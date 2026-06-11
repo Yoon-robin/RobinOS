@@ -44,12 +44,18 @@ jobs:
           chmod +x boot/config/includes.chroot/usr/local/bin/robinos-session || true
           ls -la boot/config/includes.chroot/opt/robinos | head
 
-      - name: Install live-build
-        run: sudo apt-get install -y live-build debootstrap debian-archive-keyring xorriso squashfs-tools mtools dosfstools
-
-      - name: Build ISO
-        working-directory: boot
-        run: sudo bash build.sh
+      # ISO는 Debian bookworm 컨테이너 안에서 빌드 — 데비안 자체 live-build를 써서
+      # 우분투 러너의 아카이브 레이아웃 불일치(Contents 경로/보안suite/모드)를 회피.
+      # 컨테이너는 호스트 커널을 공유하므로 가상화 불필요. --privileged는 chroot/loop/mount용.
+      - name: Build ISO (Debian bookworm container)
+        run: |
+          docker run --rm --privileged -v "$PWD:/work" -w /work/boot debian:bookworm bash -c '
+            set -e
+            apt-get update
+            apt-get install -y live-build xorriso squashfs-tools mtools dosfstools ca-certificates
+            bash build.sh
+          '
+          sudo chown -R "$(id -u):$(id -g)" boot 2>/dev/null || true
 
       - name: Find ISO
         id: iso
