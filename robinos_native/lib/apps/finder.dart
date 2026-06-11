@@ -33,6 +33,13 @@ class _FinderAppState extends State<FinderApp> {
           ),
           actions: [
             TextButton(
+              onPressed: () {
+                context.read<RobinFs>().delete(e.path);
+                Navigator.pop(context);
+              },
+              child: const Text('삭제', style: TextStyle(color: Color(0xFFFF5F57))),
+            ),
+            TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text('닫기', style: TextStyle(color: sys.accent)),
             ),
@@ -65,6 +72,8 @@ class _FinderAppState extends State<FinderApp> {
                 const SizedBox(width: 10),
                 Text(_dir, style: TextStyle(fontSize: 13, color: sys.textPrimary, fontWeight: FontWeight.w600)),
                 const Spacer(),
+                _newFileBtn(sys, fs),
+                const SizedBox(width: 8),
                 _newFolderBtn(sys, fs),
               ],
             ),
@@ -106,6 +115,29 @@ class _FinderAppState extends State<FinderApp> {
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text('+ 새 폴더', style: TextStyle(fontSize: 12, color: sys.textSec(0.8))),
+      ),
+    );
+  }
+
+  Widget _newFileBtn(SystemState sys, RobinFs fs) {
+    String pathOf(String nm) => _dir == '/' ? '/$nm' : '$_dir/$nm';
+    return GestureDetector(
+      onTap: () {
+        var name = '새 메모.txt';
+        var n = 2;
+        while (fs.exists(pathOf(name))) {
+          name = '새 메모 $n.txt';
+          n++;
+        }
+        fs.write(pathOf(name), '');
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: sys.textSec(0.08),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text('+ 새 파일', style: TextStyle(fontSize: 12, color: sys.textSec(0.8))),
       ),
     );
   }
