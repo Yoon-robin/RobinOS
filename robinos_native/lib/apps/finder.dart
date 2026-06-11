@@ -70,7 +70,7 @@ class _FinderAppState extends State<FinderApp> {
                   setState(() => _dir = fs.get(_dir)?.parent ?? '/');
                 }),
                 const SizedBox(width: 10),
-                Text(_dir, style: TextStyle(fontSize: 13, color: sys.textPrimary, fontWeight: FontWeight.w600)),
+                Flexible(child: _breadcrumb(sys)),
                 const Spacer(),
                 _newFileBtn(sys, fs),
                 const SizedBox(width: 8),
@@ -99,6 +99,38 @@ class _FinderAppState extends State<FinderApp> {
     return GestureDetector(
       onTap: enabled ? onTap : null,
       child: Icon(icon, size: 16, color: sys.textSec(enabled ? 0.7 : 0.2)),
+    );
+  }
+
+  // 경로 브레드크럼 (🏠 › 문서 …) — 조각 탭하면 그 폴더로 이동
+  Widget _breadcrumb(SystemState sys) {
+    final parts =
+        _dir == '/' ? const <String>[] : _dir.split('/').where((s) => s.isNotEmpty).toList();
+    final crumbs = <Widget>[_crumb(sys, '🏠', '/')];
+    var acc = '';
+    for (final p in parts) {
+      acc = '$acc/$p';
+      crumbs.add(Text('  ›  ', style: TextStyle(fontSize: 13, color: sys.textSec(0.3))));
+      crumbs.add(_crumb(sys, p, acc));
+    }
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(mainAxisSize: MainAxisSize.min, children: crumbs),
+    );
+  }
+
+  Widget _crumb(SystemState sys, String label, String path) {
+    final active = path == _dir;
+    return GestureDetector(
+      onTap: () => setState(() => _dir = path),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 13,
+          color: active ? sys.textPrimary : sys.textSec(0.6),
+          fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+        ),
+      ),
     );
   }
 
