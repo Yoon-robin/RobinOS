@@ -1,0 +1,67 @@
+name: Build RobinOS ISO
+
+# 가상화 없이 클라우드(우분투 러너)에서 RobinOS 부팅 ISO 빌드.
+# 수동 실행(Actions 탭 → Run workflow) 또는 main 푸시 시 동작.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'robinos_native/**'
+      - 'boot/**'
+      - '.github/workflows/build-iso.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.44.1
+
+      - name: Install Linux build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+
+      - name: Build RobinOS (Flutter Linux)
+        working-directory: robinos_native
+        run: |
+          flutter config --enable-linux-desktop
+          flutter pub get
+          flutter build linux --release
+
+      - name: Stage RobinOS binary into live-build config
+        run: |
+          mkdir -p boot/config/includes.chroot/opt/robinos
+          cp -r robinos_native/build/linux/x64/release/bundle/* boot/config/includes.chroot/opt/robinos/
+          chmod +x boot/config/includes.chroot/usr/local/bin/robinos-session || true
+          ls -la boot/config/includes.chroot/opt/robinos | head
+
+      - name: Install live-build
+        run: sudo apt-get install -y live-build
+
+      - name: Build ISO
+        working-directory: boot
+        run: sudo bash build.sh
+
+      - name: Find ISO
+        id: iso
+        run: |
+          ISO=$(ls boot/*.iso | head -n1)
+          echo "Built: $ISO ($(du -h "$ISO" | cut -f1))"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: robinos-iso
+          path: boot/*.iso
+          if-no-files-found: error
+          retention-days: 14

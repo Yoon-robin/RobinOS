@@ -1,0 +1,28 @@
+{
+  "name": "robinos",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "RobinOS — 나만의 데스크톱 OS 경험",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:logo": "node scripts/build-logo.mjs"
+  },
+  "dependencies": {
+    "motion": "^12.40.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.2",
+    "opentype.js": "^2.0.0",
+    "sharp": "^0.34.5",
+    "text-to-svg": "^3.1.5",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.16"
+  }
+}

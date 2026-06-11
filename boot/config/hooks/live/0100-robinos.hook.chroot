@@ -1,0 +1,24 @@
+#!/bin/sh
+# live-build chroot 훅 — 이미지 빌드 중 1회 실행.
+# robin 유저 생성 + RobinOS 키오스크 서비스 활성화 (+ 선택: Qwen2.5 내장).
+set -e
+
+# 1) robin 사용자 (자동 로그인 키오스크용, 비번 없음)
+if ! id robin >/dev/null 2>&1; then
+  useradd -m -s /bin/bash robin
+  passwd -d robin || true
+  usermod -aG video,render,input,seat robin || true
+fi
+
+# 2) seatd + RobinOS 키오스크 서비스 활성화, 그래픽 타깃으로 부팅
+systemctl enable seatd.service || true
+systemctl enable robinos-kiosk.service || true
+systemctl set-default graphical.target || true
+
+# 3) (선택) Qwen2.5 내장 — 주석 해제하면 오프라인 Robin 가능 (ISO가 커짐)
+# curl -fsSL https://ollama.com/install.sh | sh
+# ollama serve & sleep 5
+# ollama pull qwen2.5      # 가벼우면: ollama pull qwen2.5:3b
+# pkill ollama || true
+
+echo "RobinOS chroot 훅 완료."

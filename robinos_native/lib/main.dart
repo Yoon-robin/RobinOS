@@ -1,0 +1,1379 @@
+import 'dart:async';
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'system/system_state.dart';
+import 'system/file_system.dart';
+import 'robin/robin.dart';
+import 'robin/brains.dart';
+import 'apps/registry.dart';
+import 'apps/notes.dart';
+import 'apps/finder.dart';
+import 'apps/terminal.dart';
+import 'apps/calculator.dart';
+import 'apps/settings.dart';
+import 'apps/paint.dart';
+import 'widgets/clock.dart';
+import 'widgets/boot_screen.dart';
+import 'widgets/lock_screen.dart';
+import 'widgets/control_center.dart';
+import 'widgets/spotlight.dart';
+import 'widgets/launchpad.dart';
+import 'widgets/mission_control.dart';
+import 'widgets/notifications.dart';
+import 'widgets/context_menu.dart';
+import 'widgets/desktop_widget.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final sys = SystemState();
+  final fs = RobinFs();
+  await sys.load();
+  await fs.load();
+  await applySavedBrain(); // 저장된 Robin 두뇌 복원 (로컬/Ollama/DeepSeek)
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: sys),
+        ChangeNotifierProvider.value(value: fs),
+      ],
+      child: const RobinOSApp(),
+    ),
+  );
+}
+
+class RobinOSApp extends StatelessWidget {
+  const RobinOSApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      title: 'RobinOS',
+      debugShowCheckedModeBanner: false,
+      home: Desktop(),
+    );
+  }
+}
+
+// ===========================================================
+// 창 상태 — 웹 App.tsx 의 wins[] 대응
+// ===========================================================
+class WinState {
+  final int key;
+  final AppDef app;
+  Offset pos;
+  Size size;
+  int z;
+  bool minimized;
+  bool maximized;
+  Offset? restorePos;
+  Size? restoreSize;
+
+  WinState({
+    required this.key,
+    required this.app,
+    required this.pos,
+    required this.size,
+    required this.z,
+    this.minimized = false,
+    this.maximized = false,
+  });
+}
+
+// ===========================================================
+// Desktop — 데스크톱 셸 + 창 관리자
+// ===========================================================
+class Desktop extends StatefulWidget {
+  const Desktop({super.key});
+
+  @override
+  State<Desktop> createState() => _DesktopState();
+}
+
+class _DesktopState extends State<Desktop> {
+  final List<WinState> _wins = [];
+  int _keySeq = 0;
+  int _zTop = 1;
+  Size _deskSize = const Size(1280, 800);
+  bool _robinOpen = false;
+
+  // 시작 흐름 + 화면들
+  bool _booted = false;
+  bool _locked = true;
+  bool _spotlight = false;
+  bool _launchpad = false;
+  bool _mission = false;
+  bool _control = false;
+  ({Offset pos, List<CtxItem> items})? _ctx;
+
+  // 알림
+  final List<NotifItem> _notifs = [];
+  int _notifSeq = 0;
+
+  void _notify(String icon, String title, String body) {
+    final id = ++_notifSeq;
+    setState(() => _notifs.add(NotifItem(id, icon, title, body)));
+    Timer(const Duration(seconds: 5), () => _dismissNotif(id));
+  }
+
+  void _dismissNotif(int id) {
+    if (mounted) setState(() => _notifs.removeWhere((n) => n.id == id));
+  }
+
+  void _unlock() {
+    setState(() => _locked = false);
+    _notify('🪐', 'RobinOS', '환영해요! 독의 R 오브를 눌러 Robin을 불러보세요.');
+  }
+
+  void _closeOverlays() => setState(() {
+        _spotlight = false;
+        _launchpad = false;
+        _mission = false;
+        _control = false;
+        _ctx = null;
+      });
+
+  void _openAppById(String id) {
+    final match = kApps.where((a) => a.id == id);
+    if (match.isNotEmpty) _openApp(match.first);
+  }
+
+  void _desktopMenu(Offset pos) {
+    final sys = context.read<SystemState>();
+    setState(() {
+      _ctx = (
+        pos: pos,
+        items: [
+          CtxItem('미션 컨트롤', () => setState(() => _mission = true),
+              icon: Icons.grid_view_rounded),
+          CtxItem('Spotlight 검색', () => setState(() => _spotlight = true),
+              icon: Icons.search),
+          CtxItem('배경화면 바꾸기', () => _openAppById('settings'),
+              icon: Icons.wallpaper),
+          CtxItem(sys.isLight ? '다크 모드' : '라이트 모드', sys.toggleTheme,
+              icon: Icons.contrast),
+        ],
+      );
+    });
+  }
+
+  WinState? get _focused {
+    final visible = _wins.where((w) => !w.minimized).toList();
+    if (visible.isEmpty) return null;
+    visible.sort((a, b) => a.z.compareTo(b.z));
+    return visible.last;
+  }
+
+  void _openApp(AppDef app) {
+    setState(() {
+      final existing = _wins.where((w) => w.app.id == app.id).toList();
+      if (existing.isNotEmpty) {
+        final w = existing.first;
+        w.minimized = false;
+        w.z = ++_zTop;
+        return;
+      }
+      final n = _wins.length;
+      final cx = (_deskSize.width - app.size.width) / 2 + n * 28;
+      final cy = (_deskSize.height - app.size.height) / 2 - 20 + n * 24;
+      _wins.add(WinState(
+        key: ++_keySeq,
+        app: app,
+        pos: Offset(
+          cx.clamp(8, _deskSize.width - 120),
+          cy.clamp(44, _deskSize.height - 160),
+        ),
+        size: app.size,
+        z: ++_zTop,
+      ));
+    });
+  }
+
+  void _focus(WinState w) {
+    if (_focused == w) return;
+    setState(() => w.z = ++_zTop);
+  }
+
+  void _close(WinState w) => setState(() => _wins.remove(w));
+
+  void _move(WinState w, Offset delta) {
+    if (w.maximized) return;
+    setState(() {
+      final nx = (w.pos.dx + delta.dx)
+          .clamp(-w.size.width + 80.0, _deskSize.width - 80.0);
+      final ny = (w.pos.dy + delta.dy).clamp(32.0, _deskSize.height - 60.0);
+      w.pos = Offset(nx, ny);
+    });
+  }
+
+  void _toggleMin(WinState w) => setState(() => w.minimized = true);
+
+  void _toggleMax(WinState w) {
+    setState(() {
+      if (w.maximized) {
+        w.maximized = false;
+        if (w.restorePos != null) w.pos = w.restorePos!;
+        if (w.restoreSize != null) w.size = w.restoreSize!;
+      } else {
+        w.restorePos = w.pos;
+        w.restoreSize = w.size;
+        w.maximized = true;
+        w.pos = const Offset(8, 40);
+        w.size = Size(_deskSize.width - 16, _deskSize.height - 40 - 96);
+      }
+      w.z = ++_zTop;
+    });
+  }
+
+  Set<String> get _openIds => _wins.map((w) => w.app.id).toSet();
+
+  void _lock() => setState(() => _locked = true);
+
+  void _restore(int key) {
+    final w = _wins.firstWhere((x) => x.key == key);
+    setState(() {
+      w.minimized = false;
+      w.z = ++_zTop;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sys = context.watch<SystemState>();
+    if (!_booted) {
+      return Scaffold(
+        body: BootScreen(onDone: () => setState(() => _booted = true)),
+      );
+    }
+    final robinActions = RobinActions(
+      openApp: _openAppById,
+      apps: () => kApps.map((a) => AppInfo(a.id, a.name)).toList(),
+      setTheme: sys.setLight,
+      isLight: () => sys.isLight,
+      setWallpaper: sys.setWallpaper,
+      setAccent: sys.setAccent,
+      setBrightness: sys.setBrightness,
+      brightness: () => sys.brightness,
+    );
+    return Scaffold(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          _deskSize = Size(constraints.maxWidth, constraints.maxHeight);
+          final visibleWins = _wins.where((w) => !w.minimized).toList()
+            ..sort((a, b) => a.z.compareTo(b.z));
+          final focused = _focused;
+          final hasWindows = visibleWins.isNotEmpty;
+
+          return Stack(
+            children: [
+              // 배경 (좌클릭=오버레이 닫기, 우클릭=컨텍스트 메뉴)
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _closeOverlays,
+                  onSecondaryTapDown: (d) => _desktopMenu(d.globalPosition),
+                  child: const _AuroraBackground(),
+                ),
+              ),
+              if (!hasWindows)
+                const Positioned(top: 64, left: 40, child: DesktopClock()),
+              if (!hasWindows) const _Welcome(),
+              for (final w in visibleWins)
+                RobinWindow(
+                  key: ValueKey(w.key),
+                  win: w,
+                  focused: w == focused,
+                  onFocus: () => _focus(w),
+                  onMove: (d) => _move(w, d),
+                  onClose: () => _close(w),
+                  onMinimize: () => _toggleMin(w),
+                  onMaximize: () => _toggleMax(w),
+                ),
+              Align(
+                alignment: Alignment.topCenter,
+                child: _MenuBar(
+                  activeApp: focused?.app.name ?? 'RobinOS',
+                  onLogo: () => setState(() => _launchpad = true),
+                  onSearch: () => setState(() => _spotlight = true),
+                  onMission: () => setState(() => _mission = true),
+                  onControl: () => setState(() => _control = true),
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: _Dock(
+                  openIds: _openIds,
+                  onTap: _openApp,
+                  robinActive: _robinOpen,
+                  onRobinTap: () => setState(() => _robinOpen = !_robinOpen),
+                  onLaunchpad: () => setState(() => _launchpad = true),
+                ),
+              ),
+              if (sys.brightness < 0.999)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Container(
+                      color: Colors.black
+                          .withValues(alpha: (1 - sys.brightness) * 0.7),
+                    ),
+                  ),
+                ),
+              if (_robinOpen)
+                Positioned(
+                  right: 18,
+                  bottom: 96,
+                  child: RobinPanel(
+                    actions: robinActions,
+                    onClose: () => setState(() => _robinOpen = false),
+                  ),
+                ),
+              // 화면 오버레이
+              if (_control)
+                ControlCenter(onLock: _lock, onClose: _closeOverlays),
+              if (_spotlight)
+                Spotlight(onOpen: _openAppById, onClose: _closeOverlays),
+              if (_launchpad)
+                Launchpad(onOpen: _openAppById, onClose: _closeOverlays),
+              if (_mission)
+                MissionControl(
+                  wins: _wins
+                      .map((w) => MissionWin(w.key, w.app, w.app.name))
+                      .toList(),
+                  onSelect: _restore,
+                  onClose: _closeOverlays,
+                ),
+              Toasts(items: _notifs, onDismiss: _dismissNotif),
+              if (_ctx != null)
+                ContextMenu(
+                  pos: _ctx!.pos,
+                  items: _ctx!.items,
+                  onClose: () => setState(() => _ctx = null),
+                ),
+              if (_locked)
+                Positioned.fill(child: LockScreen(onUnlock: _unlock)),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------
+// 배경: 그라데이션 + 강조색 블롭 3개 (테마/배경/강조색 반응)
+// -----------------------------------------------------------
+class _AuroraBackground extends StatelessWidget {
+  const _AuroraBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    final sys = context.watch<SystemState>();
+    final blob = sys.accent;
+    final blob2 = sys.accent2;
+    final a = sys.isLight ? 0.30 : 0.34;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 400),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: sys.backgroundGradient,
+        ),
+      ),
+      child: Stack(
+        children: [
+          _Blob(top: -120, left: -80, size: 460, color: blob.withValues(alpha: a)),
+          _Blob(top: 120, right: -120, size: 520, color: blob2.withValues(alpha: a)),
+          _Blob(
+            bottom: -160,
+            left: 160,
+            size: 480,
+            color: sys.accent.withValues(alpha: a * 0.8),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Blob extends StatelessWidget {
+  final double? top, left, right, bottom;
+  final double size;
+  final Color color;
+  const _Blob({
+    this.top,
+    this.left,
+    this.right,
+    this.bottom,
+    required this.size,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: top,
+      left: left,
+      right: right,
+      bottom: bottom,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [color, color.withValues(alpha: 0)],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------
+// 가운데 환영 — R 스퀘어클 (강조색)
+// -----------------------------------------------------------
+class _Welcome extends StatelessWidget {
+  const _Welcome();
+
+  @override
+  Widget build(BuildContext context) {
+    final sys = context.watch<SystemState>();
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 104,
+            height: 104,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [sys.accent, sys.accent2],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: sys.accent.withValues(alpha: 0.45),
+                  blurRadius: 48,
+                  spreadRadius: 4,
+                ),
+              ],
+            ),
+            child: const Center(
+              child: Text(
+                'R',
+                style: TextStyle(
+                  fontSize: 56,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  height: 1,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'RobinOS',
+            style: TextStyle(
+              fontSize: 40,
+              fontWeight: FontWeight.w700,
+              color: sys.textPrimary,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '독에서 앱을 열어보세요',
+            style: TextStyle(fontSize: 15, color: sys.textSec(0.5)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------
+// 상단 메뉴바
+// -----------------------------------------------------------
+class _MenuBar extends StatelessWidget {
+  final String activeApp;
+  final VoidCallback onLogo, onSearch, onMission, onControl;
+  const _MenuBar({
+    required this.activeApp,
+    required this.onLogo,
+    required this.onSearch,
+    required this.onMission,
+    required this.onControl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final sys = context.watch<SystemState>();
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        child: Container(
+          height: 32,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: sys.chromeOverlay,
+            border: Border(bottom: BorderSide(color: sys.chromeBorder)),
+          ),
+          child: Row(
+            children: [
+              // R 로고 → 런치패드
+              _hover(
+                onTap: onLogo,
+                child: Container(
+                  width: 18,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(5),
+                    gradient: LinearGradient(colors: [sys.accent, sys.accent2]),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Text('R',
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          height: 1)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(activeApp,
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: sys.textPrimary)),
+              const SizedBox(width: 18),
+              ..._menus.map(
+                (m) => Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: Text(m,
+                      style:
+                          TextStyle(fontSize: 13, color: sys.textSec(0.75))),
+                ),
+              ),
+              const Spacer(),
+              // 우측: Spotlight · 미션컨트롤 · 제어센터 · 시계
+              _icon(sys, Icons.grid_view_rounded, onMission),
+              _icon(sys, Icons.search, onSearch),
+              _hover(
+                onTap: onControl,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Row(
+                    children: [
+                      Icon(Icons.wifi, size: 15, color: sys.textSec(0.8)),
+                      const SizedBox(width: 6),
+                      Icon(Icons.battery_full,
+                          size: 15, color: sys.textSec(0.8)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              LiveClock(
+                format: (t) => '${robinDate(t)}  ${robinTime(t)}',
+                style: TextStyle(fontSize: 12.5, color: sys.textPrimary),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _icon(SystemState sys, IconData icon, VoidCallback onTap) => _hover(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Icon(icon, size: 16, color: sys.textSec(0.8)),
+        ),
+      );
+
+  Widget _hover({required Widget child, required VoidCallback onTap}) =>
+      MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: child,
+        ),
+      );
+
+  static const _menus = ['파일', '편집', '보기', '윈도우'];
+}
+
+// ===========================================================
+// RobinWindow — 창 1개 (신호등 + 드래그 + 포커스)
+// ===========================================================
+class RobinWindow extends StatelessWidget {
+  final WinState win;
+  final bool focused;
+  final VoidCallback onFocus;
+  final ValueChanged<Offset> onMove;
+  final VoidCallback onClose;
+  final VoidCallback onMinimize;
+  final VoidCallback onMaximize;
+
+  const RobinWindow({
+    super.key,
+    required this.win,
+    required this.focused,
+    required this.onFocus,
+    required this.onMove,
+    required this.onClose,
+    required this.onMinimize,
+    required this.onMaximize,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final sys = context.watch<SystemState>();
+    return Positioned(
+      left: win.pos.dx,
+      top: win.pos.dy,
+      width: win.size.width,
+      height: win.size.height,
+      child: Listener(
+        onPointerDown: (_) => onFocus(),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: sys.windowSurface.withValues(alpha: sys.isLight ? 0.96 : 0.92),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: focused
+                  ? sys.accent.withValues(alpha: sys.isLight ? 0.4 : 0.45)
+                  : sys.windowBorder,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: focused ? 0.45 : 0.25),
+                blurRadius: focused ? 40 : 20,
+                offset: const Offset(0, 18),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Column(
+              children: [
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onPanUpdate: (d) => onMove(d.delta),
+                  onDoubleTap: onMaximize,
+                  child: Container(
+                    height: 38,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: sys.titlebarOverlay,
+                      border: Border(
+                        bottom: BorderSide(color: sys.chromeBorder),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        _TrafficLights(
+                          onClose: onClose,
+                          onMin: onMinimize,
+                          onMax: onMaximize,
+                        ),
+                        Expanded(
+                          child: Text(
+                            win.app.name,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: sys.textSec(focused ? 0.9 : 0.5),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 54),
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(child: _AppContent(app: win.app)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TrafficLights extends StatefulWidget {
+  final VoidCallback onClose, onMin, onMax;
+  const _TrafficLights({
+    required this.onClose,
+    required this.onMin,
+    required this.onMax,
+  });
+
+  @override
+  State<_TrafficLights> createState() => _TrafficLightsState();
+}
+
+class _TrafficLightsState extends State<_TrafficLights> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _light(const Color(0xFFFF5F57), '×', widget.onClose),
+          const SizedBox(width: 8),
+          _light(const Color(0xFFFEBC2E), '–', widget.onMin),
+          const SizedBox(width: 8),
+          _light(const Color(0xFF28C840), '+', widget.onMax),
+        ],
+      ),
+    );
+  }
+
+  Widget _light(Color color, String glyph, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 13,
+        height: 13,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        alignment: Alignment.center,
+        child: _hover
+            ? Text(
+                glyph,
+                style: const TextStyle(
+                  fontSize: 10,
+                  height: 1,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0x99000000),
+                ),
+              )
+            : null,
+      ),
+    );
+  }
+}
+
+// 앱 내용 — 설정은 실제 앱, 나머지는 플레이스홀더
+class _AppContent extends StatelessWidget {
+  final AppDef app;
+  const _AppContent({required this.app});
+
+  @override
+  Widget build(BuildContext context) {
+    if (app.id == 'settings') return const SettingsApp();
+    if (app.id == 'calc') return const CalculatorApp();
+    if (app.id == 'notes') return const NotesApp();
+    if (app.id == 'finder') return const FinderApp();
+    if (app.id == 'terminal') return const TerminalApp();
+    if (app.id == 'paint') return const PaintApp();
+    final sys = context.watch<SystemState>();
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [app.color, Color.lerp(app.color, Colors.black, 0.25)!],
+              ),
+            ),
+            alignment: Alignment.center,
+            child: Text(app.emoji, style: const TextStyle(fontSize: 32)),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            app.name,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: sys.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text('곧 만들 앱이에요', style: TextStyle(fontSize: 13, color: sys.textSec(0.45))),
+        ],
+      ),
+    );
+  }
+}
+
+// ===========================================================
+// Robin 패널 — 채팅 UI (웹 components/Robin.tsx 대응)
+// ===========================================================
+class _Msg {
+  final String text;
+  final bool fromUser;
+  final RobinConfirm? confirm;
+  const _Msg(this.text, this.fromUser, {this.confirm});
+}
+
+class RobinPanel extends StatefulWidget {
+  final RobinActions actions;
+  final VoidCallback onClose;
+  const RobinPanel({super.key, required this.actions, required this.onClose});
+
+  @override
+  State<RobinPanel> createState() => _RobinPanelState();
+}
+
+class _RobinPanelState extends State<RobinPanel> {
+  final List<_Msg> _msgs = [];
+  final _ctrl = TextEditingController();
+  final _scroll = ScrollController();
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _msgs.add(const _Msg(
+      '안녕하세요! 저는 Robin이에요. "도움말"이라고 하거나 바로 명령해보세요 🪐',
+      false,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _scrollDown() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scroll.hasClients) {
+        _scroll.animateTo(
+          _scroll.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  Future<void> _send() async {
+    final text = _ctrl.text.trim();
+    if (text.isEmpty || _loading) return;
+    setState(() {
+      _msgs.add(_Msg(text, true));
+      _ctrl.clear();
+      _loading = true;
+    });
+    _scrollDown();
+    final res = await runRobin(text, widget.actions);
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
+      _msgs.add(_Msg(res.reply, false, confirm: res.confirm));
+    });
+    _scrollDown();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sys = context.watch<SystemState>();
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutBack,
+      builder: (context, t, child) => Opacity(
+        opacity: t.clamp(0, 1),
+        child: Transform.scale(
+          scale: 0.85 + 0.15 * t.clamp(0, 1),
+          alignment: Alignment.bottomRight,
+          child: child,
+        ),
+      ),
+      child: Container(
+        width: 344,
+        height: 470,
+        decoration: BoxDecoration(
+          color: sys.windowSurface.withValues(alpha: sys.isLight ? 0.98 : 0.96),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: sys.windowBorder),
+          boxShadow: [
+            BoxShadow(
+              color: sys.accent.withValues(alpha: 0.28),
+              blurRadius: 44,
+              spreadRadius: 2,
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.4),
+              blurRadius: 30,
+              offset: const Offset(0, 16),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Column(
+            children: [
+              _header(sys),
+              Expanded(
+                child: ListView.builder(
+                  controller: _scroll,
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 6),
+                  itemCount: _msgs.length + (_loading ? 1 : 0),
+                  itemBuilder: (context, i) {
+                    if (i == _msgs.length) return _thinking(sys);
+                    return _bubble(sys, _msgs[i]);
+                  },
+                ),
+              ),
+              _inputBar(sys),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _header(SystemState sys) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [sys.accent, sys.accent2]),
+      ),
+      child: Row(
+        children: [
+          _orb(20),
+          const SizedBox(width: 10),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Robin',
+                  style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      height: 1.1)),
+              Text('개인 에이전트',
+                  style: TextStyle(fontSize: 11, color: Colors.white70)),
+            ],
+          ),
+          const Spacer(),
+          GestureDetector(
+            onTap: widget.onClose,
+            child: const Icon(Icons.close, size: 18, color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _orb(double size) {
+    final sys = context.read<SystemState>();
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(colors: [sys.accent2, sys.accent]),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1),
+      ),
+      alignment: Alignment.center,
+      child: Text('R',
+          style: TextStyle(
+              fontSize: size * 0.55,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              height: 1)),
+    );
+  }
+
+  Widget _bubble(SystemState sys, _Msg m) {
+    if (m.fromUser) {
+      return Align(
+        alignment: Alignment.centerRight,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 10, left: 40),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: sys.accent,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(16),
+              topRight: Radius.circular(16),
+              bottomLeft: Radius.circular(16),
+              bottomRight: Radius.circular(4),
+            ),
+          ),
+          child: Text(m.text,
+              style: const TextStyle(fontSize: 13.5, color: Colors.white, height: 1.35)),
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10, right: 30),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _orb(24),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: sys.textSec(0.08),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(4),
+                      topRight: Radius.circular(16),
+                      bottomLeft: Radius.circular(16),
+                      bottomRight: Radius.circular(16),
+                    ),
+                  ),
+                  child: Text(m.text,
+                      style: TextStyle(
+                          fontSize: 13.5, color: sys.textPrimary, height: 1.4)),
+                ),
+                if (m.confirm != null) _confirmRow(sys, m.confirm!),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _confirmRow(SystemState sys, RobinConfirm c) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () {
+              c.run();
+              setState(() => _msgs.add(_Msg('네, 실행했어요!', false)));
+              _scrollDown();
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+              decoration: BoxDecoration(
+                  color: sys.accent, borderRadius: BorderRadius.circular(9)),
+              child: Text(c.text,
+                  style: const TextStyle(
+                      fontSize: 12.5, fontWeight: FontWeight.w600, color: Colors.white)),
+            ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () {
+              setState(() => _msgs.add(const _Msg('취소했어요.', false)));
+              _scrollDown();
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(color: sys.textSec(0.25)),
+              ),
+              child: Text('취소',
+                  style: TextStyle(fontSize: 12.5, color: sys.textSec(0.8))),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _thinking(SystemState sys) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          _orb(24),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: sys.textSec(0.08),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text('• • •',
+                style: TextStyle(fontSize: 14, color: sys.textSec(0.5), height: 1)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _inputBar(SystemState sys) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: sys.chromeBorder)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _ctrl,
+              onSubmitted: (_) => _send(),
+              textInputAction: TextInputAction.send,
+              style: TextStyle(fontSize: 13.5, color: sys.textPrimary),
+              decoration: InputDecoration(
+                hintText: 'Robin에게 말하기…',
+                hintStyle: TextStyle(fontSize: 13.5, color: sys.textSec(0.4)),
+                isDense: true,
+                filled: true,
+                fillColor: sys.textSec(0.06),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: _send,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(colors: [sys.accent, sys.accent2]),
+              ),
+              child: const Icon(Icons.arrow_upward_rounded,
+                  size: 20, color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ===========================================================
+// 하단 독
+// ===========================================================
+class _Dock extends StatelessWidget {
+  final Set<String> openIds;
+  final ValueChanged<AppDef> onTap;
+  final bool robinActive;
+  final VoidCallback onRobinTap;
+  final VoidCallback onLaunchpad;
+  const _Dock({
+    required this.openIds,
+    required this.onTap,
+    required this.robinActive,
+    required this.onRobinTap,
+    required this.onLaunchpad,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final sys = context.watch<SystemState>();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: sys.dockOverlay,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: sys.dockBorder),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 런치패드
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: onLaunchpad,
+                    child: Container(
+                      width: 52,
+                      height: 52,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFF5A5A66), Color(0xFF34343C)],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4)),
+                        ],
+                      ),
+                      child: const Icon(Icons.grid_view_rounded,
+                          color: Colors.white, size: 26),
+                    ),
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  height: 40,
+                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                  color: sys.textSec(0.15),
+                ),
+                for (final a in kApps)
+                  _DockIcon(
+                    app: a,
+                    running: openIds.contains(a.id),
+                    dotColor: sys.textSec(0.85),
+                    onTap: () => onTap(a),
+                  ),
+                Container(
+                  width: 1,
+                  height: 40,
+                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                  color: sys.textSec(0.15),
+                ),
+                // Robin 오브 (강조색) — 클릭하면 채팅 패널
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: onRobinTap,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [sys.accent, sys.accent2],
+                        ),
+                        border: robinActive
+                            ? Border.all(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                width: 2.5)
+                            : null,
+                        boxShadow: [
+                          BoxShadow(
+                            color: sys.accent.withValues(
+                                alpha: robinActive ? 0.85 : 0.5),
+                            blurRadius: robinActive ? 28 : 20,
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: const Text(
+                        'R',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          height: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DockIcon extends StatefulWidget {
+  final AppDef app;
+  final bool running;
+  final Color dotColor;
+  final VoidCallback onTap;
+  const _DockIcon({
+    required this.app,
+    required this.running,
+    required this.dotColor,
+    required this.onTap,
+  });
+
+  @override
+  State<_DockIcon> createState() => _DockIconState();
+}
+
+class _DockIconState extends State<_DockIcon> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedScale(
+              scale: _hover ? 1.25 : 1.0,
+              duration: const Duration(milliseconds: 160),
+              curve: Curves.easeOut,
+              child: Container(
+                width: 52,
+                height: 52,
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      widget.app.color,
+                      Color.lerp(widget.app.color, Colors.black, 0.25)!,
+                    ],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  widget.app.emoji,
+                  style: const TextStyle(fontSize: 26),
+                ),
+              ),
+            ),
+            const SizedBox(height: 3),
+            Container(
+              width: 4,
+              height: 4,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: widget.running ? widget.dotColor : Colors.transparent,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

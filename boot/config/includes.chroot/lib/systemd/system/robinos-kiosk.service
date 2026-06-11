@@ -1,0 +1,23 @@
+# RobinOS 키오스크 — 부팅 시 tty1에서 RobinOS 셸을 자동 실행.
+# (Kali의 데스크톱 자동시작 자리. cage = Wayland 키오스크 컴포지터.)
+[Unit]
+Description=RobinOS Kiosk Shell
+After=systemd-user-sessions.service seatd.service network-online.target
+Wants=seatd.service
+
+[Service]
+User=robin
+Group=robin
+PAMName=login
+TTYPath=/dev/tty1
+StandardInput=tty
+StandardOutput=journal
+StandardError=journal
+ExecStart=/usr/local/bin/robinos-session
+Restart=always
+RestartSec=2
+# seat/그래픽 접근
+SupplementaryGroups=video render input seat
+
+[Install]
+WantedBy=graphical.target

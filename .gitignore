@@ -1,0 +1,25 @@
+node_modules
+dist
+dist-ssr
+*.local
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+
+# 로고 빌드용 폰트 (scripts/build-logo.mjs 실행 시 자동으로 받아 쓰면 됨)
+scripts/*.ttf
+
+# Flutter 네이티브 빌드 산출물 (robinos_native/.gitignore 가 대부분 처리하지만 보강)
+robinos_native/build/
+robinos_native/.dart_tool/
+robinos_native/.flutterrun.log
+
+# live-build ISO 빌드 산출물 (CI/리눅스에서 생성)
+boot/.build/
+boot/chroot/
+boot/binary/
+boot/cache/
+boot/local/
+boot/*.iso
+boot/*.log
+boot/config/includes.chroot/opt/robinos/

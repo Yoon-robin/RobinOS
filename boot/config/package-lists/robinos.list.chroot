@@ -1,0 +1,19 @@
+# RobinOS 라이브 이미지에 설치할 패키지 (live-build chroot 단계)
+# Wayland 키오스크 컴포지터 (RobinOS 풀스크린)
+cage
+seatd
+# GPU / 렌더링
+libgl1-mesa-dri
+libgles2
+# Flutter Linux 런타임 의존성
+libgtk-3-0
+# 한글 + 이모지 폰트 (Robin/메뉴/독 텍스트 표시에 필수)
+fonts-noto-cjk
+fonts-noto-color-emoji
+# 네트워크 (Phase C: nmcli)
+network-manager
+# 밝기 제어 (Phase C: brightnessctl)
+brightnessctl
+# 기본 유틸
+curl
+ca-certificates

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="RobinOS">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6366f1"/>
+      <stop offset="0.5" stop-color="#a855f7"/>
+      <stop offset="1" stop-color="#ec4899"/>
+    </linearGradient></defs>
+  <rect x="6" y="6" width="108" height="108" rx="30" fill="url(#g)"/>
+  <path d="M56.40 0L38.64 0L25.21-24.38L21.44-24.38L21.44 0L5.70 0L5.70-64.58L32.11-64.58Q39.74-64.58 45.13-61.92Q50.51-59.25 53.18-54.60Q55.84-49.96 55.84-44.25Q55.84-37.81 52.21-32.75Q48.58-27.69 41.49-25.58L56.40 0M21.44-51.52L21.44-35.51L31.19-35.51Q35.51-35.51 37.67-37.63Q39.84-39.74 39.84-43.61Q39.84-47.29 37.67-49.40Q35.51-51.52 31.19-51.52" transform="translate(28.95,92.29)" fill="#ffffff"/>
+</svg>

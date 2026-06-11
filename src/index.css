@@ -1,0 +1,260 @@
+/* ===========================================================
+   RobinOS 전역 스타일
+   macOS 느낌(반투명 + 블러 + 둥근 모서리 + 부드러운 그림자)을
+   순수 CSS로 잡았어요. 색·간격을 바꾸면 분위기가 확 달라집니다.
+   =========================================================== */
+
+:root {
+  --menubar-height: 28px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue",
+    Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  color: #fff;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ===== 데스크톱 배경 (그라데이션 + 컬러 오브) ===== */
+.desktop {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(129, 140, 248, 0.55), transparent 42%),
+    radial-gradient(circle at 82% 18%, rgba(244, 114, 182, 0.45), transparent 42%),
+    radial-gradient(circle at 50% 92%, rgba(45, 212, 191, 0.4), transparent 48%),
+    linear-gradient(135deg, #0b1026 0%, #2b1055 55%, #7e2a6e 100%);
+}
+
+/* ===== 상단 메뉴바 ===== */
+.menubar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--menubar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.15);
+  z-index: 9999;
+}
+.menubar-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.menubar-logo {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  display: block;
+}
+.menubar-app {
+  font-weight: 700;
+}
+.menubar-menu {
+  opacity: 0.9;
+}
+.menubar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  opacity: 0.95;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== 하단 독(Dock) ===== */
+.dock-wrap {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 9000;
+  pointer-events: none; /* 빈 공간은 클릭 통과, 독 본체만 클릭 받음 */
+}
+.dock {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 64px;
+  padding: 8px 12px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 0.5px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+}
+.dock-icon {
+  position: relative;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.dock-icon-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+}
+.dock-icon-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+  display: block;
+  object-fit: cover;
+}
+.dock-dot {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+}
+.dock-tooltip {
+  position: absolute;
+  top: -34px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(40, 40, 45, 0.92);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.dock-icon:hover .dock-tooltip {
+  opacity: 1;
+}
+
+/* ===== 창(Window) ===== */
+.window {
+  position: absolute;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(28, 28, 32, 0.82);
+  backdrop-filter: blur(30px) saturate(160%);
+  -webkit-backdrop-filter: blur(30px) saturate(160%);
+  border: 0.5px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+}
+.titlebar {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
+  cursor: default;
+}
+.traffic {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.light {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.light.red {
+  background: #ff5f57;
+}
+.light.yellow {
+  background: #febc2e;
+}
+.light.green {
+  background: #28c840;
+}
+.titlebar-title {
+  margin-left: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+.window-body {
+  flex: 1;
+  padding: 22px;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow: auto;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* ===== 부팅 화면 ===== */
+.boot {
+  position: absolute;
+  inset: 0;
+  z-index: 99999;
+  background: #05060a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+}
+.boot-wordmark {
+  width: 260px;
+  max-width: 70vw;
+  height: auto;
+}
+.boot-bar {
+  width: 200px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+}
+.boot-bar-fill {
+  height: 100%;
+  background: #fff;
+  border-radius: 2px;
+}
