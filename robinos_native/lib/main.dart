@@ -387,6 +387,9 @@ class _DesktopState extends State<Desktop> {
       setBrightness: sys.setBrightness,
       brightness: () => sys.brightness,
       lock: _lock,
+      closeApp: (id) =>
+          setState(() => _wins.removeWhere((w) => w.app.id == id)),
+      closeAll: () => setState(() => _wins.clear()),
     );
     return Scaffold(
       body: Focus(

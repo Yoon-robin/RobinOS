@@ -36,6 +36,8 @@ class RobinActions {
   final void Function(double v) setBrightness;
   final double Function() brightness;
   final void Function() lock;
+  final void Function(String appId) closeApp;
+  final void Function() closeAll;
 
   const RobinActions({
     required this.openApp,
@@ -47,6 +49,8 @@ class RobinActions {
     required this.setBrightness,
     required this.brightness,
     required this.lock,
+    required this.closeApp,
+    required this.closeAll,
   });
 }
 
@@ -201,6 +205,27 @@ Future<RobinResult> localBrain(String msg, RobinActions a) async {
       a.setBrightness((a.brightness() - 0.2).clamp(0.25, 1.0));
       return const RobinResult('밝기를 내렸어요 🔅');
     }
+  }
+
+  // 앱 닫기 / 전부 닫기
+  if (m.contains('닫') || m.contains('종료')) {
+    final wantAll = m.contains('전부') ||
+        m.contains('모두') ||
+        m.contains('모든') ||
+        m.contains('전체') ||
+        m.contains('싹') ||
+        RegExp(r'다\s*(닫|종료)').hasMatch(m);
+    if (wantAll) {
+      a.closeAll();
+      return const RobinResult('열린 창을 모두 닫았어요 🧹');
+    }
+    for (final app in a.apps()) {
+      if (m.contains(app.name) || low.contains(app.id)) {
+        a.closeApp(app.id);
+        return RobinResult('${app.name} 창을 닫았어요.');
+      }
+    }
+    return const RobinResult('어떤 창을 닫을까요? "계산기 닫아"처럼요. (전부 닫으려면 "다 닫아")');
   }
 
   // 계산

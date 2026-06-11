@@ -15,6 +15,8 @@ RobinActions _actions(Map<String, String> log) => RobinActions(
       setBrightness: (v) => log['brightness'] = v.toStringAsFixed(2),
       brightness: () => 1.0,
       lock: () => log['lock'] = '1',
+      closeApp: (id) => log['close'] = id,
+      closeAll: () => log['close'] = 'all',
     );
 
 void main() {
@@ -132,6 +134,16 @@ void main() {
       final r = await localBrain('화면 잠가줘', _actions(log));
       expect(log['lock'], '1');
       expect(r.reply, contains('잠갔'));
+    });
+    test('앱 닫기 → closeApp(calc)', () async {
+      final log = <String, String>{};
+      await localBrain('계산기 닫아', _actions(log));
+      expect(log['close'], 'calc');
+    });
+    test('전부 닫기 → closeAll', () async {
+      final log = <String, String>{};
+      await localBrain('다 닫아줘', _actions(log));
+      expect(log['close'], 'all');
     });
   });
 }
