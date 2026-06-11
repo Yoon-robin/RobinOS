@@ -94,6 +94,31 @@ class RobinFs extends ChangeNotifier {
     notifyListeners();
   }
 
+  // 이름 변경 — 폴더면 하위 경로(자식 전부)도 함께 재작성.
+  // 이름 충돌/빈 이름/'/' 포함이면 무시. 성공 시 새 경로 반환(없으면 null).
+  String? rename(String from, String newName) {
+    final entry = _map[from];
+    final name = newName.trim();
+    if (entry == null || name.isEmpty || name.contains('/')) return null;
+    final to = _join(entry.parent, name);
+    if (to == from || _map.containsKey(to)) return null;
+    if (entry.isDir) {
+      final affected =
+          _map.keys.where((k) => k == from || k.startsWith('$from/')).toList();
+      for (final k in affected) {
+        final e = _map.remove(k)!;
+        final nk = to + k.substring(from.length);
+        _map[nk] = FsEntry(nk, e.isDir, e.content);
+      }
+    } else {
+      _map.remove(from);
+      _map[to] = FsEntry(to, false, entry.content);
+    }
+    _persist();
+    notifyListeners();
+    return to;
+  }
+
   void _persist() {
     final data = {
       for (final e in _map.values)

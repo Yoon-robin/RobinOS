@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../system/system_state.dart';
 import '../system/file_system.dart';
+import '../widgets/context_menu.dart';
 
 // Finder — 가상 파일시스템 탐색 (폴더 이동·파일 미리보기·새 폴더)
 class FinderApp extends StatefulWidget {
@@ -14,6 +15,68 @@ class FinderApp extends StatefulWidget {
 class _FinderAppState extends State<FinderApp> {
   String _dir = '/';
   int _newCount = 0;
+  Offset? _menuPos;
+  FsEntry? _menuTarget;
+
+  // 타일 우클릭 → Finder 내용 기준 좌표로 컨텍스트 메뉴 표시
+  void _showMenu(FsEntry e, Offset globalPos) {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    setState(() {
+      _menuTarget = e;
+      _menuPos = box.globalToLocal(globalPos);
+    });
+  }
+
+  void _closeMenu() => setState(() {
+        _menuPos = null;
+        _menuTarget = null;
+      });
+
+  void _renameDialog(FsEntry e, SystemState sys) {
+    final ctrl = TextEditingController(text: e.name);
+    ctrl.selection = TextSelection(baseOffset: 0, extentOffset: e.name.length);
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: sys.windowSurface,
+        title: Text('이름 변경',
+            style: TextStyle(color: sys.textPrimary, fontSize: 15)),
+        content: SizedBox(
+          width: 320,
+          child: TextField(
+            controller: ctrl,
+            autofocus: true,
+            style: TextStyle(color: sys.textPrimary, fontSize: 14),
+            decoration: InputDecoration(
+              hintText: '새 이름',
+              hintStyle: TextStyle(color: sys.textSec(0.35)),
+              enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: sys.chromeBorder)),
+              focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: sys.accent)),
+            ),
+            onSubmitted: (_) => _doRename(e, ctrl.text),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('취소', style: TextStyle(color: sys.textSec(0.7))),
+          ),
+          TextButton(
+            onPressed: () => _doRename(e, ctrl.text),
+            child: Text('변경', style: TextStyle(color: sys.accent)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _doRename(FsEntry e, String raw) {
+    Navigator.pop(context);
+    context.read<RobinFs>().rename(e.path, raw);
+  }
 
   void _open(FsEntry e, SystemState sys) {
     if (e.isDir) {
@@ -54,10 +117,13 @@ class _FinderAppState extends State<FinderApp> {
     final sys = context.watch<SystemState>();
     final fs = context.watch<RobinFs>();
     final items = fs.list(_dir);
+    final menuTarget = _menuTarget;
     return Container(
       color: sys.windowSurface,
-      child: Column(
+      child: Stack(
         children: [
+          Column(
+            children: [
           // 툴바
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -90,6 +156,33 @@ class _FinderAppState extends State<FinderApp> {
                     ],
                   ),
           ),
+            ],
+          ),
+          if (_menuPos != null && menuTarget != null)
+            ContextMenu(
+              pos: _menuPos!,
+              onClose: _closeMenu,
+              items: [
+                CtxItem(
+                  menuTarget.isDir ? '열기' : '미리보기',
+                  () => _open(menuTarget, sys),
+                  icon: menuTarget.isDir
+                      ? Icons.folder_open
+                      : Icons.visibility_outlined,
+                ),
+                CtxItem(
+                  '이름 변경',
+                  () => _renameDialog(menuTarget, sys),
+                  icon: Icons.drive_file_rename_outline,
+                ),
+                CtxItem(
+                  '삭제',
+                  () => context.read<RobinFs>().delete(menuTarget.path),
+                  icon: Icons.delete_outline,
+                  danger: true,
+                ),
+              ],
+            ),
         ],
       ),
     );
@@ -177,6 +270,8 @@ class _FinderAppState extends State<FinderApp> {
   Widget _tile(SystemState sys, FsEntry e) {
     return GestureDetector(
       onTap: () => _open(e, sys),
+      onSecondaryTapDown: (d) => _showMenu(e, d.globalPosition),
+      onLongPressStart: (d) => _showMenu(e, d.globalPosition),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

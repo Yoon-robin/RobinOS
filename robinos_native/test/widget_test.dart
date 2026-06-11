@@ -3,6 +3,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:robinos_native/widgets/clock.dart';
 import 'package:robinos_native/robin/robin.dart';
+import 'package:robinos_native/system/file_system.dart';
 
 RobinActions _actions(Map<String, String> log) => RobinActions(
       openApp: (id) => log['open'] = id,
@@ -58,6 +59,48 @@ void main() {
       final log = <String, String>{};
       await localBrain('강조색 핑크로 바꿔', _actions(log));
       expect(log['accent'], 'pink');
+    });
+  });
+
+  group('RobinFs.rename', () {
+    test('파일 이름 변경 — 내용 보존, 옛 경로 제거', () {
+      final fs = RobinFs();
+      fs.write('/문서/메모.txt', '안녕');
+      final to = fs.rename('/문서/메모.txt', '일기.txt');
+      expect(to, '/문서/일기.txt');
+      expect(fs.exists('/문서/메모.txt'), false);
+      expect(fs.get('/문서/일기.txt')?.content, '안녕');
+    });
+
+    test('폴더 이름 변경 — 하위 항목 경로까지 재작성', () {
+      final fs = RobinFs();
+      fs.mkdir('/', '작업');
+      fs.write('/작업/a.txt', '1');
+      fs.write('/작업/하위/b.txt', '2');
+      final to = fs.rename('/작업', '프로젝트');
+      expect(to, '/프로젝트');
+      expect(fs.exists('/작업'), false);
+      expect(fs.exists('/작업/a.txt'), false);
+      expect(fs.get('/프로젝트/a.txt')?.content, '1');
+      expect(fs.get('/프로젝트/하위/b.txt')?.content, '2');
+    });
+
+    test('이름 충돌 시 무시(null) — 기존 항목 보존', () {
+      final fs = RobinFs();
+      fs.write('/문서/a.txt', 'A');
+      fs.write('/문서/b.txt', 'B');
+      final to = fs.rename('/문서/a.txt', 'b.txt');
+      expect(to, isNull);
+      expect(fs.get('/문서/a.txt')?.content, 'A');
+      expect(fs.get('/문서/b.txt')?.content, 'B');
+    });
+
+    test('빈 이름·슬래시 포함은 거부(null)', () {
+      final fs = RobinFs();
+      fs.write('/문서/a.txt', 'A');
+      expect(fs.rename('/문서/a.txt', '   '), isNull);
+      expect(fs.rename('/문서/a.txt', '하위/c.txt'), isNull);
+      expect(fs.exists('/문서/a.txt'), true);
     });
   });
 }
