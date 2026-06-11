@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../system/system_state.dart';
 import '../system/file_system.dart';
+import '../system/app_intents.dart';
 
 // 메모 — /문서/메모.txt 에 저장 (Finder·터미널과 공유)
 class NotesApp extends StatefulWidget {
@@ -19,11 +20,23 @@ class _NotesAppState extends State<NotesApp> {
   bool _saved = true;
 
   @override
+  void initState() {
+    super.initState();
+    notesOpenTarget.addListener(_consumeIntent);
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_loaded) {
       _loaded = true;
       final fs = context.read<RobinFs>();
+      // Finder가 특정 파일을 열라고 했으면 그 파일로 시작
+      final intent = notesOpenTarget.value;
+      if (intent != null && fs.exists(intent)) {
+        notesOpenTarget.value = null;
+        _path = intent;
+      }
       if (!fs.exists(_path)) fs.write(_path, '');
       _ctrl.text = fs.get(_path)?.content ?? '';
     }
@@ -31,8 +44,19 @@ class _NotesAppState extends State<NotesApp> {
 
   @override
   void dispose() {
+    notesOpenTarget.removeListener(_consumeIntent);
     _ctrl.dispose();
     super.dispose();
+  }
+
+  // 이미 열려 있는 메모 앱에 Finder가 다른 파일 열기를 요청했을 때 전환
+  void _consumeIntent() {
+    final target = notesOpenTarget.value;
+    if (target == null || !mounted) return;
+    final fs = context.read<RobinFs>();
+    if (!fs.exists(target)) return;
+    notesOpenTarget.value = null;
+    _switchTo(target);
   }
 
   void _onChanged(String v) {

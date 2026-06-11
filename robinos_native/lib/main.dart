@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'system/system_state.dart';
 import 'system/file_system.dart';
+import 'system/app_intents.dart';
 import 'robin/robin.dart';
 import 'robin/brains.dart';
 import 'apps/registry.dart';
@@ -112,6 +113,23 @@ class _DesktopState extends State<Desktop> {
   // 알림
   final List<NotifItem> _notifs = [];
   int _notifSeq = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    notesOpenTarget.addListener(_onNotesIntent);
+  }
+
+  @override
+  void dispose() {
+    notesOpenTarget.removeListener(_onNotesIntent);
+    super.dispose();
+  }
+
+  // Finder가 .txt를 "메모에서 열기" 요청 → 메모 앱을 연다 (전환은 NotesApp이 처리)
+  void _onNotesIntent() {
+    if (notesOpenTarget.value != null) _openAppById('notes');
+  }
 
   void _notify(String icon, String title, String body) {
     final id = ++_notifSeq;

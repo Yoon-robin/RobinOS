@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../system/system_state.dart';
 import '../system/file_system.dart';
 import '../widgets/context_menu.dart';
+import '../system/app_intents.dart';
 
 // Finder — 가상 파일시스템 탐색 (폴더 이동·파일 미리보기·새 폴더)
 class FinderApp extends StatefulWidget {
@@ -78,6 +79,11 @@ class _FinderAppState extends State<FinderApp> {
     context.read<RobinFs>().rename(e.path, raw);
   }
 
+  // .txt 파일을 메모 앱에서 열기 (Desktop이 듣고 메모 앱을 띄우고, NotesApp이 전환)
+  void _openInNotes(FsEntry e) => notesOpenTarget.value = e.path;
+
+  bool _isTxt(FsEntry e) => !e.isDir && e.name.toLowerCase().endsWith('.txt');
+
   void _open(FsEntry e, SystemState sys) {
     if (e.isDir) {
       setState(() => _dir = e.path);
@@ -95,6 +101,14 @@ class _FinderAppState extends State<FinderApp> {
             ),
           ),
           actions: [
+            if (e.name.toLowerCase().endsWith('.txt'))
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _openInNotes(e);
+                },
+                child: Text('메모에서 열기', style: TextStyle(color: sys.accent)),
+              ),
             TextButton(
               onPressed: () {
                 context.read<RobinFs>().delete(e.path);
@@ -163,6 +177,12 @@ class _FinderAppState extends State<FinderApp> {
               pos: _menuPos!,
               onClose: _closeMenu,
               items: [
+                if (_isTxt(menuTarget))
+                  CtxItem(
+                    '메모에서 열기',
+                    () => _openInNotes(menuTarget),
+                    icon: Icons.sticky_note_2_outlined,
+                  ),
                 CtxItem(
                   menuTarget.isDir ? '열기' : '미리보기',
                   () => _open(menuTarget, sys),
