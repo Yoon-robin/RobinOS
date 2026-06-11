@@ -14,6 +14,7 @@ RobinActions _actions(Map<String, String> log) => RobinActions(
       setAccent: (id) => log['accent'] = id,
       setBrightness: (v) => log['brightness'] = v.toStringAsFixed(2),
       brightness: () => 1.0,
+      lock: () => log['lock'] = '1',
     );
 
 void main() {
@@ -101,6 +102,36 @@ void main() {
       expect(fs.rename('/문서/a.txt', '   '), isNull);
       expect(fs.rename('/문서/a.txt', '하위/c.txt'), isNull);
       expect(fs.exists('/문서/a.txt'), true);
+    });
+  });
+
+  group('localBrain 확장 인텐트', () {
+    test('시간 질문 → 오전/오후 포함', () async {
+      final r = await localBrain('지금 몇 시야?', _actions({}));
+      expect(r.reply, anyOf(contains('오전'), contains('오후')));
+    });
+    test('날짜 질문 → 요일 포함', () async {
+      final r = await localBrain('오늘 무슨 요일이야?', _actions({}));
+      expect(r.reply, contains('요일'));
+    });
+    test('정체성 질문 → 비서 소개', () async {
+      final r = await localBrain('너 누구야?', _actions({}));
+      expect(r.reply, contains('비서'));
+    });
+    test('테마 토글(현재 다크) → setTheme(light)', () async {
+      final log = <String, String>{};
+      await localBrain('테마 바꿔줘', _actions(log));
+      expect(log['theme'], 'light');
+    });
+    test('감사 → 천만에요', () async {
+      final r = await localBrain('고마워!', _actions({}));
+      expect(r.reply, contains('천만'));
+    });
+    test('잠금 → lock() 호출', () async {
+      final log = <String, String>{};
+      final r = await localBrain('화면 잠가줘', _actions(log));
+      expect(log['lock'], '1');
+      expect(r.reply, contains('잠갔'));
     });
   });
 }

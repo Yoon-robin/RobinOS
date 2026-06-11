@@ -1,4 +1,5 @@
 import '../system/system_state.dart';
+import '../widgets/clock.dart';
 
 // ===========================================================
 // Robin — RobinOS의 개인 에이전트 (웹 system/robin.ts 대응)
@@ -34,6 +35,7 @@ class RobinActions {
   final void Function(String id) setAccent;
   final void Function(double v) setBrightness;
   final double Function() brightness;
+  final void Function() lock;
 
   const RobinActions({
     required this.openApp,
@@ -44,6 +46,7 @@ class RobinActions {
     required this.setAccent,
     required this.setBrightness,
     required this.brightness,
+    required this.lock,
   });
 }
 
@@ -68,6 +71,31 @@ Future<RobinResult> localBrain(String msg, RobinActions a) async {
     return const RobinResult('안녕하세요! 저는 Robin이에요. RobinOS를 직접 조작해 드릴게요 🪐');
   }
 
+  // 정체성
+  if (m.contains('누구') ||
+      m.contains('네 이름') ||
+      m.contains('너 이름') ||
+      m.contains('이름이 뭐') ||
+      m.contains('정체')) {
+    return const RobinResult(
+        '저는 Robin이에요 — 이 OS의 개인 비서예요. 화면도 켜고 끄고, 앱도 열고, 계산도 해드려요 🙂');
+  }
+
+  // 시간 / 날짜
+  if (m.contains('몇 시') ||
+      m.contains('몇시') ||
+      m.contains('시각') ||
+      (m.contains('시간') &&
+          (m.contains('지금') || m.contains('현재') || m.contains('알려')))) {
+    return RobinResult('지금은 ${robinTime(DateTime.now())}이에요 ⏰');
+  }
+  if (m.contains('며칠') ||
+      m.contains('날짜') ||
+      m.contains('요일') ||
+      (m.contains('오늘') && m.contains('무슨'))) {
+    return RobinResult('오늘은 ${robinDate(DateTime.now())}이에요 📅');
+  }
+
   // 도움말
   if (m.contains('도움') ||
       m.contains('뭐 할') ||
@@ -84,6 +112,18 @@ Future<RobinResult> localBrain(String msg, RobinActions a) async {
       '• "12 곱하기 9는?"\n'
       '나중에 DeepSeek 두뇌가 연결되면 훨씬 똑똑해져요!',
     );
+  }
+
+  // 테마 토글 (현재 반대로)
+  if (m.contains('테마') &&
+      (m.contains('바꿔') ||
+          m.contains('바꾸') ||
+          m.contains('토글') ||
+          m.contains('전환') ||
+          m.contains('반대'))) {
+    final toLight = !a.isLight();
+    a.setTheme(toLight);
+    return RobinResult(toLight ? '라이트 모드로 바꿨어요 ☀️' : '다크 모드로 바꿨어요 🌙');
   }
 
   // 테마
@@ -182,9 +222,21 @@ Future<RobinResult> localBrain(String msg, RobinActions a) async {
     }
   }
 
-  // 잠금 (네이티브 잠금화면은 추후)
-  if (m.contains('잠그') || m.contains('잠금') || low.contains('lock')) {
-    return const RobinResult('잠금 화면은 곧 추가할게요 🔒');
+  // 감사 / 칭찬
+  if (m.contains('고마') ||
+      m.contains('감사') ||
+      m.contains('땡큐') ||
+      low.contains('thank') ||
+      m.contains('잘했') ||
+      m.contains('최고') ||
+      m.contains('멋지')) {
+    return const RobinResult('천만에요! 더 필요한 게 있으면 언제든 불러주세요 😊');
+  }
+
+  // 잠금 — 실제로 잠금 화면으로
+  if (m.contains('잠그') || m.contains('잠가') || m.contains('잠금') || low.contains('lock')) {
+    a.lock();
+    return const RobinResult('화면을 잠갔어요. 다시 오실 때 봬요 🔒');
   }
 
   // 폴백

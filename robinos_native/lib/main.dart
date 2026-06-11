@@ -322,6 +322,7 @@ class _DesktopState extends State<Desktop> {
       setAccent: sys.setAccent,
       setBrightness: sys.setBrightness,
       brightness: () => sys.brightness,
+      lock: _lock,
     );
     return Scaffold(
       body: LayoutBuilder(
