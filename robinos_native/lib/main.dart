@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'system/system_state.dart';
 import 'system/file_system.dart';
 import 'robin/robin.dart';
@@ -953,13 +955,48 @@ class _RobinPanelState extends State<RobinPanel> {
   final _scroll = ScrollController();
   bool _loading = false;
 
+  static const _greeting = _Msg(
+      '안녕하세요! 저는 Robin이에요. "도움말"이라고 하거나 바로 명령해보세요 🪐', false);
+
   @override
   void initState() {
     super.initState();
-    _msgs.add(const _Msg(
-      '안녕하세요! 저는 Robin이에요. "도움말"이라고 하거나 바로 명령해보세요 🪐',
-      false,
-    ));
+    _msgs.add(_greeting);
+    _loadChat();
+  }
+
+  // 저장된 대화 복원 (없으면 인사만)
+  Future<void> _loadChat() async {
+    final p = await SharedPreferences.getInstance();
+    final raw = p.getString('robinos.robin.chat');
+    if (raw == null || !mounted) return;
+    try {
+      final list = jsonDecode(raw) as List;
+      if (list.isNotEmpty) {
+        setState(() {
+          _msgs.clear();
+          for (final m in list) {
+            _msgs.add(_Msg(m['t'] as String, m['u'] as bool));
+          }
+        });
+        _scrollDown();
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _persist() async {
+    final p = await SharedPreferences.getInstance();
+    await p.setString('robinos.robin.chat',
+        jsonEncode(_msgs.map((m) => {'t': m.text, 'u': m.fromUser}).toList()));
+  }
+
+  void _clearChat() {
+    setState(() {
+      _msgs
+        ..clear()
+        ..add(_greeting);
+    });
+    _persist();
   }
 
   @override
@@ -997,6 +1034,7 @@ class _RobinPanelState extends State<RobinPanel> {
       _msgs.add(_Msg(res.reply, false, confirm: res.confirm));
     });
     _scrollDown();
+    _persist();
   }
 
   @override
@@ -1083,6 +1121,12 @@ class _RobinPanelState extends State<RobinPanel> {
             ],
           ),
           const Spacer(),
+          GestureDetector(
+            onTap: _clearChat,
+            child: const Icon(Icons.delete_sweep_outlined,
+                size: 18, color: Colors.white),
+          ),
+          const SizedBox(width: 14),
           GestureDetector(
             onTap: widget.onClose,
             child: const Icon(Icons.close, size: 18, color: Colors.white),
