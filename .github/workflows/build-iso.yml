@@ -3,13 +3,7 @@ name: Build RobinOS ISO
 # 가상화 없이 클라우드(우분투 러너)에서 RobinOS 부팅 ISO 빌드.
 # 수동 실행(Actions 탭 → Run workflow) 또는 main 푸시 시 동작.
 on:
-  workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'robinos_native/**'
-      - 'boot/**'
-      - '.github/workflows/build-iso.yml'
+  workflow_dispatch:   # 수동 실행만 — 무거운 ISO 빌드(~18분)를 매 푸시마다 돌리지 않음.
 
 jobs:
   build:

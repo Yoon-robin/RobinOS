@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# QEMU QMP로 부팅 중 스크린샷을 여러 장 찍는다 (CI 부팅 테스트용).
+# QEMU QMP로 라이브 부팅을 진행시키고(부트메뉴에서 ENTER) 스크린샷을 여러 장 찍는다.
 # 사용: python3 qmp_shots.py <출력디렉터리>  (QEMU는 -qmp unix:/tmp/qmp.sock 로 떠 있어야 함)
 import socket
 import json
@@ -33,11 +33,21 @@ def cmd(obj):
         return f"recv error: {e}"
 
 
+def enter():
+    return cmd({"execute": "sendkey",
+                "arguments": {"keys": [{"type": "qcode", "data": "ret"}]}})
+
+
 try:
     s.recv(65536)  # QMP greeting
     cmd({"execute": "qmp_capabilities"})
-    # TCG(소프트 에뮬)는 느리니 부팅하는 동안 45초 간격으로 6장.
-    for i in range(6):
+    # 부트 메뉴가 뜰 시간을 준 뒤 ENTER → 라이브 시스템 부팅 시작
+    time.sleep(25)
+    print("ENTER (부트메뉴):", enter())
+    time.sleep(5)
+    enter()  # 혹시 한 번 더 필요할 때 대비
+    # TCG(소프트 에뮬)는 매우 느리니 라이브 부팅이 끝날 때까지 길게 캡처.
+    for i in range(12):
         time.sleep(45)
         r = cmd({"execute": "screendump", "arguments": {"filename": f"{out}/shot{i}.ppm"}})
         print(f"shot{i}: {r}")

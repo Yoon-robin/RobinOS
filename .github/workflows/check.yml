@@ -1,0 +1,25 @@
+name: Check (analyze)
+
+# 빠른 검사 — 푸시마다 flutter analyze. (무거운 ISO 빌드는 build-iso.yml 에서 수동/on-demand)
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'robinos_native/**'
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.44.1
+      - name: Analyze
+        working-directory: robinos_native
+        run: |
+          flutter pub get
+          flutter analyze
