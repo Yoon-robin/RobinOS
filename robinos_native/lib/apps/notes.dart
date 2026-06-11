@@ -12,7 +12,8 @@ class NotesApp extends StatefulWidget {
 }
 
 class _NotesAppState extends State<NotesApp> {
-  static const _path = '/문서/메모.txt';
+  static const _dir = '/문서';
+  String _path = '/문서/메모.txt';
   final _ctrl = TextEditingController();
   bool _loaded = false;
   bool _saved = true;
@@ -22,7 +23,9 @@ class _NotesAppState extends State<NotesApp> {
     super.didChangeDependencies();
     if (!_loaded) {
       _loaded = true;
-      _ctrl.text = context.read<RobinFs>().get(_path)?.content ?? '';
+      final fs = context.read<RobinFs>();
+      if (!fs.exists(_path)) fs.write(_path, '');
+      _ctrl.text = fs.get(_path)?.content ?? '';
     }
   }
 
@@ -41,23 +44,61 @@ class _NotesAppState extends State<NotesApp> {
     });
   }
 
+  void _switchTo(String path) {
+    setState(() {
+      _path = path;
+      _ctrl.text = context.read<RobinFs>().get(path)?.content ?? '';
+    });
+  }
+
+  void _newNote() {
+    final fs = context.read<RobinFs>();
+    String p(String n) => '$_dir/$n';
+    var name = '새 메모.txt';
+    var n = 2;
+    while (fs.exists(p(name))) {
+      name = '새 메모 $n.txt';
+      n++;
+    }
+    fs.write(p(name), '');
+    _switchTo(p(name));
+  }
+
   @override
   Widget build(BuildContext context) {
     final sys = context.watch<SystemState>();
+    final fs = context.watch<RobinFs>();
+    final files = fs
+        .list(_dir)
+        .where((e) => !e.isDir && e.name.toLowerCase().endsWith('.txt'))
+        .toList();
     return Container(
       color: sys.windowSurface,
       child: Column(
         children: [
+          // 파일 탭 바 (/문서의 .txt 들 + 새 메모)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            height: 42,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             decoration: BoxDecoration(
               border: Border(bottom: BorderSide(color: sys.chromeBorder)),
             ),
             child: Row(
               children: [
-                Text('📄 $_path',
-                    style: TextStyle(fontSize: 12, color: sys.textSec(0.55))),
-                const Spacer(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        for (final e in files)
+                          _chip(sys, e.name, e.path == _path,
+                              () => _switchTo(e.path)),
+                        _newChip(sys),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Text(_saved ? '저장됨' : '저장 중…',
                     style: TextStyle(
                         fontSize: 11,
@@ -82,6 +123,43 @@ class _NotesAppState extends State<NotesApp> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _chip(SystemState sys, String label, bool active, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: active ? sys.accent.withValues(alpha: 0.18) : sys.textSec(0.06),
+          borderRadius: BorderRadius.circular(9),
+          border: Border.all(color: active ? sys.accent : Colors.transparent),
+        ),
+        child: Text(label,
+            style: TextStyle(
+                fontSize: 12,
+                color: active ? sys.textPrimary : sys.textSec(0.7),
+                fontWeight: active ? FontWeight.w600 : FontWeight.w400)),
+      ),
+    );
+  }
+
+  Widget _newChip(SystemState sys) {
+    return GestureDetector(
+      onTap: _newNote,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: sys.textSec(0.06),
+          borderRadius: BorderRadius.circular(9),
+        ),
+        child: Text('+ 새 메모', style: TextStyle(fontSize: 12, color: sys.accent)),
       ),
     );
   }
