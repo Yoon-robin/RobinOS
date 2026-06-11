@@ -68,6 +68,7 @@ class WinState {
   bool maximized;
   Offset? restorePos;
   Size? restoreSize;
+  Offset dragPointer = const Offset(-1, -1); // 타이틀바 드래그 중 커서 전역 위치
 
   WinState({
     required this.key,
@@ -196,12 +197,13 @@ class _DesktopState extends State<Desktop> {
 
   void _close(WinState w) => setState(() => _wins.remove(w));
 
-  void _move(WinState w, Offset delta) {
+  void _move(WinState w, DragUpdateDetails d) {
     if (w.maximized) return;
+    w.dragPointer = d.globalPosition;
     setState(() {
-      final nx = (w.pos.dx + delta.dx)
+      final nx = (w.pos.dx + d.delta.dx)
           .clamp(-w.size.width + 80.0, _deskSize.width - 80.0);
-      final ny = (w.pos.dy + delta.dy).clamp(32.0, _deskSize.height - 60.0);
+      final ny = (w.pos.dy + d.delta.dy).clamp(32.0, _deskSize.height - 60.0);
       w.pos = Offset(nx, ny);
     });
   }
@@ -215,6 +217,38 @@ class _DesktopState extends State<Desktop> {
           .clamp(160.0, (_deskSize.height - w.pos.dy).clamp(160.0, 4000.0));
       w.size = Size(nw, nh);
     });
+  }
+
+  // 드래그 종료 시 가장자리 스냅 — 커서가 닿은 화면 가장자리로 판정 (macOS식)
+  // 상단→최대화, 좌→왼쪽 절반, 우→오른쪽 절반
+  void _snap(WinState w) {
+    if (w.maximized) return;
+    final p = w.dragPointer;
+    w.dragPointer = const Offset(-1, -1);
+    if (p.dx < 0) return; // 드래그 정보 없음
+    final topH = _deskSize.height - 40 - 96;
+    if (p.dy <= 38) {
+      setState(() {
+        w.restorePos = w.pos;
+        w.restoreSize = w.size;
+        w.maximized = true;
+        w.pos = const Offset(8, 40);
+        w.size = Size(_deskSize.width - 16, topH);
+        w.z = ++_zTop;
+      });
+    } else if (p.dx <= 12) {
+      setState(() {
+        w.pos = const Offset(8, 40);
+        w.size = Size(_deskSize.width / 2 - 12, topH);
+        w.z = ++_zTop;
+      });
+    } else if (p.dx >= _deskSize.width - 12) {
+      setState(() {
+        w.pos = Offset(_deskSize.width / 2 + 4, 40);
+        w.size = Size(_deskSize.width / 2 - 12, topH);
+        w.z = ++_zTop;
+      });
+    }
   }
 
   void _toggleMin(WinState w) => setState(() => w.minimized = true);
@@ -296,6 +330,7 @@ class _DesktopState extends State<Desktop> {
                   focused: w == focused,
                   onFocus: () => _focus(w),
                   onMove: (d) => _move(w, d),
+                  onSnap: () => _snap(w),
                   onResize: (d) => _resize(w, d),
                   onClose: () => _close(w),
                   onMinimize: () => _toggleMin(w),
@@ -627,7 +662,8 @@ class RobinWindow extends StatelessWidget {
   final WinState win;
   final bool focused;
   final VoidCallback onFocus;
-  final ValueChanged<Offset> onMove;
+  final ValueChanged<DragUpdateDetails> onMove;
+  final VoidCallback onSnap;
   final ValueChanged<Offset> onResize;
   final VoidCallback onClose;
   final VoidCallback onMinimize;
@@ -639,6 +675,7 @@ class RobinWindow extends StatelessWidget {
     required this.focused,
     required this.onFocus,
     required this.onMove,
+    required this.onSnap,
     required this.onResize,
     required this.onClose,
     required this.onMinimize,
@@ -682,7 +719,8 @@ class RobinWindow extends StatelessWidget {
               children: [
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onPanUpdate: (d) => onMove(d.delta),
+                  onPanUpdate: (d) => onMove(d),
+                  onPanEnd: (_) => onSnap(),
                   onDoubleTap: onMaximize,
                   child: Container(
                     height: 38,
