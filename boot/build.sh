@@ -13,11 +13,19 @@ if [ ! -d config/includes.chroot/opt/robinos ]; then
   echo "    먼저 'flutter build linux --release' 후 bundle/ 을 거기로 복사하세요 (README 참고)."
 fi
 
-# 1) 부트스트랩 설정: Debian stable, amd64, 라이브 시스템
+# 1) 부트스트랩 설정: Debian bookworm, amd64, 라이브 시스템
+#    --mode debian + 데비안 미러를 명시 — 우분투 호스트(CI)에서 빌드해도
+#    우분투 기본값(archive.ubuntu.com)으로 새지 않도록.
 lb config \
+  --mode debian \
   --distribution bookworm \
   --architectures amd64 \
   --archive-areas "main contrib non-free non-free-firmware" \
+  --mirror-bootstrap http://deb.debian.org/debian/ \
+  --mirror-chroot http://deb.debian.org/debian/ \
+  --mirror-binary http://deb.debian.org/debian/ \
+  --mirror-chroot-security http://security.debian.org/debian-security/ \
+  --mirror-binary-security http://security.debian.org/debian-security/ \
   --debian-installer none \
   --bootappend-live "boot=live components quiet splash"
 
