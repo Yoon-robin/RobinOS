@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../system/system_state.dart';
 
@@ -116,12 +117,83 @@ class _CalculatorAppState extends State<CalculatorApp> {
     });
   }
 
+  void _backspace() {
+    setState(() {
+      if (_display == '오류' || _resetNext) {
+        _display = '0';
+        _resetNext = false;
+      } else if (_display.length <= 1 ||
+          (_display.length == 2 && _display.startsWith('-'))) {
+        _display = '0';
+      } else {
+        _display = _display.substring(0, _display.length - 1);
+      }
+    });
+  }
+
+  // 물리 키보드 입력 (숫자/연산자/Enter/백스페이스 등)
+  KeyEventResult _onKey(FocusNode node, KeyEvent e) {
+    if (e is! KeyDownEvent) return KeyEventResult.ignored;
+    final k = e.logicalKey;
+    if (k == LogicalKeyboardKey.enter || k == LogicalKeyboardKey.numpadEnter) {
+      _equals();
+      return KeyEventResult.handled;
+    }
+    if (k == LogicalKeyboardKey.backspace) {
+      _backspace();
+      return KeyEventResult.handled;
+    }
+    if (k == LogicalKeyboardKey.escape) {
+      _clear();
+      return KeyEventResult.handled;
+    }
+    final ch = e.character;
+    if (ch == null || ch.isEmpty) return KeyEventResult.ignored;
+    if (RegExp(r'^[0-9]$').hasMatch(ch)) {
+      _digit(ch);
+      return KeyEventResult.handled;
+    }
+    switch (ch) {
+      case '.':
+        _dot();
+        return KeyEventResult.handled;
+      case '+':
+        _setOp('+');
+        return KeyEventResult.handled;
+      case '-':
+        _setOp('−');
+        return KeyEventResult.handled;
+      case '*':
+      case 'x':
+      case 'X':
+        _setOp('×');
+        return KeyEventResult.handled;
+      case '/':
+        _setOp('÷');
+        return KeyEventResult.handled;
+      case '=':
+        _equals();
+        return KeyEventResult.handled;
+      case '%':
+        _percent();
+        return KeyEventResult.handled;
+      case 'c':
+      case 'C':
+        _clear();
+        return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
   @override
   Widget build(BuildContext context) {
     final sys = context.watch<SystemState>();
     final digitBg = sys.isLight ? const Color(0xFFE9E9EE) : const Color(0xFF2B2B33);
     final funcBg = sys.isLight ? const Color(0xFFD3D3DA) : const Color(0xFF3A3A44);
-    return Container(
+    return Focus(
+      autofocus: true,
+      onKeyEvent: _onKey,
+      child: Container(
       color: sys.isLight ? const Color(0xFFF3F3F6) : const Color(0xFF15151B),
       padding: const EdgeInsets.all(10),
       child: Column(
@@ -175,6 +247,7 @@ class _CalculatorAppState extends State<CalculatorApp> {
             _key('=', sys.accent, Colors.white, onTap: _equals),
           ]),
         ],
+      ),
       ),
     );
   }
