@@ -22,9 +22,14 @@ class SettingsApp extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              _segBtn(sys, '🌙 다크', !sys.isLight, () => sys.setLight(false)),
-              const SizedBox(width: 10),
-              _segBtn(sys, '☀️ 라이트', sys.isLight, () => sys.setLight(true)),
+              _segBtn(sys, '🌙 다크', sys.themeMode == 'dark',
+                  () => sys.setThemeMode('dark')),
+              const SizedBox(width: 8),
+              _segBtn(sys, '☀️ 라이트', sys.themeMode == 'light',
+                  () => sys.setThemeMode('light')),
+              const SizedBox(width: 8),
+              _segBtn(sys, '🕐 자동', sys.themeMode == 'auto',
+                  () => sys.setThemeMode('auto')),
             ],
           ),
           const SizedBox(height: 26),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -47,7 +48,9 @@ const kAccents = <Accent>[
 class SystemState extends ChangeNotifier {
   String _wallpaperId = 'aurora';
   String _accentId = 'blue';
-  bool _light = false;
+  bool _light = false; // 해석된 현재값 (팔레트 게터가 사용)
+  String _themeMode = 'dark'; // dark | light | auto
+  Timer? _autoTimer;
   double _brightness = 1.0;
   SharedPreferences? _prefs;
 
@@ -55,6 +58,7 @@ class SystemState extends ChangeNotifier {
   String get wallpaperId => _wallpaperId;
   String get accentId => _accentId;
   bool get isLight => _light;
+  String get themeMode => _themeMode;
   double get brightness => _brightness;
 
   Wallpaper get wallpaper => kWallpapers.firstWhere(
@@ -105,7 +109,10 @@ class SystemState extends ChangeNotifier {
     _prefs = await SharedPreferences.getInstance();
     _wallpaperId = _prefs?.getString('robinos.wallpaper') ?? 'aurora';
     _accentId = _prefs?.getString('robinos.accent') ?? 'blue';
-    _light = _prefs?.getBool('robinos.light') ?? false;
+    _themeMode = _prefs?.getString('robinos.thememode') ??
+        ((_prefs?.getBool('robinos.light') ?? false) ? 'light' : 'dark');
+    _applyMode();
+    _ensureAutoTimer();
     _brightness = _prefs?.getDouble('robinos.brightness') ?? 1.0;
     notifyListeners();
   }
@@ -122,13 +129,47 @@ class SystemState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setLight(bool v) {
-    _light = v;
-    _prefs?.setBool('robinos.light', v);
+  // 모드 → 실제 라이트 여부 계산 (자동은 시간대별: 07~19시 라이트)
+  void _applyMode() {
+    if (_themeMode == 'auto') {
+      final h = DateTime.now().hour;
+      _light = h >= 7 && h < 19;
+    } else {
+      _light = _themeMode == 'light';
+    }
+  }
+
+  // 자동 모드일 때만 주기적으로 재평가(경계에서 자동 전환)
+  void _ensureAutoTimer() {
+    _autoTimer?.cancel();
+    _autoTimer = null;
+    if (_themeMode == 'auto') {
+      _autoTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+        final was = _light;
+        _applyMode();
+        if (was != _light) notifyListeners();
+      });
+    }
+  }
+
+  void setThemeMode(String mode) {
+    _themeMode = mode;
+    _prefs?.setString('robinos.thememode', mode);
+    _applyMode();
+    _ensureAutoTimer();
     notifyListeners();
   }
 
-  void toggleTheme() => setLight(!_light);
+  // 하위호환: Robin·제어센터가 쓰는 명시 전환
+  void setLight(bool v) => setThemeMode(v ? 'light' : 'dark');
+
+  void toggleTheme() => setThemeMode(_light ? 'dark' : 'light');
+
+  @override
+  void dispose() {
+    _autoTimer?.cancel();
+    super.dispose();
+  }
 
   void setBrightness(double v) {
     _brightness = v.clamp(0.25, 1.0);
