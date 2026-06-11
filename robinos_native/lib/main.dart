@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'system/system_state.dart';
@@ -153,6 +154,51 @@ class _DesktopState extends State<Desktop> {
         _control = false;
         _ctx = null;
       });
+
+  bool get _anyOverlay =>
+      _spotlight || _launchpad || _mission || _control || _ctx != null;
+
+  // 전역 단축키 — TextField가 먼저 키를 소비하므로 입력과 충돌하지 않음.
+  // ⌘/Ctrl+Space=Spotlight, ⌘/Ctrl+K=Robin, ⌘/Ctrl+,=설정, Esc=닫기.
+  KeyEventResult _onKey(FocusNode _, KeyEvent e) {
+    if (e is! KeyDownEvent) return KeyEventResult.ignored;
+    final key = e.logicalKey;
+
+    if (key == LogicalKeyboardKey.escape) {
+      if (_anyOverlay) {
+        _closeOverlays();
+        return KeyEventResult.handled;
+      }
+      if (_robinOpen) {
+        setState(() => _robinOpen = false);
+        return KeyEventResult.handled;
+      }
+      return KeyEventResult.ignored;
+    }
+
+    final meta = HardwareKeyboard.instance.isMetaPressed ||
+        HardwareKeyboard.instance.isControlPressed;
+    if (!meta) return KeyEventResult.ignored;
+
+    if (key == LogicalKeyboardKey.space) {
+      setState(() {
+        _spotlight = !_spotlight;
+        if (_spotlight) {
+          _launchpad = _mission = _control = false;
+        }
+      });
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.keyK) {
+      setState(() => _robinOpen = !_robinOpen);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.comma) {
+      _openAppById('settings');
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
 
   void _openAppById(String id) {
     final match = kApps.where((a) => a.id == id);
@@ -343,7 +389,10 @@ class _DesktopState extends State<Desktop> {
       lock: _lock,
     );
     return Scaffold(
-      body: LayoutBuilder(
+      body: Focus(
+        autofocus: true,
+        onKeyEvent: _onKey,
+        child: LayoutBuilder(
         builder: (context, constraints) {
           _deskSize = Size(constraints.maxWidth, constraints.maxHeight);
           final visibleWins = _wins.where((w) => !w.minimized).toList()
@@ -444,6 +493,7 @@ class _DesktopState extends State<Desktop> {
             ],
           );
         },
+        ),
       ),
     );
   }
