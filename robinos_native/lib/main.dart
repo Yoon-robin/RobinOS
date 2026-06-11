@@ -206,6 +206,17 @@ class _DesktopState extends State<Desktop> {
     });
   }
 
+  void _resize(WinState w, Offset delta) {
+    if (w.maximized) return;
+    setState(() {
+      final nw = (w.size.width + delta.dx)
+          .clamp(240.0, (_deskSize.width - w.pos.dx).clamp(240.0, 4000.0));
+      final nh = (w.size.height + delta.dy)
+          .clamp(160.0, (_deskSize.height - w.pos.dy).clamp(160.0, 4000.0));
+      w.size = Size(nw, nh);
+    });
+  }
+
   void _toggleMin(WinState w) => setState(() => w.minimized = true);
 
   void _toggleMax(WinState w) {
@@ -285,6 +296,7 @@ class _DesktopState extends State<Desktop> {
                   focused: w == focused,
                   onFocus: () => _focus(w),
                   onMove: (d) => _move(w, d),
+                  onResize: (d) => _resize(w, d),
                   onClose: () => _close(w),
                   onMinimize: () => _toggleMin(w),
                   onMaximize: () => _toggleMax(w),
@@ -616,6 +628,7 @@ class RobinWindow extends StatelessWidget {
   final bool focused;
   final VoidCallback onFocus;
   final ValueChanged<Offset> onMove;
+  final ValueChanged<Offset> onResize;
   final VoidCallback onClose;
   final VoidCallback onMinimize;
   final VoidCallback onMaximize;
@@ -626,6 +639,7 @@ class RobinWindow extends StatelessWidget {
     required this.focused,
     required this.onFocus,
     required this.onMove,
+    required this.onResize,
     required this.onClose,
     required this.onMinimize,
     required this.onMaximize,
@@ -641,7 +655,11 @@ class RobinWindow extends StatelessWidget {
       height: win.size.height,
       child: Listener(
         onPointerDown: (_) => onFocus(),
-        child: DecoratedBox(
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(
+              child: DecoratedBox(
           decoration: BoxDecoration(
             color: sys.windowSurface.withValues(alpha: sys.isLight ? 0.96 : 0.92),
             borderRadius: BorderRadius.circular(14),
@@ -703,8 +721,57 @@ class RobinWindow extends StatelessWidget {
             ),
           ),
         ),
+            ),
+            if (!win.maximized) ..._resizeHandles(),
+          ],
+        ),
       ),
     );
+  }
+
+  // 창 가장자리/모서리 리사이즈 핸들 (최대화 상태가 아닐 때만)
+  List<Widget> _resizeHandles() {
+    return [
+      Positioned(
+        top: 8,
+        bottom: 14,
+        right: 0,
+        width: 6,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.resizeLeftRight,
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onPanUpdate: (d) => onResize(Offset(d.delta.dx, 0)),
+          ),
+        ),
+      ),
+      Positioned(
+        left: 8,
+        right: 14,
+        bottom: 0,
+        height: 6,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.resizeUpDown,
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onPanUpdate: (d) => onResize(Offset(0, d.delta.dy)),
+          ),
+        ),
+      ),
+      Positioned(
+        right: 0,
+        bottom: 0,
+        width: 18,
+        height: 18,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.resizeUpLeftDownRight,
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onPanUpdate: (d) => onResize(d.delta),
+          ),
+        ),
+      ),
+    ];
   }
 }
 
