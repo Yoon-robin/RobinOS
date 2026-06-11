@@ -65,3 +65,35 @@ jobs:
           path: boot/*.iso
           if-no-files-found: error
           retention-days: 14
+
+      # 가상화 없이 QEMU 소프트웨어 에뮬레이션(TCG)으로 ISO를 부팅해보고
+      # 부팅 중 화면을 여러 장 캡처 → 스크린샷 아티팩트. (best-effort)
+      - name: Boot-test ISO in QEMU (software emulation, no KVM)
+        continue-on-error: true
+        run: |
+          sudo apt-get install -y qemu-system-x86 imagemagick
+          ISO=$(ls boot/*.iso | head -n1)
+          echo "Booting $ISO in QEMU TCG (no KVM)…"
+          qemu-system-x86_64 -machine q35 -accel tcg -m 4096 -smp 2 \
+            -cdrom "$ISO" -boot d -vga virtio -display none \
+            -qmp unix:/tmp/qmp.sock,server,nowait \
+            -serial file:boot/boot-serial.log &
+          QPID=$!
+          python3 boot/qmp_shots.py /tmp || true
+          for f in /tmp/shot*.ppm; do
+            [ -f "$f" ] && convert "$f" "boot/$(basename "${f%.ppm}").png" || true
+          done
+          kill $QPID 2>/dev/null || true
+          ls -la boot/*.png 2>/dev/null || echo "no screenshots captured"
+
+      - name: Upload boot screenshots
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: robinos-boot-screenshots
+          path: |
+            boot/shot*.png
+            boot/boot-serial.log
+          if-no-files-found: warn
+          retention-days: 14

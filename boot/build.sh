@@ -24,8 +24,8 @@ lb config \
   --mirror-bootstrap http://deb.debian.org/debian/ \
   --mirror-chroot http://deb.debian.org/debian/ \
   --mirror-binary http://deb.debian.org/debian/ \
-  --mirror-chroot-security http://security.debian.org/debian-security/ \
-  --mirror-binary-security http://security.debian.org/debian-security/ \
+  --security false \
+  --updates true \
   --debian-installer none \
   --bootappend-live "boot=live components quiet splash"
 
