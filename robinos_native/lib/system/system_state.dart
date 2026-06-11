@@ -21,6 +21,9 @@ const kWallpapers = <Wallpaper>[
   Wallpaper('ocean', '오션', [Color(0xFF071A22), Color(0xFF0A2630), Color(0xFF03121A)]),
   Wallpaper('sakura', '사쿠라', [Color(0xFF24121C), Color(0xFF301826), Color(0xFF160A12)]),
   Wallpaper('graphite', '그래파이트', [Color(0xFF141416), Color(0xFF1C1C20), Color(0xFF0C0C0E)]),
+  Wallpaper('forest', '포레스트', [Color(0xFF0B1A12), Color(0xFF102A1C), Color(0xFF06120C)]),
+  Wallpaper('plum', '플럼', [Color(0xFF180C24), Color(0xFF221033), Color(0xFF0E0518)]),
+  Wallpaper('ember', '엠버', [Color(0xFF1F0E0A), Color(0xFF2C1510), Color(0xFF120705)]),
 ];
 
 class Accent {
@@ -37,6 +40,8 @@ const kAccents = <Accent>[
   Accent('teal', '틸', Color(0xFF38D6C4)),
   Accent('orange', '오렌지', Color(0xFFFF9F4A)),
   Accent('green', '그린', Color(0xFF49D17A)),
+  Accent('red', '레드', Color(0xFFFF5A5F)),
+  Accent('cyan', '시안', Color(0xFF37C8E8)),
 ];
 
 class SystemState extends ChangeNotifier {

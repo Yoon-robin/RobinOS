@@ -203,6 +203,8 @@ bool _accentAlias(String id, String m) {
     'teal': ['틸', '청록', '민트'],
     'orange': ['오렌지', '주황'],
     'green': ['초록', '그린', '녹색'],
+    'red': ['레드', '빨강', '빨간', '적색'],
+    'cyan': ['시안', '하늘', '하늘색'],
   };
   return alias[id]?.any(m.contains) ?? false;
 }
