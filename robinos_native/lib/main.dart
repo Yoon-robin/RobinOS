@@ -1235,7 +1235,7 @@ class _RobinPanelState extends State<RobinPanel> {
 // ===========================================================
 // 하단 독
 // ===========================================================
-class _Dock extends StatelessWidget {
+class _Dock extends StatefulWidget {
   final Set<String> openIds;
   final ValueChanged<AppDef> onTap;
   final bool robinActive;
@@ -1248,6 +1248,22 @@ class _Dock extends StatelessWidget {
     required this.onRobinTap,
     required this.onLaunchpad,
   });
+
+  @override
+  State<_Dock> createState() => _DockState();
+}
+
+class _DockState extends State<_Dock> {
+  int? _hovered; // 마우스가 올라간 앱 아이콘 인덱스
+
+  double _scaleFor(int i) {
+    if (_hovered == null) return 1.0;
+    final d = (i - _hovered!).abs();
+    if (d == 0) return 1.28;
+    if (d == 1) return 1.15;
+    if (d == 2) return 1.05;
+    return 1.0;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1272,7 +1288,7 @@ class _Dock extends StatelessWidget {
                 MouseRegion(
                   cursor: SystemMouseCursors.click,
                   child: GestureDetector(
-                    onTap: onLaunchpad,
+                    onTap: widget.onLaunchpad,
                     child: Container(
                       width: 52,
                       height: 52,
@@ -1302,12 +1318,20 @@ class _Dock extends StatelessWidget {
                   margin: const EdgeInsets.symmetric(horizontal: 8),
                   color: sys.textSec(0.15),
                 ),
-                for (final a in kApps)
+                for (int i = 0; i < kApps.length; i++)
                   _DockIcon(
-                    app: a,
-                    running: openIds.contains(a.id),
+                    app: kApps[i],
+                    running: widget.openIds.contains(kApps[i].id),
                     dotColor: sys.textSec(0.85),
-                    onTap: () => onTap(a),
+                    scale: _scaleFor(i),
+                    onHover: (h) => setState(() {
+                      if (h) {
+                        _hovered = i;
+                      } else if (_hovered == i) {
+                        _hovered = null;
+                      }
+                    }),
+                    onTap: () => widget.onTap(kApps[i]),
                   ),
                 Container(
                   width: 1,
@@ -1319,7 +1343,7 @@ class _Dock extends StatelessWidget {
                 MouseRegion(
                   cursor: SystemMouseCursors.click,
                   child: GestureDetector(
-                    onTap: onRobinTap,
+                    onTap: widget.onRobinTap,
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       width: 52,
@@ -1331,7 +1355,7 @@ class _Dock extends StatelessWidget {
                           end: Alignment.bottomRight,
                           colors: [sys.accent, sys.accent2],
                         ),
-                        border: robinActive
+                        border: widget.robinActive
                             ? Border.all(
                                 color: Colors.white.withValues(alpha: 0.9),
                                 width: 2.5)
@@ -1339,8 +1363,8 @@ class _Dock extends StatelessWidget {
                         boxShadow: [
                           BoxShadow(
                             color: sys.accent.withValues(
-                                alpha: robinActive ? 0.85 : 0.5),
-                            blurRadius: robinActive ? 28 : 20,
+                                alpha: widget.robinActive ? 0.85 : 0.5),
+                            blurRadius: widget.robinActive ? 28 : 20,
                           ),
                         ],
                       ),
@@ -1366,39 +1390,36 @@ class _Dock extends StatelessWidget {
   }
 }
 
-class _DockIcon extends StatefulWidget {
+class _DockIcon extends StatelessWidget {
   final AppDef app;
   final bool running;
   final Color dotColor;
+  final double scale;
+  final ValueChanged<bool> onHover;
   final VoidCallback onTap;
   const _DockIcon({
     required this.app,
     required this.running,
     required this.dotColor,
+    required this.scale,
+    required this.onHover,
     required this.onTap,
   });
 
   @override
-  State<_DockIcon> createState() => _DockIconState();
-}
-
-class _DockIconState extends State<_DockIcon> {
-  bool _hover = false;
-
-  @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      onEnter: (_) => setState(() => _hover = true),
-      onExit: (_) => setState(() => _hover = false),
+      onEnter: (_) => onHover(true),
+      onExit: (_) => onHover(false),
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: widget.onTap,
+        onTap: onTap,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             AnimatedScale(
-              scale: _hover ? 1.25 : 1.0,
-              duration: const Duration(milliseconds: 160),
+              scale: scale,
+              duration: const Duration(milliseconds: 140),
               curve: Curves.easeOut,
               child: Container(
                 width: 52,
@@ -1410,8 +1431,8 @@ class _DockIconState extends State<_DockIcon> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      widget.app.color,
-                      Color.lerp(widget.app.color, Colors.black, 0.25)!,
+                      app.color,
+                      Color.lerp(app.color, Colors.black, 0.25)!,
                     ],
                   ),
                   boxShadow: [
@@ -1423,10 +1444,7 @@ class _DockIconState extends State<_DockIcon> {
                   ],
                 ),
                 alignment: Alignment.center,
-                child: Text(
-                  widget.app.emoji,
-                  style: const TextStyle(fontSize: 26),
-                ),
+                child: Text(app.emoji, style: const TextStyle(fontSize: 26)),
               ),
             ),
             const SizedBox(height: 3),
@@ -1435,7 +1453,7 @@ class _DockIconState extends State<_DockIcon> {
               height: 4,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: widget.running ? widget.dotColor : Colors.transparent,
+                color: running ? dotColor : Colors.transparent,
               ),
             ),
           ],
