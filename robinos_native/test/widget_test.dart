@@ -1,14 +1,63 @@
-// RobinOS 네이티브 기본 스모크 테스트.
+// RobinOS 단위 테스트 — 순수 로직(시계 포맷 / Robin 로컬 두뇌).
+// provider·shared_preferences·위젯 펌프가 필요 없어 CI에서 안정적으로 돈다.
 import 'package:flutter_test/flutter_test.dart';
+import 'package:robinos_native/widgets/clock.dart';
+import 'package:robinos_native/robin/robin.dart';
 
-import 'package:robinos_native/main.dart';
+RobinActions _actions(Map<String, String> log) => RobinActions(
+      openApp: (id) => log['open'] = id,
+      apps: () => const [AppInfo('calc', '계산기'), AppInfo('notes', '메모')],
+      setTheme: (light) => log['theme'] = light ? 'light' : 'dark',
+      isLight: () => false,
+      setWallpaper: (id) => log['wallpaper'] = id,
+      setAccent: (id) => log['accent'] = id,
+      setBrightness: (v) => log['brightness'] = v.toStringAsFixed(2),
+      brightness: () => 1.0,
+    );
 
 void main() {
-  testWidgets('RobinOS desktop renders', (WidgetTester tester) async {
-    await tester.pumpWidget(const RobinOSApp());
+  group('clock format', () {
+    test('robinTime 오전/오후 경계', () {
+      expect(robinTime(DateTime(2026, 6, 12, 9, 5)), '오전 9:05');
+      expect(robinTime(DateTime(2026, 6, 12, 13, 30)), '오후 1:30');
+      expect(robinTime(DateTime(2026, 6, 12, 0, 0)), '오전 12:00');
+      expect(robinTime(DateTime(2026, 6, 12, 12, 0)), '오후 12:00');
+    });
+    test('robinBigTime / robinDate', () {
+      expect(robinBigTime(DateTime(2026, 6, 12, 8, 7)), '8:07');
+      // 2026-06-12 는 금요일
+      expect(robinDate(DateTime(2026, 6, 12)), '6월 12일 금요일');
+    });
+  });
 
-    // 데스크톱에 브랜드와 메뉴바가 떠야 한다.
-    expect(find.text('RobinOS'), findsWidgets);
-    expect(find.text('네이티브 빌드 · Flutter'), findsOneWidget);
+  group('localBrain 인텐트', () {
+    test('인사', () async {
+      final r = await localBrain('안녕', _actions({}));
+      expect(r.reply, contains('Robin'));
+    });
+    test('계산: 12 곱하기 9 = 108', () async {
+      final r = await localBrain('12 곱하기 9는?', _actions({}));
+      expect(r.reply, contains('108'));
+    });
+    test('다크모드 → setTheme(dark)', () async {
+      final log = <String, String>{};
+      await localBrain('다크모드 켜줘', _actions(log));
+      expect(log['theme'], 'dark');
+    });
+    test('라이트모드 → setTheme(light)', () async {
+      final log = <String, String>{};
+      await localBrain('라이트모드로', _actions(log));
+      expect(log['theme'], 'light');
+    });
+    test('앱 열기 → openApp(calc)', () async {
+      final log = <String, String>{};
+      await localBrain('계산기 열어', _actions(log));
+      expect(log['open'], 'calc');
+    });
+    test('강조색 핑크 → setAccent(pink)', () async {
+      final log = <String, String>{};
+      await localBrain('강조색 핑크로 바꿔', _actions(log));
+      expect(log['accent'], 'pink');
+    });
   });
 }

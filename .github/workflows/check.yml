@@ -18,8 +18,9 @@ jobs:
         with:
           channel: stable
           flutter-version: 3.44.1
-      - name: Analyze
+      - name: Analyze & test
         working-directory: robinos_native
         run: |
           flutter pub get
           flutter analyze
+          flutter test
