@@ -690,7 +690,15 @@ class RobinWindow extends StatelessWidget {
       top: win.pos.dy,
       width: win.size.width,
       height: win.size.height,
-      child: Listener(
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.0, end: 1.0),
+        duration: const Duration(milliseconds: 170),
+        curve: Curves.easeOutCubic,
+        builder: (context, t, child) => Opacity(
+          opacity: t.clamp(0.0, 1.0),
+          child: Transform.scale(scale: 0.94 + 0.06 * t, child: child),
+        ),
+        child: Listener(
         onPointerDown: (_) => onFocus(),
         child: Stack(
           clipBehavior: Clip.none,
@@ -763,6 +771,7 @@ class RobinWindow extends StatelessWidget {
             if (!win.maximized) ..._resizeHandles(),
           ],
         ),
+      ),
       ),
     );
   }
