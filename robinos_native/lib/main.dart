@@ -141,6 +141,27 @@ class _DesktopState extends State<Desktop> {
     if (match.isNotEmpty) _openApp(match.first);
   }
 
+  // 독 아이콘 우클릭 메뉴 (열기 / 닫기)
+  void _dockMenu(AppDef app, Offset pos) {
+    final running = _wins.any((w) => w.app.id == app.id);
+    setState(() {
+      _ctx = (
+        pos: pos,
+        items: [
+          CtxItem('열기', () => _openAppById(app.id), icon: Icons.launch),
+          if (running)
+            CtxItem(
+              '닫기',
+              () => setState(
+                  () => _wins.removeWhere((w) => w.app.id == app.id)),
+              icon: Icons.close,
+              danger: true,
+            ),
+        ],
+      );
+    });
+  }
+
   void _desktopMenu(Offset pos) {
     final sys = context.read<SystemState>();
     setState(() {
@@ -356,6 +377,7 @@ class _DesktopState extends State<Desktop> {
                   robinActive: _robinOpen,
                   onRobinTap: () => setState(() => _robinOpen = !_robinOpen),
                   onLaunchpad: () => setState(() => _launchpad = true),
+                  onAppContext: _dockMenu,
                 ),
               ),
               if (sys.brightness < 0.999)
@@ -1332,12 +1354,14 @@ class _Dock extends StatefulWidget {
   final bool robinActive;
   final VoidCallback onRobinTap;
   final VoidCallback onLaunchpad;
+  final void Function(AppDef, Offset) onAppContext;
   const _Dock({
     required this.openIds,
     required this.onTap,
     required this.robinActive,
     required this.onRobinTap,
     required this.onLaunchpad,
+    required this.onAppContext,
   });
 
   @override
@@ -1423,6 +1447,7 @@ class _DockState extends State<_Dock> {
                       }
                     }),
                     onTap: () => widget.onTap(kApps[i]),
+                    onContext: (pos) => widget.onAppContext(kApps[i], pos),
                   ),
                 Container(
                   width: 1,
@@ -1488,6 +1513,7 @@ class _DockIcon extends StatelessWidget {
   final double scale;
   final ValueChanged<bool> onHover;
   final VoidCallback onTap;
+  final void Function(Offset)? onContext;
   const _DockIcon({
     required this.app,
     required this.running,
@@ -1495,6 +1521,7 @@ class _DockIcon extends StatelessWidget {
     required this.scale,
     required this.onHover,
     required this.onTap,
+    this.onContext,
   });
 
   @override
@@ -1505,6 +1532,8 @@ class _DockIcon extends StatelessWidget {
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: onTap,
+        onSecondaryTapDown:
+            onContext == null ? null : (d) => onContext!(d.globalPosition),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
