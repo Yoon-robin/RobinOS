@@ -3,9 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../system/system_state.dart';
+import '../system/file_system.dart';
+import '../system/app_intents.dart';
 import '../apps/registry.dart';
 
-// Spotlight — 가운데 검색창에서 앱 검색 → Enter/클릭으로 실행.
+// Spotlight 검색 결과 한 줄(앱 또는 파일).
+class _Hit {
+  final String label;
+  final String badge; // '앱' / '메모'
+  final Color color;
+  final String emoji;
+  final VoidCallback onOpen;
+  const _Hit(this.label, this.badge, this.color, this.emoji, this.onOpen);
+}
+
+// Spotlight — 가운데 검색창에서 앱·메모 검색 → Enter/클릭으로 실행.
 class Spotlight extends StatefulWidget {
   final void Function(String id) onOpen;
   final VoidCallback onClose;
@@ -33,26 +45,41 @@ class _SpotlightState extends State<Spotlight> {
     super.dispose();
   }
 
-  List<AppDef> get _results {
+  List<_Hit> _hits(RobinFs fs) {
     final q = _q.trim().toLowerCase();
-    if (q.isEmpty) return kApps;
-    return kApps
-        .where((a) => a.name.toLowerCase().contains(q) || a.id.contains(q))
-        .toList();
+    final apps = (q.isEmpty
+            ? kApps
+            : kApps.where(
+                (a) => a.name.toLowerCase().contains(q) || a.id.contains(q)))
+        .map((a) => _Hit(a.name, '앱', a.color, a.emoji, () {
+              widget.onOpen(a.id);
+              widget.onClose();
+            }));
+    // 메모/문서(.txt) 전역 검색 → 선택 시 메모 앱에서 열기
+    final files = q.isEmpty
+        ? const <_Hit>[]
+        : fs.entries
+            .where((e) =>
+                !e.isDir &&
+                e.name.toLowerCase().endsWith('.txt') &&
+                e.name.toLowerCase().contains(q))
+            .map((e) => _Hit(e.name, '메모', const Color(0xFF4AA3FF), '📄', () {
+                  notesOpenTarget.value = e.path;
+                  widget.onClose();
+                }));
+    return [...apps, ...files];
   }
 
-  void _openFirst() {
-    final r = _results;
-    if (r.isNotEmpty) {
-      widget.onOpen(r.first.id);
-      widget.onClose();
-    }
+  void _openFirst(RobinFs fs) {
+    final r = _hits(fs);
+    if (r.isNotEmpty) r.first.onOpen();
   }
 
   @override
   Widget build(BuildContext context) {
     final sys = context.watch<SystemState>();
-    final results = _results;
+    final fs = context.watch<RobinFs>();
+    final results = _hits(fs);
     return Stack(
       children: [
         Positioned.fill(
@@ -106,7 +133,7 @@ class _SpotlightState extends State<Spotlight> {
                             controller: _ctrl,
                             focusNode: _focus,
                             onChanged: (v) => setState(() => _q = v),
-                            onSubmitted: (_) => _openFirst(),
+                            onSubmitted: (_) => _openFirst(fs),
                             style: TextStyle(fontSize: 19, color: sys.textPrimary),
                             decoration: InputDecoration(
                               isCollapsed: true,
@@ -148,12 +175,9 @@ class _SpotlightState extends State<Spotlight> {
     );
   }
 
-  Widget _resultRow(SystemState sys, AppDef a) {
+  Widget _resultRow(SystemState sys, _Hit h) {
     return GestureDetector(
-      onTap: () {
-        widget.onOpen(a.id);
-        widget.onClose();
-      },
+      onTap: h.onOpen,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
         margin: const EdgeInsets.symmetric(vertical: 1),
@@ -165,17 +189,21 @@ class _SpotlightState extends State<Spotlight> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(9),
                 gradient: LinearGradient(
-                  colors: [a.color, Color.lerp(a.color, Colors.black, 0.25)!],
+                  colors: [h.color, Color.lerp(h.color, Colors.black, 0.25)!],
                 ),
               ),
               alignment: Alignment.center,
-              child: Text(a.emoji, style: const TextStyle(fontSize: 18)),
+              child: Text(h.emoji, style: const TextStyle(fontSize: 18)),
             ),
             const SizedBox(width: 12),
-            Text(a.name,
-                style: TextStyle(fontSize: 14.5, color: sys.textPrimary)),
-            const Spacer(),
-            Text('앱', style: TextStyle(fontSize: 12, color: sys.textSec(0.4))),
+            Expanded(
+              child: Text(h.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 14.5, color: sys.textPrimary)),
+            ),
+            const SizedBox(width: 8),
+            Text(h.badge, style: TextStyle(fontSize: 12, color: sys.textSec(0.4))),
           ],
         ),
       ),

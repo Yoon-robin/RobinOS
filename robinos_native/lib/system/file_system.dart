@@ -66,6 +66,9 @@ class RobinFs extends ChangeNotifier {
   FsEntry? get(String path) => _map[path];
   bool exists(String path) => _map.containsKey(path);
 
+  // 전체 항목 (Spotlight 전역 검색 등)
+  List<FsEntry> get entries => _map.values.toList();
+
   void _mkdir(String path) => _map[path] = FsEntry(path, true);
   void _set(String path, String content) =>
       _map[path] = FsEntry(path, false, content);
