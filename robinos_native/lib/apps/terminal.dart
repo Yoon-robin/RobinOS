@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../system/file_system.dart';
+import '../widgets/clock.dart';
 
 // 터미널 — 가상 파일시스템 위에서 도는 미니 셸
 class TerminalApp extends StatefulWidget {
@@ -47,7 +48,9 @@ class _TerminalAppState extends State<TerminalApp> {
       case '':
         break;
       case 'help':
-        _lines.add('명령어: help, ls, cd <폴더>, pwd, cat <파일>, echo <텍스트>, whoami, robinos, clear');
+        _lines.add('명령어: help, ls, cd <폴더>, pwd, cat <파일>, echo <텍스트>,');
+        _lines.add('        mkdir <폴더>, touch <파일>, rm <대상>, mv <원래> <새이름>,');
+        _lines.add('        date, whoami, robinos, clear');
         break;
       case 'ls':
         final items = fs.list(_dir);
@@ -84,6 +87,56 @@ class _TerminalAppState extends State<TerminalApp> {
         break;
       case 'echo':
         _lines.add(arg);
+        break;
+      case 'mkdir':
+        if (arg.isEmpty) {
+          _lines.add('mkdir: 폴더 이름을 입력하세요');
+        } else {
+          fs.mkdir(_dir, arg);
+          _lines.add('폴더 만듦: $arg');
+        }
+        break;
+      case 'touch':
+        if (arg.isEmpty) {
+          _lines.add('touch: 파일 이름을 입력하세요');
+        } else {
+          final p = _dir == '/' ? '/$arg' : '$_dir/$arg';
+          if (!fs.exists(p)) fs.write(p, '');
+          _lines.add('파일 만듦: $arg');
+        }
+        break;
+      case 'rm':
+        if (arg.isEmpty) {
+          _lines.add('rm: 대상을 입력하세요');
+        } else {
+          final p = arg.startsWith('/')
+              ? arg
+              : (_dir == '/' ? '/$arg' : '$_dir/$arg');
+          if (fs.exists(p)) {
+            fs.delete(p);
+            _lines.add('삭제: $arg');
+          } else {
+            _lines.add('rm: $arg: 그런 항목이 없어요');
+          }
+        }
+        break;
+      case 'mv':
+        final mv = arg.split(RegExp(r'\s+'));
+        if (mv.length < 2 || mv[0].isEmpty) {
+          _lines.add('사용법: mv <원래> <새이름>');
+        } else {
+          final from = mv[0].startsWith('/')
+              ? mv[0]
+              : (_dir == '/' ? '/${mv[0]}' : '$_dir/${mv[0]}');
+          final to = fs.rename(from, mv[1]);
+          _lines.add(to == null
+              ? 'mv: 실패 (대상이 없거나 이름이 겹쳐요)'
+              : '이름 변경: ${mv[0]} → ${mv[1]}');
+        }
+        break;
+      case 'date':
+        final now = DateTime.now();
+        _lines.add('${robinDate(now)} ${robinTime(now)}');
         break;
       case 'whoami':
         _lines.add('robin');
