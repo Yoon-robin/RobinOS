@@ -1,0 +1,48 @@
+name: Boot-test RobinOS ISO
+
+# 기존 build-iso 아티팩트(ISO)를 받아 QEMU 부팅테스트만 빠르게(~3분) 돌린다.
+# ISO를 다시 굽지 않으므로 부팅 디버깅 반복이 8배 빠름.
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'ISO를 가져올 build-iso 실행 ID (비우면 최신 성공 빌드)'
+        required: false
+
+jobs:
+  boottest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download ISO from build-iso run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RID="${{ github.event.inputs.run_id }}"
+          if [ -z "$RID" ]; then
+            RID=$(gh run list --workflow=build-iso.yml --status success --limit 1 \
+                  --json databaseId -q '.[0].databaseId')
+          fi
+          echo "ISO를 build-iso run $RID 에서 받음"
+          mkdir -p boot
+          gh run download "$RID" -n robinos-iso -D boot
+          ls -la boot/*.iso
+
+      - name: Boot-test (direct kernel, no KVM)
+        continue-on-error: true
+        run: bash boot/boottest.sh
+
+      - name: Upload screenshots + serial log
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: robinos-boot-screenshots
+          path: |
+            boot/shot*.png
+            boot/boot-serial.log
+          if-no-files-found: warn
+          retention-days: 14
