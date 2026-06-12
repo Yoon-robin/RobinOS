@@ -31,6 +31,11 @@ if command -v ollama >/dev/null 2>&1; then
   ollama serve >/var/log/ollama.log 2>&1 &
 fi
 
+# 오디오 스택 — pipewire 사운드서버 + 세션관리 시작(볼륨/소리 wpctl 동작 전제).
+for a in pipewire wireplumber pipewire-pulse; do
+  command -v "$a" >/dev/null 2>&1 && "$a" >/dev/null 2>&1 &
+done
+
 echo "ROBINOS-SESSION: launching cage + /opt/robinos/robinos_native" >&2
 # cage 로 RobinOS 바이너리만 풀스크린.
 exec cage -- /opt/robinos/robinos_native

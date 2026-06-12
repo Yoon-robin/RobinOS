@@ -17,6 +17,12 @@ fonts-noto-color-emoji
 network-manager
 # 밝기 제어 (Phase C: brightnessctl)
 brightnessctl
+# 볼륨/오디오 (Phase C: wpctl) — pipewire 사운드서버 + wireplumber 세션관리 + pulse 호환
+pipewire
+pipewire-pulse
+wireplumber
+# 블루투스 on/off (Phase C: rfkill)
+rfkill
 # 기본 유틸
 curl
 ca-certificates
