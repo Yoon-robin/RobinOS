@@ -378,6 +378,40 @@ class _LinuxBackend implements PlatformBackend {
     await _run('sudo', ['timedatectl', 'set-timezone', tz]);
   }
 
+  @override
+  Future<DisplayInfo?> displayInfo() async {
+    try {
+      final r = await Process.run('wlr-randr', const <String>[]);
+      if (r.exitCode != 0) return null;
+      String? output;
+      final modes = <String>[];
+      String? current;
+      for (final line in '${r.stdout}'.split('\n')) {
+        if (line.isEmpty) continue;
+        if (!line.startsWith(' ') && !line.startsWith('\t')) {
+          if (output != null) break; // 첫 출력만 다룬다.
+          output = line.split(RegExp(r'\s+')).first.trim();
+        } else {
+          final m = RegExp(r'(\d{3,}x\d{3,})\s*px').firstMatch(line);
+          if (m != null) {
+            final mode = m.group(1)!;
+            if (!modes.contains(mode)) modes.add(mode);
+            if (line.contains('current')) current = mode;
+          }
+        }
+      }
+      if (output == null || modes.isEmpty) return null;
+      return DisplayInfo(output, modes, current);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Future<void> setDisplayMode(String output, String mode) async {
+    await _run('wlr-randr', ['--output', output, '--mode', mode]);
+  }
+
   Future<void> _run(String exe, List<String> args) async {
     try {
       await Process.run(exe, args);
@@ -455,4 +489,8 @@ class _NoopBackend implements PlatformBackend {
   Future<String?> currentTimezone() async => null;
   @override
   Future<void> setTimezone(String tz) async {}
+  @override
+  Future<DisplayInfo?> displayInfo() async => null;
+  @override
+  Future<void> setDisplayMode(String output, String mode) async {}
 }

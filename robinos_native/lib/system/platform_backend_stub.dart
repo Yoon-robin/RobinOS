@@ -70,4 +70,8 @@ class _StubBackend implements PlatformBackend {
   Future<String?> currentTimezone() async => null;
   @override
   Future<void> setTimezone(String tz) async {}
+  @override
+  Future<DisplayInfo?> displayInfo() async => null;
+  @override
+  Future<void> setDisplayMode(String output, String mode) async {}
 }

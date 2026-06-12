@@ -29,6 +29,8 @@ rfkill
 bluez
 # 스크린샷 (Robin '스크린샷' / grim — wlr-screencopy, sway에서 동작)
 grim
+# 디스플레이 해상도 변경 (설정 > 디스플레이 — wlr-randr, sway)
+wlr-randr
 # 경량 Wayland 터미널 — 런치패드 '설치된 앱'에 잡히는 첫 실제 앱 + 멀티윈도 검증용.
 foot
 # 기본 데스크톱 앱 — 런치패드 '설치된 앱'에 표시(칼리/우분투처럼 실사용 앱 구색).

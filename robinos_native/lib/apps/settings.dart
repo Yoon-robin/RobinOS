@@ -110,6 +110,10 @@ class SettingsApp extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 26),
+          _section(sys, '디스플레이'),
+          const SizedBox(height: 10),
+          const _DisplaySettings(),
+          const SizedBox(height: 26),
           _section(sys, '네트워크'),
           const SizedBox(height: 10),
           const _WifiSettings(),
@@ -1036,6 +1040,133 @@ class _TimeSettingsState extends State<_TimeSettings> {
           ),
         ),
         child: Text(label,
+            style: TextStyle(
+                fontSize: 13,
+                fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                color: active ? sys.accent : sys.textPrimary)),
+      ),
+    );
+  }
+
+  Widget _hintBox(SystemState sys, String text) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: sys.textSec(0.05),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(text,
+            style:
+                TextStyle(fontSize: 12, color: sys.textSec(0.55), height: 1.4)),
+      );
+}
+
+// -----------------------------------------------------------
+// 디스플레이 — 출력 해상도 변경 (리눅스: wlr-randr, sway). 웹/개발은 안내만.
+// -----------------------------------------------------------
+class _DisplaySettings extends StatefulWidget {
+  const _DisplaySettings();
+
+  @override
+  State<_DisplaySettings> createState() => _DisplaySettingsState();
+}
+
+class _DisplaySettingsState extends State<_DisplaySettings> {
+  DisplayInfo? _info;
+  bool _loaded = false;
+  String? _status;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final i = await platformBackend.displayInfo();
+    if (!mounted) return;
+    setState(() {
+      _info = i;
+      _loaded = true;
+    });
+  }
+
+  Future<void> _set(String mode) async {
+    final info = _info;
+    if (info == null) return;
+    setState(() => _status = null);
+    await platformBackend.setDisplayMode(info.output, mode);
+    await Future.delayed(const Duration(milliseconds: 400));
+    await _load();
+    if (!mounted) return;
+    setState(() => _status = '해상도를 $mode(으)로 바꿨어요.');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sys = context.watch<SystemState>();
+    if (!platformBackend.isReal) {
+      return _hintBox(sys, '디스플레이 해상도 변경은 리눅스 실기기(sway)에서 돼요.');
+    }
+    if (!_loaded) return _hintBox(sys, '디스플레이 정보를 읽는 중…');
+    final info = _info;
+    if (info == null) {
+      return _hintBox(sys, '디스플레이 정보를 가져오지 못했어요. (wlr-randr)');
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text('출력 ${info.output}',
+                style: TextStyle(fontSize: 12, color: sys.textSec(0.6))),
+            const Spacer(),
+            if (info.current != null)
+              Text(info.current!,
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: sys.accent,
+                      fontWeight: FontWeight.w600)),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (var i = 0; i < info.modes.length; i++)
+              StaggerIn(
+                index: i,
+                child:
+                    _chip(sys, info.modes[i], info.current == info.modes[i]),
+              ),
+          ],
+        ),
+        if (_status != null) ...[
+          const SizedBox(height: 8),
+          Text(_status!,
+              style: TextStyle(fontSize: 11.5, color: sys.textSec(0.6))),
+        ],
+      ],
+    );
+  }
+
+  Widget _chip(SystemState sys, String mode, bool active) {
+    return GestureDetector(
+      onTap: active ? null : () => _set(mode),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          color:
+              active ? sys.accent.withValues(alpha: 0.16) : sys.textSec(0.05),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: active ? sys.accent : sys.textSec(0.12),
+            width: active ? 1.5 : 1,
+          ),
+        ),
+        child: Text(mode,
             style: TextStyle(
                 fontSize: 13,
                 fontWeight: active ? FontWeight.w600 : FontWeight.w400,

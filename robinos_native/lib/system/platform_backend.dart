@@ -41,6 +41,14 @@ class BatteryInfo {
   const BatteryInfo(this.level, this.charging);
 }
 
+// 디스플레이 출력 정보 (wlr-randr). 웹/도구부재: null.
+class DisplayInfo {
+  final String output; // 출력 이름(예: 'HDMI-A-1', 'eDP-1')
+  final List<String> modes; // 해상도 목록(예: '1920x1080') — 중복 제거
+  final String? current; // 현재 해상도
+  const DisplayInfo(this.output, this.modes, this.current);
+}
+
 // 블루투스 기기 (bluetoothctl). 웹/스텁에선 만들어지지 않음.
 class BtDevice {
   final String mac;
@@ -126,6 +134,12 @@ abstract class PlatformBackend {
   Future<String?> currentTimezone();
   // 시간대 변경(리눅스: sudo timedatectl set-timezone). 웹/도구부재: no-op.
   Future<void> setTimezone(String tz);
+
+  // === 디스플레이 (리눅스: wlr-randr, sway에서 동작) ===
+  // 첫 출력의 해상도 정보. 웹/도구부재: null.
+  Future<DisplayInfo?> displayInfo();
+  // 해상도 변경(리눅스: wlr-randr --output X --mode WxH). 웹/도구부재: no-op.
+  Future<void> setDisplayMode(String output, String mode);
 }
 
 // 플랫폼별 구현 인스턴스 — 조건부 import가 createPlatformBackend()를 제공.
