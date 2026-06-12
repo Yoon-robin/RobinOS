@@ -114,9 +114,11 @@ class _DesktopState extends State<Desktop> {
   bool _control = false;
   ({Offset pos, List<CtxItem> items})? _ctx;
 
-  // 알림
+  // 알림 — _notifs는 누적 히스토리(알림 센터), _activeToasts는 지금 화면에 떠있는 토스트 id.
   final List<NotifItem> _notifs = [];
+  final Set<int> _activeToasts = {};
   int _notifSeq = 0;
+  bool _notifCenter = false;
 
   @override
   void initState() {
@@ -151,13 +153,23 @@ class _DesktopState extends State<Desktop> {
 
   void _notify(String icon, String title, String body) {
     final id = ++_notifSeq;
-    setState(() => _notifs.add(NotifItem(id, icon, title, body)));
+    setState(() {
+      _notifs.add(NotifItem(id, icon, title, body));
+      _activeToasts.add(id);
+    });
+    // 5초 뒤 토스트만 사라지고, 알림은 센터 히스토리에 남는다.
     Timer(const Duration(seconds: 5), () => _dismissNotif(id));
   }
 
+  // 토스트 닫기 — 화면에서만 치우고 히스토리는 보존.
   void _dismissNotif(int id) {
-    if (mounted) setState(() => _notifs.removeWhere((n) => n.id == id));
+    if (mounted) setState(() => _activeToasts.remove(id));
   }
+
+  void _clearNotifs() => setState(() {
+        _notifs.clear();
+        _activeToasts.clear();
+      });
 
   void _unlock() {
     setState(() => _locked = false);
@@ -169,11 +181,17 @@ class _DesktopState extends State<Desktop> {
         _launchpad = false;
         _mission = false;
         _control = false;
+        _notifCenter = false;
         _ctx = null;
       });
 
   bool get _anyOverlay =>
-      _spotlight || _launchpad || _mission || _control || _ctx != null;
+      _spotlight ||
+      _launchpad ||
+      _mission ||
+      _control ||
+      _notifCenter ||
+      _ctx != null;
 
   // 전역 단축키 — TextField가 먼저 키를 소비하므로 입력과 충돌하지 않음.
   // ⌘/Ctrl+Space=Spotlight, ⌘/Ctrl+K=Robin, ⌘/Ctrl+,=설정, Esc=닫기.
@@ -481,6 +499,8 @@ class _DesktopState extends State<Desktop> {
                   onSearch: () => setState(() => _spotlight = true),
                   onMission: () => setState(() => _mission = true),
                   onControl: () => setState(() => _control = true),
+                  onNotifCenter: () => setState(() => _notifCenter = true),
+                  notifCount: _notifs.length,
                 ),
               ),
               Align(
@@ -527,7 +547,17 @@ class _DesktopState extends State<Desktop> {
                   onSelect: _restore,
                   onClose: _closeOverlays,
                 ),
-              Toasts(items: _notifs, onDismiss: _dismissNotif),
+              Toasts(
+                items:
+                    _notifs.where((n) => _activeToasts.contains(n.id)).toList(),
+                onDismiss: _dismissNotif,
+              ),
+              if (_notifCenter)
+                NotificationCenter(
+                  items: _notifs,
+                  onClose: () => setState(() => _notifCenter = false),
+                  onClearAll: _clearNotifs,
+                ),
               if (_ctx != null)
                 ContextMenu(
                   pos: _ctx!.pos,
@@ -685,13 +715,16 @@ class _Welcome extends StatelessWidget {
 // -----------------------------------------------------------
 class _MenuBar extends StatelessWidget {
   final String activeApp;
-  final VoidCallback onLogo, onSearch, onMission, onControl;
+  final VoidCallback onLogo, onSearch, onMission, onControl, onNotifCenter;
+  final int notifCount;
   const _MenuBar({
     required this.activeApp,
     required this.onLogo,
     required this.onSearch,
     required this.onMission,
     required this.onControl,
+    required this.onNotifCenter,
+    required this.notifCount,
   });
 
   @override
@@ -757,6 +790,33 @@ class _MenuBar extends StatelessWidget {
                       const SizedBox(width: 6),
                       Icon(Icons.battery_full,
                           size: 15, color: sys.textSec(0.8)),
+                    ],
+                  ),
+                ),
+              ),
+              // 알림 센터 종 아이콘 (누적 알림 있으면 점 배지)
+              _hover(
+                onTap: onNotifCenter,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Icon(Icons.notifications_none,
+                          size: 16, color: sys.textSec(0.8)),
+                      if (notifCount > 0)
+                        Positioned(
+                          right: -2,
+                          top: -1,
+                          child: Container(
+                            width: 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                              color: sys.accent,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
