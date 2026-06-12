@@ -9,6 +9,11 @@ on:
         description: 'ISO를 가져올 build-iso 실행 ID (비우면 최신 성공 빌드)'
         required: false
 
+# 다른 실행의 ISO 아티팩트를 gh로 받으려면 actions:read 필요 (기본 토큰엔 없음 → 403).
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   boottest:
     runs-on: ubuntu-latest
