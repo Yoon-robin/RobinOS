@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../system/file_system.dart';
+import '../system/platform_backend.dart';
 import '../widgets/clock.dart';
 
-// 터미널 — 가상 파일시스템 위에서 도는 미니 셸
+// 터미널 — 리눅스 실기기면 진짜 bash, 그 외엔 RobinFs 가상 셸
 class TerminalApp extends StatefulWidget {
   const TerminalApp({super.key});
 
@@ -18,7 +19,50 @@ class _TerminalAppState extends State<TerminalApp> {
   final List<String> _lines = [
     'RobinOS 터미널 — "help" 입력',
   ];
-  String _dir = '/';
+  String _dir = '/'; // RobinFs 가상 셸용 현재 폴더
+  String _realCwd = ''; // 진짜 bash용 현재 디렉터리(빈 값=홈)
+
+  bool get _isReal => platformBackend.isReal;
+  String get _promptDir => _isReal ? (_realCwd.isEmpty ? '~' : _realCwd) : _dir;
+
+  // 진짜 bash 실행 (리눅스). cd는 cwd 추적, 나머지는 bash -c.
+  Future<void> _runReal(String cmd) async {
+    setState(() => _ctrl.clear());
+    if (cmd.isEmpty) {
+      _scrollDown();
+      _focus.requestFocus();
+      return;
+    }
+    if (cmd == 'clear') {
+      setState(() => _lines.clear());
+      _focus.requestFocus();
+      return;
+    }
+    if (cmd == 'cd' || cmd.startsWith('cd ')) {
+      final target = cmd == 'cd' ? r'$HOME' : cmd.substring(3).trim();
+      final out = await platformBackend.runShell('cd $target && pwd', _realCwd);
+      if (!mounted) return;
+      final p = (out ?? '').trim();
+      setState(() {
+        if (p.startsWith('/') && !p.contains('\n')) {
+          _realCwd = p;
+        } else if (p.isNotEmpty) {
+          _lines.add(p);
+        }
+      });
+      _scrollDown();
+      _focus.requestFocus();
+      return;
+    }
+    final out = await platformBackend.runShell(cmd, _realCwd);
+    if (!mounted) return;
+    setState(() {
+      final text = (out ?? '').trimRight();
+      if (text.isNotEmpty) _lines.add(text);
+    });
+    _scrollDown();
+    _focus.requestFocus();
+  }
 
   @override
   void dispose() {
@@ -37,9 +81,13 @@ class _TerminalAppState extends State<TerminalApp> {
   }
 
   void _run(String raw) {
-    final fs = context.read<RobinFs>();
     final cmd = raw.trim();
-    _lines.add('robin@robinos:$_dir\$ $cmd');
+    _lines.add('robin@robinos:$_promptDir\$ $cmd');
+    if (_isReal) {
+      _runReal(cmd);
+      return;
+    }
+    final fs = context.read<RobinFs>();
     final parts = cmd.split(RegExp(r'\s+'));
     final name = parts.isEmpty ? '' : parts.first;
     final arg = parts.length > 1 ? parts.sublist(1).join(' ') : '';
@@ -204,7 +252,7 @@ class _TerminalAppState extends State<TerminalApp> {
             ),
             Row(
               children: [
-                Text('robin@robinos:$_dir\$ ',
+                Text('robin@robinos:$_promptDir\$ ',
                     style: const TextStyle(
                         fontFamily: 'monospace', fontSize: 13, color: green)),
                 Expanded(

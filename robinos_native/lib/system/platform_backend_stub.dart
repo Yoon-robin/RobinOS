@@ -29,4 +29,7 @@ class _StubBackend implements PlatformBackend {
 
   @override
   Future<void> runInstaller() async {}
+
+  @override
+  Future<String?> runShell(String cmd, String cwd) async => null;
 }

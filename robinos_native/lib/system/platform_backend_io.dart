@@ -42,6 +42,17 @@ class _LinuxBackend implements PlatformBackend {
   Future<void> runInstaller() async =>
       _run('sh', ['-c', 'sudo -E calamares || calamares']);
 
+  @override
+  Future<String?> runShell(String cmd, String cwd) async {
+    try {
+      final r = await Process.run('bash', ['-c', cmd],
+          workingDirectory: cwd.isEmpty ? null : cwd);
+      return '${r.stdout}${r.stderr}';
+    } catch (e) {
+      return 'shell 오류: $e\n';
+    }
+  }
+
   Future<void> _run(String exe, List<String> args) async {
     try {
       await Process.run(exe, args);
@@ -78,4 +89,7 @@ class _NoopBackend implements PlatformBackend {
 
   @override
   Future<void> runInstaller() async {}
+
+  @override
+  Future<String?> runShell(String cmd, String cwd) async => null;
 }

@@ -32,6 +32,10 @@ abstract class PlatformBackend {
 
   // RobinOS를 디스크에 설치 (리눅스: Calamares 그래픽 설치기 실행). 웹/도구부재 시 no-op.
   Future<void> runInstaller();
+
+  // 실제 셸 명령 실행 (리눅스: bash -c, stdout+stderr 반환).
+  // 웹/비리눅스: null → 터미널이 RobinFs 가짜 셸로 폴백.
+  Future<String?> runShell(String cmd, String cwd);
 }
 
 // 플랫폼별 구현 인스턴스 — 조건부 import가 createPlatformBackend()를 제공.
