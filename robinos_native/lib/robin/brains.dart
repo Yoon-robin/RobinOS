@@ -22,7 +22,9 @@ const _kDeepseekKey = 'robinos.deepseek.key';
 
 const kOllamaDefaultUrl = 'http://localhost:11434/v1';
 // 기본 내장 모델 = abliterated(거부 제거) → Robin이 "못 합니다" 안 함.
-const kOllamaDefaultModel = 'huihui_ai/qwen2.5-abliterate:7b';
+// ISO에 내장(embed_ai)하는 모델과 반드시 일치해야 함(불일치면 ollamaBrain이 모델없음 오류).
+// 3b = 검열해제 + 1.9GB로 실용/경량 균형. 더 똑똑하게는 7b로 재빌드.
+const kOllamaDefaultModel = 'huihui_ai/qwen2.5-abliterate:3b';
 
 // 모델 프리셋 — 사용자가 탭으로 고르거나, 칸에 직접 아무 모델이나 입력 가능.
 const kModelPresets = <(String, String)>[
@@ -155,19 +157,40 @@ Future<RobinResult> deepseekBrain(String msg, RobinActions a) async {
   );
 }
 
+// Ollama 서버가 떠 있는지 빠르게 확인(2초). 자동 두뇌 선택용.
+Future<bool> _ollamaUp() async {
+  try {
+    final p = await SharedPreferences.getInstance();
+    final url = p.getString(_kOllamaUrl) ?? kOllamaDefaultUrl;
+    final base = url.replaceAll('/v1', '');
+    final res = await http
+        .get(Uri.parse('$base/api/tags'))
+        .timeout(const Duration(seconds: 2));
+    return res.statusCode == 200;
+  } catch (_) {
+    return false;
+  }
+}
+
 // 저장된 두뇌 선택 적용 (부팅 시 + 설정 변경 시)
 Future<void> applySavedBrain() async {
   final p = await SharedPreferences.getInstance();
-  switch (p.getString(_kBrain)) {
-    case 'ollama':
-      setRobinBrain(ollamaBrain);
-      break;
-    case 'deepseek':
-      setRobinBrain(deepseekBrain);
-      break;
-    default:
-      setRobinBrain(localBrain);
+  final saved = p.getString(_kBrain);
+  if (saved == 'ollama') {
+    setRobinBrain(ollamaBrain);
+    return;
   }
+  if (saved == 'deepseek') {
+    setRobinBrain(deepseekBrain);
+    return;
+  }
+  if (saved == 'local') {
+    setRobinBrain(localBrain);
+    return;
+  }
+  // 저장된 선택이 없으면(첫 부팅): Ollama(내장 모델)가 떠 있으면 자동으로 LLM 두뇌를,
+  // 없으면 로컬 규칙 두뇌를 쓴다. → embed_ai ISO는 부팅 즉시 진짜 LLM Robin.
+  setRobinBrain(await _ollamaUp() ? ollamaBrain : localBrain);
 }
 
 Future<void> setBrainChoice(String choice) async {
