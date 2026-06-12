@@ -286,6 +286,62 @@ class _LinuxBackend implements PlatformBackend {
     return null;
   }
 
+  @override
+  Future<List<BtDevice>> scanBluetooth() async {
+    try {
+      // 짧게 스캔(6초)해 주변 기기를 등록시킨 뒤 목록을 읽는다.
+      await Process.run('bluetoothctl', ['--timeout', '6', 'scan', 'on']);
+      final r = await Process.run('bluetoothctl', ['devices']);
+      if (r.exitCode != 0) return const [];
+      final out = <BtDevice>[];
+      final re = RegExp(r'^Device\s+([0-9A-Fa-f:]{17})\s+(.*)$');
+      for (final line in '${r.stdout}'.split('\n')) {
+        final m = re.firstMatch(line.trim());
+        if (m == null) continue;
+        final mac = m.group(1)!;
+        final name = m.group(2)!.trim();
+        var connected = false, paired = false;
+        try {
+          final info = await Process.run('bluetoothctl', ['info', mac]);
+          final it = '${info.stdout}';
+          connected = it.contains('Connected: yes');
+          paired = it.contains('Paired: yes');
+        } catch (_) {}
+        out.add(BtDevice(mac, name.isEmpty ? mac : name, connected, paired));
+      }
+      out.sort((a, b) {
+        if (a.connected != b.connected) return a.connected ? -1 : 1;
+        if (a.paired != b.paired) return a.paired ? -1 : 1;
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      });
+      return out;
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  @override
+  Future<bool> connectBluetooth(String mac) async {
+    try {
+      final info = await Process.run('bluetoothctl', ['info', mac]);
+      if (!'${info.stdout}'.contains('Paired: yes')) {
+        await Process.run('bluetoothctl', ['pair', mac]);
+        await Process.run('bluetoothctl', ['trust', mac]);
+      }
+      final r = await Process.run('bluetoothctl', ['connect', mac]);
+      return r.exitCode == 0;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<void> disconnectBluetooth(String mac) async {
+    try {
+      await Process.run('bluetoothctl', ['disconnect', mac]);
+    } catch (_) {}
+  }
+
   Future<void> _run(String exe, List<String> args) async {
     try {
       await Process.run(exe, args);
@@ -353,4 +409,10 @@ class _NoopBackend implements PlatformBackend {
   Future<void> fsRename(String fromPath, String toPath) async {}
   @override
   Future<BatteryInfo?> batteryInfo() async => null;
+  @override
+  Future<List<BtDevice>> scanBluetooth() async => const [];
+  @override
+  Future<bool> connectBluetooth(String mac) async => false;
+  @override
+  Future<void> disconnectBluetooth(String mac) async {}
 }

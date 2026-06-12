@@ -112,6 +112,10 @@ class SettingsApp extends StatelessWidget {
           const SizedBox(height: 10),
           const _WifiSettings(),
           const SizedBox(height: 26),
+          _section(sys, '블루투스'),
+          const SizedBox(height: 10),
+          const _BtSettings(),
+          const SizedBox(height: 26),
           _section(sys, 'Robin 두뇌'),
           const SizedBox(height: 10),
           const _BrainSettings(),
@@ -716,4 +720,168 @@ class _WifiSettingsState extends State<_WifiSettings> {
     if (signal >= 34) return Icons.wifi_2_bar;
     return Icons.wifi_1_bar;
   }
+}
+
+// -----------------------------------------------------------
+// 블루투스 — 주변 기기 검색 + 연결/해제 (리눅스: bluetoothctl).
+// just-works 페어링만 자동(PIN 방식은 실패할 수 있음). 웹/개발 모드는 안내만.
+// -----------------------------------------------------------
+class _BtSettings extends StatefulWidget {
+  const _BtSettings();
+
+  @override
+  State<_BtSettings> createState() => _BtSettingsState();
+}
+
+class _BtSettingsState extends State<_BtSettings> {
+  bool _scanning = false;
+  bool _busy = false;
+  List<BtDevice> _devs = const [];
+  String? _status;
+
+  Future<void> _scan() async {
+    setState(() {
+      _scanning = true;
+      _status = null;
+    });
+    final d = await platformBackend.scanBluetooth();
+    if (!mounted) return;
+    setState(() {
+      _devs = d;
+      _scanning = false;
+    });
+  }
+
+  Future<void> _toggle(BtDevice d) async {
+    setState(() {
+      _busy = true;
+      _status = null;
+    });
+    String msg;
+    if (d.connected) {
+      await platformBackend.disconnectBluetooth(d.mac);
+      msg = '${d.name} 연결을 끊었어요.';
+    } else {
+      final ok = await platformBackend.connectBluetooth(d.mac);
+      msg = ok
+          ? '${d.name}에 연결됐어요.'
+          : '${d.name} 연결에 실패했어요(페어링이 필요하거나 PIN 방식일 수 있어요).';
+    }
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      _status = msg;
+    });
+    _scan();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sys = context.watch<SystemState>();
+    if (!platformBackend.isReal) {
+      return _hintBox(sys,
+          '리눅스 실기기에서 블루투스 기기를 검색·연결할 수 있어요. (지금은 웹/개발 모드)');
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(_scanning ? '검색 중… (약 6초)' : '기기 ${_devs.length}개',
+                style: TextStyle(fontSize: 12, color: sys.textSec(0.6))),
+            const Spacer(),
+            GestureDetector(
+              onTap: _scanning ? null : _scan,
+              child: Row(
+                children: [
+                  Icon(Icons.bluetooth_searching, size: 15, color: sys.accent),
+                  const SizedBox(width: 4),
+                  Text('검색',
+                      style: TextStyle(fontSize: 12, color: sys.accent)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        if (_devs.isEmpty && !_scanning)
+          _hintBox(sys, '검색을 눌러 주변 블루투스 기기를 찾아보세요. (블루투스가 켜져 있어야 해요)')
+        else
+          for (final d in _devs) _row(sys, d),
+        if (_status != null) ...[
+          const SizedBox(height: 6),
+          Text(_status!,
+              style: TextStyle(fontSize: 11.5, color: sys.textSec(0.6))),
+        ],
+      ],
+    );
+  }
+
+  Widget _row(SystemState sys, BtDevice d) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      decoration: BoxDecoration(
+        color:
+            d.connected ? sys.accent.withValues(alpha: 0.14) : sys.textSec(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+            color: d.connected
+                ? sys.accent.withValues(alpha: 0.5)
+                : sys.textSec(0.1)),
+      ),
+      child: Row(
+        children: [
+          Icon(d.connected ? Icons.bluetooth_connected : Icons.bluetooth,
+              size: 18, color: sys.textPrimary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(d.name,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    fontSize: 13.5,
+                    color: sys.textPrimary,
+                    fontWeight:
+                        d.connected ? FontWeight.w600 : FontWeight.w400)),
+          ),
+          if (d.connected)
+            Text('연결됨',
+                style: TextStyle(
+                    fontSize: 11,
+                    color: sys.accent,
+                    fontWeight: FontWeight.w600))
+          else if (d.paired)
+            Text('페어링됨', style: TextStyle(fontSize: 11, color: sys.textSec(0.45))),
+          const SizedBox(width: 10),
+          GestureDetector(
+            onTap: _busy ? null : () => _toggle(d),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              decoration: BoxDecoration(
+                color: d.connected ? sys.textSec(0.1) : sys.accent,
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: Text(d.connected ? '해제' : '연결',
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: d.connected ? sys.textPrimary : Colors.white,
+                      fontWeight: FontWeight.w600)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _hintBox(SystemState sys, String text) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: sys.textSec(0.05),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(text,
+            style:
+                TextStyle(fontSize: 12, color: sys.textSec(0.55), height: 1.4)),
+      );
 }

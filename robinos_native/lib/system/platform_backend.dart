@@ -41,6 +41,15 @@ class BatteryInfo {
   const BatteryInfo(this.level, this.charging);
 }
 
+// 블루투스 기기 (bluetoothctl). 웹/스텁에선 만들어지지 않음.
+class BtDevice {
+  final String mac;
+  final String name;
+  final bool connected;
+  final bool paired;
+  const BtDevice(this.mac, this.name, this.connected, this.paired);
+}
+
 abstract class PlatformBackend {
   // 실제 하드웨어 제어가 가능한 플랫폼인지(리눅스 실기기 등). 웹/스텁은 false.
   bool get isReal;
@@ -103,6 +112,14 @@ abstract class PlatformBackend {
 
   // 배터리 상태 (리눅스: /sys/class/power_supply). 배터리 없음/웹: null.
   Future<BatteryInfo?> batteryInfo();
+
+  // === 블루투스 (리눅스: bluetoothctl) ===
+  // 주변 기기 스캔(짧게 스캔 후 알려진 기기 목록+상태). 웹/도구부재: 빈 목록.
+  Future<List<BtDevice>> scanBluetooth();
+  // 기기 연결(필요 시 페어링/신뢰 후 연결). just-works 페어링만 자동. 성공 시 true.
+  Future<bool> connectBluetooth(String mac);
+  // 기기 연결 해제.
+  Future<void> disconnectBluetooth(String mac);
 }
 
 // 플랫폼별 구현 인스턴스 — 조건부 import가 createPlatformBackend()를 제공.

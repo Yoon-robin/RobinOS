@@ -60,4 +60,10 @@ class _StubBackend implements PlatformBackend {
   Future<void> fsRename(String fromPath, String toPath) async {}
   @override
   Future<BatteryInfo?> batteryInfo() async => null;
+  @override
+  Future<List<BtDevice>> scanBluetooth() async => const [];
+  @override
+  Future<bool> connectBluetooth(String mac) async => false;
+  @override
+  Future<void> disconnectBluetooth(String mac) async {}
 }

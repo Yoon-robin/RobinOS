@@ -11,7 +11,7 @@ fi
 
 # 그래픽/시트/입력 접근 그룹 — 없으면 생성하고 robin을 각각 추가.
 # (한 그룹이라도 없으면 'usermod -aG a,b,c'가 통째 실패 → cage가 DRM/seat 접근 불가.)
-for g in video render input audio seat _seatd; do
+for g in video render input audio seat _seatd bluetooth; do
   groupadd -f "$g" 2>/dev/null || true
   usermod -aG "$g" robin 2>/dev/null || true
 done
