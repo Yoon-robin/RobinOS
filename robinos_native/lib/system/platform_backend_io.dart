@@ -267,6 +267,25 @@ class _LinuxBackend implements PlatformBackend {
     } catch (_) {}
   }
 
+  @override
+  Future<BatteryInfo?> batteryInfo() async {
+    try {
+      for (final n in const ['BAT0', 'BAT1', 'BAT']) {
+        final cap = File('/sys/class/power_supply/$n/capacity');
+        if (!cap.existsSync()) continue;
+        final level = (int.tryParse(cap.readAsStringSync().trim()) ?? 0)
+            .clamp(0, 100);
+        var charging = false;
+        final st = File('/sys/class/power_supply/$n/status');
+        if (st.existsSync()) {
+          charging = st.readAsStringSync().trim().toLowerCase() == 'charging';
+        }
+        return BatteryInfo(level, charging);
+      }
+    } catch (_) {}
+    return null;
+  }
+
   Future<void> _run(String exe, List<String> args) async {
     try {
       await Process.run(exe, args);
@@ -332,4 +351,6 @@ class _NoopBackend implements PlatformBackend {
   Future<void> fsDelete(String path) async {}
   @override
   Future<void> fsRename(String fromPath, String toPath) async {}
+  @override
+  Future<BatteryInfo?> batteryInfo() async => null;
 }

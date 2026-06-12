@@ -19,6 +19,7 @@ import 'apps/calculator.dart';
 import 'apps/settings.dart';
 import 'apps/paint.dart';
 import 'widgets/clock.dart';
+import 'widgets/battery.dart';
 import 'widgets/boot_screen.dart';
 import 'widgets/lock_screen.dart';
 import 'widgets/control_center.dart';
@@ -788,8 +789,7 @@ class _MenuBar extends StatelessWidget {
                     children: [
                       Icon(Icons.wifi, size: 15, color: sys.textSec(0.8)),
                       const SizedBox(width: 6),
-                      Icon(Icons.battery_full,
-                          size: 15, color: sys.textSec(0.8)),
+                      const BatteryIndicator(),
                     ],
                   ),
                 ),

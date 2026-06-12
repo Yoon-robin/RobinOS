@@ -58,4 +58,6 @@ class _StubBackend implements PlatformBackend {
   Future<void> fsDelete(String path) async {}
   @override
   Future<void> fsRename(String fromPath, String toPath) async {}
+  @override
+  Future<BatteryInfo?> batteryInfo() async => null;
 }

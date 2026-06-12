@@ -34,6 +34,13 @@ class FsNode {
   const FsNode(this.path, this.isDir, this.content);
 }
 
+// 배터리 상태 (리눅스: /sys/class/power_supply). 배터리 없는 기기/웹은 null.
+class BatteryInfo {
+  final int level; // 0~100
+  final bool charging;
+  const BatteryInfo(this.level, this.charging);
+}
+
 abstract class PlatformBackend {
   // 실제 하드웨어 제어가 가능한 플랫폼인지(리눅스 실기기 등). 웹/스텁은 false.
   bool get isReal;
@@ -93,6 +100,9 @@ abstract class PlatformBackend {
   Future<void> fsDelete(String path);
   // 이름/경로 변경(파일·폴더 공통).
   Future<void> fsRename(String fromPath, String toPath);
+
+  // 배터리 상태 (리눅스: /sys/class/power_supply). 배터리 없음/웹: null.
+  Future<BatteryInfo?> batteryInfo();
 }
 
 // 플랫폼별 구현 인스턴스 — 조건부 import가 createPlatformBackend()를 제공.
