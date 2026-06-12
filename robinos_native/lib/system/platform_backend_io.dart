@@ -35,6 +35,10 @@ class _LinuxBackend implements PlatformBackend {
       _run('nmcli', ['radio', 'wifi', on ? 'on' : 'off']);
 
   @override
+  Future<void> setBluetooth(bool on) async =>
+      _run('rfkill', [on ? 'unblock' : 'block', 'bluetooth']);
+
+  @override
   Future<void> runInstaller() async =>
       _run('sh', ['-c', 'sudo -E calamares || calamares']);
 
@@ -68,6 +72,9 @@ class _NoopBackend implements PlatformBackend {
 
   @override
   Future<void> setWifi(bool on) async {}
+
+  @override
+  Future<void> setBluetooth(bool on) async {}
 
   @override
   Future<void> runInstaller() async {}

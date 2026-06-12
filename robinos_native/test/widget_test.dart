@@ -27,6 +27,7 @@ RobinActions _actions(Map<String, String> log) => RobinActions(
       reboot: () => log['power'] = 'reboot',
       powerOff: () => log['power'] = 'off',
       setWifi: (on) => log['wifi'] = on ? 'on' : 'off',
+      setBluetooth: (on) => log['bt'] = on ? 'on' : 'off',
       newNote: () => log['newNote'] = '1',
     );
 
@@ -201,6 +202,11 @@ void main() {
       final log = <String, String>{};
       await localBrain('메모 만들어줘', _actions(log));
       expect(log['newNote'], '1');
+    });
+    test('블루투스 꺼 → setBluetooth(off)', () async {
+      final log = <String, String>{};
+      await localBrain('블루투스 꺼줘', _actions(log));
+      expect(log['bt'], 'off');
     });
   });
 

@@ -60,7 +60,10 @@ class _ControlCenterState extends State<ControlCenter> {
                         const SizedBox(width: 10),
                         Expanded(
                             child: _toggle(sys, Icons.bluetooth, 'Bluetooth',
-                                _bt, () => setState(() => _bt = !_bt))),
+                                _bt, () {
+                              setState(() => _bt = !_bt);
+                              platformBackend.setBluetooth(_bt); // 리눅스: rfkill
+                            })),
                       ],
                     ),
                     const SizedBox(height: 10),

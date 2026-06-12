@@ -410,6 +410,7 @@ class _DesktopState extends State<Desktop> {
       reboot: () => platformBackend.reboot(),
       powerOff: () => platformBackend.powerOff(),
       setWifi: (on) => platformBackend.setWifi(on),
+      setBluetooth: (on) => platformBackend.setBluetooth(on),
       newNote: _newNote,
     );
     return Scaffold(

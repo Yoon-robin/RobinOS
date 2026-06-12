@@ -27,6 +27,9 @@ abstract class PlatformBackend {
   // 와이파이 on/off (리눅스: nmcli radio wifi). 웹/도구부재 시 no-op.
   Future<void> setWifi(bool on);
 
+  // 블루투스 on/off (리눅스: rfkill). 웹/도구부재 시 no-op.
+  Future<void> setBluetooth(bool on);
+
   // RobinOS를 디스크에 설치 (리눅스: Calamares 그래픽 설치기 실행). 웹/도구부재 시 no-op.
   Future<void> runInstaller();
 }
