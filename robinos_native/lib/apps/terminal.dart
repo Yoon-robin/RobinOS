@@ -49,8 +49,8 @@ class _TerminalAppState extends State<TerminalApp> {
         break;
       case 'help':
         _lines.add('명령어: help, ls, cd <폴더>, pwd, cat <파일>, echo <텍스트>,');
-        _lines.add('        mkdir <폴더>, touch <파일>, rm <대상>, mv <원래> <새이름>,');
-        _lines.add('        date, whoami, robinos, clear');
+        _lines.add('        mkdir <폴더>, touch <파일>, write <파일> <내용>,');
+        _lines.add('        rm <대상>, mv <원래> <새이름>, date, whoami, robinos, clear');
         break;
       case 'ls':
         final items = fs.list(_dir);
@@ -103,6 +103,20 @@ class _TerminalAppState extends State<TerminalApp> {
           final p = _dir == '/' ? '/$arg' : '$_dir/$arg';
           if (!fs.exists(p)) fs.write(p, '');
           _lines.add('파일 만듦: $arg');
+        }
+        break;
+      case 'write':
+        final sp = arg.indexOf(' ');
+        if (sp < 1) {
+          _lines.add('사용법: write <파일> <내용>');
+        } else {
+          final fname = arg.substring(0, sp);
+          final content = arg.substring(sp + 1);
+          final p = fname.startsWith('/')
+              ? fname
+              : (_dir == '/' ? '/$fname' : '$_dir/$fname');
+          fs.write(p, content);
+          _lines.add('저장: $fname (${content.length}자)');
         }
         break;
       case 'rm':
