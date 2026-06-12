@@ -4,6 +4,15 @@ name: Build RobinOS ISO
 # 수동 실행(Actions 탭 → Run workflow) 또는 main 푸시 시 동작.
 on:
   workflow_dispatch:   # 수동 실행만 — 무거운 ISO 빌드(~18분)를 매 푸시마다 돌리지 않음.
+    inputs:
+      embed_ai:
+        description: 'AI 모델을 ISO에 내장 (Ollama+모델 — ISO가 크게 늘어남)'
+        type: boolean
+        default: false
+      ai_model:
+        description: '내장할 Ollama 모델 (embed_ai=true일 때). 예: qwen2.5:1.5b, huihui_ai/qwen2.5-abliterate:7b'
+        type: string
+        default: 'qwen2.5:1.5b'
 
 jobs:
   build:
@@ -41,6 +50,15 @@ jobs:
           cp -r robinos_native/build/linux/x64/release/bundle/* boot/config/includes.chroot/opt/robinos/
           chmod +x boot/config/includes.chroot/usr/local/bin/robinos-session || true
           ls -la boot/config/includes.chroot/opt/robinos | head
+
+      # embed_ai=true 면 부팅 훅의 'AI:' 줄을 활성화(Ollama+모델 내장). 기본은 건너뜀(ISO 가볍게).
+      - name: Enable AI embed (optional)
+        if: ${{ inputs.embed_ai }}
+        run: |
+          HOOK=boot/config/hooks/live/0100-robinos.hook.chroot
+          echo "AI 내장 활성화 — 모델: ${{ inputs.ai_model }}"
+          sed -i -e 's/^# AI: //' -e "s|__AI_MODEL__|${{ inputs.ai_model }}|" "$HOOK"
+          echo "=== 활성화된 훅 AI 블록 ==="; sed -n '24,30p' "$HOOK"
 
       # ISO는 Debian bookworm 컨테이너 안에서 빌드 — 데비안 자체 live-build를 써서
       # 우분투 러너의 아카이브 레이아웃 불일치(Contents 경로/보안suite/모드)를 회피.

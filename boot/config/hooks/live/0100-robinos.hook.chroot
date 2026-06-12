@@ -21,10 +21,12 @@ systemctl enable seatd.service || true
 systemctl enable robinos-kiosk.service || true
 systemctl set-default graphical.target || true
 
-# 3) (선택) Qwen2.5 내장 — 주석 해제하면 오프라인 Robin 가능 (ISO가 커짐)
-# curl -fsSL https://ollama.com/install.sh | sh
-# ollama serve & sleep 5
-# ollama pull qwen2.5      # 가벼우면: ollama pull qwen2.5:3b
-# pkill ollama || true
+# 3) (선택) AI 모델 내장 — build-iso 워크플로 embed_ai=true 로 빌드하면 아래 'AI:' 줄들이
+#    sed로 활성화되어 Ollama + 모델이 ISO에 포함됨(오프라인 Robin). 단 ISO가 크게 늘어남.
+#    기본 빌드는 비활성(ISO 가볍게). 모델은 워크플로 ai_model 입력으로 지정(__AI_MODEL__ 치환).
+# AI: curl -fsSL https://ollama.com/install.sh | sh
+# AI: (OLLAMA_HOST=127.0.0.1:11434 ollama serve &) ; sleep 8
+# AI: ollama pull __AI_MODEL__ || true
+# AI: pkill ollama 2>/dev/null || true
 
 echo "RobinOS chroot 훅 완료."
