@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../system/system_state.dart';
+import '../system/platform_backend.dart';
 import '../robin/brains.dart';
 
 // ===========================================================
@@ -81,9 +82,46 @@ class SettingsApp extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 26),
+          _section(sys, '볼륨'),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Text('🔈', style: TextStyle(color: sys.textSec(0.6))),
+              Expanded(
+                child: SliderTheme(
+                  data: SliderThemeData(
+                    activeTrackColor: sys.accent,
+                    thumbColor: sys.accent,
+                    inactiveTrackColor: sys.textSec(0.15),
+                    overlayColor: sys.accent.withValues(alpha: 0.15),
+                    trackHeight: 4,
+                  ),
+                  child: Slider(
+                    value: sys.volume,
+                    min: 0.0,
+                    max: 1.0,
+                    onChanged: sys.setVolume,
+                  ),
+                ),
+              ),
+              Text('🔊', style: TextStyle(color: sys.textSec(0.6))),
+            ],
+          ),
+          const SizedBox(height: 26),
           _section(sys, 'Robin 두뇌'),
           const SizedBox(height: 10),
           const _BrainSettings(),
+          const SizedBox(height: 26),
+          _section(sys, '시스템'),
+          const SizedBox(height: 10),
+          _infoRow(sys, 'RobinOS', '네이티브 빌드 · Flutter'),
+          _infoRow(
+            sys,
+            '하드웨어 제어',
+            platformBackend.isReal
+                ? '활성 — 리눅스에서 밝기·볼륨·전원·Wi-Fi 실제 제어'
+                : '시뮬레이션 — 웹/개발 모드 (실기기 부팅 시 활성화)',
+          ),
         ],
       ),
     );
@@ -96,6 +134,25 @@ class SettingsApp extends StatelessWidget {
           fontWeight: FontWeight.w700,
           letterSpacing: 0.4,
           color: sys.textSec(0.5),
+        ),
+      );
+
+  Widget _infoRow(SystemState sys, String label, String value) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 90,
+              child: Text(label,
+                  style: TextStyle(fontSize: 12.5, color: sys.textSec(0.55))),
+            ),
+            Expanded(
+              child: Text(value,
+                  style: TextStyle(
+                      fontSize: 12.5, color: sys.textPrimary, height: 1.4)),
+            ),
+          ],
         ),
       );
 
