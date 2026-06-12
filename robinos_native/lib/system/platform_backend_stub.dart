@@ -74,4 +74,6 @@ class _StubBackend implements PlatformBackend {
   Future<DisplayInfo?> displayInfo() async => null;
   @override
   Future<void> setDisplayMode(String output, String mode) async {}
+  @override
+  Future<bool> wifiConnected() async => false;
 }

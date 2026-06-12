@@ -67,3 +67,50 @@ class _BatteryIndicatorState extends State<BatteryIndicator> {
     return Icons.battery_alert;
   }
 }
+
+// 메뉴바 Wi-Fi 표시 — 리눅스 실기기면 실제 연결 상태(nmcli)를 30초마다 폴링.
+// 끊긴 게 확인됐을 때만 wifi_off, 그 외(웹/확인 전/연결됨)는 wifi 아이콘.
+class WifiIndicator extends StatefulWidget {
+  const WifiIndicator({super.key});
+
+  @override
+  State<WifiIndicator> createState() => _WifiIndicatorState();
+}
+
+class _WifiIndicatorState extends State<WifiIndicator> {
+  bool _connected = true;
+  bool _checked = false;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    if (platformBackend.isReal) {
+      _poll();
+      _timer = Timer.periodic(const Duration(seconds: 30), (_) => _poll());
+    }
+  }
+
+  Future<void> _poll() async {
+    final c = await platformBackend.wifiConnected();
+    if (!mounted) return;
+    setState(() {
+      _connected = c;
+      _checked = true;
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sys = context.watch<SystemState>();
+    final off = platformBackend.isReal && _checked && !_connected;
+    return Icon(off ? Icons.wifi_off : Icons.wifi,
+        size: 15, color: sys.textSec(0.8));
+  }
+}

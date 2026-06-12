@@ -412,6 +412,22 @@ class _LinuxBackend implements PlatformBackend {
     await _run('wlr-randr', ['--output', output, '--mode', mode]);
   }
 
+  @override
+  Future<bool> wifiConnected() async {
+    try {
+      final r = await Process.run(
+          'nmcli', ['-t', '-f', 'TYPE,STATE', 'device', 'status']);
+      if (r.exitCode != 0) return false;
+      for (final line in '${r.stdout}'.split('\n')) {
+        final p = line.split(':');
+        if (p.length >= 2 && p[0] == 'wifi' && p[1] == 'connected') return true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> _run(String exe, List<String> args) async {
     try {
       await Process.run(exe, args);
@@ -493,4 +509,6 @@ class _NoopBackend implements PlatformBackend {
   Future<DisplayInfo?> displayInfo() async => null;
   @override
   Future<void> setDisplayMode(String output, String mode) async {}
+  @override
+  Future<bool> wifiConnected() async => false;
 }

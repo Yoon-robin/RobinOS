@@ -797,7 +797,7 @@ class _MenuBar extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Row(
                     children: [
-                      Icon(Icons.wifi, size: 15, color: sys.textSec(0.8)),
+                      const WifiIndicator(),
                       const SizedBox(width: 6),
                       const BatteryIndicator(),
                     ],

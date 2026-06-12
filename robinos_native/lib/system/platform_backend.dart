@@ -140,6 +140,9 @@ abstract class PlatformBackend {
   Future<DisplayInfo?> displayInfo();
   // 해상도 변경(리눅스: wlr-randr --output X --mode WxH). 웹/도구부재: no-op.
   Future<void> setDisplayMode(String output, String mode);
+
+  // 현재 Wi-Fi 연결 여부 (리눅스: nmcli device status). 웹/도구부재: false.
+  Future<bool> wifiConnected();
 }
 
 // 플랫폼별 구현 인스턴스 — 조건부 import가 createPlatformBackend()를 제공.
