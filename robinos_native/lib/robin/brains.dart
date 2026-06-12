@@ -48,6 +48,10 @@ String _systemPrompt(RobinActions a) {
 - setWallpaper (arg = aurora|midnight|sunset|ocean|sakura|graphite)
 - setAccent (arg = blue|purple|pink|teal|orange|green)
 - setBrightness (arg = 0~100 정수, 퍼센트)
+- setVolume (arg = 0~100 정수, 퍼센트)
+- setWifi (arg = "on" | "off")
+- setBluetooth (arg = "on" | "off")
+- screenshot (arg 없음 — 화면을 캡처)
 - calculate (arg = 수식; 결과는 네가 직접 계산해서 reply에 적어줘)
 동작이 필요 없으면 {"action":null,"reply":"<답변>"}.''';
 }
@@ -79,6 +83,19 @@ RobinResult _apply(String content, RobinActions a) {
       case 'setBrightness':
         final n = double.tryParse(arg);
         if (n != null) a.setBrightness((n / 100).clamp(0.25, 1.0));
+        break;
+      case 'setVolume':
+        final v = double.tryParse(arg);
+        if (v != null) a.setVolume((v / 100).clamp(0.0, 1.0));
+        break;
+      case 'setWifi':
+        a.setWifi(arg == 'on' || arg == 'true');
+        break;
+      case 'setBluetooth':
+        a.setBluetooth(arg == 'on' || arg == 'true');
+        break;
+      case 'screenshot':
+        a.screenshot();
         break;
     }
     return RobinResult(reply);
