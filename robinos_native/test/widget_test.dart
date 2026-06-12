@@ -15,6 +15,8 @@ RobinActions _actions(Map<String, String> log) => RobinActions(
       setAccent: (id) => log['accent'] = id,
       setBrightness: (v) => log['brightness'] = v.toStringAsFixed(2),
       brightness: () => 1.0,
+      setVolume: (v) => log['volume'] = v.toStringAsFixed(2),
+      volume: () => 0.7,
       lock: () => log['lock'] = '1',
       closeApp: (id) => log['close'] = id,
       closeAll: () => log['close'] = 'all',
@@ -145,6 +147,16 @@ void main() {
       final log = <String, String>{};
       await localBrain('다 닫아줘', _actions(log));
       expect(log['close'], 'all');
+    });
+    test('볼륨 50% → setVolume(0.50)', () async {
+      final log = <String, String>{};
+      await localBrain('볼륨 50%로', _actions(log));
+      expect(log['volume'], '0.50');
+    });
+    test('음소거 → setVolume(0.00)', () async {
+      final log = <String, String>{};
+      await localBrain('음소거해줘', _actions(log));
+      expect(log['volume'], '0.00');
     });
   });
 

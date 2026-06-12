@@ -386,6 +386,8 @@ class _DesktopState extends State<Desktop> {
       setAccent: sys.setAccent,
       setBrightness: sys.setBrightness,
       brightness: () => sys.brightness,
+      setVolume: sys.setVolume,
+      volume: () => sys.volume,
       lock: _lock,
       closeApp: (id) =>
           setState(() => _wins.removeWhere((w) => w.app.id == id)),

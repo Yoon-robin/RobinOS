@@ -53,6 +53,7 @@ class SystemState extends ChangeNotifier {
   String _themeMode = 'dark'; // dark | light | auto
   Timer? _autoTimer;
   double _brightness = 1.0;
+  double _volume = 0.7;
   SharedPreferences? _prefs;
 
   // --- 읽기 ---
@@ -61,6 +62,7 @@ class SystemState extends ChangeNotifier {
   bool get isLight => _light;
   String get themeMode => _themeMode;
   double get brightness => _brightness;
+  double get volume => _volume;
 
   Wallpaper get wallpaper => kWallpapers.firstWhere(
         (w) => w.id == _wallpaperId,
@@ -115,6 +117,7 @@ class SystemState extends ChangeNotifier {
     _applyMode();
     _ensureAutoTimer();
     _brightness = _prefs?.getDouble('robinos.brightness') ?? 1.0;
+    _volume = _prefs?.getDouble('robinos.volume') ?? 0.7;
     notifyListeners();
   }
 
@@ -177,6 +180,14 @@ class SystemState extends ChangeNotifier {
     _prefs?.setDouble('robinos.brightness', _brightness);
     // 리눅스 실기기면 실제 화면 밝기도 조절(brightnessctl). 웹/기타는 no-op.
     platformBackend.setBrightness(_brightness);
+    notifyListeners();
+  }
+
+  void setVolume(double v) {
+    _volume = v.clamp(0.0, 1.0);
+    _prefs?.setDouble('robinos.volume', _volume);
+    // 리눅스 실기기면 실제 시스템 볼륨도 조절(wpctl). 웹/기타는 no-op.
+    platformBackend.setVolume(_volume);
     notifyListeners();
   }
 }

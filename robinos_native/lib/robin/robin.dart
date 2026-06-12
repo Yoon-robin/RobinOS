@@ -35,6 +35,8 @@ class RobinActions {
   final void Function(String id) setAccent;
   final void Function(double v) setBrightness;
   final double Function() brightness;
+  final void Function(double v) setVolume;
+  final double Function() volume;
   final void Function() lock;
   final void Function(String appId) closeApp;
   final void Function() closeAll;
@@ -48,6 +50,8 @@ class RobinActions {
     required this.setAccent,
     required this.setBrightness,
     required this.brightness,
+    required this.setVolume,
+    required this.volume,
     required this.lock,
     required this.closeApp,
     required this.closeAll,
@@ -205,6 +209,36 @@ Future<RobinResult> localBrain(String msg, RobinActions a) async {
       a.setBrightness((a.brightness() - 0.2).clamp(0.25, 1.0));
       return const RobinResult('밝기를 내렸어요 🔅');
     }
+  }
+
+  // 볼륨 / 소리
+  if (m.contains('볼륨') ||
+      m.contains('소리') ||
+      m.contains('음량') ||
+      m.contains('음소거')) {
+    if (m.contains('음소거') || (m.contains('소리') && m.contains('꺼'))) {
+      a.setVolume(0);
+      return const RobinResult('음소거했어요 🔇');
+    }
+    if (m.contains('최대') || m.contains('제일') || m.contains('가장')) {
+      a.setVolume(1.0);
+      return const RobinResult('볼륨을 최대로 올렸어요 🔊');
+    }
+    final pm = RegExp(r'(\d{1,3})\s*%').firstMatch(m);
+    if (pm != null) {
+      final v = (int.parse(pm.group(1)!) / 100).clamp(0.0, 1.0).toDouble();
+      a.setVolume(v);
+      return RobinResult('볼륨을 ${(v * 100).round()}%로 맞췄어요 🔊');
+    }
+    if (m.contains('올려') || m.contains('높여') || m.contains('키워') || m.contains('크게')) {
+      a.setVolume((a.volume() + 0.15).clamp(0.0, 1.0));
+      return const RobinResult('볼륨을 올렸어요 🔊');
+    }
+    if (m.contains('내려') || m.contains('낮춰') || m.contains('줄여') || m.contains('작게')) {
+      a.setVolume((a.volume() - 0.15).clamp(0.0, 1.0));
+      return const RobinResult('볼륨을 내렸어요 🔉');
+    }
+    return const RobinResult('볼륨을 어떻게 할까요? "볼륨 올려 / 내려 / 50% / 음소거"처럼요 🔊');
   }
 
   // 앱 닫기 / 전부 닫기
