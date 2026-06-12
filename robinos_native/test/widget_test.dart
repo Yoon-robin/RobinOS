@@ -29,6 +29,12 @@ RobinActions _actions(Map<String, String> log) => RobinActions(
       setWifi: (on) => log['wifi'] = on ? 'on' : 'off',
       setBluetooth: (on) => log['bt'] = on ? 'on' : 'off',
       newNote: () => log['newNote'] = '1',
+      realApps: () => const [AppInfo('firefox', 'Firefox')],
+      launchReal: (exec) => log['launch'] = exec,
+      screenshot: () async {
+        log['shot'] = '1';
+        return '/home/robin/사진/test.png';
+      },
     );
 
 void main() {
@@ -207,6 +213,18 @@ void main() {
       final log = <String, String>{};
       await localBrain('블루투스 꺼줘', _actions(log));
       expect(log['bt'], 'off');
+    });
+    test('스크린샷 → screenshot() 호출 + 경로 응답', () async {
+      final log = <String, String>{};
+      final r = await localBrain('스크린샷 찍어줘', _actions(log));
+      expect(log['shot'], '1');
+      expect(r.reply, contains('저장'));
+    });
+    test('실제 앱 실행 → launchReal(firefox)', () async {
+      final log = <String, String>{};
+      final r = await localBrain('Firefox 실행해줘', _actions(log));
+      expect(log['launch'], 'firefox');
+      expect(r.reply, contains('실행'));
     });
   });
 

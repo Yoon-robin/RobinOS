@@ -45,6 +45,11 @@ class RobinActions {
   final void Function(bool on) setWifi;
   final void Function(bool on) setBluetooth;
   final void Function() newNote;
+  // B(진짜 DE): 설치된 실제 리눅스 앱 목록(id=exec, name=표시이름) + 실행.
+  final List<AppInfo> Function() realApps;
+  final void Function(String exec) launchReal;
+  // 화면 캡처 → 저장 경로(또는 null). 리눅스 실기기(grim)에서만 실제 동작.
+  final Future<String?> Function() screenshot;
 
   const RobinActions({
     required this.openApp,
@@ -65,6 +70,9 @@ class RobinActions {
     required this.setWifi,
     required this.setBluetooth,
     required this.newNote,
+    required this.realApps,
+    required this.launchReal,
+    required this.screenshot,
   });
 }
 
@@ -270,6 +278,18 @@ Future<RobinResult> localBrain(String msg, RobinActions a) async {
     return RobinResult(off ? '블루투스를 껐어요' : '블루투스를 켰어요 🔵');
   }
 
+  // 스크린샷 — 리눅스 실기기(grim)에서 화면을 PNG로 저장.
+  if (m.contains('스크린샷') ||
+      m.contains('화면 캡처') ||
+      m.contains('화면캡처') ||
+      m.contains('캡처') ||
+      low.contains('screenshot')) {
+    final path = await a.screenshot();
+    return RobinResult(path != null
+        ? '스크린샷을 저장했어요 📸\n$path'
+        : '스크린샷은 리눅스 실기기에서만 돼요(grim 필요). 지금은 캡처할 수 없어요 📸');
+  }
+
   // 전원 (재부팅 / 종료) — 위험 동작이므로 확인(RobinConfirm)을 받는다.
   if (m.contains('재부팅') || m.contains('리부트') || low.contains('reboot')) {
     return RobinResult('정말 재부팅할까요?',
@@ -334,6 +354,21 @@ Future<RobinResult> localBrain(String msg, RobinActions a) async {
     if (m == app.name || low == app.id) {
       a.openApp(app.id);
       return RobinResult('${app.name}${_eulReul(app.name)} 열었어요!');
+    }
+  }
+
+  // 설치된 실제 리눅스 앱 열기 (B: 진짜 앱 — Firefox 등). 내장 앱이 우선 매칭된 뒤 시도.
+  for (final app in a.realApps()) {
+    final name = app.name;
+    if (name.isEmpty) continue;
+    if ((m.contains(name) || low.contains(name.toLowerCase())) &&
+        (m.contains('열') ||
+            m.contains('실행') ||
+            m.contains('켜') ||
+            m.contains('보여') ||
+            m.contains('띄'))) {
+      a.launchReal(app.id); // id = .desktop Exec
+      return RobinResult('$name${_eulReul(name)} 실행했어요! 🚀');
     }
   }
 

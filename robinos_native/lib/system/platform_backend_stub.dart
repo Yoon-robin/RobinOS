@@ -38,4 +38,7 @@ class _StubBackend implements PlatformBackend {
 
   @override
   Future<void> launchApp(String exec) async {}
+
+  @override
+  Future<String?> screenshot() async => null;
 }

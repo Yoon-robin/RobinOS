@@ -56,6 +56,10 @@ class SystemState extends ChangeNotifier {
   double _volume = 0.7;
   SharedPreferences? _prefs;
 
+  // 설치된 실제 리눅스 앱(.desktop) 캐시 — 부팅 시 1회 로드, 런치패드·Robin이 공유.
+  // 웹/스텁에선 빈 목록(리눅스 실기기에서만 채워짐).
+  List<InstalledApp> _installedApps = const [];
+
   // --- 읽기 ---
   String get wallpaperId => _wallpaperId;
   String get accentId => _accentId;
@@ -63,6 +67,7 @@ class SystemState extends ChangeNotifier {
   String get themeMode => _themeMode;
   double get brightness => _brightness;
   double get volume => _volume;
+  List<InstalledApp> get installedApps => _installedApps;
 
   Wallpaper get wallpaper => kWallpapers.firstWhere(
         (w) => w.id == _wallpaperId,
@@ -119,6 +124,20 @@ class SystemState extends ChangeNotifier {
     _brightness = _prefs?.getDouble('robinos.brightness') ?? 1.0;
     _volume = _prefs?.getDouble('robinos.volume') ?? 0.7;
     notifyListeners();
+    // 설치된 실앱은 부팅을 막지 않게 비동기로 로드(준비되면 notify).
+    _loadInstalledApps();
+  }
+
+  // 설치된 실제 리눅스 앱 목록을 백그라운드로 로드(.desktop 스캔). 실패해도 조용히 무시.
+  Future<void> _loadInstalledApps() async {
+    if (!platformBackend.isReal) return;
+    try {
+      final apps = await platformBackend.listInstalledApps();
+      if (apps.isNotEmpty) {
+        _installedApps = apps;
+        notifyListeners();
+      }
+    } catch (_) {}
   }
 
   void setWallpaper(String id) {

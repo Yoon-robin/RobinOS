@@ -99,6 +99,26 @@ class _LinuxBackend implements PlatformBackend {
     } catch (_) {}
   }
 
+  @override
+  Future<String?> screenshot() async {
+    final home = Platform.environment['HOME'] ?? '';
+    if (home.isEmpty) return null;
+    final dir = '$home/사진';
+    try {
+      Directory(dir).createSync(recursive: true);
+    } catch (_) {}
+    final n = DateTime.now();
+    String p2(int v) => v.toString().padLeft(2, '0');
+    final fname =
+        '스크린샷-${n.year}${p2(n.month)}${p2(n.day)}-${p2(n.hour)}${p2(n.minute)}${p2(n.second)}.png';
+    final path = '$dir/$fname';
+    try {
+      final r = await Process.run('grim', [path]);
+      if (r.exitCode == 0) return path;
+    } catch (_) {}
+    return null;
+  }
+
   Future<void> _run(String exe, List<String> args) async {
     try {
       await Process.run(exe, args);
@@ -144,4 +164,7 @@ class _NoopBackend implements PlatformBackend {
 
   @override
   Future<void> launchApp(String exec) async {}
+
+  @override
+  Future<String?> screenshot() async => null;
 }

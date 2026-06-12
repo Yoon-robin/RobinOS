@@ -49,6 +49,10 @@ abstract class PlatformBackend {
 
   // 실제 리눅스 앱/명령을 detached로 실행 (B: 진짜 앱 띄우기). 웹/비리눅스: no-op.
   Future<void> launchApp(String exec);
+
+  // 화면 캡처 (리눅스: grim → 홈/사진 폴더에 PNG 저장, 저장 경로 반환).
+  // 웹/도구부재/캡처실패: null. (grim은 wlr-screencopy 지원 컴포지터=labwc에서 동작)
+  Future<String?> screenshot();
 }
 
 // 플랫폼별 구현 인스턴스 — 조건부 import가 createPlatformBackend()를 제공.

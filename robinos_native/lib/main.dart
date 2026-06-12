@@ -429,6 +429,10 @@ class _DesktopState extends State<Desktop> {
       setWifi: (on) => platformBackend.setWifi(on),
       setBluetooth: (on) => platformBackend.setBluetooth(on),
       newNote: _newNote,
+      realApps: () =>
+          sys.installedApps.map((e) => AppInfo(e.exec, e.name)).toList(),
+      launchReal: (exec) => platformBackend.launchApp(exec),
+      screenshot: () => platformBackend.screenshot(),
     );
     return Scaffold(
       body: Focus(
