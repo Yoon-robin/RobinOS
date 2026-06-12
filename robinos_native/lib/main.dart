@@ -74,6 +74,8 @@ class WinState {
   Offset? restorePos;
   Size? restoreSize;
   Offset dragPointer = const Offset(-1, -1); // 타이틀바 드래그 중 커서 전역 위치
+  bool closing = false; // 닫기 애니메이션 중
+  bool minimizing = false; // 최소화 애니메이션 중
 
   WinState({
     required this.key,
@@ -297,7 +299,12 @@ class _DesktopState extends State<Desktop> {
     setState(() => w.z = ++_zTop);
   }
 
-  void _close(WinState w) => setState(() => _wins.remove(w));
+  void _close(WinState w) {
+    setState(() => w.closing = true);
+    Future.delayed(const Duration(milliseconds: 175), () {
+      if (mounted) setState(() => _wins.remove(w));
+    });
+  }
 
   void _move(WinState w, DragUpdateDetails d) {
     if (w.maximized) return;
@@ -353,7 +360,17 @@ class _DesktopState extends State<Desktop> {
     }
   }
 
-  void _toggleMin(WinState w) => setState(() => w.minimized = true);
+  void _toggleMin(WinState w) {
+    setState(() => w.minimizing = true);
+    Future.delayed(const Duration(milliseconds: 175), () {
+      if (mounted) {
+        setState(() {
+          w.minimized = true;
+          w.minimizing = false;
+        });
+      }
+    });
+  }
 
   void _toggleMax(WinState w) {
     setState(() {
@@ -809,12 +826,13 @@ class RobinWindow extends StatelessWidget {
       width: win.size.width,
       height: win.size.height,
       child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: 0.0, end: 1.0),
+        tween: Tween(
+            begin: 0.0, end: (win.closing || win.minimizing) ? 0.0 : 1.0),
         duration: const Duration(milliseconds: 170),
         curve: Curves.easeOutCubic,
         builder: (context, t, child) => Opacity(
           opacity: t.clamp(0.0, 1.0),
-          child: Transform.scale(scale: 0.94 + 0.06 * t, child: child),
+          child: Transform.scale(scale: 0.9 + 0.1 * t, child: child),
         ),
         child: Listener(
         onPointerDown: (_) => onFocus(),
