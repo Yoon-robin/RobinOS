@@ -20,6 +20,7 @@ import 'apps/settings.dart';
 import 'apps/paint.dart';
 import 'widgets/clock.dart';
 import 'widgets/battery.dart';
+import 'widgets/anim.dart';
 import 'widgets/boot_screen.dart';
 import 'widgets/lock_screen.dart';
 import 'widgets/control_center.dart';
@@ -528,9 +529,13 @@ class _DesktopState extends State<Desktop> {
                 Positioned(
                   right: 18,
                   bottom: 96,
-                  child: RobinPanel(
-                    actions: robinActions,
-                    onClose: () => setState(() => _robinOpen = false),
+                  child: PopIn(
+                    from: 0.94,
+                    alignment: Alignment.bottomRight,
+                    child: RobinPanel(
+                      actions: robinActions,
+                      onClose: () => setState(() => _robinOpen = false),
+                    ),
                   ),
                 ),
               // 화면 오버레이
