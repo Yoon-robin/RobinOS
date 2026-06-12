@@ -16,8 +16,9 @@ StandardError=journal
 ExecStart=/usr/local/bin/robinos-session
 Restart=always
 RestartSec=2
-# seat/그래픽 접근
-SupplementaryGroups=video render input seat
+# seat/그래픽 접근 그룹은 hook에서 robin을 직접 가입시킴(/etc/group) →
+# User=robin 이면 systemd가 initgroups로 자동 적용. 여기서 SupplementaryGroups로
+# 다시 지정하면 그 그룹이 없을 때 systemd가 GROUP 단계에서 status=216으로 죽음.
 
 [Install]
 WantedBy=graphical.target
