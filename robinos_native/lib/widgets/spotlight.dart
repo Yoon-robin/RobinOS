@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../system/system_state.dart';
 import '../system/file_system.dart';
+import '../system/platform_backend.dart';
 import '../system/app_intents.dart';
 import '../apps/registry.dart';
 import 'anim.dart';
@@ -56,6 +57,17 @@ class _SpotlightState extends State<Spotlight> {
               widget.onOpen(a.id);
               widget.onClose();
             }));
+    // 설치된 실제 리눅스 앱(리눅스 실기기) → 선택 시 launchApp으로 실행.
+    final real = q.isEmpty
+        ? const <_Hit>[]
+        : context
+            .read<SystemState>()
+            .installedApps
+            .where((a) => a.name.toLowerCase().contains(q))
+            .map((a) => _Hit(a.name, '앱', const Color(0xFF49D17A), '📦', () {
+                  platformBackend.launchApp(a.exec);
+                  widget.onClose();
+                }));
     // 메모/문서(.txt) 전역 검색 → 선택 시 메모 앱에서 열기
     final files = q.isEmpty
         ? const <_Hit>[]
@@ -68,7 +80,7 @@ class _SpotlightState extends State<Spotlight> {
                   notesOpenTarget.value = e.path;
                   widget.onClose();
                 }));
-    return [...apps, ...files];
+    return [...apps, ...real, ...files];
   }
 
   void _openFirst(RobinFs fs) {
