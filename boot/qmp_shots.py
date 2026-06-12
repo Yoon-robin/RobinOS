@@ -41,16 +41,23 @@ def enter():
 try:
     s.recv(65536)  # QMP greeting
     cmd({"execute": "qmp_capabilities"})
-    # 부트 메뉴가 뜰 시간을 준 뒤 ENTER → 라이브 시스템 부팅 시작
-    time.sleep(25)
-    print("ENTER (부트메뉴):", enter())
-    time.sleep(5)
-    enter()  # 혹시 한 번 더 필요할 때 대비
-    # TCG(소프트 에뮬)는 매우 느리니 라이브 부팅이 끝날 때까지 길게 캡처.
-    for i in range(12):
-        time.sleep(45)
-        r = cmd({"execute": "screendump", "arguments": {"filename": f"{out}/shot{i}.ppm"}})
-        print(f"shot{i}: {r}")
+    shot = 0
+    # 1) 부트 메뉴 통과: 첫 2분간 ENTER를 반복 전송(메뉴가 언제 준비될지 모르므로
+    #    계속 두드린다) + 중간중간 캡처. TCG가 느려 단발 ENTER로는 못 넘어감.
+    for t in range(24):  # 24 * 5s = 120s
+        time.sleep(5)
+        enter()
+        if t % 3 == 2:  # ~15초마다 한 장
+            cmd({"execute": "screendump",
+                 "arguments": {"filename": f"{out}/shot{shot}.ppm"}})
+            shot += 1
+    # 2) 라이브 부팅 + cage/Flutter 데스크톱 렌더를 길게 캡처(~9분).
+    for _ in range(18):  # 18 * 30s = 540s
+        time.sleep(30)
+        r = cmd({"execute": "screendump",
+                 "arguments": {"filename": f"{out}/shot{shot}.ppm"}})
+        print(f"shot{shot}: {r}")
+        shot += 1
 except Exception as e:  # noqa: BLE001
     print(f"QMP 오류: {e}")
 finally:

@@ -27,7 +27,7 @@ lb config \
   --security false \
   --linux-flavours amd64 \
   --debian-installer none \
-  --bootappend-live "boot=live components quiet splash"
+  --bootappend-live "boot=live components console=tty0 console=ttyS0,115200 systemd.journald.forward_to_console=1"
 
 # 2) 빌드 (config/ 의 패키지·includes·hooks 가 자동 반영됨)
 lb build
