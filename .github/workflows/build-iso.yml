@@ -7,7 +7,11 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # ubuntu-22.04(glib 2.72) 에서 Flutter를 빌드 — ISO의 Debian bookworm(glib 2.74)보다
+    # 구형이라 바이너리가 2.72까지의 심볼만 참조 → bookworm에서 정상 실행.
+    # ubuntu-latest(24.04, glib 2.80)로 빌드하면 g_once_init_enter_pointer(2.80) 등
+    # 신 심볼을 참조해 bookworm에서 'symbol lookup error'로 크래시함.
+    runs-on: ubuntu-22.04
     timeout-minutes: 90
     steps:
       - name: Checkout
