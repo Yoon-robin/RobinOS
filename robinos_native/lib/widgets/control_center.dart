@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../system/system_state.dart';
+import '../system/platform_backend.dart';
 
 // 제어센터 — 메뉴바 우측 아이콘에서 열리는 빠른 토글 패널.
 class ControlCenter extends StatefulWidget {
@@ -52,8 +53,10 @@ class _ControlCenterState extends State<ControlCenter> {
                     Row(
                       children: [
                         Expanded(
-                            child: _toggle(sys, Icons.wifi, 'Wi-Fi', _wifi,
-                                () => setState(() => _wifi = !_wifi))),
+                            child: _toggle(sys, Icons.wifi, 'Wi-Fi', _wifi, () {
+                              setState(() => _wifi = !_wifi);
+                              platformBackend.setWifi(_wifi); // 리눅스: nmcli
+                            })),
                         const SizedBox(width: 10),
                         Expanded(
                             child: _toggle(sys, Icons.bluetooth, 'Bluetooth',
@@ -94,6 +97,44 @@ class _ControlCenterState extends State<ControlCenter> {
                                 ),
                               ),
                               Icon(Icons.brightness_high,
+                                  size: 16, color: sys.textSec(0.5)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _card(
+                      sys,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('볼륨',
+                              style: TextStyle(
+                                  fontSize: 12, color: sys.textSec(0.6))),
+                          Row(
+                            children: [
+                              Icon(Icons.volume_down,
+                                  size: 16, color: sys.textSec(0.5)),
+                              Expanded(
+                                child: SliderTheme(
+                                  data: SliderThemeData(
+                                    activeTrackColor: sys.accent,
+                                    thumbColor: sys.accent,
+                                    inactiveTrackColor: sys.textSec(0.15),
+                                    overlayColor:
+                                        sys.accent.withValues(alpha: 0.12),
+                                    trackHeight: 4,
+                                  ),
+                                  child: Slider(
+                                    value: sys.volume,
+                                    min: 0.0,
+                                    max: 1.0,
+                                    onChanged: sys.setVolume,
+                                  ),
+                                ),
+                              ),
+                              Icon(Icons.volume_up,
                                   size: 16, color: sys.textSec(0.5)),
                             ],
                           ),
