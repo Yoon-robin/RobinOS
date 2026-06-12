@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../system/system_state.dart';
 import '../system/file_system.dart';
+import '../system/platform_backend.dart';
 import '../widgets/context_menu.dart';
 import '../system/app_intents.dart';
 
@@ -150,6 +151,12 @@ class _FinderAppState extends State<FinderApp> {
                   setState(() => _dir = fs.get(_dir)?.parent ?? '/');
                 }),
                 const SizedBox(width: 10),
+                // 실기기: 디스크 변경(터미널/외부)을 다시 읽어오는 새로고침.
+                if (platformBackend.isReal) ...[
+                  _toolBtn(sys, Icons.refresh, true,
+                      () => context.read<RobinFs>().refresh()),
+                  const SizedBox(width: 10),
+                ],
                 Flexible(child: _breadcrumb(sys)),
                 const Spacer(),
                 Text('${items.length}개',

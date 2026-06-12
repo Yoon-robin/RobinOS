@@ -79,6 +79,14 @@ class RobinFs extends ChangeNotifier {
     }
   }
 
+  // 실기기: 디스크를 다시 스캔해 캐시 갱신(터미널/외부에서 바뀐 파일 반영).
+  // 가상 모드(웹/개발)는 메모리가 곧 진실이므로 no-op.
+  Future<void> refresh() async {
+    if (!_realBacked) return;
+    await _loadFromDisk();
+    notifyListeners();
+  }
+
   // 변경 영속: 실기기면 디스크에 미러, 아니면 shared_preferences.
   void _sync(void Function() diskOp) {
     if (_realBacked) {
