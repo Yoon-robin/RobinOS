@@ -6,6 +6,7 @@ import '../system/system_state.dart';
 import '../system/file_system.dart';
 import '../system/app_intents.dart';
 import '../apps/registry.dart';
+import 'anim.dart';
 
 // Spotlight 검색 결과 한 줄(앱 또는 파일).
 class _Hit {
@@ -94,7 +95,10 @@ class _SpotlightState extends State<Spotlight> {
         ),
         Align(
           alignment: const Alignment(0, -0.35),
-          child: Container(
+          child: PopIn(
+            from: 0.96,
+            alignment: Alignment.topCenter,
+            child: Container(
             width: 540,
             decoration: BoxDecoration(
               color: sys.isLight
@@ -169,6 +173,7 @@ class _SpotlightState extends State<Spotlight> {
                 ),
               ],
             ),
+          ),
           ),
         ),
       ],

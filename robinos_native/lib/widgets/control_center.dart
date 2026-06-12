@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../system/system_state.dart';
 import '../system/platform_backend.dart';
+import 'anim.dart';
 
 // 제어센터 — 메뉴바 우측 아이콘에서 열리는 빠른 토글 패널.
 class ControlCenter extends StatefulWidget {
@@ -33,7 +34,10 @@ class _ControlCenterState extends State<ControlCenter> {
         Positioned(
           top: 38,
           right: 10,
-          child: ClipRRect(
+          child: PopIn(
+            from: 0.95,
+            alignment: Alignment.topRight,
+            child: ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
@@ -203,6 +207,7 @@ class _ControlCenterState extends State<ControlCenter> {
                 ),
               ),
             ),
+          ),
           ),
         ),
       ],

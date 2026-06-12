@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../system/system_state.dart';
 import '../apps/registry.dart';
+import 'anim.dart';
 
 // 런치패드 — 전체화면 앱 그리드. 앱 탭 → 실행, 빈 곳 탭 → 닫기.
 class Launchpad extends StatelessWidget {
@@ -21,15 +22,18 @@ class Launchpad extends StatelessWidget {
         child: Container(
           color: Colors.black.withValues(alpha: sys.isLight ? 0.25 : 0.45),
           child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 40,
-                runSpacing: 36,
-                children: [
-                  for (final a in kApps) _tile(sys, a),
-                ],
+            child: PopIn(
+              from: 0.9,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 720),
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 40,
+                  runSpacing: 36,
+                  children: [
+                    for (final a in kApps) _tile(sys, a),
+                  ],
+                ),
               ),
             ),
           ),

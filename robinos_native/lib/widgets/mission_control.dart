@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../system/system_state.dart';
 import '../apps/registry.dart';
+import 'anim.dart';
 
 class MissionWin {
   final int key;
@@ -34,20 +35,23 @@ class MissionControl extends StatelessWidget {
         child: Container(
           color: Colors.black.withValues(alpha: sys.isLight ? 0.2 : 0.4),
           child: Center(
-            child: wins.isEmpty
-                ? Text('열린 창이 없어요',
-                    style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white.withValues(alpha: 0.7)))
-                : ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 820),
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 26,
-                      runSpacing: 26,
-                      children: [for (final w in wins) _card(sys, w)],
+            child: PopIn(
+              from: 0.93,
+              child: wins.isEmpty
+                  ? Text('열린 창이 없어요',
+                      style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white.withValues(alpha: 0.7)))
+                  : ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 820),
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 26,
+                        runSpacing: 26,
+                        children: [for (final w in wins) _card(sys, w)],
+                      ),
                     ),
-                  ),
+            ),
           ),
         ),
       ),

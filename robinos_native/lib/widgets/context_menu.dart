@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../system/system_state.dart';
+import 'anim.dart';
 
 class CtxItem {
   final String label;
@@ -42,7 +43,11 @@ class ContextMenu extends StatelessWidget {
         Positioned(
           left: left,
           top: top,
-          child: ClipRRect(
+          child: PopIn(
+            from: 0.9,
+            duration: const Duration(milliseconds: 130),
+            alignment: Alignment.topLeft,
+            child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
@@ -68,6 +73,7 @@ class ContextMenu extends StatelessWidget {
                 ),
               ),
             ),
+          ),
           ),
         ),
       ],
