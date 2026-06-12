@@ -175,6 +175,10 @@ class _LinuxBackend implements PlatformBackend {
   // RobinFs 경로('/문서/a.txt') → 실제 경로('$HOME/문서/a.txt'). '/'는 홈 자체.
   String _real(String p) => p == '/' ? _home : '$_home$p';
 
+  // 쓰기/삭제 대상으로 위험한 경로 차단: 홈 자체('/')·빈 경로·상위 이탈('..').
+  // (실호출 경로상 도달은 어렵지만, 홈 전체 deleteSync 같은 사고를 원천 차단하는 심층 방어.)
+  bool _unsafe(String p) => p.isEmpty || p == '/' || p.contains('..');
+
   bool _isTextPath(String p) {
     final l = p.toLowerCase();
     const exts = [
@@ -224,6 +228,7 @@ class _LinuxBackend implements PlatformBackend {
 
   @override
   Future<void> fsWriteFile(String path, String content) async {
+    if (_unsafe(path)) return;
     try {
       final f = File(_real(path));
       f.parent.createSync(recursive: true);
@@ -233,6 +238,7 @@ class _LinuxBackend implements PlatformBackend {
 
   @override
   Future<void> fsMakeDir(String path) async {
+    if (_unsafe(path)) return;
     try {
       Directory(_real(path)).createSync(recursive: true);
     } catch (_) {}
@@ -240,6 +246,7 @@ class _LinuxBackend implements PlatformBackend {
 
   @override
   Future<void> fsDelete(String path) async {
+    if (_unsafe(path)) return;
     try {
       final r = _real(path);
       final d = Directory(r);
@@ -254,6 +261,7 @@ class _LinuxBackend implements PlatformBackend {
 
   @override
   Future<void> fsRename(String fromPath, String toPath) async {
+    if (_unsafe(fromPath) || _unsafe(toPath)) return;
     try {
       final from = _real(fromPath);
       final to = _real(toPath);
@@ -293,21 +301,30 @@ class _LinuxBackend implements PlatformBackend {
       await Process.run('bluetoothctl', ['--timeout', '6', 'scan', 'on']);
       final r = await Process.run('bluetoothctl', ['devices']);
       if (r.exitCode != 0) return const [];
-      final out = <BtDevice>[];
       final re = RegExp(r'^Device\s+([0-9A-Fa-f:]{17})\s+(.*)$');
+      // 1) 기기 목록 파싱.
+      final parsed = <(String mac, String name)>[];
       for (final line in '${r.stdout}'.split('\n')) {
         final m = re.firstMatch(line.trim());
         if (m == null) continue;
-        final mac = m.group(1)!;
-        final name = m.group(2)!.trim();
-        var connected = false, paired = false;
+        parsed.add((m.group(1)!, m.group(2)!.trim()));
+      }
+      // 2) 각 기기 상태(info)를 병렬 조회(직렬이면 기기 수만큼 느려짐).
+      final infos = await Future.wait(parsed.map((p) async {
         try {
-          final info = await Process.run('bluetoothctl', ['info', mac]);
-          final it = '${info.stdout}';
-          connected = it.contains('Connected: yes');
-          paired = it.contains('Paired: yes');
-        } catch (_) {}
-        out.add(BtDevice(mac, name.isEmpty ? mac : name, connected, paired));
+          return '${(await Process.run('bluetoothctl', ['info', p.$1])).stdout}';
+        } catch (_) {
+          return '';
+        }
+      }));
+      // 3) 조합.
+      final out = <BtDevice>[];
+      for (var i = 0; i < parsed.length; i++) {
+        final mac = parsed[i].$1;
+        final name = parsed[i].$2;
+        final it = infos[i];
+        out.add(BtDevice(mac, name.isEmpty ? mac : name,
+            it.contains('Connected: yes'), it.contains('Paired: yes')));
       }
       out.sort((a, b) {
         if (a.connected != b.connected) return a.connected ? -1 : 1;

@@ -129,6 +129,9 @@ class RobinFs extends ChangeNotifier {
   String _join(String dir, String name) => dir == '/' ? '/$name' : '$dir/$name';
 
   void mkdir(String dir, String name) {
+    if (name.isEmpty || name.contains('/') || name == '..' || name == '.') {
+      return;
+    }
     final p = _join(dir, name);
     if (!_map.containsKey(p)) {
       _mkdir(p);
@@ -155,7 +158,13 @@ class RobinFs extends ChangeNotifier {
   String? rename(String from, String newName) {
     final entry = _map[from];
     final name = newName.trim();
-    if (entry == null || name.isEmpty || name.contains('/')) return null;
+    if (entry == null ||
+        name.isEmpty ||
+        name.contains('/') ||
+        name == '..' ||
+        name == '.') {
+      return null;
+    }
     final to = _join(entry.parent, name);
     if (to == from || _map.containsKey(to)) return null;
     if (entry.isDir) {
