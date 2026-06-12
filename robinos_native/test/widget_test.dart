@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:robinos_native/widgets/clock.dart';
 import 'package:robinos_native/robin/robin.dart';
 import 'package:robinos_native/system/file_system.dart';
+import 'package:robinos_native/system/platform_backend.dart';
 
 RobinActions _actions(Map<String, String> log) => RobinActions(
       openApp: (id) => log['open'] = id,
@@ -144,6 +145,15 @@ void main() {
       final log = <String, String>{};
       await localBrain('다 닫아줘', _actions(log));
       expect(log['close'], 'all');
+    });
+  });
+
+  group('PlatformBackend (Phase C)', () {
+    test('setBrightness/setVolume 는 도구가 없어도 예외 없이 완료', () async {
+      // 리눅스 CI엔 brightnessctl/wpctl 미설치 → Process.run 예외를 내부에서 흡수.
+      await platformBackend.setBrightness(0.5);
+      await platformBackend.setVolume(0.3);
+      expect(platformBackend.isReal, isA<bool>());
     });
   });
 }

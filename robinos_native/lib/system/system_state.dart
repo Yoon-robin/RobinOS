@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'platform_backend.dart';
 
 // ===========================================================
 // SystemState — 웹의 SystemContext 대응 (테마·배경·강조색·밝기)
@@ -174,6 +175,8 @@ class SystemState extends ChangeNotifier {
   void setBrightness(double v) {
     _brightness = v.clamp(0.25, 1.0);
     _prefs?.setDouble('robinos.brightness', _brightness);
+    // 리눅스 실기기면 실제 화면 밝기도 조절(brightnessctl). 웹/기타는 no-op.
+    platformBackend.setBrightness(_brightness);
     notifyListeners();
   }
 }
