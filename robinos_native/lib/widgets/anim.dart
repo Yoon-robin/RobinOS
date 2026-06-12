@@ -34,6 +34,61 @@ class PopIn extends StatelessWidget {
   }
 }
 
+// 리스트 아이템 staggered 등장 — 인덱스에 비례해 살짝 지연된 슬라이드업+페이드.
+// 검색 결과·알림·앱 타일이 "주르륵" 부드럽게 나타나는 macOS/iOS 감성.
+// (각 아이템이 자기 AnimationController로 1회 등장 — 리스트 빌드 시 index만 넘기면 됨)
+class StaggerIn extends StatefulWidget {
+  final Widget child;
+  final int index;
+  final double dy; // 시작 시 아래로 내려둘 오프셋(px)
+  const StaggerIn(
+      {super.key, required this.child, this.index = 0, this.dy = 10});
+
+  @override
+  State<StaggerIn> createState() => _StaggerInState();
+}
+
+class _StaggerInState extends State<StaggerIn>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c;
+
+  @override
+  void initState() {
+    super.initState();
+    _c = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 300));
+    // 인덱스 비례 지연(최대 ~320ms)으로 순차 등장.
+    final delayMs = (widget.index * 40).clamp(0, 320);
+    Future.delayed(Duration(milliseconds: delayMs), () {
+      if (mounted) _c.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (_, child) {
+        final t = Curves.easeOutCubic.transform(_c.value);
+        return Opacity(
+          opacity: t,
+          child: Transform.translate(
+            offset: Offset(0, (1 - t) * widget.dy),
+            child: child,
+          ),
+        );
+      },
+      child: widget.child,
+    );
+  }
+}
+
 // 배경 흐림/딤이 부드럽게 들어오게 (오버레이 backdrop용).
 class FadeIn extends StatelessWidget {
   final Widget child;

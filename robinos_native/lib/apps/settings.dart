@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../system/system_state.dart';
 import '../system/platform_backend.dart';
 import '../robin/brains.dart';
+import '../widgets/anim.dart';
 
 // ===========================================================
 // 설정 앱 — 테마 · 배경화면 · 강조색 · 밝기 · Robin 두뇌
@@ -579,7 +580,8 @@ class _WifiSettingsState extends State<_WifiSettings> {
         if (_nets.isEmpty && !_scanning)
           _hintBox(sys, '검색된 네트워크가 없어요. Wi-Fi가 켜져 있는지 확인하고 다시 검색해 주세요.')
         else
-          for (final n in _nets) _row(sys, n),
+          for (var i = 0; i < _nets.length; i++)
+            StaggerIn(index: i, child: _row(sys, _nets[i])),
         if (_status != null) ...[
           const SizedBox(height: 6),
           Text(_status!,
@@ -807,7 +809,8 @@ class _BtSettingsState extends State<_BtSettings> {
         if (_devs.isEmpty && !_scanning)
           _hintBox(sys, '검색을 눌러 주변 블루투스 기기를 찾아보세요. (블루투스가 켜져 있어야 해요)')
         else
-          for (final d in _devs) _row(sys, d),
+          for (var i = 0; i < _devs.length; i++)
+            StaggerIn(index: i, child: _row(sys, _devs[i])),
         if (_status != null) ...[
           const SizedBox(height: 6),
           Text(_status!,

@@ -180,7 +180,8 @@ class NotificationCenter extends StatelessWidget {
                             itemCount: ordered.length,
                             separatorBuilder: (_, _) =>
                                 const SizedBox(height: 8),
-                            itemBuilder: (_, i) => _card(sys, ordered[i]),
+                            itemBuilder: (_, i) =>
+                                StaggerIn(index: i, child: _card(sys, ordered[i])),
                           ),
                         ),
                     ],

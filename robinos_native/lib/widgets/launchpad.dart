@@ -38,7 +38,8 @@ class Launchpad extends StatelessWidget {
                         spacing: 40,
                         runSpacing: 36,
                         children: [
-                          for (final a in kApps) _tile(sys, a),
+                          for (var i = 0; i < kApps.length; i++)
+                            StaggerIn(index: i, child: _tile(sys, kApps[i])),
                         ],
                       ),
                       // 설치된 실제 리눅스 앱 (리눅스 실기기에서만 — labwc가 창으로 띄움)
@@ -59,7 +60,10 @@ class Launchpad extends StatelessWidget {
                           spacing: 40,
                           runSpacing: 36,
                           children: [
-                            for (final a in sys.installedApps) _realTile(a),
+                            for (var i = 0; i < sys.installedApps.length; i++)
+                              StaggerIn(
+                                  index: i,
+                                  child: _realTile(sys.installedApps[i])),
                           ],
                         ),
                       ],
