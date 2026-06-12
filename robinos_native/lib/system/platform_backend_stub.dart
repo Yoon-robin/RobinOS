@@ -66,4 +66,8 @@ class _StubBackend implements PlatformBackend {
   Future<bool> connectBluetooth(String mac) async => false;
   @override
   Future<void> disconnectBluetooth(String mac) async {}
+  @override
+  Future<String?> currentTimezone() async => null;
+  @override
+  Future<void> setTimezone(String tz) async {}
 }

@@ -359,6 +359,25 @@ class _LinuxBackend implements PlatformBackend {
     } catch (_) {}
   }
 
+  @override
+  Future<String?> currentTimezone() async {
+    try {
+      final r = await Process.run(
+          'timedatectl', ['show', '-p', 'Timezone', '--value']);
+      if (r.exitCode != 0) return null;
+      final tz = '${r.stdout}'.trim();
+      return tz.isEmpty ? null : tz;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Future<void> setTimezone(String tz) async {
+    // tz는 프리셋/목록에서 온 검증된 IANA 이름. Process.run 인자라 셸 인젝션 없음.
+    await _run('sudo', ['timedatectl', 'set-timezone', tz]);
+  }
+
   Future<void> _run(String exe, List<String> args) async {
     try {
       await Process.run(exe, args);
@@ -432,4 +451,8 @@ class _NoopBackend implements PlatformBackend {
   Future<bool> connectBluetooth(String mac) async => false;
   @override
   Future<void> disconnectBluetooth(String mac) async {}
+  @override
+  Future<String?> currentTimezone() async => null;
+  @override
+  Future<void> setTimezone(String tz) async {}
 }

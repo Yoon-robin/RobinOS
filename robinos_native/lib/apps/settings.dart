@@ -5,6 +5,7 @@ import '../system/system_state.dart';
 import '../system/platform_backend.dart';
 import '../robin/brains.dart';
 import '../widgets/anim.dart';
+import '../widgets/clock.dart';
 
 // ===========================================================
 // 설정 앱 — 테마 · 배경화면 · 강조색 · 밝기 · Robin 두뇌
@@ -116,6 +117,10 @@ class SettingsApp extends StatelessWidget {
           _section(sys, '블루투스'),
           const SizedBox(height: 10),
           const _BtSettings(),
+          const SizedBox(height: 26),
+          _section(sys, '날짜 및 시간'),
+          const SizedBox(height: 10),
+          const _TimeSettings(),
           const SizedBox(height: 26),
           _section(sys, 'Robin 두뇌'),
           const SizedBox(height: 10),
@@ -872,6 +877,169 @@ class _BtSettingsState extends State<_BtSettings> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _hintBox(SystemState sys, String text) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: sys.textSec(0.05),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(text,
+            style:
+                TextStyle(fontSize: 12, color: sys.textSec(0.55), height: 1.4)),
+      );
+}
+
+// -----------------------------------------------------------
+// 날짜 및 시간 — 현재 시각(항상 표시) + 시간대 변경(리눅스: timedatectl).
+// -----------------------------------------------------------
+class _TimeSettings extends StatefulWidget {
+  const _TimeSettings();
+
+  @override
+  State<_TimeSettings> createState() => _TimeSettingsState();
+}
+
+class _TimeSettingsState extends State<_TimeSettings> {
+  String? _tz;
+  String? _status;
+
+  static const _presets = <(String tz, String label)>[
+    ('Asia/Seoul', '서울'),
+    ('Asia/Tokyo', '도쿄'),
+    ('Asia/Shanghai', '상하이'),
+    ('Asia/Singapore', '싱가포르'),
+    ('UTC', 'UTC'),
+    ('Europe/London', '런던'),
+    ('Europe/Paris', '파리'),
+    ('America/New_York', '뉴욕'),
+    ('America/Los_Angeles', 'LA'),
+    ('Australia/Sydney', '시드니'),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final tz = await platformBackend.currentTimezone();
+    if (!mounted) return;
+    setState(() => _tz = tz);
+  }
+
+  Future<void> _set(String tz) async {
+    setState(() => _status = null);
+    await platformBackend.setTimezone(tz);
+    await Future.delayed(const Duration(milliseconds: 250));
+    final cur = await platformBackend.currentTimezone();
+    if (!mounted) return;
+    setState(() {
+      _tz = cur ?? tz;
+      _status = '시간대를 $tz(으)로 바꿨어요.';
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sys = context.watch<SystemState>();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 현재 시각 카드 — 큰 시계 + 날짜/시간대.
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          decoration: BoxDecoration(
+            color: sys.textSec(0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: sys.textSec(0.08)),
+          ),
+          child: Row(
+            children: [
+              LiveClock(
+                format: robinBigTime,
+                style: TextStyle(
+                    fontSize: 34,
+                    fontWeight: FontWeight.w300,
+                    color: sys.textPrimary,
+                    letterSpacing: 1),
+              ),
+              const Spacer(),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  LiveClock(
+                    format: robinDate,
+                    style: TextStyle(fontSize: 13, color: sys.textSec(0.7)),
+                  ),
+                  if (_tz != null) ...[
+                    const SizedBox(height: 3),
+                    Text(_tz!,
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: sys.accent,
+                            fontWeight: FontWeight.w600)),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        if (!platformBackend.isReal)
+          _hintBox(sys, '시간대 변경은 리눅스 실기기에서 돼요. 위 시각은 지금 이 기기의 시간이에요.')
+        else ...[
+          Text('시간대', style: TextStyle(fontSize: 12, color: sys.textSec(0.5))),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (var i = 0; i < _presets.length; i++)
+                StaggerIn(
+                  index: i,
+                  child: _chip(sys, _presets[i].$1, _presets[i].$2),
+                ),
+            ],
+          ),
+          if (_status != null) ...[
+            const SizedBox(height: 8),
+            Text(_status!,
+                style: TextStyle(fontSize: 11.5, color: sys.textSec(0.6))),
+          ],
+        ],
+      ],
+    );
+  }
+
+  Widget _chip(SystemState sys, String tz, String label) {
+    final active = _tz == tz;
+    return GestureDetector(
+      onTap: active ? null : () => _set(tz),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          color:
+              active ? sys.accent.withValues(alpha: 0.16) : sys.textSec(0.05),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: active ? sys.accent : sys.textSec(0.12),
+            width: active ? 1.5 : 1,
+          ),
+        ),
+        child: Text(label,
+            style: TextStyle(
+                fontSize: 13,
+                fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                color: active ? sys.accent : sys.textPrimary)),
       ),
     );
   }

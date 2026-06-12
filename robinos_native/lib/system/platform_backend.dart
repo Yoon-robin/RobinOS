@@ -120,6 +120,12 @@ abstract class PlatformBackend {
   Future<bool> connectBluetooth(String mac);
   // 기기 연결 해제.
   Future<void> disconnectBluetooth(String mac);
+
+  // === 시간대 (리눅스: timedatectl) ===
+  // 현재 시스템 시간대(예: 'Asia/Seoul'). 웹/도구부재: null.
+  Future<String?> currentTimezone();
+  // 시간대 변경(리눅스: sudo timedatectl set-timezone). 웹/도구부재: no-op.
+  Future<void> setTimezone(String tz);
 }
 
 // 플랫폼별 구현 인스턴스 — 조건부 import가 createPlatformBackend()를 제공.
