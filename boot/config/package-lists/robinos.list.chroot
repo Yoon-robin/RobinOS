@@ -20,3 +20,9 @@ brightnessctl
 # 기본 유틸
 curl
 ca-certificates
+# 디스크 설치기 — 설정의 "RobinOS 디스크에 설치" 버튼이 Calamares를 실행(파티션·유저·GRUB).
+# calamares-settings-debian = 동작하는 기본 설치 설정. sudo = robin이 루트 설치기 실행용.
+# (주의: Qt 기반이라 ISO 크기가 늘어남)
+calamares
+calamares-settings-debian
+sudo

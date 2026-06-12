@@ -23,4 +23,7 @@ class _StubBackend implements PlatformBackend {
 
   @override
   Future<void> setWifi(bool on) async {}
+
+  @override
+  Future<void> runInstaller() async {}
 }

@@ -26,6 +26,9 @@ abstract class PlatformBackend {
 
   // 와이파이 on/off (리눅스: nmcli radio wifi). 웹/도구부재 시 no-op.
   Future<void> setWifi(bool on);
+
+  // RobinOS를 디스크에 설치 (리눅스: Calamares 그래픽 설치기 실행). 웹/도구부재 시 no-op.
+  Future<void> runInstaller();
 }
 
 // 플랫폼별 구현 인스턴스 — 조건부 import가 createPlatformBackend()를 제공.

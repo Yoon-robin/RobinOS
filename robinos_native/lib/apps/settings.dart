@@ -122,6 +122,37 @@ class SettingsApp extends StatelessWidget {
                 ? '활성 — 리눅스에서 밝기·볼륨·전원·Wi-Fi 실제 제어'
                 : '시뮬레이션 — 웹/개발 모드 (실기기 부팅 시 활성화)',
           ),
+          // 리눅스 실기기(라이브 부팅)에서만 디스크 설치 진입점 노출.
+          if (platformBackend.isReal) ...[
+            const SizedBox(height: 14),
+            GestureDetector(
+              onTap: () => platformBackend.runInstaller(),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: sys.accent.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: sys.accent.withValues(alpha: 0.5)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.install_desktop, size: 18, color: sys.accent),
+                    const SizedBox(width: 10),
+                    Text('RobinOS 디스크에 설치',
+                        style: TextStyle(
+                            fontSize: 13.5,
+                            color: sys.accent,
+                            fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 5),
+            Text('파티션·유저 설정 후 디스크에 설치합니다 (Calamares 설치기).',
+                style: TextStyle(fontSize: 11, color: sys.textSec(0.4))),
+          ],
         ],
       ),
     );

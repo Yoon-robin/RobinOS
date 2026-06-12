@@ -34,6 +34,10 @@ class _LinuxBackend implements PlatformBackend {
   Future<void> setWifi(bool on) async =>
       _run('nmcli', ['radio', 'wifi', on ? 'on' : 'off']);
 
+  @override
+  Future<void> runInstaller() async =>
+      _run('sh', ['-c', 'sudo -E calamares || calamares']);
+
   Future<void> _run(String exe, List<String> args) async {
     try {
       await Process.run(exe, args);
@@ -64,4 +68,7 @@ class _NoopBackend implements PlatformBackend {
 
   @override
   Future<void> setWifi(bool on) async {}
+
+  @override
+  Future<void> runInstaller() async {}
 }

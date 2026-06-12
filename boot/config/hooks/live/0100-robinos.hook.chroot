@@ -16,6 +16,14 @@ for g in video render input audio seat _seatd; do
   usermod -aG "$g" robin 2>/dev/null || true
 done
 
+# robin이 디스크 설치기(Calamares)를 루트로 실행할 수 있게 (설정의 'RobinOS 설치' 버튼).
+# SETENV: Wayland 디스플레이 등 환경변수를 보존(sudo -E)하기 위함.
+if command -v calamares >/dev/null 2>&1; then
+  echo 'robin ALL=(root) NOPASSWD:SETENV: /usr/bin/calamares' \
+    > /etc/sudoers.d/robinos-install || true
+  chmod 440 /etc/sudoers.d/robinos-install 2>/dev/null || true
+fi
+
 # 2) seatd + RobinOS 키오스크 서비스 활성화, 그래픽 타깃으로 부팅
 systemctl enable seatd.service || true
 systemctl enable robinos-kiosk.service || true
