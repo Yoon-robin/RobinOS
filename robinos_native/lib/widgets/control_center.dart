@@ -154,9 +154,9 @@ class _ControlCenterState extends State<ControlCenter> {
                             GestureDetector(
                               onTap: () => sys.setAccent(a.id),
                               child: Container(
-                                width: 20,
-                                height: 20,
-                                margin: const EdgeInsets.only(left: 7),
+                                width: 18,
+                                height: 18,
+                                margin: const EdgeInsets.only(left: 5),
                                 decoration: BoxDecoration(
                                   color: a.color,
                                   shape: BoxShape.circle,
