@@ -9,6 +9,10 @@ export XDG_RUNTIME_DIR="/run/user/$(id -u)"
 mkdir -p "$XDG_RUNTIME_DIR"
 chmod 700 "$XDG_RUNTIME_DIR"
 
+# Flutter(GTK)가 XWayland(X11)로 떨어지지 않고 네이티브 Wayland를 쓰게 →
+# cage가 타이틀바 없이 풀스크린으로 렌더(이전엔 1024x721 창 + 타이틀바였음).
+export GDK_BACKEND=wayland
+
 # 렌더링: 기본은 진짜 GPU(하드웨어 EGL/GL). 단, 부팅테스트(QEMU·GPU 없음)는
 # 커널 cmdline에 'robinos.softrender' 를 넣어 소프트웨어 렌더로 전환:
 #   cage 컴포지터 = pixman(EGL 불필요), Flutter = llvmpipe 소프트웨어 GL.
