@@ -9,6 +9,13 @@
 import 'platform_backend_stub.dart'
     if (dart.library.io) 'platform_backend_io.dart';
 
+// 설치된 실제 리눅스 앱 (.desktop 항목) — B(데스크톱 환경) 앱 런처용.
+class InstalledApp {
+  final String name;
+  final String exec;
+  const InstalledApp(this.name, this.exec);
+}
+
 abstract class PlatformBackend {
   // 실제 하드웨어 제어가 가능한 플랫폼인지(리눅스 실기기 등). 웹/스텁은 false.
   bool get isReal;
@@ -36,6 +43,12 @@ abstract class PlatformBackend {
   // 실제 셸 명령 실행 (리눅스: bash -c, stdout+stderr 반환).
   // 웹/비리눅스: null → 터미널이 RobinFs 가짜 셸로 폴백.
   Future<String?> runShell(String cmd, String cwd);
+
+  // 설치된 실제 리눅스 앱 목록 (.desktop 스캔). 웹/비리눅스: 빈 목록.
+  Future<List<InstalledApp>> listInstalledApps();
+
+  // 실제 리눅스 앱/명령을 detached로 실행 (B: 진짜 앱 띄우기). 웹/비리눅스: no-op.
+  Future<void> launchApp(String exec);
 }
 
 // 플랫폼별 구현 인스턴스 — 조건부 import가 createPlatformBackend()를 제공.

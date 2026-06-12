@@ -53,6 +53,52 @@ class _LinuxBackend implements PlatformBackend {
     }
   }
 
+  @override
+  Future<List<InstalledApp>> listInstalledApps() async {
+    final home = Platform.environment['HOME'] ?? '';
+    final dirs = [
+      '/usr/share/applications',
+      '/usr/local/share/applications',
+      if (home.isNotEmpty) '$home/.local/share/applications',
+    ];
+    final apps = <InstalledApp>[];
+    final seen = <String>{};
+    for (final d in dirs) {
+      final dir = Directory(d);
+      if (!dir.existsSync()) continue;
+      try {
+        for (final f in dir.listSync()) {
+          if (f is! File || !f.path.endsWith('.desktop')) continue;
+          try {
+            String? name, exec;
+            var hidden = false;
+            for (final l in f.readAsLinesSync()) {
+              if (name == null && l.startsWith('Name=')) {
+                name = l.substring(5).trim();
+              } else if (exec == null && l.startsWith('Exec=')) {
+                exec = l.substring(5).replaceAll(RegExp(r'%[a-zA-Z]'), '').trim();
+              } else if (l == 'NoDisplay=true' || l == 'Terminal=true') {
+                hidden = true;
+              }
+            }
+            if (hidden || name == null || exec == null || exec.isEmpty) continue;
+            if (seen.add(name)) apps.add(InstalledApp(name, exec));
+          } catch (_) {}
+        }
+      } catch (_) {}
+    }
+    apps.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    return apps;
+  }
+
+  @override
+  Future<void> launchApp(String exec) async {
+    try {
+      await Process.start('sh', ['-c', exec],
+          mode: ProcessStartMode.detached);
+    } catch (_) {}
+  }
+
   Future<void> _run(String exe, List<String> args) async {
     try {
       await Process.run(exe, args);
@@ -92,4 +138,10 @@ class _NoopBackend implements PlatformBackend {
 
   @override
   Future<String?> runShell(String cmd, String cwd) async => null;
+
+  @override
+  Future<List<InstalledApp>> listInstalledApps() async => const [];
+
+  @override
+  Future<void> launchApp(String exec) async {}
 }

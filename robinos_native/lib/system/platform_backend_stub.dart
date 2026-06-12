@@ -32,4 +32,10 @@ class _StubBackend implements PlatformBackend {
 
   @override
   Future<String?> runShell(String cmd, String cwd) async => null;
+
+  @override
+  Future<List<InstalledApp>> listInstalledApps() async => const [];
+
+  @override
+  Future<void> launchApp(String exec) async {}
 }
