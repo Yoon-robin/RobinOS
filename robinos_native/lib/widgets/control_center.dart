@@ -20,6 +20,17 @@ class _ControlCenterState extends State<ControlCenter> {
   bool _bt = false;
 
   @override
+  void initState() {
+    super.initState();
+    // 실기기면 현재 Wi-Fi 연결 상태로 토글을 초기화(하드코딩 대신 실제 반영).
+    if (platformBackend.isReal) {
+      platformBackend.wifiConnected().then((c) {
+        if (mounted) setState(() => _wifi = c);
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final sys = context.watch<SystemState>();
     return Stack(
