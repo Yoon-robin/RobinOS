@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  RobinOS labwc 설정.
+  RobinOS 셸(app_id=os.robinos.shell)은 풀스크린 백드롭으로 두고,
+  실제 리눅스 앱은 그 위에 일반 창으로 띄운다.
+  키바인드/마우스는 labwc 내장 기본값(<default/>)을 그대로 사용 →
+  Alt+Tab 창 전환, Super+드래그 이동 등 잘 검증된 동작을 얻는다.
+-->
+<labwc_config>
+  <core>
+    <gap>0</gap>
+  </core>
+
+  <keyboard>
+    <default />
+  </keyboard>
+
+  <mouse>
+    <default />
+  </mouse>
+
+  <windowRules>
+    <!-- RobinOS 셸: 서버 장식 제거 + 작업표시줄/창전환기에서 제외(백드롭처럼 동작). -->
+    <windowRule identifier="os.robinos.shell"
+                serverDecoration="no"
+                skipTaskbar="yes"
+                skipWindowSwitcher="yes" />
+  </windowRules>
+</labwc_config>

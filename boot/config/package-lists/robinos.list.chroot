@@ -1,5 +1,7 @@
 # RobinOS 라이브 이미지에 설치할 패키지 (live-build chroot 단계)
-# Wayland 키오스크 컴포지터 (RobinOS 풀스크린)
+# 컴포지터: labwc = wlroots 멀티윈도(스택형) → RobinOS 셸 + 실제 리눅스 앱을 창으로(B: 진짜 DE).
+# cage = 단일앱 키오스크(폴백, 'robinos.cage' 커널파라미터로 선택). 둘 다 wlroots라 softrender 공유.
+labwc
 cage
 seatd
 # cage는 시작 시 XWayland 바이너리를 요구(없으면 'Cannot create XWayland server'로 종료).
@@ -23,6 +25,8 @@ pipewire-pulse
 wireplumber
 # 블루투스 on/off (Phase C: rfkill)
 rfkill
+# 스크린샷 (Robin '스크린샷' / grim — wlr-screencopy, labwc에서 동작)
+grim
 # 기본 유틸
 curl
 ca-certificates

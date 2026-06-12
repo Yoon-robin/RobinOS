@@ -25,34 +25,15 @@ static void my_application_activate(GApplication* application) {
   GtkWindow* window =
       GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
 
-  // Use a header bar when running in GNOME as this is the common style used
-  // by applications and is the setup most users will be using (e.g. Ubuntu
-  // desktop).
-  // If running on X and not using GNOME then just use a traditional title bar
-  // in case the window manager does more exotic layout, e.g. tiling.
-  // If running on Wayland assume the header bar will work (may need changing
-  // if future cases occur).
-  gboolean use_header_bar = TRUE;
-#ifdef GDK_WINDOWING_X11
-  GdkScreen* screen = gtk_window_get_screen(window);
-  if (GDK_IS_X11_SCREEN(screen)) {
-    const gchar* wm_name = gdk_x11_screen_get_window_manager_name(screen);
-    if (g_strcmp0(wm_name, "GNOME Shell") != 0) {
-      use_header_bar = FALSE;
-    }
-  }
-#endif
-  if (use_header_bar) {
-    GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
-    gtk_widget_show(GTK_WIDGET(header_bar));
-    gtk_header_bar_set_title(header_bar, "robinos_native");
-    gtk_header_bar_set_show_close_button(header_bar, TRUE);
-    gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
-  } else {
-    gtk_window_set_title(window, "robinos_native");
-  }
-
+  // RobinOS는 컴포지터(labwc 멀티윈도 / cage 단일앱) 위의 "셸"이다.
+  // 타이틀바·장식 없이 화면을 가득 채우는 백드롭으로 직접 설정 →
+  // 어떤 컴포지터에서도 동일하게 풀스크린처럼 보이고, 실제 앱은 그 위에 창으로 뜬다.
+  // (fullscreen 대신 maximize: fullscreen은 wlroots에서 상위 레이어로 올라가 새 앱 창을
+  //  가릴 수 있음. maximize면 일반 레이어에 남아 새 앱이 자연스럽게 위로 쌓인다.)
+  gtk_window_set_decorated(window, FALSE);
+  gtk_window_set_title(window, "RobinOS");
   gtk_window_set_default_size(window, 1280, 720);
+  gtk_window_maximize(window);
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
   fl_dart_project_set_dart_entrypoint_arguments(
