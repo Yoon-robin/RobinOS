@@ -27,7 +27,10 @@ lb config \
   --security false \
   --linux-flavours amd64 \
   --debian-installer none \
-  --bootappend-live "boot=live components console=tty0 console=ttyS0,115200 systemd.journald.forward_to_console=1"
+  --bootappend-live "boot=live components quiet splash persistence"
+  # ↑ persistence: 'persistence' 라벨 파티션(+persistence.conf)이 있으면 데이터 유지,
+  #   없으면 그냥 휘발성 부팅(무해). 진단용 console=ttyS0 등은 CI 부팅테스트가
+  #   boottest.sh의 -append로 직접 주므로 실 USB 부팅(제품)엔 깨끗하게 둠.
 
 # 2) 빌드 (config/ 의 패키지·includes·hooks 가 자동 반영됨)
 lb build
