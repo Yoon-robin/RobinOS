@@ -8,7 +8,11 @@ import 'package:robinos_native/system/platform_backend.dart';
 
 RobinActions _actions(Map<String, String> log) => RobinActions(
       openApp: (id) => log['open'] = id,
-      apps: () => const [AppInfo('calc', '계산기'), AppInfo('notes', '메모')],
+      apps: () => const [
+        AppInfo('calc', '계산기'),
+        AppInfo('notes', '메모'),
+        AppInfo('paint', '그림판'),
+      ],
       setTheme: (light) => log['theme'] = light ? 'light' : 'dark',
       isLight: () => false,
       setWallpaper: (id) => log['wallpaper'] = id,
@@ -64,6 +68,14 @@ void main() {
       final log = <String, String>{};
       await localBrain('계산기 열어', _actions(log));
       expect(log['open'], 'calc');
+    });
+    test('조사: 계산기→를 (받침 없음)', () async {
+      final r = await localBrain('계산기 열어', _actions({}));
+      expect(r.reply, contains('계산기를 열었어요'));
+    });
+    test('조사: 그림판→을 (받침 ㄴ)', () async {
+      final r = await localBrain('그림판 열어', _actions({}));
+      expect(r.reply, contains('그림판을 열었어요'));
     });
     test('강조색 핑크 → setAccent(pink)', () async {
       final log = <String, String>{};

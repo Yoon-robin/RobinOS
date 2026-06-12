@@ -157,7 +157,7 @@ Future<RobinResult> localBrain(String msg, RobinActions a) async {
     for (final w in kWallpapers) {
       if (m.contains(w.name)) {
         a.setWallpaper(w.id);
-        return RobinResult('배경을 ${w.name}(으)로 바꿨어요 🖼️');
+        return RobinResult('배경을 ${w.name}${_euRo(w.name)} 바꿨어요 🖼️');
       }
     }
     return RobinResult(
@@ -180,7 +180,7 @@ Future<RobinResult> localBrain(String msg, RobinActions a) async {
     for (final c in kAccents) {
       if (m.contains(c.name) || _accentAlias(c.id, m)) {
         a.setAccent(c.id);
-        return RobinResult('강조색을 ${c.name}(으)로 바꿨어요 🎨');
+        return RobinResult('강조색을 ${c.name}${_euRo(c.name)} 바꿨어요 🎨');
       }
     }
     return RobinResult('강조색은 ${kAccents.map((c) => c.name).join(", ")} 중에 고를 수 있어요!');
@@ -317,13 +317,13 @@ Future<RobinResult> localBrain(String msg, RobinActions a) async {
     if ((m.contains(app.name) || low.contains(app.id)) &&
         (m.contains('열') || m.contains('실행') || m.contains('켜') || m.contains('보여') || m.contains('띄'))) {
       a.openApp(app.id);
-      return RobinResult('${app.name}을(를) 열었어요!');
+      return RobinResult('${app.name}${_eulReul(app.name)} 열었어요!');
     }
   }
   for (final app in a.apps()) {
     if (m == app.name || low == app.id) {
       a.openApp(app.id);
-      return RobinResult('${app.name}을(를) 열었어요!');
+      return RobinResult('${app.name}${_eulReul(app.name)} 열었어요!');
     }
   }
 
@@ -364,6 +364,24 @@ bool _accentAlias(String id, String m) {
     'cyan': ['시안', '하늘', '하늘색'],
   };
   return alias[id]?.any(m.contains) ?? false;
+}
+
+// 한국어 조사 — 마지막 글자의 받침 유무로 선택해 자연스러운 문장을 만든다.
+bool _hasBatchim(String w) {
+  if (w.isEmpty) return false;
+  final c = w.codeUnitAt(w.length - 1);
+  if (c < 0xAC00 || c > 0xD7A3) return false; // 한글 음절 아니면 받침 없음 취급
+  return (c - 0xAC00) % 28 != 0;
+}
+
+String _eulReul(String w) => _hasBatchim(w) ? '을' : '를';
+
+String _euRo(String w) {
+  if (w.isEmpty) return '로';
+  final c = w.codeUnitAt(w.length - 1);
+  if (c < 0xAC00 || c > 0xD7A3) return '로';
+  final b = (c - 0xAC00) % 28;
+  return (b == 0 || b == 8) ? '로' : '으로'; // 받침 없음 또는 ㄹ받침 → '로'
 }
 
 // 한국어 수식 → 계산. "12 곱하기 9는?" → "12*9 = 108"
