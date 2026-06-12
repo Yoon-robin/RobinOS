@@ -7,13 +7,17 @@ set $mod Mod4
 
 ### RobinOS 셸 기동 (컴포지터 시작 직후 1회) ###
 exec /opt/robinos/robinos_native
-# (실제 앱은 런치패드 '설치된 앱' / Robin '○○ 실행'으로 띄움 — foot 멀티윈도 검증 완료 2026-06-12.)
+# [멀티앱 독접근 검증용 — foot이 70% 중앙에 뜨고 RobinOS 독/메뉴바가 가장자리에
+#  노출되는지 boottest로 확인. 증명되면 이 줄 제거(실사용은 런치패드/Robin으로 실행).]
+exec foot
 
 ### 창 규칙 ###
-# 기본: 모든 창을 floating(자유창)으로.
-for_window [app_id=".*"] floating enable
-for_window [class=".*"] floating enable
-# 단, RobinOS 셸은 타일링(꽉 찬 백드롭)·무테로 되돌린다.
+# 실제 앱: floating(맥OS식 자유창) + 화면의 70% 크기로 중앙 배치 →
+# RobinOS 독(하단)·메뉴바(상단)가 가장자리에 항상 노출돼 멀티앱 전환이 가능.
+# (layer-shell로 독을 별도 패널로 올리는 건 RobinOS 단일앱 구조상 큰 작업이라 이 방식이 실용적.)
+for_window [app_id=".*"] floating enable, resize set width 70 ppt height 70 ppt, move position center
+for_window [class=".*"] floating enable, resize set width 70 ppt height 70 ppt, move position center
+# 단, RobinOS 셸은 타일링(꽉 찬 백드롭)·무테로 되돌린다(위 규칙도 매칭되나 floating 해제).
 for_window [app_id="os.robinos.shell"] floating disable, border none
 
 ### 모양 ###

@@ -31,6 +31,13 @@ bluez
 grim
 # 경량 Wayland 터미널 — 런치패드 '설치된 앱'에 잡히는 첫 실제 앱 + 멀티윈도 검증용.
 foot
+# 기본 데스크톱 앱 — 런치패드 '설치된 앱'에 표시(칼리/우분투처럼 실사용 앱 구색).
+# 모두 .desktop 제공 → listInstalledApps()가 자동 인식, sway에서 floating 창으로 실행.
+epiphany-browser
+mousepad
+imv
+mpv
+pavucontrol
 # 기본 유틸
 curl
 ca-certificates
