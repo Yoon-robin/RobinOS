@@ -14,4 +14,10 @@ class _StubBackend implements PlatformBackend {
 
   @override
   Future<void> setVolume(double value) async {}
+
+  @override
+  Future<void> reboot() async {}
+
+  @override
+  Future<void> powerOff() async {}
 }

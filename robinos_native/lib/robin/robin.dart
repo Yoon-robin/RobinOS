@@ -40,6 +40,8 @@ class RobinActions {
   final void Function() lock;
   final void Function(String appId) closeApp;
   final void Function() closeAll;
+  final void Function() reboot;
+  final void Function() powerOff;
 
   const RobinActions({
     required this.openApp,
@@ -55,6 +57,8 @@ class RobinActions {
     required this.lock,
     required this.closeApp,
     required this.closeAll,
+    required this.reboot,
+    required this.powerOff,
   });
 }
 
@@ -239,6 +243,23 @@ Future<RobinResult> localBrain(String msg, RobinActions a) async {
       return const RobinResult('볼륨을 내렸어요 🔉');
     }
     return const RobinResult('볼륨을 어떻게 할까요? "볼륨 올려 / 내려 / 50% / 음소거"처럼요 🔊');
+  }
+
+  // 전원 (재부팅 / 종료) — 위험 동작이므로 확인(RobinConfirm)을 받는다.
+  if (m.contains('재부팅') || m.contains('리부트') || low.contains('reboot')) {
+    return RobinResult('정말 재부팅할까요?',
+        confirm: RobinConfirm('재부팅', a.reboot));
+  }
+  if (((m.contains('전원') ||
+                  m.contains('컴퓨터') ||
+                  m.contains('시스템') ||
+                  low.contains('pc')) &&
+              (m.contains('꺼') || m.contains('종료') || m.contains('끄기'))) ||
+      m.contains('셧다운') ||
+      low.contains('shutdown') ||
+      low.contains('poweroff')) {
+    return RobinResult('정말 시스템을 종료할까요?',
+        confirm: RobinConfirm('종료', a.powerOff));
   }
 
   // 앱 닫기 / 전부 닫기

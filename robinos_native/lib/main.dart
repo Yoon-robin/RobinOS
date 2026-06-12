@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'system/system_state.dart';
 import 'system/file_system.dart';
 import 'system/app_intents.dart';
+import 'system/platform_backend.dart';
 import 'robin/robin.dart';
 import 'robin/brains.dart';
 import 'apps/registry.dart';
@@ -392,6 +393,8 @@ class _DesktopState extends State<Desktop> {
       closeApp: (id) =>
           setState(() => _wins.removeWhere((w) => w.app.id == id)),
       closeAll: () => setState(() => _wins.clear()),
+      reboot: () => platformBackend.reboot(),
+      powerOff: () => platformBackend.powerOff(),
     );
     return Scaffold(
       body: Focus(

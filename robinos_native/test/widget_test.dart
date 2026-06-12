@@ -20,6 +20,8 @@ RobinActions _actions(Map<String, String> log) => RobinActions(
       lock: () => log['lock'] = '1',
       closeApp: (id) => log['close'] = id,
       closeAll: () => log['close'] = 'all',
+      reboot: () => log['power'] = 'reboot',
+      powerOff: () => log['power'] = 'off',
     );
 
 void main() {
@@ -157,6 +159,19 @@ void main() {
       final log = <String, String>{};
       await localBrain('음소거해줘', _actions(log));
       expect(log['volume'], '0.00');
+    });
+    test('재부팅 → 확인 후에만 reboot 호출', () async {
+      final log = <String, String>{};
+      final r = await localBrain('재부팅해줘', _actions(log));
+      expect(r.confirm, isNotNull);
+      expect(log['power'], isNull); // 확인 전엔 실행 안 함
+      r.confirm!.run();
+      expect(log['power'], 'reboot');
+    });
+    test('전원 종료 → 확인 요청(confirm)', () async {
+      final r = await localBrain('컴퓨터 꺼줘', _actions({}));
+      expect(r.confirm, isNotNull);
+      expect(r.confirm!.text, '종료');
     });
   });
 

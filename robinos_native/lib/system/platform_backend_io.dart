@@ -24,6 +24,12 @@ class _LinuxBackend implements PlatformBackend {
     await _run('wpctl', ['set-volume', '@DEFAULT_AUDIO_SINK@', '$pct%']);
   }
 
+  @override
+  Future<void> reboot() async => _run('systemctl', ['reboot']);
+
+  @override
+  Future<void> powerOff() async => _run('systemctl', ['poweroff']);
+
   Future<void> _run(String exe, List<String> args) async {
     try {
       await Process.run(exe, args);
@@ -45,4 +51,10 @@ class _NoopBackend implements PlatformBackend {
 
   @override
   Future<void> setVolume(double value) async {}
+
+  @override
+  Future<void> reboot() async {}
+
+  @override
+  Future<void> powerOff() async {}
 }
