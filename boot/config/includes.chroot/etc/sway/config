@@ -1,0 +1,41 @@
+# RobinOS sway 설정.
+# RobinOS 셸(app_id=os.robinos.shell)은 타일링으로 화면을 꽉 채운 백드롭,
+# 실제 리눅스 앱은 그 위에 floating(맥OS식 자유창)으로 띄운다.
+# sway = bookworm 메인의 안정적 wlroots 컴포지터. softrender(pixman)는 robinos-session이 export.
+
+set $mod Mod4
+
+### RobinOS 셸 기동 (컴포지터 시작 직후 1회) ###
+exec /opt/robinos/robinos_native
+
+### 창 규칙 ###
+# 기본: 모든 창을 floating(자유창)으로.
+for_window [app_id=".*"] floating enable
+for_window [class=".*"] floating enable
+# 단, RobinOS 셸은 타일링(꽉 찬 백드롭)·무테로 되돌린다.
+for_window [app_id="os.robinos.shell"] floating disable, border none
+
+### 모양 ###
+default_border normal 2
+default_floating_border normal 2
+font pango:sans 10
+titlebar_padding 8 4
+gaps inner 0
+gaps outer 0
+# 마우스: Super+드래그로 floating 창 이동/리사이즈
+floating_modifier $mod normal
+
+### 키바인드 ###
+bindsym Alt+Tab focus next
+bindsym $mod+Tab focus next
+bindsym Alt+F4 kill
+bindsym $mod+q kill
+bindsym $mod+f fullscreen toggle
+bindsym $mod+space floating toggle
+# RobinOS 셸이 닫혔을 때 다시 띄우기
+bindsym $mod+Return exec /opt/robinos/robinos_native
+
+### 입력(기본) ###
+input * {
+    xkb_layout "us"
+}

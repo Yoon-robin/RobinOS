@@ -1,4 +1,0 @@
-# labwc autostart — RobinOS 셸을 컴포지터 위에 실행.
-# labwc가 WAYLAND_DISPLAY 등 환경을 자식에 전달하므로 RobinOS가 이 컴포지터에 붙는다.
-# (robinos-session에서 export한 GDK_BACKEND=wayland / softrender 환경도 그대로 상속.)
-/opt/robinos/robinos_native &

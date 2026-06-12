@@ -1,7 +1,8 @@
 # RobinOS 라이브 이미지에 설치할 패키지 (live-build chroot 단계)
-# 컴포지터: labwc = wlroots 멀티윈도(스택형) → RobinOS 셸 + 실제 리눅스 앱을 창으로(B: 진짜 DE).
-# cage = 단일앱 키오스크(폴백, 'robinos.cage' 커널파라미터로 선택). 둘 다 wlroots라 softrender 공유.
-labwc
+# 컴포지터: sway = bookworm 메인의 안정적 wlroots 멀티윈도 컴포지터 → RobinOS 셸 + 실제 앱을 창으로(B: 진짜 DE).
+#  (labwc는 bookworm 메인에 없어 'Unable to locate package'로 빌드 실패 → sway로 채택.)
+# cage = 단일앱 키오스크(폴백, 'robinos.cage' 커널파라미터로 선택). 셋 다 wlroots라 softrender 공유.
+sway
 cage
 seatd
 # cage는 시작 시 XWayland 바이너리를 요구(없으면 'Cannot create XWayland server'로 종료).

@@ -9,9 +9,6 @@ export XDG_RUNTIME_DIR="/run/user/$(id -u)"
 mkdir -p "$XDG_RUNTIME_DIR"
 chmod 700 "$XDG_RUNTIME_DIR"
 
-# labwc가 시스템 설정(/etc/xdg/labwc/{rc.xml,autostart})을 확실히 찾도록 XDG 경로 보장.
-export XDG_CONFIG_DIRS="${XDG_CONFIG_DIRS:-/etc/xdg}"
-
 # Flutter(GTK)가 XWayland(X11)로 떨어지지 않고 네이티브 Wayland를 쓰게 →
 # cage가 타이틀바 없이 풀스크린으로 렌더(이전엔 1024x721 창 + 타이틀바였음).
 export GDK_BACKEND=wayland
@@ -40,14 +37,14 @@ for a in pipewire wireplumber pipewire-pulse; do
 done
 
 # 컴포지터 선택:
-#   기본 = labwc (wlroots 멀티윈도) → RobinOS 셸 + 실제 리눅스 앱을 창으로 띄움(B: 진짜 DE).
-#     RobinOS 실행은 labwc autostart(/etc/xdg/labwc/autostart)가 담당. 앱은 그 위 창.
+#   기본 = sway (wlroots 멀티윈도) → RobinOS 셸 + 실제 리눅스 앱을 창으로 띄움(B: 진짜 DE).
+#     RobinOS 실행은 /etc/sway/config의 exec가 담당. 실제 앱은 그 위 floating 창.
 #   'robinos.cage' 커널 파라미터 → cage(단일앱)로 폴백 = 검증된 기존 부팅 경로.
 # 둘 다 wlroots라 위에서 export한 softrender(pixman) 환경을 그대로 사용.
 if grep -q robinos.cage /proc/cmdline 2>/dev/null; then
   echo "ROBINOS-SESSION: launching cage (single-app fallback)" >&2
   exec cage -- /opt/robinos/robinos_native
 else
-  echo "ROBINOS-SESSION: launching labwc (multi-window DE) + RobinOS shell" >&2
-  exec labwc
+  echo "ROBINOS-SESSION: launching sway (multi-window DE) + RobinOS shell" >&2
+  exec sway
 fi
