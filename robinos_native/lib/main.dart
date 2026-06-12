@@ -133,6 +133,20 @@ class _DesktopState extends State<Desktop> {
     if (notesOpenTarget.value != null) _openAppById('notes');
   }
 
+  // Robin "메모 만들어줘" → /문서에 새 .txt 생성 후 메모 앱에서 연다.
+  void _newNote() {
+    final fs = context.read<RobinFs>();
+    String p(String n) => '/문서/$n';
+    var name = '새 메모.txt';
+    var n = 2;
+    while (fs.exists(p(name))) {
+      name = '새 메모 $n.txt';
+      n++;
+    }
+    fs.write(p(name), '');
+    notesOpenTarget.value = p(name); // 리스너가 메모 앱 열고 NotesApp이 전환
+  }
+
   void _notify(String icon, String title, String body) {
     final id = ++_notifSeq;
     setState(() => _notifs.add(NotifItem(id, icon, title, body)));
@@ -396,6 +410,7 @@ class _DesktopState extends State<Desktop> {
       reboot: () => platformBackend.reboot(),
       powerOff: () => platformBackend.powerOff(),
       setWifi: (on) => platformBackend.setWifi(on),
+      newNote: _newNote,
     );
     return Scaffold(
       body: Focus(

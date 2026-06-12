@@ -23,6 +23,7 @@ RobinActions _actions(Map<String, String> log) => RobinActions(
       reboot: () => log['power'] = 'reboot',
       powerOff: () => log['power'] = 'off',
       setWifi: (on) => log['wifi'] = on ? 'on' : 'off',
+      newNote: () => log['newNote'] = '1',
     );
 
 void main() {
@@ -183,6 +184,11 @@ void main() {
       final log = <String, String>{};
       await localBrain('와이파이 켜줘', _actions(log));
       expect(log['wifi'], 'on');
+    });
+    test('메모 만들기 → newNote 호출', () async {
+      final log = <String, String>{};
+      await localBrain('메모 만들어줘', _actions(log));
+      expect(log['newNote'], '1');
     });
   });
 

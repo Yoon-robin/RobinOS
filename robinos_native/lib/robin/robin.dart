@@ -43,6 +43,7 @@ class RobinActions {
   final void Function() reboot;
   final void Function() powerOff;
   final void Function(bool on) setWifi;
+  final void Function() newNote;
 
   const RobinActions({
     required this.openApp,
@@ -61,6 +62,7 @@ class RobinActions {
     required this.reboot,
     required this.powerOff,
     required this.setWifi,
+    required this.newNote,
   });
 }
 
@@ -299,6 +301,16 @@ Future<RobinResult> localBrain(String msg, RobinActions a) async {
   // 계산
   final calc = _tryCalc(m);
   if (calc != null) return RobinResult('$calc 이에요 🧮');
+
+  // 새 메모 만들기
+  if ((m.contains('메모') || m.contains('노트')) &&
+      (m.contains('만들') ||
+          m.contains('생성') ||
+          m.contains('작성') ||
+          m.contains('새'))) {
+    a.newNote();
+    return const RobinResult('새 메모를 만들었어요. 메모 앱에서 작성하세요 ✍️');
+  }
 
   // 앱 열기 (모든 앱)
   for (final app in a.apps()) {
