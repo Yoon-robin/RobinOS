@@ -173,26 +173,28 @@ class _ControlCenterState extends State<ControlCenter> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    GestureDetector(
-                      onTap: () {
-                        widget.onClose();
-                        widget.onLock();
-                      },
-                      child: _card(
-                        sys,
-                        Row(
-                          children: [
-                            Icon(Icons.lock_outline,
-                                size: 18, color: sys.textPrimary),
-                            const SizedBox(width: 10),
-                            Text('잠금',
-                                style: TextStyle(
-                                    fontSize: 13.5,
-                                    color: sys.textPrimary,
-                                    fontWeight: FontWeight.w500)),
-                          ],
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _actionBtn(sys, Icons.lock_outline, '잠금', () {
+                            widget.onClose();
+                            widget.onLock();
+                          }),
                         ),
-                      ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _actionBtn(sys, Icons.restart_alt, '재시작',
+                              () => _confirmPower('재시작할까요?', platformBackend.reboot)),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _actionBtn(
+                              sys, Icons.power_settings_new, '종료',
+                              () => _confirmPower(
+                                  '시스템을 종료할까요?', platformBackend.powerOff),
+                              danger: true),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -213,6 +215,54 @@ class _ControlCenterState extends State<ControlCenter> {
         ),
         child: child,
       );
+
+  // 잠금/재시작/종료 같은 세로형(아이콘+라벨) 액션 버튼.
+  Widget _actionBtn(SystemState sys, IconData icon, String label,
+      VoidCallback onTap,
+      {bool danger = false}) {
+    final color = danger ? const Color(0xFFFF5F57) : sys.textPrimary;
+    return GestureDetector(
+      onTap: onTap,
+      child: _card(
+        sys,
+        Column(
+          children: [
+            Icon(icon, size: 18, color: color),
+            const SizedBox(height: 5),
+            Text(label, style: TextStyle(fontSize: 12, color: color)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 위험한 전원 동작은 확인 다이얼로그를 거친다. 웹/비리눅스는 action이 no-op.
+  void _confirmPower(String msg, Future<void> Function() action) {
+    final sys = context.read<SystemState>();
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: sys.windowSurface,
+        content:
+            Text(msg, style: TextStyle(color: sys.textPrimary, fontSize: 14)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('취소', style: TextStyle(color: sys.textSec(0.7))),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              widget.onClose();
+              action();
+            },
+            child:
+                const Text('확인', style: TextStyle(color: Color(0xFFFF5F57))),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _toggle(SystemState sys, IconData icon, String label, bool on,
       VoidCallback onTap) {
