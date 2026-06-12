@@ -27,7 +27,7 @@ sudo umount /tmp/isomnt
 echo "QEMU 직접-커널 부팅 (TCG, KVM 없음, 부트메뉴 없음)…"
 qemu-system-x86_64 -machine q35 -accel tcg -m 4096 -smp 2 \
   -kernel /tmp/vmlinuz -initrd /tmp/initrd \
-  -append "boot=live components console=ttyS0,115200 systemd.journald.forward_to_console=1" \
+  -append "boot=live components console=ttyS0,115200 systemd.journald.forward_to_console=1 robinos.softrender=1" \
   -cdrom "$ISO" -vga virtio -display none \
   -qmp unix:/tmp/qmp.sock,server,nowait \
   -serial file:boot/boot-serial.log &
