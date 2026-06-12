@@ -16,6 +16,15 @@ class InstalledApp {
   const InstalledApp(this.name, this.exec);
 }
 
+// 주변 와이파이 네트워크 (nmcli 스캔 결과). 웹/스텁에선 만들어지지 않음.
+class WifiNetwork {
+  final String ssid;
+  final int signal; // 신호 세기 0~100
+  final bool secured; // 암호 필요 여부
+  final bool active; // 현재 연결된 네트워크
+  const WifiNetwork(this.ssid, this.signal, this.secured, this.active);
+}
+
 abstract class PlatformBackend {
   // 실제 하드웨어 제어가 가능한 플랫폼인지(리눅스 실기기 등). 웹/스텁은 false.
   bool get isReal;
@@ -53,6 +62,13 @@ abstract class PlatformBackend {
   // 화면 캡처 (리눅스: grim → 홈/사진 폴더에 PNG 저장, 저장 경로 반환).
   // 웹/도구부재/캡처실패: null. (grim은 wlr-screencopy 지원 컴포지터=labwc에서 동작)
   Future<String?> screenshot();
+
+  // 주변 와이파이 스캔 (리눅스: nmcli dev wifi list). 웹/도구부재: 빈 목록.
+  Future<List<WifiNetwork>> scanWifi();
+
+  // 와이파이 접속 (리눅스: nmcli dev wifi connect). 암호는 사용자가 직접 입력한 값을 받는다.
+  // 성공 시 true. 웹/도구부재/실패: false.
+  Future<bool> connectWifi(String ssid, String password);
 }
 
 // 플랫폼별 구현 인스턴스 — 조건부 import가 createPlatformBackend()를 제공.

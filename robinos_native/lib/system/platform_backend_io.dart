@@ -119,6 +119,57 @@ class _LinuxBackend implements PlatformBackend {
     return null;
   }
 
+  @override
+  Future<List<WifiNetwork>> scanWifi() async {
+    try {
+      // -t(terse, 콜론 구분) + 필드 고정. SSID가 마지막이라 콜론 포함 시 뒤를 합쳐 복원.
+      final r = await Process.run('nmcli',
+          ['-t', '-f', 'ACTIVE,SIGNAL,SECURITY,SSID', 'device', 'wifi', 'list']);
+      if (r.exitCode != 0) return const [];
+      final nets = <String, WifiNetwork>{};
+      for (final line in '${r.stdout}'.split('\n')) {
+        if (line.trim().isEmpty) continue;
+        final parts = line.split(':');
+        if (parts.length < 4) continue;
+        final active = parts[0] == 'yes';
+        final signal = int.tryParse(parts[1]) ?? 0;
+        final security = parts[2];
+        // nmcli terse는 SSID 내 콜론을 '\:'로 이스케이프 → 합친 뒤 복원.
+        final ssid = parts.sublist(3).join(':').replaceAll(r'\:', ':').trim();
+        if (ssid.isEmpty) continue;
+        final secured = security.isNotEmpty && security != '--';
+        final prev = nets[ssid];
+        if (prev == null || active || signal > prev.signal) {
+          nets[ssid] = WifiNetwork(
+              ssid, signal, secured, active || (prev?.active ?? false));
+        }
+      }
+      final list = nets.values.toList()
+        ..sort((a, b) {
+          if (a.active != b.active) return a.active ? -1 : 1;
+          return b.signal.compareTo(a.signal);
+        });
+      return list;
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  @override
+  Future<bool> connectWifi(String ssid, String password) async {
+    try {
+      final args = ['device', 'wifi', 'connect', ssid];
+      if (password.isNotEmpty) {
+        args.add('password');
+        args.add(password);
+      }
+      final r = await Process.run('nmcli', args);
+      return r.exitCode == 0;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> _run(String exe, List<String> args) async {
     try {
       await Process.run(exe, args);
@@ -167,4 +218,10 @@ class _NoopBackend implements PlatformBackend {
 
   @override
   Future<String?> screenshot() async => null;
+
+  @override
+  Future<List<WifiNetwork>> scanWifi() async => const [];
+
+  @override
+  Future<bool> connectWifi(String ssid, String password) async => false;
 }

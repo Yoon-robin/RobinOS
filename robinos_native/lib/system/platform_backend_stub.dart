@@ -41,4 +41,10 @@ class _StubBackend implements PlatformBackend {
 
   @override
   Future<String?> screenshot() async => null;
+
+  @override
+  Future<List<WifiNetwork>> scanWifi() async => const [];
+
+  @override
+  Future<bool> connectWifi(String ssid, String password) async => false;
 }

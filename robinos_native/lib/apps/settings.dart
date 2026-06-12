@@ -108,6 +108,10 @@ class SettingsApp extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 26),
+          _section(sys, '네트워크'),
+          const SizedBox(height: 10),
+          const _WifiSettings(),
+          const SizedBox(height: 26),
           _section(sys, 'Robin 두뇌'),
           const SizedBox(height: 10),
           const _BrainSettings(),
@@ -472,5 +476,244 @@ class _BrainSettingsState extends State<_BrainSettings> {
         ),
       ),
     );
+  }
+}
+
+// -----------------------------------------------------------
+// 네트워크 — 주변 Wi-Fi 검색 + 연결 (리눅스: nmcli). 암호는 사용자가 직접 입력.
+// 웹/개발 모드에선 안내만 표시(스캔 결과가 비어 있음).
+// -----------------------------------------------------------
+class _WifiSettings extends StatefulWidget {
+  const _WifiSettings();
+
+  @override
+  State<_WifiSettings> createState() => _WifiSettingsState();
+}
+
+class _WifiSettingsState extends State<_WifiSettings> {
+  bool _scanning = false;
+  bool _connecting = false;
+  List<WifiNetwork> _nets = const [];
+  String? _expanded; // 암호 입력칸을 펼친 SSID
+  String? _status; // 연결 결과 안내
+  final _pw = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (platformBackend.isReal) _scan();
+  }
+
+  @override
+  void dispose() {
+    _pw.dispose();
+    super.dispose();
+  }
+
+  Future<void> _scan() async {
+    setState(() {
+      _scanning = true;
+      _status = null;
+    });
+    final nets = await platformBackend.scanWifi();
+    if (!mounted) return;
+    setState(() {
+      _nets = nets;
+      _scanning = false;
+    });
+  }
+
+  Future<void> _connect(WifiNetwork n, String password) async {
+    setState(() {
+      _connecting = true;
+      _status = null;
+    });
+    final ok = await platformBackend.connectWifi(n.ssid, password);
+    if (!mounted) return;
+    setState(() {
+      _connecting = false;
+      _status = ok
+          ? '${n.ssid}에 연결됐어요.'
+          : '${n.ssid} 연결에 실패했어요. 암호를 확인해 주세요.';
+      if (ok) {
+        _expanded = null;
+        _pw.clear();
+      }
+    });
+    if (ok) _scan(); // 연결됨 표시 갱신
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sys = context.watch<SystemState>();
+    if (!platformBackend.isReal) {
+      return _hintBox(sys,
+          '리눅스 실기기로 부팅하면 주변 Wi-Fi를 검색해 연결할 수 있어요. (지금은 웹/개발 모드)');
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(_scanning ? '검색 중…' : '주변 네트워크 ${_nets.length}개',
+                style: TextStyle(fontSize: 12, color: sys.textSec(0.6))),
+            const Spacer(),
+            GestureDetector(
+              onTap: _scanning ? null : _scan,
+              child: Row(
+                children: [
+                  Icon(Icons.refresh, size: 15, color: sys.accent),
+                  const SizedBox(width: 4),
+                  Text('다시 검색',
+                      style: TextStyle(fontSize: 12, color: sys.accent)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        if (_nets.isEmpty && !_scanning)
+          _hintBox(sys, '검색된 네트워크가 없어요. Wi-Fi가 켜져 있는지 확인하고 다시 검색해 주세요.')
+        else
+          for (final n in _nets) _row(sys, n),
+        if (_status != null) ...[
+          const SizedBox(height: 6),
+          Text(_status!,
+              style: TextStyle(fontSize: 11.5, color: sys.textSec(0.6))),
+        ],
+      ],
+    );
+  }
+
+  Widget _row(SystemState sys, WifiNetwork n) {
+    final isExpanded = _expanded == n.ssid;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      decoration: BoxDecoration(
+        color:
+            n.active ? sys.accent.withValues(alpha: 0.14) : sys.textSec(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+            color: n.active
+                ? sys.accent.withValues(alpha: 0.5)
+                : sys.textSec(0.1)),
+      ),
+      child: Column(
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              if (n.active) return;
+              if (n.secured) {
+                setState(() {
+                  _expanded = isExpanded ? null : n.ssid;
+                  _pw.clear();
+                  _status = null;
+                });
+              } else {
+                _connect(n, '');
+              }
+            },
+            child: Row(
+              children: [
+                Icon(_wifiIcon(n.signal), size: 18, color: sys.textPrimary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(n.ssid,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontSize: 13.5,
+                          color: sys.textPrimary,
+                          fontWeight:
+                              n.active ? FontWeight.w600 : FontWeight.w400)),
+                ),
+                if (n.secured)
+                  Icon(Icons.lock, size: 13, color: sys.textSec(0.45)),
+                if (n.active) ...[
+                  const SizedBox(width: 6),
+                  Text('연결됨',
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: sys.accent,
+                          fontWeight: FontWeight.w600)),
+                ],
+              ],
+            ),
+          ),
+          if (isExpanded) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _pw,
+                    obscureText: true,
+                    autofocus: true,
+                    style: TextStyle(fontSize: 13, color: sys.textPrimary),
+                    onSubmitted: (v) => _connect(n, v),
+                    decoration: InputDecoration(
+                      hintText: '암호',
+                      hintStyle:
+                          TextStyle(color: sys.textSec(0.4), fontSize: 13),
+                      isDense: true,
+                      filled: true,
+                      fillColor: sys.textSec(0.08),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: _connecting ? null : () => _connect(n, _pw.text),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 11),
+                    decoration: BoxDecoration(
+                      color: sys.accent,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: _connecting
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white))
+                        : const Text('연결',
+                            style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _hintBox(SystemState sys, String text) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: sys.textSec(0.05),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(text,
+            style:
+                TextStyle(fontSize: 12, color: sys.textSec(0.55), height: 1.4)),
+      );
+
+  IconData _wifiIcon(int signal) {
+    if (signal >= 67) return Icons.wifi;
+    if (signal >= 34) return Icons.wifi_2_bar;
+    return Icons.wifi_1_bar;
   }
 }
