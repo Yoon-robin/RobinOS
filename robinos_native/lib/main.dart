@@ -395,6 +395,7 @@ class _DesktopState extends State<Desktop> {
       closeAll: () => setState(() => _wins.clear()),
       reboot: () => platformBackend.reboot(),
       powerOff: () => platformBackend.powerOff(),
+      setWifi: (on) => platformBackend.setWifi(on),
     );
     return Scaffold(
       body: Focus(

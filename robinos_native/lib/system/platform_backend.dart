@@ -23,6 +23,9 @@ abstract class PlatformBackend {
   // Robin은 확인(RobinConfirm)을 거친 뒤에만 호출한다.
   Future<void> reboot();
   Future<void> powerOff();
+
+  // 와이파이 on/off (리눅스: nmcli radio wifi). 웹/도구부재 시 no-op.
+  Future<void> setWifi(bool on);
 }
 
 // 플랫폼별 구현 인스턴스 — 조건부 import가 createPlatformBackend()를 제공.

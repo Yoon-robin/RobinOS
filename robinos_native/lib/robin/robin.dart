@@ -42,6 +42,7 @@ class RobinActions {
   final void Function() closeAll;
   final void Function() reboot;
   final void Function() powerOff;
+  final void Function(bool on) setWifi;
 
   const RobinActions({
     required this.openApp,
@@ -59,6 +60,7 @@ class RobinActions {
     required this.closeAll,
     required this.reboot,
     required this.powerOff,
+    required this.setWifi,
   });
 }
 
@@ -243,6 +245,17 @@ Future<RobinResult> localBrain(String msg, RobinActions a) async {
       return const RobinResult('볼륨을 내렸어요 🔉');
     }
     return const RobinResult('볼륨을 어떻게 할까요? "볼륨 올려 / 내려 / 50% / 음소거"처럼요 🔊');
+  }
+
+  // 와이파이 on/off
+  if (m.contains('와이파이') ||
+      low.contains('wifi') ||
+      low.contains('wi-fi') ||
+      m.contains('무선')) {
+    final off =
+        m.contains('꺼') || m.contains('끄') || low.contains('off') || m.contains('해제');
+    a.setWifi(!off);
+    return RobinResult(off ? '와이파이를 껐어요 📵' : '와이파이를 켰어요 📶');
   }
 
   // 전원 (재부팅 / 종료) — 위험 동작이므로 확인(RobinConfirm)을 받는다.

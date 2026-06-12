@@ -30,6 +30,10 @@ class _LinuxBackend implements PlatformBackend {
   @override
   Future<void> powerOff() async => _run('systemctl', ['poweroff']);
 
+  @override
+  Future<void> setWifi(bool on) async =>
+      _run('nmcli', ['radio', 'wifi', on ? 'on' : 'off']);
+
   Future<void> _run(String exe, List<String> args) async {
     try {
       await Process.run(exe, args);
@@ -57,4 +61,7 @@ class _NoopBackend implements PlatformBackend {
 
   @override
   Future<void> powerOff() async {}
+
+  @override
+  Future<void> setWifi(bool on) async {}
 }

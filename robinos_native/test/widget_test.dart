@@ -22,6 +22,7 @@ RobinActions _actions(Map<String, String> log) => RobinActions(
       closeAll: () => log['close'] = 'all',
       reboot: () => log['power'] = 'reboot',
       powerOff: () => log['power'] = 'off',
+      setWifi: (on) => log['wifi'] = on ? 'on' : 'off',
     );
 
 void main() {
@@ -172,6 +173,16 @@ void main() {
       final r = await localBrain('컴퓨터 꺼줘', _actions({}));
       expect(r.confirm, isNotNull);
       expect(r.confirm!.text, '종료');
+    });
+    test('와이파이 꺼 → setWifi(off)', () async {
+      final log = <String, String>{};
+      await localBrain('와이파이 꺼줘', _actions(log));
+      expect(log['wifi'], 'off');
+    });
+    test('와이파이 켜 → setWifi(on)', () async {
+      final log = <String, String>{};
+      await localBrain('와이파이 켜줘', _actions(log));
+      expect(log['wifi'], 'on');
     });
   });
 
