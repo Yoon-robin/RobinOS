@@ -123,6 +123,9 @@ class _NotesAppState extends State<NotesApp> {
                   ),
                 ),
                 const SizedBox(width: 8),
+                Text('${_ctrl.text.characters.length}자',
+                    style: TextStyle(fontSize: 11, color: sys.textSec(0.35))),
+                const SizedBox(width: 10),
                 Text(_saved ? '저장됨' : '저장 중…',
                     style: TextStyle(
                         fontSize: 11,
