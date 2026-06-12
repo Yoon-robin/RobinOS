@@ -50,6 +50,8 @@ class RobinActions {
   final void Function(String exec) launchReal;
   // 화면 캡처 → 저장 경로(또는 null). 리눅스 실기기(grim)에서만 실제 동작.
   final Future<String?> Function() screenshot;
+  // 배터리 상태를 완성된 문장 조각으로(예: '85%예요 🔋'). 배터리 없으면 null.
+  final Future<String?> Function() batteryText;
 
   const RobinActions({
     required this.openApp,
@@ -73,6 +75,7 @@ class RobinActions {
     required this.realApps,
     required this.launchReal,
     required this.screenshot,
+    required this.batteryText,
   });
 }
 
@@ -291,6 +294,14 @@ Future<RobinResult> localBrain(String msg, RobinActions a) async {
     return RobinResult(path != null
         ? '스크린샷을 저장했어요 📸\n$path'
         : '스크린샷은 리눅스 실기기에서만 돼요(grim 필요). 지금은 캡처할 수 없어요 📸');
+  }
+
+  // 배터리 상태
+  if (m.contains('배터리') || m.contains('충전') || low.contains('battery')) {
+    final t = await a.batteryText();
+    return RobinResult(t == null
+        ? '이 기기엔 배터리 정보가 없어요(데스크톱이거나 웹이에요) 🔌'
+        : '배터리는 $t');
   }
 
   // 전원 (재부팅 / 종료) — 위험 동작이므로 확인(RobinConfirm)을 받는다.

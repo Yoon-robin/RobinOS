@@ -453,6 +453,11 @@ class _DesktopState extends State<Desktop> {
           sys.installedApps.map((e) => AppInfo(e.exec, e.name)).toList(),
       launchReal: (exec) => platformBackend.launchApp(exec),
       screenshot: () => platformBackend.screenshot(),
+      batteryText: () async {
+        final b = await platformBackend.batteryInfo();
+        if (b == null) return null;
+        return b.charging ? '${b.level}%, 충전 중이에요 ⚡' : '${b.level}%예요 🔋';
+      },
     );
     return Scaffold(
       body: Focus(

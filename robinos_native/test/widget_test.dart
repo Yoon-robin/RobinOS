@@ -35,6 +35,7 @@ RobinActions _actions(Map<String, String> log) => RobinActions(
         log['shot'] = '1';
         return '/home/robin/사진/test.png';
       },
+      batteryText: () async => '80%예요 🔋',
     );
 
 void main() {
@@ -225,6 +226,10 @@ void main() {
       final r = await localBrain('Firefox 실행해줘', _actions(log));
       expect(log['launch'], 'firefox');
       expect(r.reply, contains('실행'));
+    });
+    test('배터리 → batteryText 응답', () async {
+      final r = await localBrain('배터리 몇 %야?', _actions({}));
+      expect(r.reply, contains('80%'));
     });
   });
 

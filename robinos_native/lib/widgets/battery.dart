@@ -26,7 +26,10 @@ class _BatteryIndicatorState extends State<BatteryIndicator> {
 
   Future<void> _poll() async {
     final i = await platformBackend.batteryInfo();
-    if (mounted) setState(() => _info = i);
+    if (!mounted) return;
+    setState(() => _info = i);
+    // 배터리가 없는 기기(데스크톱/QEMU/웹)면 값이 고정 null → 더 폴링하지 않음(최적화).
+    if (i == null) _timer?.cancel();
   }
 
   @override
