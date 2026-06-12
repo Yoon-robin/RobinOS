@@ -23,8 +23,8 @@ const _kDeepseekKey = 'robinos.deepseek.key';
 const kOllamaDefaultUrl = 'http://localhost:11434/v1';
 // 기본 내장 모델 = abliterated(거부 제거) → Robin이 "못 합니다" 안 함.
 // ISO에 내장(embed_ai)하는 모델과 반드시 일치해야 함(불일치면 ollamaBrain이 모델없음 오류).
-// 3b = 검열해제 + 1.9GB로 실용/경량 균형. 더 똑똑하게는 7b로 재빌드.
-const kOllamaDefaultModel = 'huihui_ai/qwen2.5-abliterate:3b';
+// 7b = 검열해제 + 4.7GB(가장 똑똑, 사용자 선택). ISO가 ~6GB로 커짐.
+const kOllamaDefaultModel = 'huihui_ai/qwen2.5-abliterate:7b';
 
 // 모델 프리셋 — 사용자가 탭으로 고르거나, 칸에 직접 아무 모델이나 입력 가능.
 const kModelPresets = <(String, String)>[

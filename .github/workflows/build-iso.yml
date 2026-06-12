@@ -26,6 +26,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 큰 AI 모델(7b=4.7GB 등) 내장 시 러너 디스크(~14GB)가 부족해질 수 있어
+      # RobinOS 빌드와 무관한 사전설치 도구(dotnet/android/ghc/CodeQL)를 비워 ~20GB 확보.
+      - name: Free disk space (large AI embed)
+        if: ${{ inputs.embed_ai }}
+        run: |
+          echo "=== 정리 전 ==="; df -h /
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup \
+            /usr/local/lib/android /opt/hostedtoolcache/CodeQL || true
+          sudo docker image prune -a -f 2>/dev/null || true
+          echo "=== 정리 후 ==="; df -h /
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
