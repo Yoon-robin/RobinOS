@@ -2,6 +2,9 @@
 # Wayland 키오스크 컴포지터 (RobinOS 풀스크린)
 cage
 seatd
+# cage는 시작 시 XWayland 바이너리를 요구(없으면 'Cannot create XWayland server'로 종료).
+# RobinOS는 네이티브 Wayland 앱이라 X11이 필요 없지만 cage가 런타임에 찾음.
+xwayland
 # GPU / 렌더링
 libgl1-mesa-dri
 libgles2
