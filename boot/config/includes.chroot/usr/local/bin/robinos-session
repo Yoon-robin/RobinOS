@@ -24,6 +24,9 @@ if grep -q robinos.softrender /proc/cmdline 2>/dev/null; then
   export LIBGL_ALWAYS_SOFTWARE=1
   export GALLIUM_DRIVER=llvmpipe
   export MESA_LOADER_DRIVER_OVERRIDE=llvmpipe
+  # QEMU virtio-gpu 소프트렌더에선 HW 커서 포맷 협상이 실패(wlr cursor.c 에러 반복) →
+  # 소프트웨어 커서 강제. 실기기(softrender 마커 없음)는 HW 커서 그대로 사용.
+  export WLR_NO_HARDWARE_CURSORS=1
 fi
 
 # (선택) 내장 모델: Ollama가 있으면 백그라운드로 띄움 → Robin이 Qwen2.5로 동작

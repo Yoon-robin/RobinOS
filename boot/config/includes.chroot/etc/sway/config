@@ -8,6 +8,10 @@ set $mod Mod4
 ### RobinOS 셸 기동 (컴포지터 시작 직후 1회) ###
 exec /opt/robinos/robinos_native
 
+# [멀티윈도 검증용 — boottest 스크린샷에서 RobinOS 백드롭 위에 실제 앱 창(foot)이
+#  뜨는지 확인하기 위함. 증명되면 이 줄 제거(실사용에선 런치패드/Robin으로 앱 실행).]
+exec foot
+
 ### 창 규칙 ###
 # 기본: 모든 창을 floating(자유창)으로.
 for_window [app_id=".*"] floating enable
