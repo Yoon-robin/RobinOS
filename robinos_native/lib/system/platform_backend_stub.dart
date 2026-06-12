@@ -47,4 +47,15 @@ class _StubBackend implements PlatformBackend {
 
   @override
   Future<bool> connectWifi(String ssid, String password) async => false;
+
+  @override
+  Future<List<FsNode>> fsScan() async => const [];
+  @override
+  Future<void> fsWriteFile(String path, String content) async {}
+  @override
+  Future<void> fsMakeDir(String path) async {}
+  @override
+  Future<void> fsDelete(String path) async {}
+  @override
+  Future<void> fsRename(String fromPath, String toPath) async {}
 }

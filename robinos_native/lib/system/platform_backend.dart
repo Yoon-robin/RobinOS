@@ -25,6 +25,15 @@ class WifiNetwork {
   const WifiNetwork(this.ssid, this.signal, this.secured, this.active);
 }
 
+// 실제 파일/폴더 노드 (리눅스 홈 디렉터리 스캔 결과).
+// path는 RobinFs 형식('/문서/메모.txt') — 구현이 $HOME 접두를 붙여 실제 경로로 변환.
+class FsNode {
+  final String path;
+  final bool isDir;
+  final String content; // 텍스트 파일만 채움; 폴더/바이너리/대용량은 ''
+  const FsNode(this.path, this.isDir, this.content);
+}
+
 abstract class PlatformBackend {
   // 실제 하드웨어 제어가 가능한 플랫폼인지(리눅스 실기기 등). 웹/스텁은 false.
   bool get isReal;
@@ -69,6 +78,21 @@ abstract class PlatformBackend {
   // 와이파이 접속 (리눅스: nmcli dev wifi connect). 암호는 사용자가 직접 입력한 값을 받는다.
   // 성공 시 true. 웹/도구부재/실패: false.
   Future<bool> connectWifi(String ssid, String password);
+
+  // === 실제 파일시스템 (리눅스: robin 홈을 RobinFs 루트로 백킹) ===
+  // 아래 path는 모두 RobinFs 형식('/문서/메모.txt') — 구현이 $HOME 접두를 붙인다.
+  // 웹/스텁: 빈 목록 / no-op (RobinFs가 가상 모드로 폴백).
+
+  // 홈 디렉터리를 재귀 스캔(숨김 제외, 깊이 제한). 텍스트 파일만 내용 포함.
+  Future<List<FsNode>> fsScan();
+  // 파일 쓰기(부모 폴더 자동 생성).
+  Future<void> fsWriteFile(String path, String content);
+  // 폴더 생성(recursive).
+  Future<void> fsMakeDir(String path);
+  // 파일/폴더 삭제(폴더는 recursive).
+  Future<void> fsDelete(String path);
+  // 이름/경로 변경(파일·폴더 공통).
+  Future<void> fsRename(String fromPath, String toPath);
 }
 
 // 플랫폼별 구현 인스턴스 — 조건부 import가 createPlatformBackend()를 제공.

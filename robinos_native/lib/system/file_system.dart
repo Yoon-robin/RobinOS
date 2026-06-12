@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'platform_backend.dart';
 
 // ===========================================================
 // RobinFs — 가상 파일시스템 (웹 systemAPI.fs 대응)
@@ -23,8 +24,19 @@ class FsEntry {
 class RobinFs extends ChangeNotifier {
   final Map<String, FsEntry> _map = {};
   SharedPreferences? _prefs;
+  // load() 시점에 리눅스 실기기면 true → 실제 디스크(robin 홈)에 미러.
+  // 테스트는 load()를 부르지 않으므로 항상 false = 순수 가상(부작용 없음).
+  bool _realBacked = false;
 
   Future<void> load() async {
+    // 리눅스 실기기: robin 홈을 RobinFs 루트로 백킹(진짜 파일).
+    if (platformBackend.isReal) {
+      _realBacked = true;
+      await _loadFromDisk();
+      notifyListeners();
+      return;
+    }
+    // 웹/개발: 가상 파일시스템(shared_preferences 영속).
     _prefs = await SharedPreferences.getInstance();
     final raw = _prefs?.getString('robinos.fs');
     if (raw != null) {
@@ -41,6 +53,39 @@ class RobinFs extends ChangeNotifier {
       _persist();
     }
     notifyListeners();
+  }
+
+  // 리눅스: 홈을 스캔해 _map 구성. 기본 폴더(문서/사진/다운로드)는 보장하고,
+  // 홈이 비어 있으면 환영 파일도 실제로 만든다.
+  Future<void> _loadFromDisk() async {
+    final nodes = await platformBackend.fsScan();
+    _map.clear();
+    for (final n in nodes) {
+      _map[n.path] = FsEntry(n.path, n.isDir, n.content);
+    }
+    final hadAny = _map.isNotEmpty;
+    for (final d in const ['/문서', '/사진', '/다운로드']) {
+      if (!_map.containsKey(d)) {
+        _map[d] = FsEntry(d, true);
+        platformBackend.fsMakeDir(d);
+      }
+    }
+    if (!hadAny) {
+      const wp = '/문서/환영.txt';
+      const wc =
+          'RobinOS에 오신 걸 환영해요! 🪐\n\nRobin에게 무엇이든 시켜보세요.\n예) "다크모드 켜줘", "계산기 열어"';
+      _map[wp] = FsEntry(wp, false, wc);
+      platformBackend.fsWriteFile(wp, wc);
+    }
+  }
+
+  // 변경 영속: 실기기면 디스크에 미러, 아니면 shared_preferences.
+  void _sync(void Function() diskOp) {
+    if (_realBacked) {
+      diskOp();
+    } else {
+      _persist();
+    }
   }
 
   void _seed() {
@@ -79,21 +124,21 @@ class RobinFs extends ChangeNotifier {
     final p = _join(dir, name);
     if (!_map.containsKey(p)) {
       _mkdir(p);
-      _persist();
+      _sync(() => platformBackend.fsMakeDir(p));
       notifyListeners();
     }
   }
 
   void write(String path, String content) {
     _set(path, content);
-    _persist();
+    _sync(() => platformBackend.fsWriteFile(path, content));
     notifyListeners();
   }
 
   void delete(String path) {
     _map.remove(path);
     _map.removeWhere((k, _) => k.startsWith('$path/'));
-    _persist();
+    _sync(() => platformBackend.fsDelete(path));
     notifyListeners();
   }
 
@@ -117,7 +162,7 @@ class RobinFs extends ChangeNotifier {
       _map.remove(from);
       _map[to] = FsEntry(to, false, entry.content);
     }
-    _persist();
+    _sync(() => platformBackend.fsRename(from, to));
     notifyListeners();
     return to;
   }

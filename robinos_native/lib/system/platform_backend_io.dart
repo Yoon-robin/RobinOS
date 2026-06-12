@@ -170,6 +170,103 @@ class _LinuxBackend implements PlatformBackend {
     }
   }
 
+  // --- 파일시스템: robin 홈을 RobinFs 루트로 백킹 ---
+  String get _home => Platform.environment['HOME'] ?? '/home/robin';
+  // RobinFs 경로('/문서/a.txt') → 실제 경로('$HOME/문서/a.txt'). '/'는 홈 자체.
+  String _real(String p) => p == '/' ? _home : '$_home$p';
+
+  bool _isTextPath(String p) {
+    final l = p.toLowerCase();
+    const exts = [
+      '.txt', '.md', '.log', '.json', '.yaml', '.yml',
+      '.sh', '.conf', '.ini', '.csv', '.dart', '.py', '.c', '.h', '.xml',
+    ];
+    return exts.any(l.endsWith);
+  }
+
+  @override
+  Future<List<FsNode>> fsScan() async {
+    final root = Directory(_home);
+    if (!root.existsSync()) return const [];
+    final out = <FsNode>[];
+    void walk(Directory d, int depth) {
+      if (depth > 4) return; // 깊이 제한(홈 폭주 방지)
+      List<FileSystemEntity> kids;
+      try {
+        kids = d.listSync();
+      } catch (_) {
+        return;
+      }
+      for (final ent in kids) {
+        final base = ent.path.split('/').last;
+        if (base.startsWith('.')) continue; // 숨김 제외
+        // 실제 경로에서 홈 접두를 떼 RobinFs 경로로.
+        var vpath = ent.path.substring(_home.length);
+        if (!vpath.startsWith('/')) vpath = '/$vpath';
+        if (ent is Directory) {
+          out.add(FsNode(vpath, true, ''));
+          walk(ent, depth + 1);
+        } else if (ent is File) {
+          var content = '';
+          try {
+            if (_isTextPath(vpath) && ent.lengthSync() <= 256 * 1024) {
+              content = ent.readAsStringSync();
+            }
+          } catch (_) {}
+          out.add(FsNode(vpath, false, content));
+        }
+      }
+    }
+
+    walk(root, 0);
+    return out;
+  }
+
+  @override
+  Future<void> fsWriteFile(String path, String content) async {
+    try {
+      final f = File(_real(path));
+      f.parent.createSync(recursive: true);
+      f.writeAsStringSync(content);
+    } catch (_) {}
+  }
+
+  @override
+  Future<void> fsMakeDir(String path) async {
+    try {
+      Directory(_real(path)).createSync(recursive: true);
+    } catch (_) {}
+  }
+
+  @override
+  Future<void> fsDelete(String path) async {
+    try {
+      final r = _real(path);
+      final d = Directory(r);
+      if (d.existsSync()) {
+        d.deleteSync(recursive: true);
+        return;
+      }
+      final f = File(r);
+      if (f.existsSync()) f.deleteSync();
+    } catch (_) {}
+  }
+
+  @override
+  Future<void> fsRename(String fromPath, String toPath) async {
+    try {
+      final from = _real(fromPath);
+      final to = _real(toPath);
+      final d = Directory(from);
+      if (d.existsSync()) {
+        d.renameSync(to);
+        return;
+      }
+      final f = File(from);
+      if (f.existsSync()) f.renameSync(to);
+    } catch (_) {}
+  }
+
   Future<void> _run(String exe, List<String> args) async {
     try {
       await Process.run(exe, args);
@@ -224,4 +321,15 @@ class _NoopBackend implements PlatformBackend {
 
   @override
   Future<bool> connectWifi(String ssid, String password) async => false;
+
+  @override
+  Future<List<FsNode>> fsScan() async => const [];
+  @override
+  Future<void> fsWriteFile(String path, String content) async {}
+  @override
+  Future<void> fsMakeDir(String path) async {}
+  @override
+  Future<void> fsDelete(String path) async {}
+  @override
+  Future<void> fsRename(String fromPath, String toPath) async {}
 }
