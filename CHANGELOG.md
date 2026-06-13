@@ -20,6 +20,8 @@ ISO는 [Releases](../../releases)에서 받을 수 있어요(일반 빌드). AI 
 - 기본 데스크톱 앱 탑재: firefox/mousepad/imv/mpv/pavucontrol/foot.
 
 ### Polish — 디자인·애니메이션·최적화
+- **RobinOS 자체 아이콘 언어**(하이브리드 디자인): 이모지 → `RobinAppIcon`(그라데이션 스퀘어클 + 상단 글로스 + 색상별 컬러 글로우 + 글리프). 독·런치패드·미션컨트롤·Spotlight 전부 통일 → 맥OS 클론 티에서 벗어난 독자 미감.
+- **시그니처 모션 커브** `kRobinEase`/`kRobinPop`: 맥OS 표준 이징 대신 RobinOS 고유 커브로 등장·창 열기 통일(살짝 튕기는 팝).
 - staggered 등장 애니메이션(알림·검색·런치패드·설정 칩), Robin 대화창 팝업, 독 magnification.
 - 배터리 없는 기기 폴링 중단, 블루투스 스캔 병렬화 등 최적화.
 

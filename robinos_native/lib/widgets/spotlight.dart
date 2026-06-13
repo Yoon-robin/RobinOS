@@ -8,15 +8,16 @@ import '../system/platform_backend.dart';
 import '../system/app_intents.dart';
 import '../apps/registry.dart';
 import 'anim.dart';
+import 'app_icon.dart';
 
 // Spotlight 검색 결과 한 줄(앱 또는 파일).
 class _Hit {
   final String label;
   final String badge; // '앱' / '메모'
   final Color color;
-  final String emoji;
+  final IconData glyph; // RobinAppIcon용 글리프
   final VoidCallback onOpen;
-  const _Hit(this.label, this.badge, this.color, this.emoji, this.onOpen);
+  const _Hit(this.label, this.badge, this.color, this.glyph, this.onOpen);
 }
 
 // Spotlight — 가운데 검색창에서 앱·메모 검색 → Enter/클릭으로 실행.
@@ -53,7 +54,7 @@ class _SpotlightState extends State<Spotlight> {
             ? kApps
             : kApps.where(
                 (a) => a.name.toLowerCase().contains(q) || a.id.contains(q)))
-        .map((a) => _Hit(a.name, '앱', a.color, a.emoji, () {
+        .map((a) => _Hit(a.name, '앱', a.color, a.glyph, () {
               widget.onOpen(a.id);
               widget.onClose();
             }));
@@ -64,7 +65,9 @@ class _SpotlightState extends State<Spotlight> {
             .read<SystemState>()
             .installedApps
             .where((a) => a.name.toLowerCase().contains(q))
-            .map((a) => _Hit(a.name, '앱', const Color(0xFF49D17A), '📦', () {
+            .map((a) =>
+                _Hit(a.name, '앱', const Color(0xFF49D17A), Icons.widgets_rounded,
+                    () {
                   platformBackend.launchApp(a.exec);
                   widget.onClose();
                 }));
@@ -76,7 +79,9 @@ class _SpotlightState extends State<Spotlight> {
                 !e.isDir &&
                 e.name.toLowerCase().endsWith('.txt') &&
                 e.name.toLowerCase().contains(q))
-            .map((e) => _Hit(e.name, '메모', const Color(0xFF4AA3FF), '📄', () {
+            .map((e) => _Hit(
+                    e.name, '메모', const Color(0xFF4AA3FF), Icons.description_rounded,
+                    () {
                   notesOpenTarget.value = e.path;
                   widget.onClose();
                 }));
@@ -200,18 +205,7 @@ class _SpotlightState extends State<Spotlight> {
         margin: const EdgeInsets.symmetric(vertical: 1),
         child: Row(
           children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(9),
-                gradient: LinearGradient(
-                  colors: [h.color, Color.lerp(h.color, Colors.black, 0.25)!],
-                ),
-              ),
-              alignment: Alignment.center,
-              child: Text(h.emoji, style: const TextStyle(fontSize: 18)),
-            ),
+            RobinAppIcon(glyph: h.glyph, color: h.color, size: 34),
             const SizedBox(width: 12),
             Expanded(
               child: Text(h.label,

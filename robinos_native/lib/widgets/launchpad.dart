@@ -90,7 +90,7 @@ class Launchpad extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            RobinAppIcon(app: a, size: 76),
+            RobinAppIcon(glyph: a.glyph, color: a.color, size: 76),
             const SizedBox(height: 10),
             Text(a.name,
                 style: const TextStyle(

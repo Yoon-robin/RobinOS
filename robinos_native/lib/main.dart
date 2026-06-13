@@ -905,11 +905,12 @@ class RobinWindow extends StatelessWidget {
       child: TweenAnimationBuilder<double>(
         tween: Tween(
             begin: 0.0, end: (win.closing || win.minimizing) ? 0.0 : 1.0),
-        duration: const Duration(milliseconds: 170),
-        curve: Curves.easeOutCubic,
+        duration: const Duration(milliseconds: 210),
+        // RobinOS 시그니처 팝(살짝 튕기며 열림). 닫힘은 앞쪽으로 빠르게 사라져 자연스러움.
+        curve: kRobinPop,
         builder: (context, t, child) => Opacity(
           opacity: t.clamp(0.0, 1.0),
-          child: Transform.scale(scale: 0.9 + 0.1 * t, child: child),
+          child: Transform.scale(scale: 0.88 + 0.12 * t, child: child),
         ),
         child: Listener(
         onPointerDown: (_) => onFocus(),
@@ -1734,7 +1735,7 @@ class _DockIcon extends StatelessWidget {
               curve: Curves.easeOut,
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 4),
-                child: RobinAppIcon(app: app, size: 52),
+                child: RobinAppIcon(glyph: app.glyph, color: app.color, size: 52),
               ),
             ),
             const SizedBox(height: 3),

@@ -1,22 +1,28 @@
 import 'package:flutter/material.dart';
-import '../apps/registry.dart';
 
 // ===========================================================
 // RobinAppIcon — RobinOS 자체 아이콘 언어.
 // 이모지 대신 일관된 "그라데이션 스퀘어클 + 상단 글로스 + 글리프 + 컬러 글로우".
-// 독·런치패드가 공유 → OS 전체 아이콘 톤이 하나로 묶이는 게 핵심(독자 미감).
+// 독·런치패드·미션컨트롤·Spotlight가 공유 → OS 전체 아이콘 톤이 하나로(독자 미감).
 //   · 3-스톱 대각 그라데이션(밝은 틴트 → 베이스 → 짙은 톤)으로 입체감.
 //   · 색상별 컬러 글로우 그림자(맥OS의 중립 그림자와 차별화되는 RobinOS 시그니처).
 //   · 상단 글로스 하이라이트로 유리/사탕 같은 광택.
+// glyph(Material 아이콘)+color만 받아 어디서든 재사용(앱·실앱·파일 결과 공용).
 // ===========================================================
 class RobinAppIcon extends StatelessWidget {
-  final AppDef app;
+  final IconData glyph;
+  final Color color;
   final double size;
-  const RobinAppIcon({super.key, required this.app, this.size = 52});
+  const RobinAppIcon({
+    super.key,
+    required this.glyph,
+    required this.color,
+    this.size = 52,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final c = app.color;
+    final c = color;
     final radius = size * 0.27;
     return Container(
       width: size,
@@ -73,7 +79,7 @@ class RobinAppIcon extends StatelessWidget {
           // 글리프.
           Center(
             child: Icon(
-              app.glyph,
+              glyph,
               color: Colors.white,
               size: size * 0.5,
               shadows: [

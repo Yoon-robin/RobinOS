@@ -104,7 +104,7 @@ class MissionControl extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    RobinAppIcon(app: w.app, size: 46),
+                    RobinAppIcon(glyph: w.app.glyph, color: w.app.color, size: 46),
                     const SizedBox(height: 10),
                     Text(w.title,
                         style: TextStyle(
