@@ -102,11 +102,13 @@ class NotificationCenter extends StatelessWidget {
   final List<NotifItem> items;
   final VoidCallback onClose;
   final VoidCallback onClearAll;
+  final void Function(int id) onDismiss; // 개별 알림 제거(스와이프/X)
   const NotificationCenter({
     super.key,
     required this.items,
     required this.onClose,
     required this.onClearAll,
+    required this.onDismiss,
   });
 
   @override
@@ -166,11 +168,19 @@ class NotificationCenter extends StatelessWidget {
                       const SizedBox(height: 10),
                       if (ordered.isEmpty)
                         Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 28),
+                          padding: const EdgeInsets.symmetric(vertical: 30),
                           child: Center(
-                            child: Text('새 알림이 없어요',
-                                style: TextStyle(
-                                    fontSize: 13, color: sys.textSec(0.5))),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.notifications_off_outlined,
+                                    size: 34, color: sys.textSec(0.28)),
+                                const SizedBox(height: 10),
+                                Text('새 알림이 없어요',
+                                    style: TextStyle(
+                                        fontSize: 13, color: sys.textSec(0.5))),
+                              ],
+                            ),
                           ),
                         )
                       else
@@ -180,8 +190,19 @@ class NotificationCenter extends StatelessWidget {
                             itemCount: ordered.length,
                             separatorBuilder: (_, _) =>
                                 const SizedBox(height: 8),
-                            itemBuilder: (_, i) =>
-                                StaggerIn(index: i, child: _card(sys, ordered[i])),
+                            itemBuilder: (_, i) {
+                              final n = ordered[i];
+                              return StaggerIn(
+                                index: i,
+                                child: Dismissible(
+                                  key: ValueKey(n.id),
+                                  direction: DismissDirection.endToStart,
+                                  onDismissed: (_) => onDismiss(n.id),
+                                  background: _dismissBg(),
+                                  child: _card(sys, n),
+                                ),
+                              );
+                            },
                           ),
                         ),
                     ],
@@ -194,6 +215,18 @@ class NotificationCenter extends StatelessWidget {
       ],
     );
   }
+
+  // 스와이프(왼쪽) 시 드러나는 삭제 배경.
+  Widget _dismissBg() => Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 18),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFF5F57).withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: const Icon(Icons.delete_outline_rounded,
+            color: Colors.white, size: 22),
+      );
 
   Widget _card(SystemState sys, NotifItem n) {
     return Container(

@@ -179,6 +179,12 @@ class _DesktopState extends State<Desktop> {
         _activeToasts.clear();
       });
 
+  // 알림 센터에서 개별 알림을 히스토리째 제거(스와이프).
+  void _removeNotif(int id) => setState(() {
+        _notifs.removeWhere((n) => n.id == id);
+        _activeToasts.remove(id);
+      });
+
   void _unlock() {
     setState(() => _locked = false);
     _notify('🪐', 'RobinOS', '환영해요! 독의 R 오브를 눌러 Robin을 불러보세요.');
@@ -575,6 +581,7 @@ class _DesktopState extends State<Desktop> {
                   items: _notifs,
                   onClose: () => setState(() => _notifCenter = false),
                   onClearAll: _clearNotifs,
+                  onDismiss: _removeNotif,
                 ),
               if (_ctx != null)
                 ContextMenu(
