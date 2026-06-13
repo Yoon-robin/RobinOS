@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../system/system_state.dart';
 import '../apps/registry.dart';
 import 'anim.dart';
+import 'app_icon.dart';
 
 class MissionWin {
   final int key;
@@ -103,8 +104,8 @@ class MissionControl extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(w.app.emoji, style: const TextStyle(fontSize: 30)),
-                    const SizedBox(height: 8),
+                    RobinAppIcon(app: w.app, size: 46),
+                    const SizedBox(height: 10),
                     Text(w.title,
                         style: TextStyle(
                             fontSize: 13,

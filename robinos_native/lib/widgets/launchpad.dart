@@ -5,6 +5,7 @@ import '../system/system_state.dart';
 import '../system/platform_backend.dart';
 import '../apps/registry.dart';
 import 'anim.dart';
+import 'app_icon.dart';
 
 // 런치패드 — 전체화면 앱 그리드. 앱 탭 → 실행, 빈 곳 탭 → 닫기.
 class Launchpad extends StatelessWidget {
@@ -89,26 +90,7 @@ class Launchpad extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 76,
-              height: 76,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [a.color, Color.lerp(a.color, Colors.black, 0.25)!],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
-                      blurRadius: 14,
-                      offset: const Offset(0, 6)),
-                ],
-              ),
-              alignment: Alignment.center,
-              child: Text(a.emoji, style: const TextStyle(fontSize: 38)),
-            ),
+            RobinAppIcon(app: a, size: 76),
             const SizedBox(height: 10),
             Text(a.name,
                 style: const TextStyle(

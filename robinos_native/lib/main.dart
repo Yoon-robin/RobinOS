@@ -23,6 +23,7 @@ import 'apps/paint.dart';
 import 'widgets/clock.dart';
 import 'widgets/battery.dart';
 import 'widgets/anim.dart';
+import 'widgets/app_icon.dart';
 import 'widgets/boot_screen.dart';
 import 'widgets/lock_screen.dart';
 import 'widgets/control_center.dart';
@@ -1732,29 +1733,8 @@ class _DockIcon extends StatelessWidget {
               duration: const Duration(milliseconds: 140),
               curve: Curves.easeOut,
               child: Container(
-                width: 52,
-                height: 52,
                 margin: const EdgeInsets.symmetric(horizontal: 4),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      app.color,
-                      Color.lerp(app.color, Colors.black, 0.25)!,
-                    ],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                alignment: Alignment.center,
-                child: Text(app.emoji, style: const TextStyle(fontSize: 26)),
+                child: RobinAppIcon(app: app, size: 52),
               ),
             ),
             const SizedBox(height: 3),
