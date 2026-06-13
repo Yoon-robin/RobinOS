@@ -229,7 +229,15 @@ class _FinderAppState extends State<FinderApp> {
   Widget _breadcrumb(SystemState sys) {
     final parts =
         _dir == '/' ? const <String>[] : _dir.split('/').where((s) => s.isNotEmpty).toList();
-    final crumbs = <Widget>[_crumb(sys, '🏠', '/')];
+    final homeActive = _dir == '/';
+    final crumbs = <Widget>[
+      GestureDetector(
+        onTap: () => setState(() => _dir = '/'),
+        child: Icon(Icons.home_rounded,
+            size: 16,
+            color: homeActive ? sys.textPrimary : sys.textSec(0.6)),
+      ),
+    ];
     var acc = '';
     for (final p in parts) {
       acc = '$acc/$p';
@@ -305,8 +313,8 @@ class _FinderAppState extends State<FinderApp> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(e.isDir ? '📁' : '📄', style: const TextStyle(fontSize: 38)),
-          const SizedBox(height: 4),
+          _itemIcon(sys, e),
+          const SizedBox(height: 6),
           Text(
             e.name,
             maxLines: 1,
@@ -316,5 +324,42 @@ class _FinderAppState extends State<FinderApp> {
         ],
       ),
     );
+  }
+
+  // 파일/폴더 아이콘 — 이모지 대신 RobinOS 글리프 언어(폴더=블루, 타입별 색).
+  Widget _itemIcon(SystemState sys, FsEntry e) {
+    if (e.isDir) {
+      return const Icon(Icons.folder_rounded, size: 46, color: Color(0xFF5AA6FF));
+    }
+    final (glyph, color) = _fileGlyph(e.name);
+    return Icon(glyph, size: 44, color: color);
+  }
+
+  (IconData, Color) _fileGlyph(String name) {
+    final n = name.toLowerCase();
+    bool ext(List<String> xs) => xs.any(n.endsWith);
+    if (ext(['.txt', '.md', '.log', '.rtf'])) {
+      return (Icons.description_rounded, const Color(0xFF8FA0B8));
+    }
+    if (ext(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.svg'])) {
+      return (Icons.image_rounded, const Color(0xFFFF6FA5));
+    }
+    if (ext(['.mp3', '.flac', '.wav', '.ogg', '.m4a', '.aac', '.opus'])) {
+      return (Icons.music_note_rounded, const Color(0xFFFF9F4A));
+    }
+    if (ext(['.mp4', '.mkv', '.webm', '.mov', '.avi'])) {
+      return (Icons.movie_rounded, const Color(0xFFB57BFF));
+    }
+    if (ext(['.pdf'])) {
+      return (Icons.picture_as_pdf_rounded, const Color(0xFFFF5A5F));
+    }
+    if (ext(['.zip', '.tar', '.gz', '.xz', '.7z', '.rar'])) {
+      return (Icons.folder_zip_rounded, const Color(0xFFC8A24A));
+    }
+    if (ext(['.dart', '.py', '.c', '.h', '.js', '.ts', '.json', '.yaml', '.yml',
+        '.sh', '.html', '.css', '.xml'])) {
+      return (Icons.code_rounded, const Color(0xFF49D17A));
+    }
+    return (Icons.insert_drive_file_rounded, const Color(0xFF9AA3AE));
   }
 }
