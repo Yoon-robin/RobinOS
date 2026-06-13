@@ -603,8 +603,24 @@ class _DesktopState extends State<Desktop> {
 // -----------------------------------------------------------
 // 배경: 그라데이션 + 강조색 블롭 3개 (테마/배경/강조색 반응)
 // -----------------------------------------------------------
-class _AuroraBackground extends StatelessWidget {
+class _AuroraBackground extends StatefulWidget {
   const _AuroraBackground();
+
+  @override
+  State<_AuroraBackground> createState() => _AuroraBackgroundState();
+}
+
+class _AuroraBackgroundState extends State<_AuroraBackground> {
+  // 마우스 위치(중앙 기준 -0.5~0.5). 패럴랙스용 — 움직일 때만 갱신(정지 시 repaint 0).
+  // 상시 애니메이션을 피해 softrender(QEMU/저사양)에서도 가볍게.
+  Offset _m = Offset.zero;
+
+  void _onHover(Offset local, Size size) {
+    if (size.width <= 0 || size.height <= 0) return;
+    final nx = (local.dx / size.width - 0.5).clamp(-0.5, 0.5);
+    final ny = (local.dy / size.height - 0.5).clamp(-0.5, 0.5);
+    setState(() => _m = Offset(nx.toDouble(), ny.toDouble()));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -612,27 +628,48 @@ class _AuroraBackground extends StatelessWidget {
     final blob = sys.accent;
     final blob2 = sys.accent2;
     final a = sys.isLight ? 0.30 : 0.34;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 400),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: sys.backgroundGradient,
-        ),
-      ),
-      child: Stack(
-        children: [
-          _Blob(top: -120, left: -80, size: 460, color: blob.withValues(alpha: a)),
-          _Blob(top: 120, right: -120, size: 520, color: blob2.withValues(alpha: a)),
-          _Blob(
-            bottom: -160,
-            left: 160,
-            size: 480,
-            color: sys.accent.withValues(alpha: a * 0.8),
+    return LayoutBuilder(
+      builder: (context, c) {
+        final size = Size(c.maxWidth, c.maxHeight);
+        return MouseRegion(
+          opaque: false,
+          onHover: (e) => _onHover(e.localPosition, size),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 400),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: sys.backgroundGradient,
+              ),
+            ),
+            child: Stack(
+              children: [
+                // 깊이별 패럴랙스 — 블롭마다 이동량/방향을 달리해 입체감.
+                _Blob(
+                    top: -120,
+                    left: -80,
+                    size: 460,
+                    offset: _m * 26,
+                    color: blob.withValues(alpha: a)),
+                _Blob(
+                    top: 120,
+                    right: -120,
+                    size: 520,
+                    offset: _m * -34,
+                    color: blob2.withValues(alpha: a)),
+                _Blob(
+                  bottom: -160,
+                  left: 160,
+                  size: 480,
+                  offset: _m * 18,
+                  color: sys.accent.withValues(alpha: a * 0.8),
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -641,6 +678,7 @@ class _Blob extends StatelessWidget {
   final double? top, left, right, bottom;
   final double size;
   final Color color;
+  final Offset offset; // 패럴랙스 이동량
   const _Blob({
     this.top,
     this.left,
@@ -648,6 +686,7 @@ class _Blob extends StatelessWidget {
     this.bottom,
     required this.size,
     required this.color,
+    this.offset = Offset.zero,
   });
 
   @override
@@ -657,13 +696,19 @@ class _Blob extends StatelessWidget {
       left: left,
       right: right,
       bottom: bottom,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [color, color.withValues(alpha: 0)],
+      // 부드럽게 따라오도록 미세 트랜지션(움직임 끝나면 멈춤).
+      child: AnimatedSlide(
+        offset: offset / size, // AnimatedSlide는 자식 크기 비율 → px를 비율로 환산
+        duration: const Duration(milliseconds: 220),
+        curve: kRobinEase,
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(
+              colors: [color, color.withValues(alpha: 0)],
+            ),
           ),
         ),
       ),
