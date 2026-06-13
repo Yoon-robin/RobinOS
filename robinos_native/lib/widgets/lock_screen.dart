@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../system/system_state.dart';
 import 'clock.dart';
+import 'battery.dart';
 
 // 잠금 화면 — 큰 시계 + 날짜, 클릭하거나 Enter로 잠금 해제.
 class LockScreen extends StatelessWidget {
@@ -104,6 +105,19 @@ class LockScreen extends StatelessWidget {
                             color: Colors.white.withValues(alpha: 0.6))),
                   ],
                 ),
+              ),
+            ),
+            // 우상단 상태 — 배터리·Wi-Fi (macOS 잠금화면식)
+            const Positioned(
+              top: 18,
+              right: 22,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  WifiIndicator(),
+                  SizedBox(width: 8),
+                  BatteryIndicator(),
+                ],
               ),
             ),
           ],
