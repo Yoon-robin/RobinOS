@@ -122,4 +122,9 @@ class _StubBackend implements PlatformBackend {
       ]..sort((a, b) => b.memMb.compareTo(a.memMb)),
     );
   }
+
+  @override
+  Future<void> playAudio(String path) async {}
+  @override
+  Future<void> stopAudio() async {}
 }

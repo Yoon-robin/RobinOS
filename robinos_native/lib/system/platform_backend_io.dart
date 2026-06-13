@@ -637,6 +637,21 @@ class _LinuxBackend implements PlatformBackend {
     return out.length > 6 ? out.sublist(0, 6) : out;
   }
 
+  @override
+  Future<void> playAudio(String path) async {
+    if (_unsafe(path)) return;
+    // 기존 재생 정지 후 새 파일 재생(detached). --no-video로 오디오만.
+    await _run('pkill', ['-x', 'mpv']);
+    try {
+      await Process.start(
+          'mpv', ['--no-video', '--really-quiet', _real(path)],
+          mode: ProcessStartMode.detached);
+    } catch (_) {}
+  }
+
+  @override
+  Future<void> stopAudio() async => _run('pkill', ['-x', 'mpv']);
+
   Future<void> _run(String exe, List<String> args) async {
     try {
       await Process.run(exe, args);
@@ -726,4 +741,8 @@ class _NoopBackend implements PlatformBackend {
   Future<void> installPackage(String name) async {}
   @override
   Future<SystemStats?> systemStats() async => null;
+  @override
+  Future<void> playAudio(String path) async {}
+  @override
+  Future<void> stopAudio() async {}
 }

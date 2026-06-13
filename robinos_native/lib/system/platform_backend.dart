@@ -195,6 +195,13 @@ abstract class PlatformBackend {
   // 실시간 지표 한 스냅샷(CPU·메모리·네트워크·프로세스). 짧은 샘플 간격(~250ms)으로
   // CPU/네트워크 변화율을 계산하므로 호출 자체가 약간의 지연을 가진다. 웹/도구부재: null.
   Future<SystemStats?> systemStats();
+
+  // === 오디오 재생 (리눅스: mpv) ===
+  // 오디오 파일 재생(리눅스: mpv --no-video, detached). 기존 재생은 정지 후 새로 시작.
+  // path는 RobinFs 형식('/음악/a.mp3') — 구현이 $HOME 접두를 붙인다. 웹/도구부재: no-op.
+  Future<void> playAudio(String path);
+  // 재생 정지(리눅스: mpv 종료). 웹/도구부재: no-op.
+  Future<void> stopAudio();
 }
 
 // 플랫폼별 구현 인스턴스 — 조건부 import가 createPlatformBackend()를 제공.
