@@ -19,10 +19,22 @@ class _CalculatorAppState extends State<CalculatorApp> {
   double? _acc;
   String? _op;
   bool _resetNext = false;
-  bool _sci = false; // 공학용 모드
+  String _mode = 'basic'; // basic | sci | convert
   bool _deg = true; // 삼각함수 각도 단위(도/라디안)
 
+  // 단위 변환 상태
+  String _convCat = 'length';
+  String _convFrom = 'm';
+  String _convTo = 'km';
+  final _convCtrl = TextEditingController(text: '1');
+
   double get _value => double.tryParse(_display) ?? 0;
+
+  @override
+  void dispose() {
+    _convCtrl.dispose();
+    super.dispose();
+  }
 
   String _fmt(double v) {
     if (v.isNaN || v.isInfinite) return '오류';
@@ -221,72 +233,85 @@ class _CalculatorAppState extends State<CalculatorApp> {
         children: [
           _modeBar(sys),
           Expanded(
-            child: Container(
+            child: _mode == 'convert'
+                ? _converter(sys)
+                : _calcBody(sys, digitBg, funcBg),
+          ),
+        ],
+      ),
+      ),
+    );
+  }
+
+  // 기본/공학 계산기 본체(디스플레이 + 공학 키 + 숫자 패드).
+  Widget _calcBody(SystemState sys, Color digitBg, Color funcBg) {
+    return Column(
+      children: [
+        Expanded(
+          child: Container(
+            alignment: Alignment.bottomRight,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
               alignment: Alignment.bottomRight,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.bottomRight,
-                child: Text(
-                  _display,
-                  style: TextStyle(
-                    fontSize: 52,
-                    fontWeight: FontWeight.w300,
-                    color: sys.textPrimary,
-                  ),
+              child: Text(
+                _display,
+                style: TextStyle(
+                  fontSize: 52,
+                  fontWeight: FontWeight.w300,
+                  color: sys.textPrimary,
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 6),
-          if (_sci) ...[
-            _sciRow(sys, [
-              ('sin', () => _unary((x) => math.sin(_toRad(x)))),
-              ('cos', () => _unary((x) => math.cos(_toRad(x)))),
-              ('tan', () => _unary((x) => math.tan(_toRad(x)))),
-              ('√', () => _unary(math.sqrt)),
-              ('x²', () => _unary((x) => x * x)),
-            ]),
-            _sciRow(sys, [
-              ('ln', () => _unary(math.log)),
-              ('log', () => _unary((x) => math.log(x) / math.ln10)),
-              ('xʸ', () => _setOp('^')),
-              ('π', () => _constVal(math.pi)),
-              ('e', () => _constVal(math.e)),
-            ]),
-          ],
-          _row([
-            _key('C', funcBg, sys.textPrimary, onTap: _clear),
-            _key('±', funcBg, sys.textPrimary, onTap: _negate),
-            _key('%', funcBg, sys.textPrimary, onTap: _percent),
-            _key('÷', sys.accent, Colors.white, onTap: () => _setOp('÷'), active: _op == '÷'),
+        ),
+        const SizedBox(height: 6),
+        if (_mode == 'sci') ...[
+          _sciRow(sys, [
+            ('sin', () => _unary((x) => math.sin(_toRad(x)))),
+            ('cos', () => _unary((x) => math.cos(_toRad(x)))),
+            ('tan', () => _unary((x) => math.tan(_toRad(x)))),
+            ('√', () => _unary(math.sqrt)),
+            ('x²', () => _unary((x) => x * x)),
           ]),
-          _row([
-            _key('7', digitBg, sys.textPrimary, onTap: () => _digit('7')),
-            _key('8', digitBg, sys.textPrimary, onTap: () => _digit('8')),
-            _key('9', digitBg, sys.textPrimary, onTap: () => _digit('9')),
-            _key('×', sys.accent, Colors.white, onTap: () => _setOp('×'), active: _op == '×'),
-          ]),
-          _row([
-            _key('4', digitBg, sys.textPrimary, onTap: () => _digit('4')),
-            _key('5', digitBg, sys.textPrimary, onTap: () => _digit('5')),
-            _key('6', digitBg, sys.textPrimary, onTap: () => _digit('6')),
-            _key('−', sys.accent, Colors.white, onTap: () => _setOp('−'), active: _op == '−'),
-          ]),
-          _row([
-            _key('1', digitBg, sys.textPrimary, onTap: () => _digit('1')),
-            _key('2', digitBg, sys.textPrimary, onTap: () => _digit('2')),
-            _key('3', digitBg, sys.textPrimary, onTap: () => _digit('3')),
-            _key('+', sys.accent, Colors.white, onTap: () => _setOp('+'), active: _op == '+'),
-          ]),
-          _row([
-            _key('0', digitBg, sys.textPrimary, flex: 2, onTap: () => _digit('0')),
-            _key('.', digitBg, sys.textPrimary, onTap: _dot),
-            _key('=', sys.accent, Colors.white, onTap: _equals),
+          _sciRow(sys, [
+            ('ln', () => _unary(math.log)),
+            ('log', () => _unary((x) => math.log(x) / math.ln10)),
+            ('xʸ', () => _setOp('^')),
+            ('π', () => _constVal(math.pi)),
+            ('e', () => _constVal(math.e)),
           ]),
         ],
-      ),
-      ),
+        _row([
+          _key('C', funcBg, sys.textPrimary, onTap: _clear),
+          _key('±', funcBg, sys.textPrimary, onTap: _negate),
+          _key('%', funcBg, sys.textPrimary, onTap: _percent),
+          _key('÷', sys.accent, Colors.white, onTap: () => _setOp('÷'), active: _op == '÷'),
+        ]),
+        _row([
+          _key('7', digitBg, sys.textPrimary, onTap: () => _digit('7')),
+          _key('8', digitBg, sys.textPrimary, onTap: () => _digit('8')),
+          _key('9', digitBg, sys.textPrimary, onTap: () => _digit('9')),
+          _key('×', sys.accent, Colors.white, onTap: () => _setOp('×'), active: _op == '×'),
+        ]),
+        _row([
+          _key('4', digitBg, sys.textPrimary, onTap: () => _digit('4')),
+          _key('5', digitBg, sys.textPrimary, onTap: () => _digit('5')),
+          _key('6', digitBg, sys.textPrimary, onTap: () => _digit('6')),
+          _key('−', sys.accent, Colors.white, onTap: () => _setOp('−'), active: _op == '−'),
+        ]),
+        _row([
+          _key('1', digitBg, sys.textPrimary, onTap: () => _digit('1')),
+          _key('2', digitBg, sys.textPrimary, onTap: () => _digit('2')),
+          _key('3', digitBg, sys.textPrimary, onTap: () => _digit('3')),
+          _key('+', sys.accent, Colors.white, onTap: () => _setOp('+'), active: _op == '+'),
+        ]),
+        _row([
+          _key('0', digitBg, sys.textPrimary, flex: 2, onTap: () => _digit('0')),
+          _key('.', digitBg, sys.textPrimary, onTap: _dot),
+          _key('=', sys.accent, Colors.white, onTap: _equals),
+        ]),
+      ],
     );
   }
 
@@ -299,11 +324,14 @@ class _CalculatorAppState extends State<CalculatorApp> {
       height: 30,
       child: Row(
         children: [
-          _seg(sys, '기본', !_sci, () => setState(() => _sci = false)),
+          _seg(sys, '기본', _mode == 'basic', () => setState(() => _mode = 'basic')),
           const SizedBox(width: 6),
-          _seg(sys, '공학', _sci, () => setState(() => _sci = true)),
+          _seg(sys, '공학', _mode == 'sci', () => setState(() => _mode = 'sci')),
+          const SizedBox(width: 6),
+          _seg(sys, '변환', _mode == 'convert',
+              () => setState(() => _mode = 'convert')),
           const Spacer(),
-          if (_sci)
+          if (_mode == 'sci')
             GestureDetector(
               onTap: () => setState(() => _deg = !_deg),
               child: Container(
@@ -349,6 +377,177 @@ class _CalculatorAppState extends State<CalculatorApp> {
       for (final k in keys)
         _key(k.$1, bg, sys.textPrimary, onTap: k.$2, fontSize: 16),
     ]);
+  }
+
+  // ---- 단위 변환 ----
+  static const _convCats = ['length', 'weight', 'temp', 'data'];
+  static const _convLabels = {
+    'length': '길이',
+    'weight': '무게',
+    'temp': '온도',
+    'data': '데이터',
+  };
+  static const _convFactors = {
+    'length': {
+      'm': 1.0, 'km': 1000.0, 'cm': 0.01, 'mm': 0.001,
+      'in': 0.0254, 'ft': 0.3048, 'mi': 1609.344,
+    },
+    'weight': {'g': 1.0, 'kg': 1000.0, 'mg': 0.001, 'lb': 453.59237, 'oz': 28.349523},
+    'data': {
+      'B': 1.0, 'KB': 1024.0, 'MB': 1048576.0,
+      'GB': 1073741824.0, 'TB': 1099511627776.0,
+    },
+  };
+  static const _tempUnits = ['°C', '°F', 'K'];
+
+  List<String> _unitsOf(String cat) =>
+      cat == 'temp' ? _tempUnits : _convFactors[cat]!.keys.toList();
+
+  double _convertValue(double v, String cat, String from, String to) {
+    if (cat == 'temp') {
+      final c = from == '°C'
+          ? v
+          : from == '°F'
+              ? (v - 32) * 5 / 9
+              : v - 273.15;
+      return to == '°C'
+          ? c
+          : to == '°F'
+              ? c * 9 / 5 + 32
+              : c + 273.15;
+    }
+    final u = _convFactors[cat]!;
+    return v * u[from]! / u[to]!;
+  }
+
+  void _setCat(String cat) {
+    final units = _unitsOf(cat);
+    setState(() {
+      _convCat = cat;
+      _convFrom = units.first;
+      _convTo = units.length > 1 ? units[1] : units.first;
+    });
+  }
+
+  Widget _converter(SystemState sys) {
+    final units = _unitsOf(_convCat);
+    final from = units.contains(_convFrom) ? _convFrom : units.first;
+    final to = units.contains(_convTo) ? _convTo : units.last;
+    final input = double.tryParse(_convCtrl.text) ?? 0;
+    final r = _convertValue(input, _convCat, from, to);
+    final resStr = (r == r.roundToDouble() && r.abs() < 1e12)
+        ? r.toInt().toString()
+        : r.toStringAsPrecision(8);
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [for (final c in _convCats) _catChip(sys, c)],
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _convCtrl,
+            keyboardType: TextInputType.number,
+            onChanged: (_) => setState(() {}),
+            style: TextStyle(fontSize: 22, color: sys.textPrimary),
+            decoration: InputDecoration(
+              isDense: true,
+              filled: true,
+              fillColor: sys.textSec(0.07),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                  child: _unitDrop(
+                      sys, from, (u) => setState(() => _convFrom = u!), units)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Icon(Icons.arrow_forward_rounded,
+                    color: sys.textSec(0.5), size: 20),
+              ),
+              Expanded(
+                  child: _unitDrop(
+                      sys, to, (u) => setState(() => _convTo = u!), units)),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: sys.accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Text(resStr,
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.w400,
+                    color: sys.textPrimary)),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text('$from → $to',
+                textAlign: TextAlign.right,
+                style: TextStyle(fontSize: 12, color: sys.textSec(0.5))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _catChip(SystemState sys, String cat) {
+    final active = cat == _convCat;
+    return GestureDetector(
+      onTap: () => _setCat(cat),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: active ? sys.accent : sys.textSec(0.08),
+          borderRadius: BorderRadius.circular(9),
+        ),
+        child: Text(_convLabels[cat]!,
+            style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: active ? Colors.white : sys.textSec(0.7))),
+      ),
+    );
+  }
+
+  Widget _unitDrop(SystemState sys, String value,
+      ValueChanged<String?> onChanged, List<String> units) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: sys.textSec(0.07),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          isExpanded: true,
+          dropdownColor: sys.windowSurface,
+          style: TextStyle(fontSize: 15, color: sys.textPrimary),
+          items: [
+            for (final u in units) DropdownMenuItem(value: u, child: Text(u))
+          ],
+          onChanged: onChanged,
+        ),
+      ),
+    );
   }
 
   Widget _key(
