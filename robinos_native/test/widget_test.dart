@@ -257,6 +257,21 @@ void main() {
       expect(log['suspend'], '1');
       expect(r.reply, contains('절전'));
     });
+    test('배경 변경 → setWallpaper(ocean)', () async {
+      final log = <String, String>{};
+      await localBrain('배경 오션으로 바꿔줘', _actions(log));
+      expect(log['wallpaper'], 'ocean');
+    });
+    test('밝기 50% → setBrightness(0.50)', () async {
+      final log = <String, String>{};
+      await localBrain('밝기 50%로 해줘', _actions(log));
+      expect(log['brightness'], '0.50');
+    });
+    test('강조색 별칭: 하늘색 → setAccent(cyan)', () async {
+      final log = <String, String>{};
+      await localBrain('강조색 하늘색으로 바꿔', _actions(log));
+      expect(log['accent'], 'cyan');
+    });
   });
 
   group('PlatformBackend (Phase C)', () {
