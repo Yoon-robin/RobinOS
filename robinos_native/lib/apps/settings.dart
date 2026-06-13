@@ -132,7 +132,7 @@ class SettingsApp extends StatelessWidget {
           const SizedBox(height: 26),
           _section(sys, '시스템'),
           const SizedBox(height: 10),
-          _infoRow(sys, 'RobinOS', '네이티브 빌드 · Flutter'),
+          _infoRow(sys, 'RobinOS', '2026.06 · Flutter 네이티브 · sway DE · Robin AI 비서'),
           _infoRow(
             sys,
             '하드웨어 제어',
