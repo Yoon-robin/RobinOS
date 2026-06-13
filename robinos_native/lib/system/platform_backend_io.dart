@@ -479,15 +479,20 @@ class _LinuxBackend implements PlatformBackend {
   @override
   Future<SystemStats?> systemStats() async {
     try {
-      // CPU·네트워크는 변화율 → 짧은 간격을 두고 두 번 샘플링해 델타로 계산.
+      // CPU·네트워크·프로세스CPU는 변화율 → 짧은 간격을 두고 두 번 샘플링해 델타로 계산.
       final cpu0 = _readCpu();
+      final procJ0 = _readProcJiffies(); // 프로세스별 누적 jiffies (t0)
       final net0 = _readNet();
       final sw = Stopwatch()..start();
       await Future.delayed(const Duration(milliseconds: 250));
       sw.stop();
       final cpu1 = _readCpu();
+      final procJ1 = _readProcJiffies(); // (t1)
       final net1 = _readNet();
       final dt = sw.elapsedMicroseconds / 1e6;
+      final totalDelta = (cpu0.isNotEmpty && cpu1.isNotEmpty)
+          ? (cpu1[0][1] - cpu0[0][1])
+          : 0;
 
       double pct(List<int> a, List<int> b) {
         final dIdle = b[0] - a[0];
@@ -523,7 +528,7 @@ class _LinuxBackend implements PlatformBackend {
         netTxBps: tx < 0 ? 0.0 : tx,
         uptimeSec: _readUptime(),
         load1: _readLoad(),
-        procs: _topProcs(),
+        procs: _topProcs(procJ0, procJ1, totalDelta),
       );
     } catch (_) {
       return null;
@@ -637,35 +642,64 @@ class _LinuxBackend implements PlatformBackend {
     }
   }
 
-  // 메모리(RSS) 상위 프로세스 6개. /proc/[pid]/statm(상주 페이지) + comm(이름).
-  // CPU%는 프로세스별 델타 샘플링이 필요해 v1에선 생략(전체/코어 CPU로 충분).
-  List<ProcInfo> _topProcs() {
-    const pageBytes = 4096; // 일반적 페이지 크기
-    final out = <ProcInfo>[];
+  // 프로세스별 누적 CPU jiffies(utime+stime) 맵. /proc/[pid]/stat.
+  // comm(2번째 필드)에 공백/괄호가 있을 수 있어 '마지막 )' 이후를 파싱.
+  Map<int, int> _readProcJiffies() {
+    final m = <int, int>{};
     try {
       for (final ent in Directory('/proc').listSync()) {
         if (ent is! Directory) continue;
-        final pidStr = ent.path.split('/').last;
-        final pid = int.tryParse(pidStr);
+        final pid = int.tryParse(ent.path.split('/').last);
         if (pid == null) continue;
         try {
-          final statm = File('${ent.path}/statm')
-              .readAsStringSync()
-              .trim()
-              .split(RegExp(r'\s+'));
-          if (statm.length < 2) continue;
-          final rssPages = int.tryParse(statm[1]) ?? 0;
-          final memMb = rssPages * pageBytes / (1024 * 1024);
-          if (memMb < 1) continue; // 1MB 미만 잡프로세스 제외
-          var name = pidStr;
-          try {
-            name = File('${ent.path}/comm').readAsStringSync().trim();
-          } catch (_) {}
-          out.add(ProcInfo(pid, name.isEmpty ? pidStr : name, memMb));
+          final s = File('${ent.path}/stat').readAsStringSync();
+          final rp = s.lastIndexOf(')');
+          if (rp < 0) continue;
+          final p = s.substring(rp + 1).trim().split(RegExp(r'\s+'));
+          // comm 이후: state(0) ppid(1) pgrp(2) ... utime(11) stime(12)
+          if (p.length > 12) {
+            m[pid] = (int.tryParse(p[11]) ?? 0) + (int.tryParse(p[12]) ?? 0);
+          }
         } catch (_) {}
       }
     } catch (_) {}
-    out.sort((a, b) => b.memMb.compareTo(a.memMb));
+    return m;
+  }
+
+  // CPU 점유 상위 프로세스 6개. 두 jiffies 스냅샷의 델타 / 전체 델타 → CPU%.
+  // 각 후보의 mem(statm)·이름(comm)을 t1 시점에 읽어 합친다(추가 sleep 없음).
+  List<ProcInfo> _topProcs(Map<int, int> j0, Map<int, int> j1, int totalDelta) {
+    const pageBytes = 4096;
+    final out = <ProcInfo>[];
+    for (final e in j1.entries) {
+      final pid = e.key;
+      final delta = e.value - (j0[pid] ?? e.value);
+      final cpu = totalDelta > 0
+          ? (delta / totalDelta * 100).clamp(0.0, 100.0).toDouble()
+          : 0.0;
+      double memMb = 0;
+      try {
+        final statm = File('/proc/$pid/statm')
+            .readAsStringSync()
+            .trim()
+            .split(RegExp(r'\s+'));
+        if (statm.length >= 2) {
+          memMb = (int.tryParse(statm[1]) ?? 0) * pageBytes / (1024 * 1024);
+        }
+      } catch (_) {
+        continue; // 프로세스가 사라짐
+      }
+      if (memMb < 1 && cpu < 0.1) continue; // 사소한 프로세스 제외
+      var name = '$pid';
+      try {
+        name = File('/proc/$pid/comm').readAsStringSync().trim();
+      } catch (_) {}
+      out.add(ProcInfo(pid, name.isEmpty ? '$pid' : name, cpu, memMb));
+    }
+    out.sort((a, b) {
+      final c = b.cpu.compareTo(a.cpu);
+      return c != 0 ? c : b.memMb.compareTo(a.memMb);
+    });
     return out.length > 6 ? out.sublist(0, 6) : out;
   }
 

@@ -343,17 +343,14 @@ class _SystemMonitorAppState extends State<SystemMonitorApp> {
     );
   }
 
-  // ---- 프로세스 카드 ----
+  // ---- 프로세스 카드 (CPU 상위) ----
   Widget _procCard(SystemState sys, SystemStats s) {
-    final maxMem = s.procs.isEmpty
-        ? 1.0
-        : s.procs.map((p) => p.memMb).reduce((a, b) => a > b ? a : b);
     return _card(
       sys,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _cardHead(sys, '메모리 상위 프로세스', Icons.list_alt, null),
+          _cardHead(sys, '프로세스', Icons.list_alt, 'CPU 상위'),
           const SizedBox(height: 6),
           if (s.procs.isEmpty)
             Padding(
@@ -363,23 +360,23 @@ class _SystemMonitorAppState extends State<SystemMonitorApp> {
             )
           else
             for (var i = 0; i < s.procs.length; i++)
-              StaggerIn(
-                index: i,
-                child: _procRow(sys, s.procs[i], maxMem),
-              ),
+              StaggerIn(index: i, child: _procRow(sys, s.procs[i])),
         ],
       ),
     );
   }
 
-  Widget _procRow(SystemState sys, ProcInfo p, double maxMem) {
-    final double frac = (p.memMb / maxMem).clamp(0.0, 1.0).toDouble();
+  Widget _procRow(SystemState sys, ProcInfo p) {
+    final double frac = (p.cpu / 100).clamp(0.0, 1.0).toDouble();
+    final mem = p.memMb >= 1024
+        ? '${(p.memMb / 1024).toStringAsFixed(1)}G'
+        : '${p.memMb.round()}M';
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         children: [
           SizedBox(
-            width: 130,
+            width: 120,
             child: Text(p.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -417,11 +414,8 @@ class _SystemMonitorAppState extends State<SystemMonitorApp> {
           ),
           const SizedBox(width: 10),
           SizedBox(
-            width: 64,
-            child: Text(
-                p.memMb >= 1024
-                    ? '${(p.memMb / 1024).toStringAsFixed(1)} GB'
-                    : '${p.memMb.round()} MB',
+            width: 86,
+            child: Text('${p.cpu.toStringAsFixed(0)}%  $mem',
                 textAlign: TextAlign.right,
                 style: TextStyle(
                     fontSize: 11.5,

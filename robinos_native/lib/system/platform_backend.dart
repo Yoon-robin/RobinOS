@@ -70,8 +70,9 @@ class BtDevice {
 class ProcInfo {
   final int pid;
   final String name;
+  final double cpu; // CPU 점유율 0~100 (전체 jiffies 대비)
   final double memMb; // RSS(MB)
-  const ProcInfo(this.pid, this.name, this.memMb);
+  const ProcInfo(this.pid, this.name, this.cpu, this.memMb);
 }
 
 // 실시간 시스템 지표 한 스냅샷 (리눅스: /proc·/sys). 웹/도구부재: null.

@@ -120,13 +120,17 @@ class _StubBackend implements PlatformBackend {
       uptimeSec: 19000 + DateTime.now().second,
       load1: cpu / 100 * cores.length,
       procs: [
-        ProcInfo(412, 'firefox-esr', 980 + 60 * math.sin(t * 0.5)),
-        ProcInfo(331, 'robinos_native', 540 + 30 * math.sin(t * 0.7 + 1)),
-        ProcInfo(289, 'ollama', 1320 + 80 * math.sin(t * 0.3 + 2)),
-        const ProcInfo(120, 'sway', 96),
-        const ProcInfo(98, 'pipewire', 42),
-        const ProcInfo(1, 'systemd', 12),
-      ]..sort((a, b) => b.memMb.compareTo(a.memMb)),
+        ProcInfo(412, 'firefox-esr', 18 + 14 * (0.5 + 0.5 * math.sin(t * 0.9)),
+            980 + 60 * math.sin(t * 0.5)),
+        ProcInfo(289, 'ollama', 28 + 22 * (0.5 + 0.5 * math.sin(t * 0.6 + 2)),
+            1320 + 80 * math.sin(t * 0.3 + 2)),
+        ProcInfo(331, 'robinos_native',
+            6 + 5 * (0.5 + 0.5 * math.sin(t * 1.1 + 1)),
+            540 + 30 * math.sin(t * 0.7 + 1)),
+        const ProcInfo(120, 'sway', 2.5, 96),
+        const ProcInfo(98, 'pipewire', 1.0, 42),
+        const ProcInfo(1, 'systemd', 0.3, 12),
+      ]..sort((a, b) => b.cpu.compareTo(a.cpu)),
     );
   }
 
