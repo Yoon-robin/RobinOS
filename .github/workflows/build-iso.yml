@@ -22,9 +22,13 @@ jobs:
     # 신 심볼을 참조해 bookworm에서 'symbol lookup error'로 크래시함.
     runs-on: ubuntu-22.04
     timeout-minutes: 90
+    permissions:
+      contents: write   # Release 생성/업로드용
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 30   # 릴리스 노트(최근 커밋)용 히스토리
 
       # 큰 AI 모델(7b=4.7GB 등) 내장 시 러너 디스크(~14GB)가 부족해질 수 있어
       # RobinOS 빌드와 무관한 사전설치 도구(dotnet/android/ghc/CodeQL)를 비워 ~20GB 확보.
@@ -98,6 +102,32 @@ jobs:
           path: boot/*.iso
           if-no-files-found: error
           retention-days: 14
+
+      # 일반 ISO를 GitHub Release에 항상 업로드(최신 빌드 제공). 릴리스 노트는 최근 커밋으로 자동 생성.
+      # AI 내장 ISO(~6GB)는 Release 단일파일 2GB 한도를 넘어 제외 — 위 아티팩트로만 받음.
+      - name: Release ISO (일반 빌드만)
+        if: ${{ !inputs.embed_ai }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ISO="${{ steps.iso.outputs.path }}"
+          SIZE=$(du -h "$ISO" | cut -f1)
+          BYTES=$(stat -c%s "$ISO")
+          if [ "$BYTES" -ge $((2*1024*1024*1024)) ]; then
+            echo "ISO $SIZE > 2GB — Release 건너뜀(아티팩트로만 제공)."; exit 0
+          fi
+          TAG="v$(date -u +%Y.%m.%d-%H%M)"
+          {
+            echo "RobinOS 부팅 ISO ($SIZE)."
+            echo ""
+            echo "USB로 구워 부팅하면 sway 데스크톱 + Robin 비서가 뜹니다."
+            echo "설정 > Robin 두뇌에서 AI 모델(Ollama)을 켤 수 있어요."
+            echo ""
+            echo "## 최근 변경"
+            git log -15 --pretty=format:'- %s' | grep -vE '^- (Merge|Co-Authored)' || true
+          } > notes.md
+          gh release create "$TAG" "$ISO" --title "RobinOS $TAG ($SIZE)" --notes-file notes.md
+          echo "Release $TAG 생성 + ISO 업로드 완료."
 
       # 가상화 없이 QEMU 소프트웨어 에뮬레이션(TCG)으로 ISO를 부팅해보고
       # 부팅 중 화면을 여러 장 캡처 → 스크린샷 아티팩트. (best-effort)
