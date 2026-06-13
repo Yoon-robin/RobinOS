@@ -136,7 +136,7 @@ class _SoftwareAppState extends State<SoftwareApp> {
                   CircularProgressIndicator(strokeWidth: 2.5, color: sys.accent)));
     }
     if (!_did) {
-      return _center(sys, '설치할 앱을 검색해 보세요.\nfirefox · gimp · vlc · libreoffice …');
+      return _suggest(sys);
     }
     if (_results.isEmpty) {
       return _center(sys, '검색 결과가 없어요. 다른 이름으로 찾아보세요.');
@@ -234,4 +234,75 @@ class _SoftwareAppState extends State<SoftwareApp> {
                   TextStyle(fontSize: 13, color: sys.textSec(0.5), height: 1.5)),
         ),
       );
+
+  // 검색 전 화면 — 인기 앱을 칩으로 추천(탭하면 바로 검색).
+  static const _popular = <(String pkg, String label)>[
+    ('firefox-esr', '웹 브라우저'),
+    ('gimp', '이미지 편집'),
+    ('vlc', '미디어 플레이어'),
+    ('libreoffice', '오피스'),
+    ('inkscape', '벡터 그래픽'),
+    ('audacity', '오디오 편집'),
+    ('obs-studio', '화면 녹화'),
+    ('htop', '시스템 모니터'),
+  ];
+
+  Widget _suggest(SystemState sys) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('인기 앱',
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.4,
+                  color: sys.textSec(0.5))),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              for (var i = 0; i < _popular.length; i++)
+                StaggerIn(
+                    index: i,
+                    child: _suggestChip(sys, _popular[i].$1, _popular[i].$2)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _suggestChip(SystemState sys, String pkg, String label) {
+    return GestureDetector(
+      onTap: () {
+        _ctrl.text = pkg;
+        _search();
+      },
+      child: Container(
+        width: 150,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        decoration: BoxDecoration(
+          color: sys.textSec(0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: sys.textSec(0.1)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(pkg,
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: sys.textPrimary)),
+            const SizedBox(height: 2),
+            Text(label, style: TextStyle(fontSize: 11, color: sys.textSec(0.5))),
+          ],
+        ),
+      ),
+    );
+  }
 }
