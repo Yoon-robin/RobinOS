@@ -12,6 +12,10 @@ RobinActions _actions(Map<String, String> log) => RobinActions(
         AppInfo('calc', '계산기'),
         AppInfo('notes', '메모'),
         AppInfo('paint', '그림판'),
+        AppInfo('music', '음악'),
+        AppInfo('gallery', '사진'),
+        AppInfo('monitor', '시스템 모니터'),
+        AppInfo('calendar', '캘린더'),
       ],
       setTheme: (light) => log['theme'] = light ? 'light' : 'dark',
       isLight: () => false,
@@ -26,6 +30,7 @@ RobinActions _actions(Map<String, String> log) => RobinActions(
       closeAll: () => log['close'] = 'all',
       reboot: () => log['power'] = 'reboot',
       powerOff: () => log['power'] = 'off',
+      suspend: () => log['suspend'] = '1',
       setWifi: (on) => log['wifi'] = on ? 'on' : 'off',
       setBluetooth: (on) => log['bt'] = on ? 'on' : 'off',
       newNote: () => log['newNote'] = '1',
@@ -230,6 +235,27 @@ void main() {
     test('배터리 → batteryText 응답', () async {
       final r = await localBrain('배터리 몇 %야?', _actions({}));
       expect(r.reply, contains('80%'));
+    });
+    test('새 앱 열기: 음악 → openApp(music)', () async {
+      final log = <String, String>{};
+      await localBrain('음악 열어줘', _actions(log));
+      expect(log['open'], 'music');
+    });
+    test('새 앱 열기: 사진 → openApp(gallery)', () async {
+      final log = <String, String>{};
+      await localBrain('사진 보여줘', _actions(log));
+      expect(log['open'], 'gallery');
+    });
+    test('별칭: "모니터 열어" → openApp(monitor)', () async {
+      final log = <String, String>{};
+      await localBrain('모니터 열어줘', _actions(log));
+      expect(log['open'], 'monitor');
+    });
+    test('절전 → suspend() 호출', () async {
+      final log = <String, String>{};
+      final r = await localBrain('절전 모드로 전환해줘', _actions(log));
+      expect(log['suspend'], '1');
+      expect(r.reply, contains('절전'));
     });
   });
 

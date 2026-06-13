@@ -459,6 +459,7 @@ class _DesktopState extends State<Desktop> {
       closeAll: () => setState(() => _wins.clear()),
       reboot: () => platformBackend.reboot(),
       powerOff: () => platformBackend.powerOff(),
+      suspend: () => platformBackend.suspend(),
       setWifi: (on) => platformBackend.setWifi(on),
       setBluetooth: (on) => platformBackend.setBluetooth(on),
       newNote: _newNote,

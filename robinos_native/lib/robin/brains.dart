@@ -51,6 +51,7 @@ String _systemPrompt(RobinActions a) {
 - setVolume (arg = 0~100 정수, 퍼센트)
 - setWifi (arg = "on" | "off")
 - setBluetooth (arg = "on" | "off")
+- suspend (arg 없음 — 절전/대기 모드)
 - screenshot (arg 없음 — 화면을 캡처)
 - calculate (arg = 수식; 결과는 네가 직접 계산해서 reply에 적어줘)
 동작이 필요 없으면 {"action":null,"reply":"<답변>"}.''';
@@ -93,6 +94,9 @@ RobinResult _apply(String content, RobinActions a) {
         break;
       case 'setBluetooth':
         a.setBluetooth(arg == 'on' || arg == 'true');
+        break;
+      case 'suspend':
+        a.suspend();
         break;
       case 'screenshot':
         a.screenshot();

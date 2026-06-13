@@ -42,6 +42,7 @@ class RobinActions {
   final void Function() closeAll;
   final void Function() reboot;
   final void Function() powerOff;
+  final void Function() suspend; // 절전/대기 모드
   final void Function(bool on) setWifi;
   final void Function(bool on) setBluetooth;
   final void Function() newNote;
@@ -69,6 +70,7 @@ class RobinActions {
     required this.closeAll,
     required this.reboot,
     required this.powerOff,
+    required this.suspend,
     required this.setWifi,
     required this.setBluetooth,
     required this.newNote,
@@ -136,8 +138,9 @@ Future<RobinResult> localBrain(String msg, RobinActions a) async {
       '• "다크모드 켜줘" / "테마 바꿔"\n'
       '• "배경 오션으로" / "강조색 핑크로"\n'
       '• "밝기 올려" / "볼륨 50%" / "음소거"\n'
-      '• "와이파이 꺼" / "재부팅" (확인 후 실행)\n'
-      '• "계산기 열어" / "계산기 닫아" (모든 앱)\n'
+      '• "와이파이 꺼" / "재부팅" (확인 후) / "절전"\n'
+      '• "음악/사진/캘린더/시스템 모니터 열어" (앱 11종)\n'
+      '• "계산기 열어" / "계산기 닫아" / "다 닫아"\n'
       '• "스크린샷 찍어줘" (리눅스)\n'
       '• "Firefox 실행해줘" (설치된 실제 앱)\n'
       '• "지금 몇 시?" / "12 곱하기 9는?"\n'
@@ -321,6 +324,18 @@ Future<RobinResult> localBrain(String msg, RobinActions a) async {
         confirm: RobinConfirm('종료', a.powerOff));
   }
 
+  // 절전 / 대기 모드 — 되돌릴 수 있어 확인 없이 바로(리눅스: systemctl suspend).
+  if (m.contains('절전') ||
+      m.contains('대기 모드') ||
+      m.contains('대기모드') ||
+      m.contains('슬립') ||
+      m.contains('잠자기') ||
+      low.contains('suspend') ||
+      low.contains('sleep')) {
+    a.suspend();
+    return const RobinResult('절전 모드로 전환할게요 💤');
+  }
+
   // 앱 닫기 / 전부 닫기
   if (m.contains('닫') || m.contains('종료')) {
     final wantAll = m.contains('전부') ||
@@ -356,9 +371,9 @@ Future<RobinResult> localBrain(String msg, RobinActions a) async {
     return const RobinResult('새 메모를 만들었어요. 메모 앱에서 작성하세요 ✍️');
   }
 
-  // 앱 열기 (모든 앱)
+  // 앱 열기 (모든 앱) — 풀네임·id·짧은 별칭(모니터/갤러리/달력 등) 매칭.
   for (final app in a.apps()) {
-    if ((m.contains(app.name) || low.contains(app.id)) &&
+    if ((m.contains(app.name) || low.contains(app.id) || _appAlias(app.id, low)) &&
         (m.contains('열') || m.contains('실행') || m.contains('켜') || m.contains('보여') || m.contains('띄'))) {
       a.openApp(app.id);
       return RobinResult('${app.name}${_eulReul(app.name)} 열었어요!');
@@ -408,6 +423,21 @@ Future<RobinResult> localBrain(String msg, RobinActions a) async {
     '음, 아직 그건 잘 못 알아들었어요. "도움말"이라고 하면 제가 할 수 있는 걸 알려드려요. '
     '(DeepSeek 두뇌를 연결하면 훨씬 더 똑똑해져요!)',
   );
+}
+
+// 앱 별칭 (짧은/구어 명칭 → 앱 id). 풀네임이 길거나 흔한 약칭이 있는 앱용.
+bool _appAlias(String id, String low) {
+  const alias = {
+    'monitor': ['모니터', 'monitor', '작업 관리자', '작업관리자'],
+    'gallery': ['갤러리', '사진첩', 'gallery', 'photos'],
+    'music': ['뮤직', 'music'],
+    'calendar': ['달력', 'calendar'],
+    'software': ['앱스토어', '소프트웨어', 'software', 'store'],
+    'finder': ['파인더', '파일', 'finder', 'files'],
+    'terminal': ['터미널', 'terminal', 'shell'],
+    'settings': ['세팅', 'settings'],
+  };
+  return alias[id]?.any(low.contains) ?? false;
 }
 
 // 색 별칭 (한국어 일반 명칭 → accent id)
