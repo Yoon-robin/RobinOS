@@ -84,6 +84,8 @@ class _StubBackend implements PlatformBackend {
   Future<List<PackageInfo>> searchPackages(String query) async => const [];
   @override
   Future<void> installPackage(String name) async {}
+  @override
+  Future<void> removePackage(String name) async {}
 
   // 웹 데모용 — 시간 기반 부드러운 가짜 지표(실측은 리눅스 백엔드).
   @override

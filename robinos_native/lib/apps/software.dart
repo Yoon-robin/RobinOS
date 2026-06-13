@@ -19,6 +19,7 @@ class _SoftwareAppState extends State<SoftwareApp> {
   bool _did = false;
   List<PackageInfo> _results = const [];
   final _installing = <String>{};
+  final _removing = <String>{};
   String? _status;
 
   @override
@@ -54,6 +55,43 @@ class _SoftwareAppState extends State<SoftwareApp> {
       _installing.remove(p.name);
       _status = '${p.name} 설치를 요청했어요(암호 창에서 진행). 끝나면 다시 검색해 보세요.';
     });
+  }
+
+  Future<void> _remove(PackageInfo p) async {
+    final ok = await _confirmRemove(p.name);
+    if (ok != true) return;
+    setState(() {
+      _removing.add(p.name);
+      _status = null;
+    });
+    await platformBackend.removePackage(p.name);
+    if (!mounted) return;
+    setState(() {
+      _removing.remove(p.name);
+      _status = '${p.name} 제거를 요청했어요(암호 창에서 진행). 끝나면 다시 검색해 보세요.';
+    });
+  }
+
+  Future<bool?> _confirmRemove(String name) {
+    final sys = context.read<SystemState>();
+    return showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: sys.windowSurface,
+        content: Text('$name 패키지를 제거할까요?',
+            style: TextStyle(color: sys.textPrimary, fontSize: 14)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('취소', style: TextStyle(color: sys.textSec(0.7))),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('제거', style: TextStyle(color: Color(0xFFFF5F57))),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -190,13 +228,38 @@ class _SoftwareAppState extends State<SoftwareApp> {
             ),
           ),
           const SizedBox(width: 10),
-          if (p.installed)
+          if (p.installed) ...[
             Text('설치됨',
                 style: TextStyle(
                     fontSize: 12,
                     color: sys.textSec(0.5),
-                    fontWeight: FontWeight.w600))
-          else
+                    fontWeight: FontWeight.w600)),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: _removing.contains(p.name) ? null : () => _remove(p),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF5F57).withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(9),
+                  border: Border.all(
+                      color: const Color(0xFFFF5F57).withValues(alpha: 0.5)),
+                ),
+                child: _removing.contains(p.name)
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Color(0xFFFF5F57)))
+                    : const Text('제거',
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFFFF5F57),
+                            fontWeight: FontWeight.w600)),
+              ),
+            ),
+          ] else
             GestureDetector(
               onTap: installing ? null : () => _install(p),
               child: Container(

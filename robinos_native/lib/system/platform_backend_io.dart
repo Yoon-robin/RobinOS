@@ -469,6 +469,12 @@ class _LinuxBackend implements PlatformBackend {
     await _run('pkexec', ['apt-get', 'install', '-y', name]);
   }
 
+  @override
+  Future<void> removePackage(String name) async {
+    // pkexec polkit 암호 후 apt-get remove. (purge가 아닌 remove — 설정 보존)
+    await _run('pkexec', ['apt-get', 'remove', '-y', name]);
+  }
+
   // === 시스템 모니터 (/proc·/sys) ===
   @override
   Future<SystemStats?> systemStats() async {
@@ -821,6 +827,8 @@ class _NoopBackend implements PlatformBackend {
   Future<List<PackageInfo>> searchPackages(String query) async => const [];
   @override
   Future<void> installPackage(String name) async {}
+  @override
+  Future<void> removePackage(String name) async {}
   @override
   Future<SystemStats?> systemStats() async => null;
   @override

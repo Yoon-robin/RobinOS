@@ -209,6 +209,8 @@ abstract class PlatformBackend {
   Future<List<PackageInfo>> searchPackages(String query);
   // 패키지 설치 (pkexec apt-get install -y — polkit 암호 프롬프트). 웹/도구부재: no-op.
   Future<void> installPackage(String name);
+  // 패키지 제거 (pkexec apt-get remove -y — polkit 암호 프롬프트). 웹/도구부재: no-op.
+  Future<void> removePackage(String name);
 
   // === 시스템 모니터 (리눅스: /proc·/sys) ===
   // 실시간 지표 한 스냅샷(CPU·메모리·네트워크·프로세스). 짧은 샘플 간격(~250ms)으로
