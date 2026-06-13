@@ -1,4 +1,5 @@
 // 웹/비-dart:io 플랫폼용 no-op 백엔드. (조건부 import 기본값)
+import 'dart:math' as math;
 import 'platform_backend.dart';
 
 PlatformBackend createPlatformBackend() => const _StubBackend();
@@ -80,4 +81,45 @@ class _StubBackend implements PlatformBackend {
   Future<List<PackageInfo>> searchPackages(String query) async => const [];
   @override
   Future<void> installPackage(String name) async {}
+
+  // 웹 데모용 — 시간 기반 부드러운 가짜 지표(실측은 리눅스 백엔드).
+  @override
+  Future<SystemStats?> systemStats() async {
+    final t = DateTime.now().millisecondsSinceEpoch / 1000.0;
+    double w(double base, double amp, double speed, double phase) {
+      final v = base + amp * (0.5 + 0.5 * math.sin(t * speed + phase));
+      return v < 0 ? 0.0 : (v > 100 ? 100.0 : v);
+    }
+
+    final cores = [
+      w(28, 40, 1.3, 0),
+      w(22, 50, 0.9, 1.7),
+      w(18, 35, 1.6, 3.1),
+      w(30, 45, 1.1, 4.6),
+    ];
+    final cpu = cores.reduce((a, b) => a + b) / cores.length;
+    const totalKb = 16 * 1024 * 1024; // 16 GiB
+    final usedKb =
+        (totalKb * (0.42 + 0.12 * (0.5 + 0.5 * math.sin(t * 0.3)))).round();
+    return SystemStats(
+      cpu: cpu,
+      cores: cores,
+      memUsedKb: usedKb,
+      memTotalKb: totalKb,
+      swapUsedKb: (220 * 1024),
+      swapTotalKb: (2 * 1024 * 1024),
+      netRxBps: 1.0e6 * (0.5 + 0.5 * math.sin(t * 0.8)) + 4.0e4,
+      netTxBps: 2.4e5 * (0.5 + 0.5 * math.sin(t * 1.2 + 1)) + 1.0e4,
+      uptimeSec: 19000 + DateTime.now().second,
+      load1: cpu / 100 * cores.length,
+      procs: [
+        ProcInfo(412, 'firefox-esr', 980 + 60 * math.sin(t * 0.5)),
+        ProcInfo(331, 'robinos_native', 540 + 30 * math.sin(t * 0.7 + 1)),
+        ProcInfo(289, 'ollama', 1320 + 80 * math.sin(t * 0.3 + 2)),
+        const ProcInfo(120, 'sway', 96),
+        const ProcInfo(98, 'pipewire', 42),
+        const ProcInfo(1, 'systemd', 12),
+      ]..sort((a, b) => b.memMb.compareTo(a.memMb)),
+    );
+  }
 }

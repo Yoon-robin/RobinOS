@@ -466,6 +466,177 @@ class _LinuxBackend implements PlatformBackend {
     await _run('pkexec', ['apt-get', 'install', '-y', name]);
   }
 
+  // === 시스템 모니터 (/proc·/sys) ===
+  @override
+  Future<SystemStats?> systemStats() async {
+    try {
+      // CPU·네트워크는 변화율 → 짧은 간격을 두고 두 번 샘플링해 델타로 계산.
+      final cpu0 = _readCpu();
+      final net0 = _readNet();
+      final sw = Stopwatch()..start();
+      await Future.delayed(const Duration(milliseconds: 250));
+      sw.stop();
+      final cpu1 = _readCpu();
+      final net1 = _readNet();
+      final dt = sw.elapsedMicroseconds / 1e6;
+
+      double pct(List<int> a, List<int> b) {
+        final dIdle = b[0] - a[0];
+        final dTot = b[1] - a[1];
+        if (dTot <= 0) return 0;
+        final v = (dTot - dIdle) / dTot * 100;
+        return v < 0 ? 0.0 : (v > 100 ? 100.0 : v);
+      }
+
+      final overall =
+          (cpu0.isNotEmpty && cpu1.isNotEmpty) ? pct(cpu0[0], cpu1[0]) : 0.0;
+      final cores = <double>[];
+      final n = cpu0.length < cpu1.length ? cpu0.length : cpu1.length;
+      for (var i = 1; i < n; i++) {
+        cores.add(pct(cpu0[i], cpu1[i]));
+      }
+
+      final mem = _readMem();
+      final rx = dt > 0 ? (net1.$1 - net0.$1) / dt : 0.0;
+      final tx = dt > 0 ? (net1.$2 - net0.$2) / dt : 0.0;
+
+      return SystemStats(
+        cpu: overall,
+        cores: cores,
+        memUsedKb: mem['used']!,
+        memTotalKb: mem['total']!,
+        swapUsedKb: mem['swapUsed']!,
+        swapTotalKb: mem['swapTotal']!,
+        netRxBps: rx < 0 ? 0.0 : rx,
+        netTxBps: tx < 0 ? 0.0 : tx,
+        uptimeSec: _readUptime(),
+        load1: _readLoad(),
+        procs: _topProcs(),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // /proc/stat → 각 cpu 라인의 [idle+iowait, total]. 0번이 전체, 이후가 코어별.
+  List<List<int>> _readCpu() {
+    final out = <List<int>>[];
+    try {
+      for (final l in File('/proc/stat').readAsLinesSync()) {
+        if (!l.startsWith('cpu')) break; // cpu 라인은 파일 맨 앞에 연속.
+        final p = l.trim().split(RegExp(r'\s+'));
+        final nums = p.skip(1).map((s) => int.tryParse(s) ?? 0).toList();
+        if (nums.length < 4) continue;
+        final idle = nums[3] + (nums.length > 4 ? nums[4] : 0); // idle+iowait
+        final total = nums.fold<int>(0, (a, b) => a + b);
+        out.add([idle, total]);
+      }
+    } catch (_) {}
+    return out;
+  }
+
+  // /proc/net/dev → (수신 bytes 합, 송신 bytes 합). lo(루프백)는 제외.
+  (int, int) _readNet() {
+    var rx = 0, tx = 0;
+    try {
+      for (final l in File('/proc/net/dev').readAsLinesSync()) {
+        final i = l.indexOf(':');
+        if (i < 0) continue;
+        final iface = l.substring(0, i).trim();
+        if (iface.isEmpty || iface == 'lo') continue;
+        final f = l.substring(i + 1).trim().split(RegExp(r'\s+'));
+        if (f.length < 9) continue;
+        rx += int.tryParse(f[0]) ?? 0; // rx bytes
+        tx += int.tryParse(f[8]) ?? 0; // tx bytes
+      }
+    } catch (_) {}
+    return (rx, tx);
+  }
+
+  // /proc/meminfo → {total, used, swapTotal, swapUsed} (kB). used = total - available.
+  Map<String, int> _readMem() {
+    var total = 0, avail = 0, swapTotal = 0, swapFree = 0;
+    try {
+      for (final l in File('/proc/meminfo').readAsLinesSync()) {
+        final c = l.indexOf(':');
+        if (c < 0) continue;
+        final key = l.substring(0, c).trim();
+        final val =
+            int.tryParse(l.substring(c + 1).trim().split(RegExp(r'\s+')).first) ??
+                0;
+        switch (key) {
+          case 'MemTotal':
+            total = val;
+          case 'MemAvailable':
+            avail = val;
+          case 'SwapTotal':
+            swapTotal = val;
+          case 'SwapFree':
+            swapFree = val;
+        }
+      }
+    } catch (_) {}
+    final used = total - avail < 0 ? 0 : total - avail;
+    final swapUsed = swapTotal - swapFree < 0 ? 0 : swapTotal - swapFree;
+    return {
+      'total': total,
+      'used': used,
+      'swapTotal': swapTotal,
+      'swapUsed': swapUsed,
+    };
+  }
+
+  int _readUptime() {
+    try {
+      final s = File('/proc/uptime').readAsStringSync().trim().split(' ').first;
+      return (double.tryParse(s) ?? 0).floor();
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  double _readLoad() {
+    try {
+      return double.tryParse(
+              File('/proc/loadavg').readAsStringSync().trim().split(' ').first) ??
+          0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  // 메모리(RSS) 상위 프로세스 6개. /proc/[pid]/statm(상주 페이지) + comm(이름).
+  // CPU%는 프로세스별 델타 샘플링이 필요해 v1에선 생략(전체/코어 CPU로 충분).
+  List<ProcInfo> _topProcs() {
+    const pageBytes = 4096; // 일반적 페이지 크기
+    final out = <ProcInfo>[];
+    try {
+      for (final ent in Directory('/proc').listSync()) {
+        if (ent is! Directory) continue;
+        final pidStr = ent.path.split('/').last;
+        final pid = int.tryParse(pidStr);
+        if (pid == null) continue;
+        try {
+          final statm = File('${ent.path}/statm')
+              .readAsStringSync()
+              .trim()
+              .split(RegExp(r'\s+'));
+          if (statm.length < 2) continue;
+          final rssPages = int.tryParse(statm[1]) ?? 0;
+          final memMb = rssPages * pageBytes / (1024 * 1024);
+          if (memMb < 1) continue; // 1MB 미만 잡프로세스 제외
+          var name = pidStr;
+          try {
+            name = File('${ent.path}/comm').readAsStringSync().trim();
+          } catch (_) {}
+          out.add(ProcInfo(pid, name.isEmpty ? pidStr : name, memMb));
+        } catch (_) {}
+      }
+    } catch (_) {}
+    out.sort((a, b) => b.memMb.compareTo(a.memMb));
+    return out.length > 6 ? out.sublist(0, 6) : out;
+  }
+
   Future<void> _run(String exe, List<String> args) async {
     try {
       await Process.run(exe, args);
@@ -553,4 +724,6 @@ class _NoopBackend implements PlatformBackend {
   Future<List<PackageInfo>> searchPackages(String query) async => const [];
   @override
   Future<void> installPackage(String name) async {}
+  @override
+  Future<SystemStats?> systemStats() async => null;
 }

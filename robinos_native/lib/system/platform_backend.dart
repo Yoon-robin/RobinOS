@@ -66,6 +66,39 @@ class BtDevice {
   const BtDevice(this.mac, this.name, this.connected, this.paired);
 }
 
+// 실행 중 프로세스 한 개 (리눅스: /proc/[pid]). 시스템 모니터의 상위 목록용.
+class ProcInfo {
+  final int pid;
+  final String name;
+  final double memMb; // RSS(MB)
+  const ProcInfo(this.pid, this.name, this.memMb);
+}
+
+// 실시간 시스템 지표 한 스냅샷 (리눅스: /proc·/sys). 웹/도구부재: null.
+class SystemStats {
+  final double cpu; // 전체 CPU 사용률 0~100
+  final List<double> cores; // 코어별 사용률 0~100
+  final int memUsedKb, memTotalKb; // 메모리(kB)
+  final int swapUsedKb, swapTotalKb; // 스왑(kB)
+  final double netRxBps, netTxBps; // 네트워크 수신/송신 (bytes/sec)
+  final int uptimeSec; // 가동 시간(초)
+  final double load1; // 1분 부하 평균
+  final List<ProcInfo> procs; // 메모리 상위 프로세스
+  const SystemStats({
+    required this.cpu,
+    required this.cores,
+    required this.memUsedKb,
+    required this.memTotalKb,
+    required this.swapUsedKb,
+    required this.swapTotalKb,
+    required this.netRxBps,
+    required this.netTxBps,
+    required this.uptimeSec,
+    required this.load1,
+    required this.procs,
+  });
+}
+
 abstract class PlatformBackend {
   // 실제 하드웨어 제어가 가능한 플랫폼인지(리눅스 실기기 등). 웹/스텁은 false.
   bool get isReal;
@@ -157,6 +190,11 @@ abstract class PlatformBackend {
   Future<List<PackageInfo>> searchPackages(String query);
   // 패키지 설치 (pkexec apt-get install -y — polkit 암호 프롬프트). 웹/도구부재: no-op.
   Future<void> installPackage(String name);
+
+  // === 시스템 모니터 (리눅스: /proc·/sys) ===
+  // 실시간 지표 한 스냅샷(CPU·메모리·네트워크·프로세스). 짧은 샘플 간격(~250ms)으로
+  // CPU/네트워크 변화율을 계산하므로 호출 자체가 약간의 지연을 가진다. 웹/도구부재: null.
+  Future<SystemStats?> systemStats();
 }
 
 // 플랫폼별 구현 인스턴스 — 조건부 import가 createPlatformBackend()를 제공.
