@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../system/system_state.dart';
@@ -18,6 +19,8 @@ class _NotesAppState extends State<NotesApp> {
   final _ctrl = TextEditingController();
   bool _loaded = false;
   bool _saved = true;
+  bool _mono = false; // 모노스페이스(코드용) 토글
+  Timer? _saveTimer;
 
   @override
   void initState() {
@@ -45,6 +48,7 @@ class _NotesAppState extends State<NotesApp> {
   @override
   void dispose() {
     notesOpenTarget.removeListener(_consumeIntent);
+    _saveTimer?.cancel();
     _ctrl.dispose();
     super.dispose();
   }
@@ -61,9 +65,10 @@ class _NotesAppState extends State<NotesApp> {
 
   void _onChanged(String v) {
     context.read<RobinFs>().write(_path, v);
-    if (!_saved) return;
-    setState(() => _saved = false);
-    Future.delayed(const Duration(milliseconds: 600), () {
+    _saved = false;
+    setState(() {}); // 통계(줄·단어·글자) 라이브 갱신
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 600), () {
       if (mounted) setState(() => _saved = true);
     });
   }
@@ -123,8 +128,28 @@ class _NotesAppState extends State<NotesApp> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text('${_ctrl.text.characters.length}자',
-                    style: TextStyle(fontSize: 11, color: sys.textSec(0.35))),
+                // 모노스페이스 토글(코드/정렬용)
+                GestureDetector(
+                  onTap: () => setState(() => _mono = !_mono),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _mono ? sys.accent.withValues(alpha: 0.18) : null,
+                      borderRadius: BorderRadius.circular(7),
+                      border: Border.all(
+                          color: _mono ? sys.accent : sys.textSec(0.2)),
+                    ),
+                    child: Text('</>',
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: _mono ? sys.accent : sys.textSec(0.6))),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(_stats(),
+                    style: TextStyle(fontSize: 11, color: sys.textSec(0.4))),
                 const SizedBox(width: 10),
                 Text(_saved ? '저장됨' : '저장 중…',
                     style: TextStyle(
@@ -140,7 +165,11 @@ class _NotesAppState extends State<NotesApp> {
               maxLines: null,
               expands: true,
               textAlignVertical: TextAlignVertical.top,
-              style: TextStyle(fontSize: 14, height: 1.5, color: sys.textPrimary),
+              style: TextStyle(
+                  fontSize: 14,
+                  height: 1.5,
+                  color: sys.textPrimary,
+                  fontFamily: _mono ? 'monospace' : null),
               decoration: InputDecoration(
                 hintText: '메모를 입력하세요…',
                 hintStyle: TextStyle(color: sys.textSec(0.35)),
@@ -152,6 +181,14 @@ class _NotesAppState extends State<NotesApp> {
         ],
       ),
     );
+  }
+
+  // 줄·단어·글자 수 통계.
+  String _stats() {
+    final t = _ctrl.text;
+    final lines = t.isEmpty ? 0 : '\n'.allMatches(t).length + 1;
+    final words = t.trim().isEmpty ? 0 : t.trim().split(RegExp(r'\s+')).length;
+    return '$lines줄 · $words단어 · ${t.characters.length}자';
   }
 
   Widget _chip(SystemState sys, String label, bool active, VoidCallback onTap) {

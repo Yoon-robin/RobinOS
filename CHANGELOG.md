@@ -24,6 +24,7 @@ ISO는 [Releases](../../releases)에서 받을 수 있어요(일반 빌드). AI 
 
 ### Changed — 변경
 - **계산기 공학용 모드**: 기본/공학 토글 + sin/cos/tan(DEG·RAD 전환)·ln·log·√·x²·xʸ·π·e.
+- **메모 에디터 강화**: 줄·단어·글자 수 라이브 통계 + 모노스페이스(코드) 토글. 저장 표시 디바운스.
 - **컴포지터 cage → sway**: 단일앱 키오스크에서 **멀티윈도 데스크톱 환경(DE)**으로. 실제 리눅스 앱을 창으로 띄우고(70% 중앙 배치로 RobinOS 독·메뉴바 노출), 검증 완료.
 - 기본 데스크톱 앱 탑재: firefox/mousepad/imv/mpv/pavucontrol/foot.
 
