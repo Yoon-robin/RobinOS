@@ -31,6 +31,9 @@ class _LinuxBackend implements PlatformBackend {
   Future<void> powerOff() async => _run('systemctl', ['poweroff']);
 
   @override
+  Future<void> suspend() async => _run('systemctl', ['suspend']);
+
+  @override
   Future<void> setWifi(bool on) async =>
       _run('nmcli', ['radio', 'wifi', on ? 'on' : 'off']);
 
@@ -497,6 +500,7 @@ class _LinuxBackend implements PlatformBackend {
       }
 
       final mem = _readMem();
+      final disk = _readDisk();
       final rx = dt > 0 ? (net1.$1 - net0.$1) / dt : 0.0;
       final tx = dt > 0 ? (net1.$2 - net0.$2) / dt : 0.0;
 
@@ -507,6 +511,8 @@ class _LinuxBackend implements PlatformBackend {
         memTotalKb: mem['total']!,
         swapUsedKb: mem['swapUsed']!,
         swapTotalKb: mem['swapTotal']!,
+        diskUsedKb: disk['used']!,
+        diskTotalKb: disk['total']!,
         netRxBps: rx < 0 ? 0.0 : rx,
         netTxBps: tx < 0 ? 0.0 : tx,
         uptimeSec: _readUptime(),
@@ -584,6 +590,26 @@ class _LinuxBackend implements PlatformBackend {
       'swapTotal': swapTotal,
       'swapUsed': swapUsed,
     };
+  }
+
+  // 루트(/) 디스크 사용량 → {total, used} (kB). df -B1 --output 파싱.
+  Map<String, int> _readDisk() {
+    try {
+      final r = Process.runSync('df', ['-B1', '--output=size,used', '/']);
+      if (r.exitCode == 0) {
+        final lines = '${r.stdout}'.trim().split('\n');
+        if (lines.length >= 2) {
+          final p = lines[1].trim().split(RegExp(r'\s+'));
+          if (p.length >= 2) {
+            return {
+              'total': (int.tryParse(p[0]) ?? 0) ~/ 1024,
+              'used': (int.tryParse(p[1]) ?? 0) ~/ 1024,
+            };
+          }
+        }
+      }
+    } catch (_) {}
+    return {'total': 0, 'used': 0};
   }
 
   int _readUptime() {
@@ -679,6 +705,9 @@ class _NoopBackend implements PlatformBackend {
 
   @override
   Future<void> powerOff() async {}
+
+  @override
+  Future<void> suspend() async {}
 
   @override
   Future<void> setWifi(bool on) async {}

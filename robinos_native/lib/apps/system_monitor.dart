@@ -97,6 +97,10 @@ class _SystemMonitorAppState extends State<SystemMonitorApp> {
           const SizedBox(height: 12),
           _memCard(sys, s),
           const SizedBox(height: 12),
+          if (s.diskTotalKb > 0) ...[
+            _diskCard(sys, s),
+            const SizedBox(height: 12),
+          ],
           _netCard(sys, s),
           const SizedBox(height: 12),
           _procCard(sys, s),
@@ -245,6 +249,38 @@ class _SystemMonitorAppState extends State<SystemMonitorApp> {
             Text('스왑 ${_fmtKb(s.swapUsedKb)} / ${_fmtKb(s.swapTotalKb)}',
                 style: TextStyle(fontSize: 11.5, color: sys.textSec(0.45))),
           ],
+        ],
+      ),
+    );
+  }
+
+  // ---- 저장공간 카드 ----
+  Widget _diskCard(SystemState sys, SystemStats s) {
+    final frac = s.diskTotalKb > 0 ? s.diskUsedKb / s.diskTotalKb : 0.0;
+    return _card(
+      sys,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _cardHead(sys, '저장공간', Icons.storage_rounded,
+              '${_fmtKb(s.diskUsedKb)} / ${_fmtKb(s.diskTotalKb)}'),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(child: _bigBar(sys, frac.toDouble())),
+              const SizedBox(width: 12),
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: frac * 100),
+                duration: const Duration(milliseconds: 700),
+                curve: Curves.easeOutCubic,
+                builder: (_, v, _) => Text('${v.round()}%',
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                        color: sys.textPrimary)),
+              ),
+            ],
+          ),
         ],
       ),
     );

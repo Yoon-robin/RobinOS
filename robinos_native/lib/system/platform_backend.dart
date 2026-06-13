@@ -80,6 +80,7 @@ class SystemStats {
   final List<double> cores; // 코어별 사용률 0~100
   final int memUsedKb, memTotalKb; // 메모리(kB)
   final int swapUsedKb, swapTotalKb; // 스왑(kB)
+  final int diskUsedKb, diskTotalKb; // 루트(/) 디스크(kB)
   final double netRxBps, netTxBps; // 네트워크 수신/송신 (bytes/sec)
   final int uptimeSec; // 가동 시간(초)
   final double load1; // 1분 부하 평균
@@ -91,6 +92,8 @@ class SystemStats {
     required this.memTotalKb,
     required this.swapUsedKb,
     required this.swapTotalKb,
+    required this.diskUsedKb,
+    required this.diskTotalKb,
     required this.netRxBps,
     required this.netTxBps,
     required this.uptimeSec,
@@ -113,6 +116,8 @@ abstract class PlatformBackend {
   // Robin은 확인(RobinConfirm)을 거친 뒤에만 호출한다.
   Future<void> reboot();
   Future<void> powerOff();
+  // 절전/대기 모드 (리눅스: systemctl suspend). 웹/도구부재 시 no-op.
+  Future<void> suspend();
 
   // 와이파이 on/off (리눅스: nmcli radio wifi). 웹/도구부재 시 no-op.
   Future<void> setWifi(bool on);

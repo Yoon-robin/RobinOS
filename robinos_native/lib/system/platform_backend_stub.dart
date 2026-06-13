@@ -23,6 +23,9 @@ class _StubBackend implements PlatformBackend {
   Future<void> powerOff() async {}
 
   @override
+  Future<void> suspend() async {}
+
+  @override
   Future<void> setWifi(bool on) async {}
 
   @override
@@ -108,6 +111,8 @@ class _StubBackend implements PlatformBackend {
       memTotalKb: totalKb,
       swapUsedKb: (220 * 1024),
       swapTotalKb: (2 * 1024 * 1024),
+      diskUsedKb: 168 * 1024 * 1024, // 168 GiB 사용
+      diskTotalKb: 256 * 1024 * 1024, // 256 GiB
       netRxBps: 1.0e6 * (0.5 + 0.5 * math.sin(t * 0.8)) + 4.0e4,
       netTxBps: 2.4e5 * (0.5 + 0.5 * math.sin(t * 1.2 + 1)) + 1.0e4,
       uptimeSec: 19000 + DateTime.now().second,

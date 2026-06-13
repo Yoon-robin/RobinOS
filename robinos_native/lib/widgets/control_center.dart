@@ -201,6 +201,18 @@ class _ControlCenterState extends State<ControlCenter> {
                         ),
                         const SizedBox(width: 10),
                         Expanded(
+                          child: _actionBtn(sys, Icons.bedtime_outlined, '절전',
+                              () {
+                            widget.onClose();
+                            platformBackend.suspend(); // 리눅스: systemctl suspend
+                          }),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
                           child: _actionBtn(sys, Icons.restart_alt, '재시작',
                               () => _confirmPower('재시작할까요?', platformBackend.reboot)),
                         ),
