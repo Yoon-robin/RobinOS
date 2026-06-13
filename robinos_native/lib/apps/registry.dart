@@ -38,4 +38,6 @@ const kApps = <AppDef>[
       size: Size(660, 500), glyph: Icons.inventory_2_rounded),
   AppDef('monitor', '시스템 모니터', '📊', Color(0xFF49D17A),
       size: Size(620, 560), glyph: Icons.monitor_heart_rounded),
+  AppDef('calendar', '캘린더', '📅', Color(0xFFFF5A5F),
+      size: Size(600, 600), glyph: Icons.calendar_month_rounded),
 ];

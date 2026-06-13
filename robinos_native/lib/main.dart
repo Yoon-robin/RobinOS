@@ -19,6 +19,7 @@ import 'apps/calculator.dart';
 import 'apps/settings.dart';
 import 'apps/software.dart';
 import 'apps/system_monitor.dart';
+import 'apps/calendar.dart';
 import 'apps/paint.dart';
 import 'widgets/clock.dart';
 import 'widgets/battery.dart';
@@ -510,6 +511,7 @@ class _DesktopState extends State<Desktop> {
                   onMission: () => setState(() => _mission = true),
                   onControl: () => setState(() => _control = true),
                   onNotifCenter: () => setState(() => _notifCenter = true),
+                  onCalendar: () => _openAppById('calendar'),
                   notifCount: _notifs.length,
                 ),
               ),
@@ -730,6 +732,7 @@ class _Welcome extends StatelessWidget {
 class _MenuBar extends StatelessWidget {
   final String activeApp;
   final VoidCallback onLogo, onSearch, onMission, onControl, onNotifCenter;
+  final VoidCallback onCalendar;
   final int notifCount;
   const _MenuBar({
     required this.activeApp,
@@ -738,6 +741,7 @@ class _MenuBar extends StatelessWidget {
     required this.onMission,
     required this.onControl,
     required this.onNotifCenter,
+    required this.onCalendar,
     required this.notifCount,
   });
 
@@ -835,9 +839,15 @@ class _MenuBar extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 6),
-              LiveClock(
-                format: (t) => '${robinDate(t)}  ${robinTime(t)}',
-                style: TextStyle(fontSize: 12.5, color: sys.textPrimary),
+              _hover(
+                onTap: onCalendar,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: LiveClock(
+                    format: (t) => '${robinDate(t)}  ${robinTime(t)}',
+                    style: TextStyle(fontSize: 12.5, color: sys.textPrimary),
+                  ),
+                ),
               ),
             ],
           ),
@@ -1103,6 +1113,7 @@ class _AppContent extends StatelessWidget {
     if (app.id == 'settings') return const SettingsApp();
     if (app.id == 'software') return const SoftwareApp();
     if (app.id == 'monitor') return const SystemMonitorApp();
+    if (app.id == 'calendar') return const CalendarApp();
     if (app.id == 'calc') return const CalculatorApp();
     if (app.id == 'notes') return const NotesApp();
     if (app.id == 'finder') return const FinderApp();
