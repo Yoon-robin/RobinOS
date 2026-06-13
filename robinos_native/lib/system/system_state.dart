@@ -49,7 +49,9 @@ const kAccents = <Accent>[
 class SystemState extends ChangeNotifier {
   String _wallpaperId = 'aurora';
   String _accentId = 'blue';
-  bool _light = false; // 해석된 현재값 (팔레트 게터가 사용)
+  bool _light = false; // 해석된 현재값 (논리 판단용 — 즉시 반영)
+  double _themeT = 0.0; // 0=다크 … 1=라이트. 토글 시 부드럽게 보간(전체 UI 크로스페이드).
+  Timer? _themeAnim;
   String _themeMode = 'dark'; // dark | light | auto
   Timer? _autoTimer;
   double _brightness = 1.0;
@@ -85,32 +87,38 @@ class SystemState extends ChangeNotifier {
   }
 
   // --- 라이트/다크 팔레트 (한 곳에서 색을 결정) ---
-  List<Color> get backgroundGradient => _light
-      ? const [Color(0xFFE9EDF6), Color(0xFFF1ECF9), Color(0xFFFBFCFF)]
-      : wallpaper.colors;
+  // _themeT(0=다크,1=라이트)로 두 팔레트를 보간 → 토글 시 전체 UI가 부드럽게 크로스페이드.
+  Color _lp(Color dark, Color light) => Color.lerp(dark, light, _themeT)!;
+
+  static const List<Color> _lightBg = [
+    Color(0xFFE9EDF6),
+    Color(0xFFF1ECF9),
+    Color(0xFFFBFCFF),
+  ];
+  List<Color> get backgroundGradient {
+    final dark = wallpaper.colors;
+    return [
+      for (var i = 0; i < 3; i++)
+        Color.lerp(dark[i % dark.length], _lightBg[i], _themeT)!,
+    ];
+  }
 
   Color get windowSurface =>
-      _light ? const Color(0xFFFAFAFC) : const Color(0xFF1A1A22);
-  Color get windowBorder => _light
-      ? Colors.black.withValues(alpha: 0.10)
-      : Colors.white.withValues(alpha: 0.10);
-  Color get titlebarOverlay => _light
-      ? Colors.black.withValues(alpha: 0.03)
-      : Colors.white.withValues(alpha: 0.04);
-  Color get textPrimary => _light ? const Color(0xFF1C1C1E) : Colors.white;
+      _lp(const Color(0xFF1A1A22), const Color(0xFFFAFAFC));
+  Color get windowBorder => _lp(Colors.white.withValues(alpha: 0.10),
+      Colors.black.withValues(alpha: 0.10));
+  Color get titlebarOverlay => _lp(Colors.white.withValues(alpha: 0.04),
+      Colors.black.withValues(alpha: 0.03));
+  Color get textPrimary => _lp(Colors.white, const Color(0xFF1C1C1E));
   Color textSec(double a) => textPrimary.withValues(alpha: a);
-  Color get chromeOverlay => _light
-      ? Colors.white.withValues(alpha: 0.55)
-      : Colors.white.withValues(alpha: 0.06);
-  Color get chromeBorder => _light
-      ? Colors.black.withValues(alpha: 0.08)
-      : Colors.white.withValues(alpha: 0.08);
-  Color get dockOverlay => _light
-      ? Colors.white.withValues(alpha: 0.45)
-      : Colors.white.withValues(alpha: 0.08);
-  Color get dockBorder => _light
-      ? Colors.black.withValues(alpha: 0.08)
-      : Colors.white.withValues(alpha: 0.12);
+  Color get chromeOverlay => _lp(Colors.white.withValues(alpha: 0.06),
+      Colors.white.withValues(alpha: 0.55));
+  Color get chromeBorder => _lp(Colors.white.withValues(alpha: 0.08),
+      Colors.black.withValues(alpha: 0.08));
+  Color get dockOverlay => _lp(Colors.white.withValues(alpha: 0.08),
+      Colors.white.withValues(alpha: 0.45));
+  Color get dockBorder => _lp(Colors.white.withValues(alpha: 0.12),
+      Colors.black.withValues(alpha: 0.08));
 
   // --- 쓰기 (즉시 저장) ---
   Future<void> load() async {
@@ -153,13 +161,47 @@ class SystemState extends ChangeNotifier {
   }
 
   // 모드 → 실제 라이트 여부 계산 (자동은 시간대별: 07~19시 라이트)
-  void _applyMode() {
+  // animate=true면 _themeT를 부드럽게 보간(크로스페이드), false면 즉시 반영(부팅 등).
+  void _applyMode({bool animate = false}) {
     if (_themeMode == 'auto') {
       final h = DateTime.now().hour;
       _light = h >= 7 && h < 19;
     } else {
       _light = _themeMode == 'light';
     }
+    final target = _light ? 1.0 : 0.0;
+    if (animate) {
+      _animateThemeTo(target);
+    } else {
+      _themeAnim?.cancel();
+      _themeAnim = null;
+      _themeT = target;
+    }
+  }
+
+  // _themeT를 target으로 ~320ms easeInOut 보간(60fps Timer). 명시적 토글에서만 사용.
+  void _animateThemeTo(double target) {
+    final from = _themeT;
+    if ((target - from).abs() < 0.001) {
+      _themeT = target;
+      return;
+    }
+    final startMs = DateTime.now().millisecondsSinceEpoch;
+    const durMs = 320;
+    _themeAnim?.cancel();
+    _themeAnim = Timer.periodic(const Duration(milliseconds: 16), (t) {
+      final raw = (DateTime.now().millisecondsSinceEpoch - startMs) / durMs;
+      final done = raw >= 1.0;
+      final p = Curves.easeInOut
+          .transform(done ? 1.0 : raw.clamp(0.0, 1.0).toDouble());
+      _themeT = from + (target - from) * p;
+      notifyListeners();
+      if (done) {
+        _themeT = target;
+        t.cancel();
+        _themeAnim = null;
+      }
+    });
   }
 
   // 자동 모드일 때만 주기적으로 재평가(경계에서 자동 전환)
@@ -169,7 +211,7 @@ class SystemState extends ChangeNotifier {
     if (_themeMode == 'auto') {
       _autoTimer = Timer.periodic(const Duration(minutes: 5), (_) {
         final was = _light;
-        _applyMode();
+        _applyMode(animate: true);
         if (was != _light) notifyListeners();
       });
     }
@@ -178,7 +220,7 @@ class SystemState extends ChangeNotifier {
   void setThemeMode(String mode) {
     _themeMode = mode;
     _prefs?.setString('robinos.thememode', mode);
-    _applyMode();
+    _applyMode(animate: true);
     _ensureAutoTimer();
     notifyListeners();
   }
@@ -191,6 +233,7 @@ class SystemState extends ChangeNotifier {
   @override
   void dispose() {
     _autoTimer?.cancel();
+    _themeAnim?.cancel();
     super.dispose();
   }
 
