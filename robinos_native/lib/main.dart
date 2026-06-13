@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -1579,10 +1580,10 @@ class _DockState extends State<_Dock> {
   double _scaleFor(int i) {
     if (_hovered == null) return 1.0;
     final d = (i - _hovered!).abs();
-    if (d == 0) return 1.28;
-    if (d == 1) return 1.15;
-    if (d == 2) return 1.05;
-    return 1.0;
+    // 가우시안 감쇠 — 계단식 대신 부드러운 확대 웨이브(맥OS 독 느낌).
+    const peak = 0.36; // 최대 추가 배율(중심 1.36x)
+    const sigma = 1.4; // 확산(이웃까지 자연스럽게 번짐)
+    return 1.0 + peak * math.exp(-(d * d) / (2 * sigma * sigma));
   }
 
   @override
