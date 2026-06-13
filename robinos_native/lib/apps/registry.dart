@@ -27,7 +27,7 @@ const kApps = <AppDef>[
   AppDef('notes', '메모', '📝', Color(0xFFFFC24A),
       size: Size(520, 420), glyph: Icons.sticky_note_2_rounded),
   AppDef('calc', '계산기', '🧮', Color(0xFF9B8CFF),
-      size: Size(280, 420), glyph: Icons.calculate_rounded),
+      size: Size(320, 520), glyph: Icons.calculate_rounded),
   AppDef('paint', '그림판', '🎨', Color(0xFFFF6FA5),
       size: Size(640, 460), glyph: Icons.brush_rounded),
   AppDef('terminal', '터미널', '⌨️', Color(0xFF2B2B33),
