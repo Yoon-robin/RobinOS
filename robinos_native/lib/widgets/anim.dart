@@ -1,5 +1,14 @@
 import 'package:flutter/material.dart';
 
+// ===========================================================
+// RobinOS 시그니처 모션 — OS 전체가 같은 "감"으로 움직이도록 한 곳에서 정의.
+// kRobinEase: 부드럽게 감속하는 기본 이징(슬라이드·페이드·전환 공용).
+// kRobinPop : 등장 시 아주 살짝 튕기는(overshoot) 팝 — RobinOS 특유의 경쾌함.
+// (맥OS의 표준 이징을 그대로 쓰지 않고 우리만의 커브를 쓰는 게 독자 모션 언어의 시작.)
+// ===========================================================
+const Cubic kRobinEase = Cubic(0.2, 0.9, 0.25, 1.0);
+const Cubic kRobinPop = Cubic(0.34, 1.40, 0.5, 1.0);
+
 // macOS식 등장 애니메이션 — 살짝 커지며(스케일) 부드럽게 페이드인.
 // 오버레이/패널을 감싸면 마운트 시 자동으로 팝인. (TweenAnimationBuilder라 별도 컨트롤러 불필요)
 class PopIn extends StatelessWidget {
@@ -20,7 +29,7 @@ class PopIn extends StatelessWidget {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: duration,
-      curve: Curves.easeOutCubic,
+      curve: kRobinPop, // 살짝 튕기는 RobinOS 시그니처 팝
       builder: (_, t, child) => Opacity(
         opacity: t.clamp(0.0, 1.0),
         child: Transform.scale(
@@ -75,9 +84,9 @@ class _StaggerInState extends State<StaggerIn>
     return AnimatedBuilder(
       animation: _c,
       builder: (_, child) {
-        final t = Curves.easeOutCubic.transform(_c.value);
+        final t = kRobinEase.transform(_c.value);
         return Opacity(
-          opacity: t,
+          opacity: t.clamp(0.0, 1.0),
           child: Transform.translate(
             offset: Offset(0, (1 - t) * widget.dy),
             child: child,
