@@ -1,6 +1,7 @@
 // dart:io 플랫폼용 백엔드. 리눅스 실기기에선 표준 CLI 도구로 실제 시스템을 제어.
 // 도구가 없거나 권한이 없으면 조용히 무시(UI엔 영향 없음) → 개발 중에도 안전.
 import 'dart:io';
+import 'dart:typed_data';
 import 'platform_backend.dart';
 
 PlatformBackend createPlatformBackend() =>
@@ -719,6 +720,19 @@ class _LinuxBackend implements PlatformBackend {
   Future<void> stopAudio() async => _run('pkill', ['-x', 'mpv']);
 
   @override
+  Future<Uint8List?> readImageBytes(String path) async {
+    if (_unsafe(path)) return null;
+    try {
+      final f = File(_real(path));
+      if (!f.existsSync()) return null;
+      if (f.lengthSync() > 12 * 1024 * 1024) return null; // 12MB 초과는 스킵
+      return f.readAsBytesSync();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
   Future<List<AudioOutput>> audioOutputs() async {
     try {
       final defR = await Process.run('pactl', ['get-default-sink']);
@@ -873,4 +887,6 @@ class _NoopBackend implements PlatformBackend {
   Future<List<AudioOutput>> audioOutputs() async => const [];
   @override
   Future<void> setAudioOutput(String name) async {}
+  @override
+  Future<Uint8List?> readImageBytes(String path) async => null;
 }

@@ -22,6 +22,7 @@ import 'apps/software.dart';
 import 'apps/system_monitor.dart';
 import 'apps/calendar.dart';
 import 'apps/music.dart';
+import 'apps/gallery.dart';
 import 'apps/paint.dart';
 import 'widgets/clock.dart';
 import 'widgets/battery.dart';
@@ -1169,6 +1170,7 @@ class _AppContent extends StatelessWidget {
     if (app.id == 'monitor') return const SystemMonitorApp();
     if (app.id == 'calendar') return const CalendarApp();
     if (app.id == 'music') return const MusicApp();
+    if (app.id == 'gallery') return const GalleryApp();
     if (app.id == 'calc') return const CalculatorApp();
     if (app.id == 'notes') return const NotesApp();
     if (app.id == 'finder') return const FinderApp();

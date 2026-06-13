@@ -1,5 +1,6 @@
 // 웹/비-dart:io 플랫폼용 no-op 백엔드. (조건부 import 기본값)
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'platform_backend.dart';
 
 PlatformBackend createPlatformBackend() => const _StubBackend();
@@ -138,6 +139,8 @@ class _StubBackend implements PlatformBackend {
   Future<void> playAudio(String path) async {}
   @override
   Future<void> stopAudio() async {}
+  @override
+  Future<Uint8List?> readImageBytes(String path) async => null;
 
   // 웹 데모 — 출력 장치 2개(전환은 no-op).
   @override

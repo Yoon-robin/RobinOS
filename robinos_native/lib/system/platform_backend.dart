@@ -6,6 +6,7 @@
 //   - 리눅스 실기기   → platform_backend_io.dart  (Process.run: brightnessctl 등)
 // 덕분에 웹 빌드에 dart:io가 새지 않고, 같은 셸 코드가 양쪽에서 동작한다.
 // ===========================================================
+import 'dart:typed_data';
 import 'platform_backend_stub.dart'
     if (dart.library.io) 'platform_backend_io.dart';
 
@@ -224,6 +225,10 @@ abstract class PlatformBackend {
   Future<void> playAudio(String path);
   // 재생 정지(리눅스: mpv 종료). 웹/도구부재: no-op.
   Future<void> stopAudio();
+
+  // === 이미지 (갤러리용) ===
+  // 이미지 파일 바이트(리눅스: 홈 파일 읽기, 너무 크면 null). 웹/도구부재: null.
+  Future<Uint8List?> readImageBytes(String path);
 }
 
 // 플랫폼별 구현 인스턴스 — 조건부 import가 createPlatformBackend()를 제공.

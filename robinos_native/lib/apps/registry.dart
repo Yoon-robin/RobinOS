@@ -42,4 +42,6 @@ const kApps = <AppDef>[
       size: Size(600, 600), glyph: Icons.calendar_month_rounded),
   AppDef('music', '음악', '🎵', Color(0xFFFF9F4A),
       size: Size(560, 560), glyph: Icons.music_note_rounded),
+  AppDef('gallery', '사진', '🖼️', Color(0xFF38D6C4),
+      size: Size(620, 560), glyph: Icons.photo_library_rounded),
 ];
