@@ -4,6 +4,9 @@
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
 #endif
+#ifdef HAVE_GTK_LAYER_SHELL
+#include <gtk-layer-shell/gtk-layer-shell.h>
+#endif
 
 #include "flutter/generated_plugin_registrant.h"
 
@@ -33,7 +36,30 @@ static void my_application_activate(GApplication* application) {
   gtk_window_set_decorated(window, FALSE);
   gtk_window_set_title(window, "RobinOS");
   gtk_window_set_default_size(window, 1280, 720);
-  gtk_window_maximize(window);
+
+  // layer-shell이 있으면(Wayland) 셸을 background 레이어 표면으로 만든다 →
+  // 데스크톱 배경처럼 모든 앱 창 아래에 깔리고, sway가 상/하단 gap으로 비워둔
+  // 메뉴바·독 영역엔 아무 앱도 안 와서 항상 보인다. (자세한 설계: boot/LAYER_SHELL.md)
+  // 미지원/미설치(X11·개발 등)면 기존처럼 maximize 백드롭으로 폴백.
+  gboolean as_layer = FALSE;
+#ifdef HAVE_GTK_LAYER_SHELL
+  if (gtk_layer_is_supported()) {
+    gtk_layer_init_for_window(window);
+    gtk_layer_set_layer(window, GTK_LAYER_SHELL_LAYER_BACKGROUND);
+    gtk_layer_set_anchor(window, GTK_LAYER_SHELL_EDGE_TOP, TRUE);
+    gtk_layer_set_anchor(window, GTK_LAYER_SHELL_EDGE_BOTTOM, TRUE);
+    gtk_layer_set_anchor(window, GTK_LAYER_SHELL_EDGE_LEFT, TRUE);
+    gtk_layer_set_anchor(window, GTK_LAYER_SHELL_EDGE_RIGHT, TRUE);
+    gtk_layer_set_exclusive_zone(window, 0);
+    // Spotlight·Robin 입력을 위해 클릭 시 키보드 포커스를 받을 수 있게.
+    gtk_layer_set_keyboard_mode(window, GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND);
+    gtk_layer_set_namespace(window, "robinos-shell");
+    as_layer = TRUE;
+  }
+#endif
+  if (!as_layer) {
+    gtk_window_maximize(window);
+  }
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
   fl_dart_project_set_dart_entrypoint_arguments(

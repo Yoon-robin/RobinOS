@@ -12,22 +12,24 @@ exec lxqt-policykit-agent
 # (실제 앱은 아래 규칙으로 70% 중앙 floating → RobinOS 독·메뉴바가 가장자리에 노출.
 #  멀티앱 독접근 검증 완료 2026-06-13. 실사용은 런치패드/Robin/Spotlight로 앱 실행.)
 
-### 창 규칙 ###
-# 실제 앱: floating(맥OS식 자유창) + 화면의 70% 크기로 중앙 배치 →
-# RobinOS 독(하단)·메뉴바(상단)가 가장자리에 항상 노출돼 멀티앱 전환이 가능.
-# (layer-shell로 독을 별도 패널로 올리는 건 RobinOS 단일앱 구조상 큰 작업이라 이 방식이 실용적.)
-for_window [app_id=".*"] floating enable, resize set width 70 ppt height 70 ppt, move position center
-for_window [class=".*"] floating enable, resize set width 70 ppt height 70 ppt, move position center
-# 단, RobinOS 셸은 타일링(꽉 찬 백드롭)·무테로 되돌린다(위 규칙도 매칭되나 floating 해제).
-for_window [app_id="os.robinos.shell"] floating disable, border none
+### 창 규칙 (layer-shell) ###
+# RobinOS 셸은 layer-shell 'background' 표면(창이 아님) → 데스크톱 배경 레이어에 그려진다.
+# 실제 앱은 그 위에 '타일링'되며, 상단(메뉴바)·하단(독) 영역은 아래 gap으로 비워 둬
+# 그 자리에 셸의 메뉴바·독이 항상 보이게 한다(아무 앱도 안 와서 안 가림).
+# 개별 앱을 맥OS식 자유창으로 쓰고 싶으면 Super+Space로 floating 토글.
+# (참고: gtk-layer-shell 미지원 시 셸은 maximize 백드롭으로 폴백 — boot/LAYER_SHELL.md)
 
 ### 모양 ###
-default_border normal 2
+default_border pixel 2
 default_floating_border normal 2
 font pango:sans 10
 titlebar_padding 8 4
-gaps inner 0
-gaps outer 0
+# 메뉴바(~32px)·독(~84px) 영역을 비워 항상 보이게 + 가장자리/창간 여백으로 데스크톱 노출.
+gaps inner 10
+gaps top 34
+gaps bottom 96
+gaps left 10
+gaps right 10
 # 마우스: Super+드래그로 floating 창 이동/리사이즈
 floating_modifier $mod normal
 

@@ -54,6 +54,10 @@ add_subdirectory(${FLUTTER_MANAGED_DIR})
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK REQUIRED IMPORTED_TARGET gtk+-3.0)
 
+# wlr-layer-shell (선택): 있으면 셸을 background 레이어 표면으로 → 독/메뉴바 데스크톱 레이어.
+# 없으면 my_application.cc가 기존 maximize 백드롭으로 폴백(빌드 성공).
+pkg_check_modules(GTK_LAYER_SHELL IMPORTED_TARGET gtk-layer-shell-0)
+
 # Application build; see runner/CMakeLists.txt.
 add_subdirectory("runner")
 
