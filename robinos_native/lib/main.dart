@@ -17,6 +17,7 @@ import 'apps/finder.dart';
 import 'apps/terminal.dart';
 import 'apps/calculator.dart';
 import 'apps/settings.dart';
+import 'apps/software.dart';
 import 'apps/paint.dart';
 import 'widgets/clock.dart';
 import 'widgets/battery.dart';
@@ -1097,6 +1098,7 @@ class _AppContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (app.id == 'settings') return const SettingsApp();
+    if (app.id == 'software') return const SoftwareApp();
     if (app.id == 'calc') return const CalculatorApp();
     if (app.id == 'notes') return const NotesApp();
     if (app.id == 'finder') return const FinderApp();

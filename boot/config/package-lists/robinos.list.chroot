@@ -27,6 +27,9 @@ wireplumber
 # 블루투스 on/off (rfkill) + 기기 페어링/연결(bluez=bluetoothctl, 설정>블루투스)
 rfkill
 bluez
+# 패키지 설치 권한 — 소프트웨어 센터가 pkexec로 apt 실행 시 polkit 암호창.
+policykit-1
+lxqt-policykit
 # 스크린샷 (Robin '스크린샷' / grim — wlr-screencopy, sway에서 동작)
 grim
 # 디스플레이 해상도 변경 (설정 > 디스플레이 — wlr-randr, sway)

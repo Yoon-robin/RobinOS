@@ -26,4 +26,5 @@ const kApps = <AppDef>[
   AppDef('paint', '그림판', '🎨', Color(0xFFFF6FA5), size: Size(640, 460)),
   AppDef('terminal', '터미널', '⌨️', Color(0xFF2B2B33), size: Size(600, 380)),
   AppDef('settings', '설정', '⚙️', Color(0xFF8A8A92), size: Size(640, 480)),
+  AppDef('software', '소프트웨어', '📦', Color(0xFF5B8DEF), size: Size(660, 500)),
 ];

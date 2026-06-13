@@ -7,6 +7,8 @@ set $mod Mod4
 
 ### RobinOS 셸 기동 (컴포지터 시작 직후 1회) ###
 exec /opt/robinos/robinos_native
+# polkit 인증 에이전트 — 소프트웨어 센터 설치(pkexec) 시 암호창을 띄움.
+exec lxqt-policykit-agent
 # (실제 앱은 아래 규칙으로 70% 중앙 floating → RobinOS 독·메뉴바가 가장자리에 노출.
 #  멀티앱 독접근 검증 완료 2026-06-13. 실사용은 런치패드/Robin/Spotlight로 앱 실행.)
 
