@@ -26,9 +26,13 @@ RobinOS는 **직접 만든 데스크톱 셸/DE**예요. 단순 테마가 아니�
 - **독** — **마우스 확대(magnification)**, 실행 표시점, 런치패드 타일, Robin 오브
 - **메뉴바** — 반투명 블러, 활성 앱 이름, 실시간 시계, Spotlight·미션컨트롤·제어센터 트리거
 - **시스템 화면** — 제어센터(와이파이·테마·밝기·강조색·잠금) · Spotlight(앱 검색) · 런치패드 · 미션컨트롤 · 알림 토스트 · 우클릭 컨텍스트 메뉴 · 데스크톱 시계
-- **앱 6종** — Finder(가상 파일시스템·새 파일/폴더·삭제) · 메모(저장) · 계산기(클릭+**키보드 입력**) · 그림판(캔버스) · 터미널(미니 셸) · 설정
-- **테마** — 다크/라이트, 배경화면 9종, 강조색 8종, 밝기 — `shared_preferences`로 영구 저장
-- **가상 파일시스템** — 메모·Finder·터미널이 공유 (한 곳에서 쓰면 다른 앱에 반영)
+- **멀티윈도 DE** — sway 컴포지터로 **실제 리눅스 앱**(Firefox 등)을 창으로 실행 (런치패드·Robin·Spotlight에서). RobinOS 셸은 백드롭, 앱은 floating 창
+- **앱 7종 + 소프트웨어 센터** — Finder · 메모 · 계산기(클릭+**키보드**) · 그림판 · 터미널(리눅스에선 **진짜 bash**) · 설정 · **소프트웨어 센터**(apt 검색·설치)
+- **설정** — 테마·배경(9종)·강조색(8종)·밝기·볼륨·**Wi-Fi 연결**·**블루투스**·**시간대**·**디스플레이 해상도**·Robin 두뇌
+- **시스템 화면** — 제어센터 · Spotlight(앱+실앱+파일 검색) · 런치패드 · 미션컨트롤 · **알림 센터**(히스토리) · 컨텍스트 메뉴
+- **실시간 상태** — 메뉴바 **배터리·Wi-Fi 연결 상태**(실기기)
+- **실제 파일시스템** — 리눅스에선 robin 홈의 **진짜 파일**을 Finder·메모가 다룸 (웹은 가상)
+- **스크린샷**(grim) · 다크/라이트 · `shared_preferences` 영구 저장
 
 ## Robin 에이전트 🪐
 
@@ -59,8 +63,9 @@ flutter run -d web-server --web-port 8091   # 빠른 미리보기
 # 리눅스 데스크톱: flutter build linux --release
 ```
 
-**부팅 ISO** — 가상화 없이 **GitHub Actions**에서 빌드 (Actions → *Build RobinOS ISO* → Run workflow)
-→ 아티팩트 `robinos-iso`(.iso) 다운로드 → USB로 굽거나 QEMU(소프트 에뮬)로 부팅.
+**부팅 ISO** — [**Releases**](../../releases)에서 최신 ISO 다운로드(일반 빌드마다 자동 업로드)
+→ USB로 굽거나 QEMU(소프트 에뮬)로 부팅하면 sway 데스크톱 + Robin이 뜹니다.
+**AI 내장(7B) ISO**는 Actions → *Build RobinOS ISO* → `embed_ai` 체크로 빌드(아티팩트 `robinos-iso`, ~6GB — Release 2GB 한도 초과라 아티팩트로 제공).
 로컬 Debian에서 직접 빌드하려면 `boot/README.md` 참고.
 
 ---
@@ -84,9 +89,13 @@ widgets/             부팅·잠금·제어센터·Spotlight·런치패드·미�
 
 - ✅ **Phase A** — 웹 프로토타입(디자인 청사진)
 - ✅ **Phase B** — 네이티브 Flutter 재구현 (셸·앱·Robin·테마)
-- ✅ **Phase D-3** — Debian live-build로 부팅 `.iso` (CI에서)
-- ⏳ **Phase C** — 실제 시스템 연동 (밝기/전원/네트워크 = LinuxBackend) + Qwen2.5 첫 부팅 다운로드
-- ⏳ **마감** — 실기기/USB 부팅, 폴리시
+- ✅ **Phase C** — 실제 시스템 연동: 밝기·볼륨·전원·Wi-Fi·블루투스·시간대·디스플레이(LinuxBackend) + **실제 파일시스템**(robin 홈 백킹)
+- ✅ **Phase D** — Debian live-build 부팅 `.iso` + **sway 멀티윈도 DE**(실제 리눅스 앱을 창으로) + **GitHub Release 자동 업로드**
+- ✅ **AI 비서** — Ollama + `huihui_ai/qwen2.5-abliterate:7b` 내장, 부팅 시 자동 LLM 활성화
+- ✅ **소프트웨어 센터** — `apt` 패키지 검색·설치(pkexec)
+- ⏳ **마감** — 실기기/USB 부팅 최종 검증, layer-shell 독(독·메뉴바 항상 위)
+
+> 📀 최신 ISO: **[Releases](../../releases)** (일반 빌드마다 자동 업로드) · 📝 변경 내역: **[CHANGELOG.md](CHANGELOG.md)**
 
 ---
 
