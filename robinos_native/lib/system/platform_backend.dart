@@ -102,6 +102,14 @@ class SystemStats {
   });
 }
 
+// 오디오 출력 장치 (리눅스: pactl/pipewire sink). 웹/스텁: 데모/없음.
+class AudioOutput {
+  final String name; // pactl sink 이름(set-default-sink 용 식별자)
+  final String description; // 사람이 읽는 이름(예: '내장 오디오')
+  final bool isDefault; // 현재 기본 출력
+  const AudioOutput(this.name, this.description, this.isDefault);
+}
+
 abstract class PlatformBackend {
   // 실제 하드웨어 제어가 가능한 플랫폼인지(리눅스 실기기 등). 웹/스텁은 false.
   bool get isReal;
@@ -118,6 +126,12 @@ abstract class PlatformBackend {
   Future<void> powerOff();
   // 절전/대기 모드 (리눅스: systemctl suspend). 웹/도구부재 시 no-op.
   Future<void> suspend();
+
+  // === 오디오 출력 장치 (리눅스: pactl/pipewire) ===
+  // 출력 장치(sink) 목록 + 현재 기본 표시. 웹: 데모, 도구부재: 빈 목록.
+  Future<List<AudioOutput>> audioOutputs();
+  // 기본 출력 장치 변경(리눅스: pactl set-default-sink + 진행 중 스트림 이동). 웹/도구부재: no-op.
+  Future<void> setAudioOutput(String name);
 
   // 와이파이 on/off (리눅스: nmcli radio wifi). 웹/도구부재 시 no-op.
   Future<void> setWifi(bool on);

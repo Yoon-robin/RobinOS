@@ -18,6 +18,8 @@ class ControlCenter extends StatefulWidget {
 class _ControlCenterState extends State<ControlCenter> {
   bool _wifi = true;
   bool _bt = false;
+  List<AudioOutput> _outputs = const [];
+  bool _audioExpanded = false;
 
   @override
   void initState() {
@@ -28,6 +30,18 @@ class _ControlCenterState extends State<ControlCenter> {
         if (mounted) setState(() => _wifi = c);
       });
     }
+    _loadOutputs(); // 오디오 출력 장치(웹은 데모, 리눅스는 pactl).
+  }
+
+  Future<void> _loadOutputs() async {
+    final o = await platformBackend.audioOutputs();
+    if (mounted) setState(() => _outputs = o);
+  }
+
+  Future<void> _pickOutput(String name) async {
+    await platformBackend.setAudioOutput(name);
+    if (mounted) setState(() => _audioExpanded = false);
+    _loadOutputs(); // 기본 표시 갱신
   }
 
   @override
@@ -159,6 +173,10 @@ class _ControlCenterState extends State<ControlCenter> {
                         ],
                       ),
                     ),
+                    if (_outputs.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      _audioCard(sys),
+                    ],
                     const SizedBox(height: 10),
                     _card(
                       sys,
@@ -245,6 +263,88 @@ class _ControlCenterState extends State<ControlCenter> {
           borderRadius: BorderRadius.circular(14),
         ),
         child: child,
+      );
+
+  // 오디오 출력 장치 — 현재 기본 표시 + 탭하면 펼쳐 전환(장치 2개 이상일 때).
+  Widget _audioCard(SystemState sys) {
+    final def = _outputs.firstWhere((o) => o.isDefault,
+        orElse: () => _outputs.first);
+    final canSwitch = _outputs.length >= 2;
+    return _card(
+      sys,
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: canSwitch
+                ? () => setState(() => _audioExpanded = !_audioExpanded)
+                : null,
+            child: Row(
+              children: [
+                Icon(Icons.speaker_rounded, size: 16, color: sys.textSec(0.6)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('출력 장치',
+                          style:
+                              TextStyle(fontSize: 12, color: sys.textSec(0.6))),
+                      Text(def.description,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: sys.textPrimary)),
+                    ],
+                  ),
+                ),
+                if (canSwitch)
+                  AnimatedRotation(
+                    turns: _audioExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    curve: kRobinEase,
+                    child: Icon(Icons.expand_more,
+                        size: 18, color: sys.textSec(0.5)),
+                  ),
+              ],
+            ),
+          ),
+          if (_audioExpanded)
+            for (var i = 0; i < _outputs.length; i++)
+              StaggerIn(index: i, child: _outputRow(sys, _outputs[i])),
+        ],
+      ),
+    );
+  }
+
+  Widget _outputRow(SystemState sys, AudioOutput o) => GestureDetector(
+        onTap: o.isDefault ? null : () => _pickOutput(o.name),
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Row(
+            children: [
+              Icon(
+                  o.isDefault
+                      ? Icons.check_circle_rounded
+                      : Icons.circle_outlined,
+                  size: 16,
+                  color: o.isDefault ? sys.accent : sys.textSec(0.4)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(o.description,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: o.isDefault ? sys.textPrimary : sys.textSec(0.8))),
+              ),
+            ],
+          ),
+        ),
       );
 
   // 잠금/재시작/종료 같은 세로형(아이콘+라벨) 액션 버튼.

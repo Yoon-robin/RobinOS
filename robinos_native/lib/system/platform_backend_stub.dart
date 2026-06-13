@@ -132,4 +132,13 @@ class _StubBackend implements PlatformBackend {
   Future<void> playAudio(String path) async {}
   @override
   Future<void> stopAudio() async {}
+
+  // 웹 데모 — 출력 장치 2개(전환은 no-op).
+  @override
+  Future<List<AudioOutput>> audioOutputs() async => const [
+        AudioOutput('builtin', '내장 스피커', true),
+        AudioOutput('hdmi', 'HDMI 오디오', false),
+      ];
+  @override
+  Future<void> setAudioOutput(String name) async {}
 }

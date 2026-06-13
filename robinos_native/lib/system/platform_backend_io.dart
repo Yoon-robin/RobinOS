@@ -678,6 +678,59 @@ class _LinuxBackend implements PlatformBackend {
   @override
   Future<void> stopAudio() async => _run('pkill', ['-x', 'mpv']);
 
+  @override
+  Future<List<AudioOutput>> audioOutputs() async {
+    try {
+      final defR = await Process.run('pactl', ['get-default-sink']);
+      final def = defR.exitCode == 0 ? '${defR.stdout}'.trim() : '';
+      final r = await Process.run('pactl', ['list', 'sinks']);
+      if (r.exitCode != 0) return const [];
+      final out = <AudioOutput>[];
+      String? name, desc;
+      void flush() {
+        if (name != null) {
+          out.add(AudioOutput(
+              name!, (desc == null || desc!.isEmpty) ? name! : desc!,
+              name == def));
+        }
+        name = null;
+        desc = null;
+      }
+
+      for (final line in '${r.stdout}'.split('\n')) {
+        final t = line.trim();
+        if (t.startsWith('Sink #')) {
+          flush();
+        } else if (name == null && t.startsWith('Name:')) {
+          name = t.substring(5).trim();
+        } else if (desc == null && t.startsWith('Description:')) {
+          desc = t.substring(12).trim();
+        }
+      }
+      flush();
+      return out;
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  @override
+  Future<void> setAudioOutput(String name) async {
+    try {
+      await Process.run('pactl', ['set-default-sink', name]);
+      // 진행 중 스트림도 새 출력으로 이동(전환이 즉시 체감되도록).
+      final si = await Process.run('pactl', ['list', 'short', 'sink-inputs']);
+      if (si.exitCode == 0) {
+        for (final line in '${si.stdout}'.split('\n')) {
+          final id = line.split('\t').first.trim();
+          if (id.isNotEmpty && int.tryParse(id) != null) {
+            await Process.run('pactl', ['move-sink-input', id, name]);
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
   Future<void> _run(String exe, List<String> args) async {
     try {
       await Process.run(exe, args);
@@ -774,4 +827,8 @@ class _NoopBackend implements PlatformBackend {
   Future<void> playAudio(String path) async {}
   @override
   Future<void> stopAudio() async {}
+  @override
+  Future<List<AudioOutput>> audioOutputs() async => const [];
+  @override
+  Future<void> setAudioOutput(String name) async {}
 }
