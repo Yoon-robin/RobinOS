@@ -428,6 +428,44 @@ class _LinuxBackend implements PlatformBackend {
     }
   }
 
+  @override
+  Future<List<PackageInfo>> searchPackages(String query) async {
+    if (query.trim().isEmpty) return const [];
+    try {
+      final r = await Process.run('apt-cache', ['search', query]);
+      if (r.exitCode != 0) return const [];
+      // 설치된 패키지 집합(한 번에 조회해 각 결과에 표시).
+      final inst = <String>{};
+      try {
+        final d = await Process.run('dpkg', ['--get-selections']);
+        for (final l in '${d.stdout}'.split('\n')) {
+          final p = l.split(RegExp(r'\s+'));
+          if (p.length >= 2 && p[1] == 'install') {
+            inst.add(p[0].split(':').first);
+          }
+        }
+      } catch (_) {}
+      final out = <PackageInfo>[];
+      for (final line in '${r.stdout}'.split('\n')) {
+        final i = line.indexOf(' - ');
+        if (i < 1) continue;
+        final name = line.substring(0, i).trim();
+        final desc = line.substring(i + 3).trim();
+        out.add(PackageInfo(name, desc, inst.contains(name)));
+        if (out.length >= 40) break; // 상위 40개만
+      }
+      return out;
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  @override
+  Future<void> installPackage(String name) async {
+    // pkexec가 polkit 암호 창을 띄움 → 사용자가 암호 입력 후 apt-get install.
+    await _run('pkexec', ['apt-get', 'install', '-y', name]);
+  }
+
   Future<void> _run(String exe, List<String> args) async {
     try {
       await Process.run(exe, args);
@@ -511,4 +549,8 @@ class _NoopBackend implements PlatformBackend {
   Future<void> setDisplayMode(String output, String mode) async {}
   @override
   Future<bool> wifiConnected() async => false;
+  @override
+  Future<List<PackageInfo>> searchPackages(String query) async => const [];
+  @override
+  Future<void> installPackage(String name) async {}
 }

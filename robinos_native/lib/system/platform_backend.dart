@@ -41,6 +41,14 @@ class BatteryInfo {
   const BatteryInfo(this.level, this.charging);
 }
 
+// 설치 가능한 패키지 (apt-cache search 결과). 웹/스텁에선 만들어지지 않음.
+class PackageInfo {
+  final String name;
+  final String desc;
+  final bool installed;
+  const PackageInfo(this.name, this.desc, this.installed);
+}
+
 // 디스플레이 출력 정보 (wlr-randr). 웹/도구부재: null.
 class DisplayInfo {
   final String output; // 출력 이름(예: 'HDMI-A-1', 'eDP-1')
@@ -143,6 +151,12 @@ abstract class PlatformBackend {
 
   // 현재 Wi-Fi 연결 여부 (리눅스: nmcli device status). 웹/도구부재: false.
   Future<bool> wifiConnected();
+
+  // === 패키지 관리 (리눅스: apt) ===
+  // 패키지 검색 (apt-cache search). 상위 N개 + 설치 여부. 웹/도구부재: 빈 목록.
+  Future<List<PackageInfo>> searchPackages(String query);
+  // 패키지 설치 (pkexec apt-get install -y — polkit 암호 프롬프트). 웹/도구부재: no-op.
+  Future<void> installPackage(String name);
 }
 
 // 플랫폼별 구현 인스턴스 — 조건부 import가 createPlatformBackend()를 제공.
