@@ -95,18 +95,21 @@ jobs:
           echo "Built: $ISO ($(du -h "$ISO" | cut -f1))"
           echo "path=$ISO" >> "$GITHUB_OUTPUT"
 
+      # ISO 아티팩트(주로 AI 내장 ISO용 — 일반 ISO는 아래 Release로 제공).
+      # 저장소 quota가 차도 빌드를 막지 않도록 continue-on-error + 짧은 보관(2일).
       - name: Upload ISO artifact
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: robinos-iso
           path: boot/*.iso
-          if-no-files-found: error
-          retention-days: 14
+          if-no-files-found: warn
+          retention-days: 2
 
       # 일반 ISO를 GitHub Release에 항상 업로드(최신 빌드 제공). 릴리스 노트는 최근 커밋으로 자동 생성.
       # AI 내장 ISO(~6GB)는 Release 단일파일 2GB 한도를 넘어 제외 — 위 아티팩트로만 받음.
       - name: Release ISO (일반 빌드만)
-        if: ${{ !inputs.embed_ai }}
+        if: ${{ !inputs.embed_ai && !cancelled() }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -132,6 +135,7 @@ jobs:
       # 가상화 없이 QEMU 소프트웨어 에뮬레이션(TCG)으로 ISO를 부팅해보고
       # 부팅 중 화면을 여러 장 캡처 → 스크린샷 아티팩트. (best-effort)
       - name: Boot-test ISO in QEMU (software emulation, no KVM)
+        if: ${{ !cancelled() }}
         continue-on-error: true
         run: bash boot/boottest.sh
 
