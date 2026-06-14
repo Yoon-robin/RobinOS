@@ -1,6 +1,7 @@
 # RobinOS sway 설정.
-# RobinOS 셸(app_id=os.robinos.shell)은 타일링으로 화면을 꽉 채운 백드롭,
-# 실제 리눅스 앱은 그 위에 floating(맥OS식 자유창)으로 띄운다.
+# RobinOS 셸(app_id=os.robinos.shell)은 layer-shell 'background' 표면 → 데스크톱 배경 레이어.
+# 실제 앱은 그 위에 타일링되고, 상/하단 gap이 메뉴바·독 영역을 비워 항상 노출시킨다.
+# (gtk-layer-shell 미지원 시 셸은 maximize 창으로 폴백 — 아래 셸 전용 규칙이 전체화면 복원.)
 # sway = bookworm 메인의 안정적 wlroots 컴포지터. softrender(pixman)는 robinos-session이 export.
 
 set $mod Mod4
@@ -9,15 +10,17 @@ set $mod Mod4
 exec /opt/robinos/robinos_native
 # polkit 인증 에이전트 — 소프트웨어 센터 설치(pkexec) 시 암호창을 띄움.
 exec lxqt-policykit-agent
-# (실제 앱은 아래 규칙으로 70% 중앙 floating → RobinOS 독·메뉴바가 가장자리에 노출.
-#  멀티앱 독접근 검증 완료 2026-06-13. 실사용은 런치패드/Robin/Spotlight로 앱 실행.)
+# (실사용 앱 실행은 런치패드/Robin/Spotlight. 창 배치는 아래 layer-shell 규칙 참고.)
 
 ### 창 규칙 (layer-shell) ###
 # RobinOS 셸은 layer-shell 'background' 표면(창이 아님) → 데스크톱 배경 레이어에 그려진다.
 # 실제 앱은 그 위에 '타일링'되며, 상단(메뉴바)·하단(독) 영역은 아래 gap으로 비워 둬
 # 그 자리에 셸의 메뉴바·독이 항상 보이게 한다(아무 앱도 안 와서 안 가림).
 # 개별 앱을 맥OS식 자유창으로 쓰고 싶으면 Super+Space로 floating 토글.
-# (참고: gtk-layer-shell 미지원 시 셸은 maximize 백드롭으로 폴백 — boot/LAYER_SHELL.md)
+# 폴백 전용(gtk-layer-shell 미지원 → 셸이 maximize '창'일 때만 매칭): 무테 + 전역 gap을
+# 0으로 되돌려 셸을 전체화면 백드롭으로 복원. 정상(layer-shell) 경로에선 셸이 창이 아니라
+# (namespace=robinos-shell 레이어 표면) 이 규칙이 안 걸려 위 gap 예약이 그대로 유지된다.
+for_window [app_id="os.robinos.shell"] floating disable, border none, gaps inner current set 0, gaps top current set 0, gaps bottom current set 0, gaps left current set 0, gaps right current set 0
 
 ### 모양 ###
 default_border pixel 2
