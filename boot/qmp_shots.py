@@ -38,6 +38,13 @@ def enter():
                 "arguments": {"keys": [{"type": "qcode", "data": "ret"}]}})
 
 
+def super_t():
+    # Super+T → sway가 foot 터미널을 띄움(독·메뉴바 위에 앱 창이 와도 안 가리는지 검증).
+    return cmd({"execute": "sendkey",
+                "arguments": {"keys": [{"type": "qcode", "data": "meta_l"},
+                                       {"type": "qcode", "data": "t"}]}})
+
+
 try:
     s.recv(65536)  # QMP greeting
     cmd({"execute": "qmp_capabilities"})
@@ -51,9 +58,14 @@ try:
             cmd({"execute": "screendump",
                  "arguments": {"filename": f"{out}/shot{shot}.ppm"}})
             shot += 1
-    # 2) 라이브 부팅 + cage/Flutter 데스크톱 렌더를 길게 캡처(~9분).
-    for _ in range(18):  # 18 * 30s = 540s
+    # 2) 라이브 부팅 + Flutter 렌더를 길게 캡처(~10분). 중간에 잠금 해제 + 앱 실행으로
+    #    데스크톱과 '앱 위에 독·메뉴바가 보이는지'(layer-shell)까지 객관적으로 남긴다.
+    for i in range(20):  # 20 * 30s = 600s
         time.sleep(30)
+        if i in (3, 4, 5):
+            enter()        # 잠금화면이 떴을 시점 → ENTER로 해제(타이밍 여유로 3회)
+        if i == 9:
+            super_t()      # 데스크톱 진입 후 터미널(foot) 열기 → 독 가림 검증
         r = cmd({"execute": "screendump",
                  "arguments": {"filename": f"{out}/shot{shot}.ppm"}})
         print(f"shot{shot}: {r}")

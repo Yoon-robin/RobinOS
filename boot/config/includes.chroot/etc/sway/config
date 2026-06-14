@@ -43,6 +43,8 @@ bindsym Alt+F4 kill
 bindsym $mod+q kill
 bindsym $mod+f fullscreen toggle
 bindsym $mod+space floating toggle
+# 터미널(foot) — 일반 단축키 + boottest가 앱 창을 띄워 독 가림을 검증하는 수단.
+bindsym $mod+t exec foot
 # RobinOS 셸이 닫혔을 때 다시 띄우기
 bindsym $mod+Return exec /opt/robinos/robinos_native
 
