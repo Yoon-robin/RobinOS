@@ -106,6 +106,8 @@ scripts/build-iso.sh
 
 ISO builds require Arch Linux or an Arch-capable Linux build environment. See `docs/build-environment.md`.
 
+To create a Hyper-V Arch VM from Windows, see `docs/hyperv-vm.md`.
+
 GitHub Actions:
 
 - `Validate`: static project checks and Bash syntax checks

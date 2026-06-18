@@ -15,6 +15,14 @@ The repository can be edited and statically validated on Windows, but ISO creati
 
 Use an Arch Linux VM.
 
+On Windows Pro, the project includes a Hyper-V helper:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/setup-hyperv-arch-vm.ps1
+```
+
+See `docs/hyperv-vm.md`.
+
 ```bash
 sudo pacman -Syu
 sudo pacman -S --needed git archiso qemu-full edk2-ovmf
@@ -44,4 +52,3 @@ scripts/build-in-arch-container.sh
 ```
 
 This requires privileged Docker and may not work on ordinary Windows Docker setups.
-

@@ -61,6 +61,7 @@ $requiredPaths = @(
     "scripts/doctor-build.sh",
     "scripts/run-vm.sh",
     "scripts/setup-windows-build-env.ps1",
+    "scripts/setup-hyperv-arch-vm.ps1",
     "scripts/build-in-arch-container.sh",
     "scripts/clean-build.sh",
     "scripts/ci-local.ps1",
@@ -90,6 +91,7 @@ $requiredPaths = @(
     "docs/local-validation.md",
     "docs/vm-smoke-test.md",
     "docs/build-environment.md",
+    "docs/hyperv-vm.md",
     "themes/sddm/robinos/Main.qml",
     "themes/grub/robinos/theme.txt",
     "themes/konsole/RobinOS.colorscheme"
