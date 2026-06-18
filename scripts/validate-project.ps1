@@ -60,6 +60,8 @@ $requiredPaths = @(
     "scripts/build-iso.sh",
     "scripts/doctor-build.sh",
     "scripts/run-vm.sh",
+    "scripts/setup-windows-build-env.ps1",
+    "scripts/build-in-arch-container.sh",
     "scripts/clean-build.sh",
     "scripts/ci-local.ps1",
     "scripts/install-git-hooks.ps1",
@@ -87,6 +89,7 @@ $requiredPaths = @(
     "docs/ci.md",
     "docs/local-validation.md",
     "docs/vm-smoke-test.md",
+    "docs/build-environment.md",
     "themes/sddm/robinos/Main.qml",
     "themes/grub/robinos/theme.txt",
     "themes/konsole/RobinOS.colorscheme"

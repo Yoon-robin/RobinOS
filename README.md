@@ -104,6 +104,8 @@ scripts/check-arch-packages.sh
 scripts/build-iso.sh
 ```
 
+ISO builds require Arch Linux or an Arch-capable Linux build environment. See `docs/build-environment.md`.
+
 GitHub Actions:
 
 - `Validate`: static project checks and Bash syntax checks

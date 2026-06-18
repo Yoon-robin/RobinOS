@@ -19,6 +19,7 @@ file_permissions=(
   ["/usr/local/bin/robin-install"]="0:0:755"
   ["/opt/robinos/bin/robinctl"]="0:0:755"
   ["/opt/robinos/scripts/build-iso.sh"]="0:0:755"
+  ["/opt/robinos/scripts/build-in-arch-container.sh"]="0:0:755"
   ["/opt/robinos/scripts/check-arch-packages.sh"]="0:0:755"
   ["/opt/robinos/scripts/clean-build.sh"]="0:0:755"
   ["/opt/robinos/scripts/doctor-build.sh"]="0:0:755"

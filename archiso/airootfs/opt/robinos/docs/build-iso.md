@@ -2,6 +2,8 @@
 
 Build on Arch Linux or an Arch-based VM.
 
+If you are on Windows, see `docs/build-environment.md` first.
+
 ## Requirements
 
 ```bash
