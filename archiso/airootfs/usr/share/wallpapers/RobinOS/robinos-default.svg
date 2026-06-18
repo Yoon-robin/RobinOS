@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2160" role="img" aria-labelledby="title desc">
+  <title id="title">RobinOS Default Wallpaper</title>
+  <desc id="desc">Dark RobinOS wallpaper with subtle technical lines and centered brand mark.</desc>
+  <defs>
+    <radialGradient id="centerGlow" cx="50%" cy="46%" r="62%">
+      <stop offset="0" stop-color="#183746"/>
+      <stop offset=".42" stop-color="#101B24"/>
+      <stop offset="1" stop-color="#080C11"/>
+    </radialGradient>
+    <linearGradient id="cyanEdge" x1="1620" y1="620" x2="2220" y2="1540" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5EEBFF"/>
+      <stop offset="1" stop-color="#1BA6C9"/>
+    </linearGradient>
+    <pattern id="grid" width="96" height="96" patternUnits="userSpaceOnUse">
+      <path d="M96 0H0v96" fill="none" stroke="#EAF7FA" stroke-opacity=".045" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <rect width="3840" height="2160" fill="url(#centerGlow)"/>
+  <rect width="3840" height="2160" fill="url(#grid)"/>
+  <g opacity=".28" fill="none" stroke-linecap="round">
+    <path d="M420 560c500-260 1030-330 1590-210 510 110 910 40 1370-160" stroke="#5EEBFF" stroke-opacity=".20" stroke-width="8"/>
+    <path d="M360 1580c560-270 1120-310 1680-120 520 176 990 118 1460-120" stroke="#D83B4B" stroke-opacity=".16" stroke-width="7"/>
+    <path d="M500 760h520m180 0h280m1030 0h420m-2130 720h640m1140 0h540" stroke="#EAF7FA" stroke-opacity=".10" stroke-width="4"/>
+  </g>
+  <g transform="translate(1600 520) scale(2.5)">
+    <path d="M128 28 206 61v66c0 50-30 82-78 105-48-23-78-55-78-105V61l78-33Z" fill="#18212C" stroke="url(#cyanEdge)" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M128 54 181 77v48c0 34-18 58-53 77-35-19-53-43-53-77V77l53-23Z" fill="#111923"/>
+    <path d="M92 91h62c14 0 25 11 25 25v4c0 14-11 25-25 25h-35l-26 29v-29h-1c-14 0-25-11-25-25v-4c0-14 11-25 25-25Z" fill="#EAF7FA"/>
+    <path d="M91 110h35l-22 19 22 19H91l21-19-21-19Z" fill="#10151C"/>
+    <path d="M137 145h32v14h-32z" fill="#10151C"/>
+    <path d="M74 77c28-18 64-18 98 0-13 5-25 13-35 25-26-6-46-4-63 6V77Z" fill="#2ED3F7"/>
+    <path d="M75 128c24-18 54-24 90-18-30 9-55 26-75 52-9-9-15-20-15-34Z" fill="#D83B4B"/>
+    <path d="M128 54 181 77v48c0 34-18 58-53 77V54Z" fill="#FFFFFF" opacity=".04"/>
+  </g>
+  <text x="1920" y="1335" text-anchor="middle" fill="#EAF7FA" font-family="Inter, Pretendard, Noto Sans, Arial, sans-serif" font-size="118" font-weight="800">RobinOS</text>
+  <text x="1920" y="1408" text-anchor="middle" fill="#5EEBFF" font-family="Inter, Pretendard, Noto Sans, Arial, sans-serif" font-size="34" font-weight="600">Security Learning Workstation</text>
+  <path d="M1680 1455h480" stroke="#D83B4B" stroke-width="8" stroke-linecap="round"/>
+</svg>
+

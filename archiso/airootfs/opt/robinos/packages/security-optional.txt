@@ -1,0 +1,8 @@
+# RobinOS optional security package candidates
+#
+# Some of these may require AUR, Flatpak, manual install, or upstream releases.
+# Keep them out of the default ISO until packaging is confirmed.
+burpsuite
+zaproxy
+metasploit
+rustscan

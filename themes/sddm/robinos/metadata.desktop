@@ -1,0 +1,15 @@
+[SddmGreeterTheme]
+Name=RobinOS
+Description=RobinOS security learning login theme
+Author=RobinOS
+Copyright=2026 RobinOS
+License=CC-BY-SA
+Type=sddm-theme
+Version=0.1.0
+Website=https://example.invalid/robinos
+Screenshot=preview.svg
+MainScript=Main.qml
+ConfigFile=theme.conf
+Theme-Id=robinos
+Theme-API=2.0
+

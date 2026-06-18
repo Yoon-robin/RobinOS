@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cat <<'EOF'
+RobinOS installer prototype
+
+This is not a full disk installer yet.
+
+Current recommended flow:
+  1. Install Arch Linux with archinstall or the manual Arch guide.
+  2. Reboot into the installed system.
+  3. Clone or copy the RobinOS repository.
+  4. Run: sudo scripts/post-install.sh
+  5. Run: robinctl doctor
+
+From the live ISO, the project files are also staged at:
+  /opt/robinos
+
+After installing Arch, you can copy that directory into the installed system
+and run:
+  sudo /opt/robinos/scripts/post-install.sh
+
+The future RobinOS installer will provide guided disk layout, Btrfs snapshots,
+desktop setup, Korean defaults, and security lab profiles.
+EOF

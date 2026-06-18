@@ -1,0 +1,9 @@
+RobinOS Security Learning Live Environment
+
+Use RobinOS only for legal learning, CTF practice, and authorized testing.
+
+Try:
+  robinctl doctor
+  robinctl profile list
+  robinctl lab list
+

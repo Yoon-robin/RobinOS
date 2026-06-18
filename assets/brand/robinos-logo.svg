@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 256" role="img" aria-labelledby="title desc">
+  <title id="title">RobinOS Logo</title>
+  <desc id="desc">RobinOS wordmark with a geometric security learning OS emblem.</desc>
+  <defs>
+    <linearGradient id="cyanEdge" x1="48" y1="36" x2="208" y2="220" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5EEBFF"/>
+      <stop offset="1" stop-color="#1BA6C9"/>
+    </linearGradient>
+  </defs>
+  <rect width="720" height="256" rx="40" fill="#10151C"/>
+  <g transform="translate(36 0)">
+    <path d="M128 28 206 61v66c0 50-30 82-78 105-48-23-78-55-78-105V61l78-33Z" fill="#18212C" stroke="url(#cyanEdge)" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M128 54 181 77v48c0 34-18 58-53 77-35-19-53-43-53-77V77l53-23Z" fill="#111923"/>
+    <path d="M92 91h62c14 0 25 11 25 25v4c0 14-11 25-25 25h-35l-26 29v-29h-1c-14 0-25-11-25-25v-4c0-14 11-25 25-25Z" fill="#EAF7FA"/>
+    <path d="M91 110h35l-22 19 22 19H91l21-19-21-19Z" fill="#10151C"/>
+    <path d="M137 145h32v14h-32z" fill="#10151C"/>
+    <path d="M74 77c28-18 64-18 98 0-13 5-25 13-35 25-26-6-46-4-63 6V77Z" fill="#2ED3F7"/>
+    <path d="M75 128c24-18 54-24 90-18-30 9-55 26-75 52-9-9-15-20-15-34Z" fill="#D83B4B"/>
+    <path d="M128 54 181 77v48c0 34-18 58-53 77V54Z" fill="#FFFFFF" opacity=".04"/>
+  </g>
+  <g transform="translate(300 88)">
+    <text x="0" y="54" fill="#EAF7FA" font-family="Inter, Pretendard, Noto Sans, Arial, sans-serif" font-size="64" font-weight="800" letter-spacing="0">RobinOS</text>
+    <text x="4" y="92" fill="#5EEBFF" font-family="Inter, Pretendard, Noto Sans, Arial, sans-serif" font-size="20" font-weight="600" letter-spacing="0">Security Learning Workstation</text>
+    <path d="M6 113h300" stroke="#D83B4B" stroke-width="5" stroke-linecap="round"/>
+  </g>
+</svg>
+

@@ -1,0 +1,17 @@
+# RobinOS build outputs
+/build/
+/out/
+/work/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+

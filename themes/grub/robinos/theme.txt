@@ -1,0 +1,69 @@
+# RobinOS GRUB theme
+#
+# Keep this first-pass theme image-free for broad GRUB compatibility.
+# Some GRUB builds do not reliably render SVG assets in themes.
+
+desktop-color: "#10151C"
+terminal-font: "Unifont Regular 16"
+terminal-left: "8%"
+terminal-top: "18%"
+terminal-width: "84%"
+terminal-height: "70%"
+terminal-border: "0"
+
++ label {
+  left = 188
+  top = 76
+  width = 600
+  height = 46
+  text = "RobinOS"
+  font = "Unifont Regular 32"
+  color = "#EAF7FA"
+}
+
++ label {
+  left = 190
+  top = 124
+  width = 760
+  height = 30
+  text = "Security Learning Workstation"
+  font = "Unifont Regular 16"
+  color = "#5EEBFF"
+}
+
++ boot_menu {
+  left = 10%
+  top = 30%
+  width = 80%
+  height = 48%
+  item_font = "Unifont Regular 18"
+  item_color = "#EAF7FA"
+  selected_item_color = "#5EEBFF"
+  icon_width = 32
+  icon_height = 32
+  item_height = 42
+  item_padding = 12
+  item_spacing = 4
+}
+
++ label {
+  left = 10%
+  top = 86%
+  width = 80%
+  height = 28
+  align = "center"
+  text = "Use only for legal learning, CTF practice, and authorized testing."
+  font = "Unifont Regular 14"
+  color = "#EAF7FA"
+}
+
++ label {
+  left = 10%
+  top = 90%
+  width = 80%
+  height = 28
+  align = "center"
+  text = "Enter: boot   e: edit   c: command line"
+  font = "Unifont Regular 14"
+  color = "#5EEBFF"
+}

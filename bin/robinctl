@@ -1,0 +1,364 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly ROBINOS_NAME="RobinOS"
+readonly ROBINOS_VERSION="0.1.0-dev"
+readonly CONFIG_FILE="/etc/robinos/config.toml"
+readonly WALLPAPER_FILE="/usr/share/wallpapers/RobinOS/robinos-default.svg"
+readonly SDDM_THEME_DIR="/usr/share/sddm/themes/robinos"
+readonly GRUB_THEME_FILE="/usr/share/grub/themes/robinos/theme.txt"
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+if [[ -d /opt/robinos ]]; then
+  PROJECT_ROOT="/opt/robinos"
+fi
+
+CORE_PACKAGES="${PROJECT_ROOT}/packages/core.txt"
+SECURITY_PACKAGES="${PROJECT_ROOT}/packages/security-baseline.txt"
+OPTIONAL_PACKAGES="${PROJECT_ROOT}/packages/security-optional.txt"
+
+usage() {
+  cat <<'EOF'
+robinctl - RobinOS control tool
+
+Usage:
+  robinctl version
+  robinctl doctor
+  robinctl update [--dry-run]
+  robinctl snapshot create [name]
+  robinctl profile list
+  robinctl profile security [--dry-run]
+  robinctl packages core
+  robinctl packages security
+  robinctl packages optional
+  robinctl lab list
+  robinctl lab info web
+  robinctl lab status web
+  robinctl lab start web
+  robinctl lab stop web
+
+RobinOS is for authorized security learning, CTF practice, and local labs.
+EOF
+}
+
+die() {
+  printf 'error: %s\n' "$*" >&2
+  exit 1
+}
+
+have_cmd() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+need_root() {
+  if [[ "${EUID}" -ne 0 ]]; then
+    die "this command needs root privileges"
+  fi
+}
+
+package_file() {
+  local file="$1"
+  [[ -f "${file}" ]] || die "package file not found: ${file}"
+  grep -Ev '^\s*(#|$)' "${file}"
+}
+
+print_version() {
+  printf '%s %s\n' "${ROBINOS_NAME}" "${ROBINOS_VERSION}"
+}
+
+doctor() {
+  print_version
+  printf '\nSystem checks:\n'
+
+  local os_name="unknown"
+  if [[ -r /etc/os-release ]]; then
+    # shellcheck disable=SC1091
+    . /etc/os-release
+    os_name="${PRETTY_NAME:-${NAME:-unknown}}"
+  fi
+  printf '  OS: %s\n' "${os_name}"
+
+  if have_cmd pacman; then
+    printf '  pacman: ok\n'
+  else
+    printf '  pacman: missing\n'
+  fi
+
+  if have_cmd systemctl; then
+    printf '  systemd: ok\n'
+  else
+    printf '  systemd: missing\n'
+  fi
+
+  if have_cmd snapper; then
+    printf '  snapper: ok\n'
+  else
+    printf '  snapper: missing\n'
+  fi
+
+  if have_cmd docker; then
+    printf '  docker: ok\n'
+  else
+    printf '  docker: missing\n'
+  fi
+
+  if have_cmd docker && docker compose version >/dev/null 2>&1; then
+    printf '  docker compose: ok\n'
+  else
+    printf '  docker compose: missing\n'
+  fi
+
+  if have_cmd fcitx5; then
+    printf '  fcitx5: ok\n'
+  else
+    printf '  fcitx5: missing\n'
+  fi
+
+  if have_cmd locale && locale -a 2>/dev/null | grep -qi '^ko_kr\.utf'; then
+    printf '  Korean locale: ok\n'
+  else
+    printf '  Korean locale: missing\n'
+  fi
+
+  if [[ -f "${CONFIG_FILE}" ]]; then
+    printf '  config: %s\n' "${CONFIG_FILE}"
+  else
+    printf '  config: missing (%s)\n' "${CONFIG_FILE}"
+  fi
+
+  if [[ -f "${WALLPAPER_FILE}" ]]; then
+    printf '  wallpaper: ok\n'
+  else
+    printf '  wallpaper: missing\n'
+  fi
+
+  if [[ -d "${SDDM_THEME_DIR}" ]]; then
+    printf '  sddm theme: ok\n'
+  else
+    printf '  sddm theme: missing\n'
+  fi
+
+  if [[ -f "${GRUB_THEME_FILE}" ]]; then
+    printf '  grub theme: ok\n'
+  else
+    printf '  grub theme: missing\n'
+  fi
+}
+
+update_system() {
+  local dry_run="false"
+  [[ "${1:-}" == "--dry-run" ]] && dry_run="true"
+
+  have_cmd pacman || die "pacman is required"
+
+  if [[ "${dry_run}" == "true" ]]; then
+    printf 'Would create pre-update snapshot if snapper is available.\n'
+    printf 'Would run: pacman -Syu\n'
+    return
+  fi
+
+  need_root
+  if have_cmd snapper; then
+    snapper create --description "RobinOS pre-update $(date -Iseconds)" || true
+  fi
+  pacman -Syu
+}
+
+snapshot_create() {
+  need_root
+  have_cmd snapper || die "snapper is required"
+
+  local name="${1:-manual}"
+  snapper create --description "RobinOS ${name} $(date -Iseconds)"
+}
+
+profile_list() {
+  cat <<'EOF'
+Available profiles:
+  core      Minimal RobinOS base workstation
+  security  Security learning tools for CTF, web, network, reversing, and forensics
+EOF
+}
+
+profile_security() {
+  local dry_run="false"
+  [[ "${1:-}" == "--dry-run" ]] && dry_run="true"
+
+  have_cmd pacman || die "pacman is required"
+
+  if [[ "${dry_run}" == "true" ]]; then
+    printf 'Would install RobinOS Security Lab packages:\n'
+    package_file "${SECURITY_PACKAGES}" | sed 's/^/  /'
+    return
+  fi
+
+  need_root
+  mapfile -t packages < <(package_file "${SECURITY_PACKAGES}")
+  pacman -S --needed "${packages[@]}"
+}
+
+packages_print() {
+  case "${1:-}" in
+    core)
+      package_file "${CORE_PACKAGES}"
+      ;;
+    security)
+      package_file "${SECURITY_PACKAGES}"
+      ;;
+    optional)
+      package_file "${OPTIONAL_PACKAGES}"
+      ;;
+    *)
+      die "unknown package group: ${1:-}"
+      ;;
+  esac
+}
+
+lab_list() {
+  cat <<'EOF'
+Available labs:
+  web  Local web security lab stack with OWASP Juice Shop and DVWA
+EOF
+}
+
+lab_info() {
+  case "${1:-}" in
+    web)
+      cat <<'EOF'
+RobinOS Web Lab
+
+Targets:
+  OWASP Juice Shop  http://localhost:3000
+  DVWA              http://localhost:8080
+
+Commands:
+  robinctl lab start web
+  robinctl lab status web
+  robinctl lab stop web
+
+Use these targets only as local learning environments.
+EOF
+      ;;
+    *)
+      die "unknown lab: ${1:-}"
+      ;;
+  esac
+}
+
+lab_status() {
+  case "${1:-}" in
+    web)
+      local compose_file="${PROJECT_ROOT}/labs/web/docker-compose.yml"
+      [[ -f "${compose_file}" ]] || die "missing lab file: ${compose_file}"
+      have_cmd docker || die "docker is required"
+      docker compose -f "${compose_file}" ps
+      ;;
+    *)
+      die "unknown lab: ${1:-}"
+      ;;
+  esac
+}
+
+lab_start() {
+  case "${1:-}" in
+    web)
+      local compose_file="${PROJECT_ROOT}/labs/web/docker-compose.yml"
+      [[ -f "${compose_file}" ]] || die "missing lab file: ${compose_file}"
+      have_cmd docker || die "docker is required"
+      docker compose -f "${compose_file}" up -d
+      ;;
+    *)
+      die "unknown lab: ${1:-}"
+      ;;
+  esac
+}
+
+lab_stop() {
+  case "${1:-}" in
+    web)
+      local compose_file="${PROJECT_ROOT}/labs/web/docker-compose.yml"
+      [[ -f "${compose_file}" ]] || die "missing lab file: ${compose_file}"
+      have_cmd docker || die "docker is required"
+      docker compose -f "${compose_file}" down
+      ;;
+    *)
+      die "unknown lab: ${1:-}"
+      ;;
+  esac
+}
+
+main() {
+  case "${1:-}" in
+    version)
+      print_version
+      ;;
+    doctor)
+      doctor
+      ;;
+    update)
+      shift
+      update_system "${1:-}"
+      ;;
+    snapshot)
+      shift
+      [[ "${1:-}" == "create" ]] || die "usage: robinctl snapshot create [name]"
+      shift
+      snapshot_create "${1:-}"
+      ;;
+    profile)
+      shift
+      case "${1:-}" in
+        list)
+          profile_list
+          ;;
+        security)
+          shift
+          profile_security "${1:-}"
+          ;;
+        *)
+          die "usage: robinctl profile list|security [--dry-run]"
+          ;;
+      esac
+      ;;
+    packages)
+      shift
+      packages_print "${1:-}"
+      ;;
+    lab)
+      shift
+      case "${1:-}" in
+        list)
+          lab_list
+          ;;
+        info)
+          shift
+          lab_info "${1:-}"
+          ;;
+        status)
+          shift
+          lab_status "${1:-}"
+          ;;
+        start)
+          shift
+          lab_start "${1:-}"
+          ;;
+        stop)
+          shift
+          lab_stop "${1:-}"
+          ;;
+        *)
+          die "usage: robinctl lab list|info|status|start|stop"
+          ;;
+      esac
+      ;;
+    help|-h|--help|"")
+      usage
+      ;;
+    *)
+      die "unknown command: ${1}"
+      ;;
+  esac
+}
+
+main "$@"
