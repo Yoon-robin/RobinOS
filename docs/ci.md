@@ -1,6 +1,22 @@
 # RobinOS CI
 
-RobinOS uses GitHub Actions for early project health checks.
+RobinOS can use GitHub Actions for early project health checks, but Actions is optional. The project also supports local validation and Git hooks.
+
+## Recommended Without Actions
+
+Use local validation:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/run-local-checks.ps1
+```
+
+Install a pre-push hook:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/install-git-hooks.ps1
+```
+
+Then every `git push` runs local validation first.
 
 ## Validate
 
@@ -49,4 +65,3 @@ This workflow can fail when package names move between repositories or when a to
 ## Current Limitation
 
 GitHub Actions requires the account to be allowed to run workflows. If a run fails before jobs start with a billing or spending-limit message, fix the GitHub account billing/settings first, then re-run the workflow.
-

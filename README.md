@@ -114,3 +114,9 @@ Local CI fallback:
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/ci-local.ps1
 ```
+
+Install local pre-push checks instead of relying on GitHub Actions:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/install-git-hooks.ps1
+```
