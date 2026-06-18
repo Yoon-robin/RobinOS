@@ -19,6 +19,14 @@ This checks:
 - Expected ISO security package coverage
 - ISO overlay paths
 
+The same check runs in GitHub Actions through `.github/workflows/validate.yml`.
+
+You can run the local CI wrapper with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/ci-local.ps1
+```
+
 ## Package Validation on Arch
 
 Run this on Arch Linux or inside the RobinOS live environment:
@@ -29,12 +37,15 @@ scripts/check-arch-packages.sh
 
 This uses `pacman -Si` to verify package names against the configured repositories.
 
+The same package check can be run manually in GitHub Actions through `.github/workflows/arch-package-check.yml`.
+
 ## ISO Build Smoke Test
 
 On Arch Linux:
 
 ```bash
 sudo pacman -S --needed archiso git
+scripts/doctor-build.sh
 scripts/build-iso.sh
 ```
 

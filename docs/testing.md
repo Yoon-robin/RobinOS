@@ -45,6 +45,7 @@ On Arch Linux:
 
 ```bash
 sudo pacman -S --needed archiso git
+scripts/doctor-build.sh
 scripts/build-iso.sh
 ```
 

@@ -21,6 +21,7 @@ file_permissions=(
   ["/opt/robinos/scripts/build-iso.sh"]="0:0:755"
   ["/opt/robinos/scripts/check-arch-packages.sh"]="0:0:755"
   ["/opt/robinos/scripts/clean-build.sh"]="0:0:755"
+  ["/opt/robinos/scripts/doctor-build.sh"]="0:0:755"
   ["/opt/robinos/scripts/customize-iso-boot.sh"]="0:0:755"
   ["/opt/robinos/scripts/install-branding.sh"]="0:0:755"
   ["/opt/robinos/scripts/install-robinctl.sh"]="0:0:755"

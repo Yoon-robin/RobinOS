@@ -11,6 +11,7 @@ sudo pacman -S --needed archiso git
 Before building, check package names:
 
 ```bash
+scripts/doctor-build.sh
 scripts/check-arch-packages.sh
 ```
 

@@ -8,6 +8,7 @@ On Arch Linux:
 
 ```bash
 sudo pacman -S --needed archiso git
+scripts/doctor-build.sh
 scripts/build-iso.sh
 ```
 
@@ -56,4 +57,3 @@ Do not publish until:
 - VM boot succeeds
 - SHA256SUMS is generated
 - Ethics notice is visible in docs and MOTD
-
