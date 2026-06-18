@@ -33,6 +33,10 @@ build/logs/mkarchiso-*.log
 Boot the ISO in a VM and check:
 
 ```bash
+scripts/run-vm.sh
+```
+
+```bash
 robinctl doctor
 robinctl lab info web
 ls /opt/robinos

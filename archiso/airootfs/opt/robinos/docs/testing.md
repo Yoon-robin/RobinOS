@@ -59,6 +59,12 @@ build/logs/mkarchiso-*.log
 
 ## VM Boot Checks
 
+Boot the ISO with QEMU:
+
+```bash
+scripts/run-vm.sh
+```
+
 After booting the ISO in a VM:
 
 ```bash
@@ -81,3 +87,5 @@ Confirm:
 - Desktop wallpaper is installed
 - Konsole can see the RobinOS color scheme
 - `/opt/robinos` contains docs, scripts, packages, labs, assets, and themes
+
+More detail: `docs/vm-smoke-test.md`.

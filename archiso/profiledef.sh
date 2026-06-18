@@ -27,5 +27,6 @@ file_permissions=(
   ["/opt/robinos/scripts/install-robinctl.sh"]="0:0:755"
   ["/opt/robinos/scripts/post-install.sh"]="0:0:755"
   ["/opt/robinos/scripts/prepare-archiso.sh"]="0:0:755"
+  ["/opt/robinos/scripts/run-vm.sh"]="0:0:755"
   ["/opt/robinos/scripts/sync-archiso-files.sh"]="0:0:755"
 )

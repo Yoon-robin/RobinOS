@@ -61,6 +61,12 @@ To clean generated build outputs:
 scripts/clean-build.sh --yes
 ```
 
+To boot the latest generated ISO in QEMU:
+
+```bash
+scripts/run-vm.sh
+```
+
 ## First VM Checks
 
 After booting the ISO:

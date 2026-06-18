@@ -64,6 +64,12 @@ else
   warn "git is not required for local builds, but useful for versioning"
 fi
 
+if have_cmd qemu-system-x86_64; then
+  ok "qemu-system-x86_64"
+else
+  warn "qemu-system-x86_64 missing; install qemu-full for scripts/run-vm.sh"
+fi
+
 printf '\nArchiso profile:\n'
 if [[ -d /usr/share/archiso/configs/releng ]]; then
   ok "/usr/share/archiso/configs/releng"
@@ -114,4 +120,3 @@ if [[ "${FAILED}" == "true" ]]; then
 fi
 
 printf '\nBuild doctor passed.\n'
-
