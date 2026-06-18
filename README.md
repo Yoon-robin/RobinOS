@@ -103,3 +103,8 @@ On Arch Linux:
 scripts/check-arch-packages.sh
 scripts/build-iso.sh
 ```
+
+GitHub Actions:
+
+- `Validate`: static project checks and Bash syntax checks
+- `Arch Package Check`: manual/weekly package-name check against Arch repositories

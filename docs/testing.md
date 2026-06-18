@@ -19,6 +19,8 @@ This checks:
 - Expected ISO security package coverage
 - ISO overlay paths
 
+The same check runs in GitHub Actions through `.github/workflows/validate.yml`.
+
 ## Package Validation on Arch
 
 Run this on Arch Linux or inside the RobinOS live environment:
@@ -28,6 +30,8 @@ scripts/check-arch-packages.sh
 ```
 
 This uses `pacman -Si` to verify package names against the configured repositories.
+
+The same package check can be run manually in GitHub Actions through `.github/workflows/arch-package-check.yml`.
 
 ## ISO Build Smoke Test
 

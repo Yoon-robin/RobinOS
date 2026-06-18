@@ -1,0 +1,38 @@
+name: Validate
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  static-validation:
+    name: Static project validation
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run RobinOS static validator
+        shell: pwsh
+        run: powershell -ExecutionPolicy Bypass -File scripts/validate-project.ps1
+
+  shell-syntax:
+    name: Shell syntax check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check Bash scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' script; do
+            bash -n "$script"
+          done < <(find scripts bin installer archiso/airootfs/root archiso/airootfs/usr/local/bin -type f \( -name '*.sh' -o -name 'robinctl' -o -name 'robin-install' \) -print0)
+

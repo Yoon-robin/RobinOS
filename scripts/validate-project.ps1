@@ -52,6 +52,8 @@ Write-Host "Validating RobinOS project..."
 
 $requiredPaths = @(
     "README.md",
+    ".github/workflows/validate.yml",
+    ".github/workflows/arch-package-check.yml",
     "bin/robinctl",
     "installer/robin-install",
     "scripts/prepare-archiso.sh",
@@ -77,6 +79,7 @@ $requiredPaths = @(
     "docs/testing.md",
     "docs/release.md",
     "docs/boot-branding.md",
+    "docs/ci.md",
     "themes/sddm/robinos/Main.qml",
     "themes/grub/robinos/theme.txt",
     "themes/konsole/RobinOS.colorscheme"

@@ -1,0 +1,26 @@
+name: Arch Package Check
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 0"
+
+jobs:
+  arch-package-check:
+    name: Check package names against Arch repositories
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run package check in Arch Linux container
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v "$PWD:/repo" \
+            -w /repo \
+            archlinux:latest \
+            bash -lc 'pacman -Sy --noconfirm && bash scripts/check-arch-packages.sh'
+
