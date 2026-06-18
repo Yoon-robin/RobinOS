@@ -21,6 +21,12 @@ Checks:
 - Windows static validation through `scripts/validate-project.ps1`
 - Bash syntax validation for scripts and installed command prototypes
 
+If GitHub Actions is unavailable because of billing, spending limits, or account settings, run the local equivalent:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/ci-local.ps1
+```
+
 ## Arch Package Check
 
 Workflow:
@@ -39,4 +45,8 @@ Checks:
 - Package names against current Arch repositories using `pacman -Si`
 
 This workflow can fail when package names move between repositories or when a tool needs AUR/manual installation. If that happens, move the tool to `packages/security-optional.txt` or update its package name.
+
+## Current Limitation
+
+GitHub Actions requires the account to be allowed to run workflows. If a run fails before jobs start with a billing or spending-limit message, fix the GitHub account billing/settings first, then re-run the workflow.
 

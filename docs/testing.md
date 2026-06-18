@@ -21,6 +21,12 @@ This checks:
 
 The same check runs in GitHub Actions through `.github/workflows/validate.yml`.
 
+You can run the local CI wrapper with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/ci-local.ps1
+```
+
 ## Package Validation on Arch
 
 Run this on Arch Linux or inside the RobinOS live environment:

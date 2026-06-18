@@ -108,3 +108,9 @@ GitHub Actions:
 
 - `Validate`: static project checks and Bash syntax checks
 - `Arch Package Check`: manual/weekly package-name check against Arch repositories
+
+Local CI fallback:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/ci-local.ps1
+```
