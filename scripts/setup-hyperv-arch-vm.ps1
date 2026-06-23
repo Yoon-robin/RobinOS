@@ -74,6 +74,8 @@ if ($existing) {
 } else {
     $vmPath = Join-Path $VMRoot $VMName
     $vhdPath = Join-Path $vmPath "$VMName.vhdx"
+    $memoryBytes = [int64]$MemoryGB * 1GB
+    $diskBytes = [int64]$DiskGB * 1GB
 
     New-Item -ItemType Directory -Force -Path $vmPath | Out-Null
 
@@ -81,14 +83,14 @@ if ($existing) {
     New-VM `
         -Name $VMName `
         -Generation 2 `
-        -MemoryStartupBytes (${MemoryGB}GB) `
+        -MemoryStartupBytes $memoryBytes `
         -NewVHDPath $vhdPath `
-        -NewVHDSizeBytes (${DiskGB}GB) `
+        -NewVHDSizeBytes $diskBytes `
         -Path $vmPath `
         -SwitchName "Default Switch" | Out-Null
 
     Set-VM -Name $VMName -ProcessorCount $CpuCount -AutomaticCheckpointsEnabled $false
-    Set-VMMemory -VMName $VMName -DynamicMemoryEnabled $true -MinimumBytes 2GB -StartupBytes (${MemoryGB}GB) -MaximumBytes (${MemoryGB}GB)
+    Set-VMMemory -VMName $VMName -DynamicMemoryEnabled $true -MinimumBytes 2GB -StartupBytes $memoryBytes -MaximumBytes $memoryBytes
     Set-VMFirmware -VMName $VMName -EnableSecureBoot Off
 }
 
@@ -118,4 +120,3 @@ Write-Host "  git clone https://github.com/Yoon-robin/RobinOS-Security-Lab.git"
 Write-Host "  cd RobinOS-Security-Lab"
 Write-Host "  scripts/doctor-build.sh"
 Write-Host "  scripts/build-iso.sh"
-
