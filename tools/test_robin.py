@@ -29,8 +29,19 @@ CASES = {
     "화면 잠가": "run",
     "도움말": "help",
     "종료": "exit",
+    "시스템 종료해줘": "run",
+    "재부팅": "run",
+    "로그아웃": "run",
+    "스크린샷": "run",
+    "볼륨 30%": "run",
+    "밝기 50%로": "run",
+    "앱 목록": "say",
+    "무슨 앱 있어": "say",
     "ㅁㄴㅇㄹ": "unknown",
 }
+
+# 전원 명령은 확인(confirm)이 켜져 있어야 한다
+CONFIRM_CASES = ["시스템 종료해줘", "재부팅", "로그아웃"]
 
 
 def main() -> int:
@@ -40,10 +51,14 @@ def main() -> int:
         if got != want:
             fails += 1
             print(f"FAIL  {text!r} -> {got} (want {want})")
+    for text in CONFIRM_CASES:
+        if not robin.parse(text).confirm:
+            fails += 1
+            print(f"FAIL  {text!r} → confirm=False (전원 명령은 확인 필요)")
     if fails:
-        print(f"\n{fails}/{len(CASES)} 실패")
+        print(f"\n{fails} 실패")
         return 1
-    print(f"OK  {len(CASES)}개 통과")
+    print(f"OK  {len(CASES) + len(CONFIRM_CASES)}개 통과")
     return 0
 
 

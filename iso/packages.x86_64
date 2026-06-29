@@ -4,6 +4,7 @@
 ## 데스크톱: Hyprland (Wayland)
 hyprland
 hyprpaper
+swaybg
 hyprlock
 hypridle
 xdg-desktop-portal-hyprland
@@ -16,6 +17,7 @@ polkit-gnome
 waybar
 wofi
 swaync
+libnotify
 kitty
 
 ## 파일관리·이미지·기본 데스크톱 유틸
