@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# RobinOS 전원 메뉴 — wofi 로 잠금/로그아웃/재부팅/종료.
+set -euo pipefail
+
+choice=$(printf '%s\n' "  잠금" "  로그아웃" "  재부팅" "  종료" \
+    | wofi --dmenu --prompt "전원" --width 260 --height 230 --cache-file /dev/null)
+
+case "$choice" in
+    *잠금)   hyprlock ;;
+    *로그아웃) hyprctl dispatch exit ;;
+    *재부팅)  systemctl reboot ;;
+    *종료)   systemctl poweroff ;;
+esac

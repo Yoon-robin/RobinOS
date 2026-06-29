@@ -9,4 +9,4 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 docker run --rm --privileged \
     -v "${REPO_ROOT}:/repo" -w /repo \
     archlinux:latest \
-    bash -c "pacman -Syu --noconfirm archiso librsvg && bash build/build.sh"
+    bash -c "pacman -Syu --noconfirm archiso librsvg ttf-jetbrains-mono-nerd noto-fonts && bash build/build.sh"

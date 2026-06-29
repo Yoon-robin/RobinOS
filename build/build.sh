@@ -57,11 +57,16 @@ sed -i \
     -e 's/^install_dir=.*/install_dir="robinos"/' \
     "$PROFILEDEF"
 
-log "실행 권한 강제 (file_permissions + chmod)"
+log "실행 권한 강제 (file_permissions)"
 # git/Windows/mkarchiso 사이에서 +x 비트가 유실되는 걸 막는다 — archiso의
-# file_permissions 배열이 squashfs에 권한을 확정한다.
-sed -i '/^file_permissions=(/a\  ["/usr/local/bin/robin"]="0:0:0755"\n  ["/usr/local/bin/robinos-session"]="0:0:0755"' "$PROFILEDEF"
-chmod 0755 "${AIROOTFS}/usr/local/bin/"* 2>/dev/null || true
+# file_permissions 배열이 squashfs에 권한을 확정한다. /usr/local/bin 의 모든
+# 스크립트를 자동 등록한다 (스크립트가 늘어도 안전).
+for f in "${AIROOTFS}/usr/local/bin/"*; do
+    [ -e "$f" ] || continue
+    name="/usr/local/bin/$(basename "$f")"
+    chmod 0755 "$f"
+    sed -i "/^file_permissions=(/a\\  [\"${name}\"]=\"0:0:0755\"" "$PROFILEDEF"
+done
 
 log "부트 메뉴 텍스트 리브랜딩 (Arch Linux → RobinOS)"
 grep -rl --null "Arch Linux" "${PROFILE}/efiboot" "${PROFILE}/grub" "${PROFILE}/syslinux" 2>/dev/null \
