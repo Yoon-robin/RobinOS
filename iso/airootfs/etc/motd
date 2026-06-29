@@ -2,6 +2,7 @@
 RobinOS 라이브 환경
 
   - 데스크톱(Hyprland)은 tty1에서 자동으로 뜬다.
-  - 설치: 터미널에서  sudo archinstall
-  - 네트워크(Wi-Fi):  iwctl  → station <장치> connect <SSID>
+  - 비서 Robin:  터미널에서  robin   또는 데스크톱에서 SUPER+A
+  - 설치:        sudo archinstall
+  - Wi-Fi:       iwctl  → station <장치> connect <SSID>
 

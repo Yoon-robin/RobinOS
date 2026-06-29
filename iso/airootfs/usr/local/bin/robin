@@ -1,0 +1,296 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Robin — RobinOS 내장 비서.
+
+OS에 말을 걸어 제어한다. 표준 라이브러리만 쓴다(라이브 ISO에서 바로 동작).
+오프라인 명령 파서가 기본이고, 설정하면 로컬 LLM(Ollama)으로 자연어를 넘긴다.
+
+사용:
+    robin                 대화형 모드
+    robin "볼륨 올려줘"     한 줄 실행
+    robin status          시스템 요약
+"""
+
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import urllib.parse
+import urllib.request
+from dataclasses import dataclass, field
+from datetime import datetime
+
+# ── RobinOS 시그니처 색 (블루 → 퍼플) ──────────────────────────────
+BLUE = "\033[38;2;120;170;255m"
+PURPLE = "\033[38;2;125;95;255m"
+DIM = "\033[2m"
+BOLD = "\033[1m"
+RESET = "\033[0m"
+
+CONFIG_PATH = os.path.expanduser("~/.config/robin/config.json")
+
+# 앱 별칭 → 실행 명령
+APPS = {
+    "browser": ("firefox", ["브라우저", "browser", "파이어폭스", "firefox", "인터넷"]),
+    "terminal": ("kitty", ["터미널", "terminal", "kitty", "콘솔"]),
+    "files": ("thunar", ["파일", "files", "탐색기", "thunar", "파일관리자"]),
+    "editor": ("nano", ["편집기", "에디터", "editor", "메모장"]),
+    "settings": ("pavucontrol", ["소리설정", "볼륨설정", "audio"]),
+}
+
+
+@dataclass
+class Intent:
+    """파싱 결과. command 가 있으면 그 셸 명령을 실행한다."""
+    kind: str
+    reply: str = ""
+    command: list = field(default_factory=list)
+    payload: dict = field(default_factory=dict)
+
+
+# ── 순수 파서: 입력 → Intent (셸 호출 없음, 테스트 가능) ────────────
+def parse(text: str) -> Intent:
+    t = text.strip().lower()
+    if not t:
+        return Intent("noop")
+
+    # 종료
+    if t in ("exit", "quit", "q", "종료", "나가기", "bye", "잘가"):
+        return Intent("exit", reply="또 부르면 올게.")
+
+    # 도움말
+    if t in ("help", "?", "도움말", "도움", "명령어"):
+        return Intent("help")
+
+    # 인사
+    if re.search(r"안녕|반가|하이|hello|hey|헤이", t):
+        return Intent("say", reply="안녕. 뭐 도와줄까?")
+
+    # 정체성
+    if re.search(r"너\s*누구|넌\s*누구|who are you|robin이 뭐|로빈이 뭐|너 뭐", t):
+        return Intent("say", reply="나는 Robin. RobinOS에 들어있는 비서야. 시스템 제어를 도와줘.")
+
+    # 시간
+    if re.search(r"몇\s*시|시간|time|날짜|date|오늘", t):
+        now = datetime.now()
+        return Intent("say", reply=now.strftime("지금 %Y-%m-%d %H:%M:%S"))
+
+    # 네트워크 (상태보다 먼저 — "와이파이 상태"가 시스템 상태로 새지 않게)
+    if re.search(r"와이파이|wifi|네트워크|network|인터넷\s*상태|\bip\b", t):
+        return Intent("network")
+
+    # 시스템 상태
+    if re.search(r"상태|status|정보|시스템|spec|사양|fetch", t):
+        return Intent("status")
+
+    # 볼륨
+    if re.search(r"볼륨|소리|음량|volume|sound|음소거|뮤트|mute", t):
+        if re.search(r"음소거|뮤트|mute|꺼|끄", t):
+            return Intent("run", reply="음소거 토글.",
+                          command=["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"])
+        if re.search(r"올|높|키워|up|raise|크게", t):
+            return Intent("run", reply="볼륨 올렸어.",
+                          command=["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%+"])
+        if re.search(r"내|낮|줄|down|lower|작게", t):
+            return Intent("run", reply="볼륨 내렸어.",
+                          command=["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%-"])
+        return Intent("say", reply="볼륨을 올릴까 내릴까? (예: '볼륨 올려줘')")
+
+    # 밝기
+    if re.search(r"밝기|화면\s*밝|brightness", t):
+        if re.search(r"올|높|키워|up|밝게", t):
+            return Intent("run", reply="밝기 올렸어.", command=["brightnessctl", "set", "10%+"])
+        if re.search(r"내|낮|줄|down|어둡", t):
+            return Intent("run", reply="밝기 내렸어.", command=["brightnessctl", "set", "10%-"])
+        return Intent("say", reply="밝기를 올릴까 내릴까?")
+
+    # 앱 실행
+    if re.search(r"열어|실행|켜|띄워|open|launch|start", t):
+        for canon, (cmd, aliases) in APPS.items():
+            if any(a in t for a in aliases):
+                return Intent("run", reply=f"{cmd} 실행할게.",
+                              command=["hyprctl", "dispatch", "exec", cmd])
+        return Intent("say", reply="어떤 앱? (브라우저 / 터미널 / 파일 / 편집기)")
+
+    # 잠금
+    if re.search(r"잠[그가궈]|lock|화면\s*잠", t):
+        return Intent("run", reply="화면 잠글게.", command=["hyprlock"])
+
+    # 인터넷 검색
+    m = re.search(r"(.+?)\s*(검색|찾아|search)", t)
+    if m and m.group(1).strip():
+        q = m.group(1).strip()
+        url = "https://duckduckgo.com/?q=" + urllib.parse.quote(q)
+        return Intent("run", reply=f"'{q}' 검색할게.",
+                      command=["hyprctl", "dispatch", "exec", f"firefox {url}"])
+
+    return Intent("unknown", reply="아직 그건 못 알아들어. 'help' 쳐봐.", payload={"text": text})
+
+
+# ── 실행 계층 (실제 OS에서만 의미 있음) ────────────────────────────
+def _run(cmd: list) -> None:
+    exe = cmd[0]
+    if not shutil.which(exe):
+        print(f"{DIM}({exe} 가 없어서 건너뜀){RESET}")
+        return
+    try:
+        subprocess.run(cmd, check=False)
+    except Exception as e:  # noqa: BLE001
+        print(f"{DIM}(실행 실패: {e}){RESET}")
+
+
+def _gather_status() -> str:
+    def cap(cmd):
+        try:
+            return subprocess.run(cmd, capture_output=True, text=True, timeout=3).stdout.strip()
+        except Exception:  # noqa: BLE001
+            return ""
+
+    host = cap(["hostnamectl", "--static"]) or os.uname().nodename
+    kernel = os.uname().release
+    uptime = ""
+    try:
+        with open("/proc/uptime") as f:
+            secs = float(f.read().split()[0])
+            uptime = f"{int(secs // 3600)}시간 {int((secs % 3600) // 60)}분"
+    except Exception:  # noqa: BLE001
+        pass
+    mem = ""
+    try:
+        info = {}
+        with open("/proc/meminfo") as f:
+            for line in f:
+                k, _, v = line.partition(":")
+                info[k] = int(v.split()[0])
+        total = info.get("MemTotal", 0) // 1024
+        avail = info.get("MemAvailable", 0) // 1024
+        mem = f"{total - avail}MB / {total}MB"
+    except Exception:  # noqa: BLE001
+        pass
+
+    lines = [
+        f"{BOLD}{PURPLE}RobinOS{RESET}",
+        f"  호스트   {host}",
+        f"  커널     {kernel}",
+        f"  가동시간 {uptime}",
+        f"  메모리   {mem}",
+    ]
+    return "\n".join(x for x in lines if x.split()[-1])
+
+
+def _network() -> str:
+    if shutil.which("nmcli"):
+        out = subprocess.run(["nmcli", "-t", "-f", "TYPE,STATE,CONNECTION", "device"],
+                             capture_output=True, text=True).stdout.strip()
+        return out or "연결 정보 없음"
+    out = subprocess.run(["ip", "-brief", "addr"], capture_output=True, text=True).stdout.strip()
+    return out or "네트워크 도구를 찾지 못했어."
+
+
+# ── LLM 폴백 (선택, 기본 꺼짐) ─────────────────────────────────────
+def _load_config() -> dict:
+    try:
+        with open(CONFIG_PATH) as f:
+            return json.load(f)
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+def _llm_reply(text: str, cfg: dict) -> str:
+    base = cfg.get("ollama_url", "http://localhost:11434")
+    model = cfg.get("model", "qwen2.5")
+    body = json.dumps({
+        "model": model,
+        "prompt": f"너는 RobinOS의 비서 Robin이다. 한국어로 짧고 담백하게 답해라.\n사용자: {text}\nRobin:",
+        "stream": False,
+    }).encode()
+    req = urllib.request.Request(f"{base}/api/generate", data=body,
+                                 headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        return json.loads(r.read()).get("response", "").strip()
+
+
+# ── 대응 ───────────────────────────────────────────────────────────
+HELP = f"""{BOLD}Robin 명령{RESET}
+  {BLUE}상태{RESET}            시스템 요약
+  {BLUE}볼륨 올려/내려{RESET}   소리 조절 (음소거도)
+  {BLUE}밝기 올려/내려{RESET}   화면 밝기
+  {BLUE}와이파이 상태{RESET}    네트워크 확인
+  {BLUE}브라우저 열어줘{RESET}  앱 실행 (터미널/파일/편집기)
+  {BLUE}OOO 검색해줘{RESET}     웹 검색
+  {BLUE}화면 잠가{RESET}       잠금
+  {BLUE}종료{RESET}            나가기"""
+
+
+def handle(intent: Intent, cfg: dict) -> bool:
+    """Intent 를 처리한다. 계속 대화하면 True, 종료면 False."""
+    if intent.kind == "exit":
+        print(f"{PURPLE}Robin{RESET} › {intent.reply}")
+        return False
+    if intent.kind == "noop":
+        return True
+    if intent.kind == "help":
+        print(HELP)
+        return True
+    if intent.kind == "status":
+        print(_gather_status())
+        return True
+    if intent.kind == "network":
+        print(_network())
+        return True
+    if intent.kind in ("say",):
+        print(f"{PURPLE}Robin{RESET} › {intent.reply}")
+        return True
+    if intent.kind == "run":
+        print(f"{PURPLE}Robin{RESET} › {intent.reply}")
+        _run(intent.command)
+        return True
+    # unknown → LLM 폴백 시도
+    if cfg.get("llm_enabled"):
+        try:
+            print(f"{PURPLE}Robin{RESET} › {_llm_reply(intent.payload.get('text', ''), cfg)}")
+            return True
+        except Exception:  # noqa: BLE001
+            pass
+    print(f"{PURPLE}Robin{RESET} › {intent.reply}")
+    return True
+
+
+BANNER = f"""{BLUE}    ╦═╗┌─┐┌┐ ┬┌┐┌{RESET}
+{BLUE}    ╠╦╝│ │├┴┐││││{RESET}   {DIM}RobinOS 비서{RESET}
+{PURPLE}    ╩╚═└─┘└─┘┴┘└┘{RESET}   {DIM}'help' 입력 · '종료'로 나가기{RESET}
+"""
+
+
+def repl(cfg: dict) -> None:
+    print(BANNER)
+    while True:
+        try:
+            text = input(f"{BOLD}{BLUE}당신{RESET} › ")
+        except (EOFError, KeyboardInterrupt):
+            print()
+            break
+        if not handle(parse(text), cfg):
+            break
+
+
+def main(argv: list) -> int:
+    cfg = _load_config()
+    # 터미널 환영: 배너 + 시스템 요약 (셸 시작 시 호출)
+    if argv[1:] == ["welcome"]:
+        print(BANNER)
+        print(_gather_status())
+        print(f"\n{DIM}'robin' 으로 비서를 부르거나 SUPER+A.{RESET}")
+        return 0
+    if len(argv) > 1:
+        handle(parse(" ".join(argv[1:])), cfg)
+        return 0
+    repl(cfg)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

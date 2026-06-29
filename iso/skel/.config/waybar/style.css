@@ -36,6 +36,16 @@ window#waybar {
     background: rgba(120, 170, 255, 0.18);
 }
 
+#custom-robin {
+    color: #ffffff;
+    background: linear-gradient(135deg, #78aaff, #7d5fff);
+    padding: 0 14px;
+    margin: 4px 4px 4px 2px;
+    border-radius: 10px;
+}
+
+#custom-robin:hover { background: linear-gradient(135deg, #8fb8ff, #9377ff); }
+
 #window { color: #b9c0d4; padding: 0 10px; }
 
 #clock {

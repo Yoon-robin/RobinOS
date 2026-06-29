@@ -41,6 +41,15 @@ mkdir -p "${AIROOTFS}/root" "${AIROOTFS}/etc/skel"
 cp -a "${REPO_ROOT}/iso/skel/." "${AIROOTFS}/root/"
 cp -a "${REPO_ROOT}/iso/skel/." "${AIROOTFS}/etc/skel/"
 
+log "터미널 환영(Robin) 셸 rc에 추가"
+WELCOME='command -v robin >/dev/null && case $- in *i*) robin welcome ;; esac'
+for rc in "${AIROOTFS}/root/.bashrc" "${AIROOTFS}/root/.zshrc" \
+          "${AIROOTFS}/etc/skel/.bashrc" "${AIROOTFS}/etc/skel/.zshrc"; do
+    mkdir -p "$(dirname "$rc")"
+    grep -qF "robin welcome" "$rc" 2>/dev/null || \
+        printf '\n# RobinOS\n%s\n' "$WELCOME" >> "$rc"
+done
+
 log "배경화면 렌더 (SVG → PNG)"
 mkdir -p "${AIROOTFS}/usr/share/backgrounds/robinos"
 rsvg-convert -w 2560 -h 1440 \
