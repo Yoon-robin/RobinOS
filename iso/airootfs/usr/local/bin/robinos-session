@@ -18,7 +18,14 @@ if systemd-detect-virt --quiet 2>/dev/null; then
     export AQ_NO_ATOMIC=1
 fi
 
-Hyprland >"${HOME}/hyprland.log" 2>&1
+# 라이브 환경은 root로 동작한다. Hyprland는 root 실행을 거부하므로
+# (설치된 시스템은 일반 사용자라 해당 없음) root일 때만 우회 플래그를 붙인다.
+hypr_args=()
+if [ "$(id -u)" -eq 0 ]; then
+    hypr_args+=(--i-am-really-stupid)
+fi
+
+Hyprland "${hypr_args[@]}" >"${HOME}/hyprland.log" 2>&1
 status=$?
 
 # 여기 도달 = Hyprland 종료. 크래시 루프 대신 진단 후 셸.
