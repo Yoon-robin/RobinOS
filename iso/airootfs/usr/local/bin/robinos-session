@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# RobinOS 데스크톱 세션 런처 (tty1 자동 로그인에서 호출).
+#
+# - VM처럼 GPU 가속이 없는 환경에선 소프트웨어 렌더링으로 폴백한다
+#   (Hyprland는 기본적으로 GLES 렌더러만 있어 가속이 없으면 시작 못 함).
+# - Hyprland가 죽어도 크래시 루프(깜빡임) 대신 셸로 떨어진다.
+
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+export XDG_SESSION_TYPE=wayland
+export XDG_CURRENT_DESKTOP=Hyprland
+
+# 가상 머신이면 소프트웨어 렌더링 강제
+if systemd-detect-virt --quiet 2>/dev/null; then
+    echo "RobinOS: 가상 머신 감지 — 소프트웨어 렌더링으로 시작한다 (실기기에선 GPU 가속)."
+    export LIBGL_ALWAYS_SOFTWARE=1
+    export WLR_RENDERER_ALLOW_SOFTWARE=1
+    export WLR_NO_HARDWARE_CURSORS=1
+    export AQ_NO_ATOMIC=1
+fi
+
+Hyprland >"${HOME}/hyprland.log" 2>&1
+status=$?
+
+# 여기 도달 = Hyprland 종료. 크래시 루프 대신 진단 후 셸.
+echo
+echo "── Hyprland 가 종료됐다 (code ${status}) ──"
+echo "로그: ${HOME}/hyprland.log  (마지막 줄)"
+tail -n 25 "${HOME}/hyprland.log" 2>/dev/null
+echo
+echo "다시 시도하려면:  robinos-session"
