@@ -9,7 +9,13 @@
 
     "modules-left": ["custom/robin", "hyprland/workspaces", "hyprland/window"],
     "modules-center": ["clock"],
-    "modules-right": ["pulseaudio", "network", "battery", "tray"],
+    "modules-right": ["pulseaudio", "network", "battery", "tray", "custom/power"],
+
+    "custom/power": {
+        "format": "⏻",
+        "tooltip": false,
+        "on-click": "robinos-powermenu"
+    },
 
     "custom/robin": {
         "format": "  Robin",

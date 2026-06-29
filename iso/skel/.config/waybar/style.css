@@ -60,3 +60,10 @@ window#waybar {
 
 #battery.warning { color: #ffcc66; }
 #battery.critical { color: #ff6b81; }
+
+#custom-power {
+    color: #ff6b81;
+    padding: 0 12px 0 8px;
+    margin: 4px 2px 4px 1px;
+}
+#custom-power:hover { color: #ff8fa0; }
