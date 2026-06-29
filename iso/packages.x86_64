@@ -1,0 +1,62 @@
+# RobinOS 추가 패키지 — 공식 releng 패키지 목록 뒤에 그대로 이어붙인다.
+# (중복은 pacman이 알아서 무시한다.)
+
+## 데스크톱: Hyprland (Wayland)
+hyprland
+hyprpaper
+hyprlock
+hypridle
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+qt5-wayland
+qt6-wayland
+polkit-gnome
+
+## 바 / 런처 / 알림 / 터미널
+waybar
+wofi
+swaync
+kitty
+
+## 파일관리·이미지·기본 데스크톱 유틸
+thunar
+thunar-volman
+gvfs
+imv
+mpv
+firefox
+
+## 스크린샷 / 클립보드 / 밝기·소리 제어
+grim
+slurp
+wl-clipboard
+brightnessctl
+pavucontrol
+playerctl
+
+## 오디오 (PipeWire)
+pipewire
+pipewire-pulse
+pipewire-alsa
+wireplumber
+
+## 폰트 (한글 포함)
+ttf-jetbrains-mono-nerd
+noto-fonts
+noto-fonts-cjk
+noto-fonts-emoji
+
+## 입력기 (한글 입력)
+fcitx5
+fcitx5-hangul
+fcitx5-configtool
+fcitx5-gtk
+fcitx5-qt
+
+## 설치기 + 기본 시스템 도구
+archinstall
+git
+vim
+nano
+sudo
+htop

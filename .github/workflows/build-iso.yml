@@ -1,0 +1,38 @@
+name: Build RobinOS ISO
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "iso/**"
+      - "branding/**"
+      - "build/**"
+      - ".github/workflows/build-iso.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+      options: --privileged
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: pacman -Syu --noconfirm archiso librsvg
+
+      - name: Build ISO
+        run: bash build/build.sh
+
+      - name: Show result
+        run: ls -lh out/
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: robinos-iso
+          path: out/*.iso
+          retention-days: 14
+          if-no-files-found: error

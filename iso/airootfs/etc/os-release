@@ -1,0 +1,11 @@
+NAME="RobinOS"
+PRETTY_NAME="RobinOS"
+ID=robinos
+ID_LIKE=arch
+BUILD_ID=rolling
+ANSI_COLOR="38;2;120;170;255"
+HOME_URL="https://github.com/Yoon-robin/RobinOS"
+DOCUMENTATION_URL="https://github.com/Yoon-robin/RobinOS"
+SUPPORT_URL="https://github.com/Yoon-robin/RobinOS/issues"
+BUG_REPORT_URL="https://github.com/Yoon-robin/RobinOS/issues"
+LOGO=robinos

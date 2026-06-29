@@ -1,0 +1,6 @@
+# 이 저장소는 리눅스에서 빌드된다. 모든 텍스트는 LF로 강제한다.
+# (CRLF로 커밋되면 셸 스크립트가 'bad interpreter'로 깨진다.)
+* text=auto eol=lf
+
+*.png binary
+*.iso binary
