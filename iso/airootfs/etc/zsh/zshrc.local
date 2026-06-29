@@ -1,0 +1,9 @@
+# RobinOS — grml-zsh-config 가 모든 zsh 세션에서 읽는 드롭인.
+# 대화형 셸을 열면 Robin 환영(배너 + 시스템 요약)을 띄운다.
+case $- in
+    *i*)
+        if command -v robin >/dev/null 2>&1; then
+            robin welcome
+        fi
+        ;;
+esac
