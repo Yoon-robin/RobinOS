@@ -1,0 +1,31 @@
+// RobinOS 부트 스플래시 — 다크 배경 + 중앙 로고 + 은은한 펄스
+
+// 배경 (#0b0d14)
+Window.SetBackgroundTopColor(0.043, 0.051, 0.078);
+Window.SetBackgroundBottomColor(0.043, 0.051, 0.078);
+
+logo.image = Image("logo.png");
+logo.sprite = Sprite(logo.image);
+logo.x = Window.GetWidth() / 2 - logo.image.GetWidth() / 2;
+logo.y = Window.GetHeight() / 2 - logo.image.GetHeight() / 2;
+logo.sprite.SetX(logo.x);
+logo.sprite.SetY(logo.y);
+logo.sprite.SetZ(10);
+
+progress = 0;
+fun refresh() {
+    progress++;
+    opacity = 0.55 + 0.45 * Math.Sin(progress / 18);
+    logo.sprite.SetOpacity(opacity);
+}
+Plymouth.SetRefreshFunction(refresh);
+
+// 디스크 암호 등 프롬프트 (있을 때만)
+fun display_password(prompt, bullets) {
+    prompt_sprite = Sprite();
+    prompt_sprite.SetImage(Image.Text(prompt + " " + bullets, 0.9, 0.92, 0.94));
+    prompt_sprite.SetX(Window.GetWidth() / 2 - prompt_sprite.GetImage().GetWidth() / 2);
+    prompt_sprite.SetY(logo.y + logo.image.GetHeight() + 40);
+    prompt_sprite.SetZ(20);
+}
+Plymouth.SetDisplayPasswordFunction(display_password);

@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=RobinOS
+Description=RobinOS boot splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/robinos
+ScriptFile=/usr/share/plymouth/themes/robinos/robinos.script

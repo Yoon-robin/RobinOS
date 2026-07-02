@@ -47,6 +47,13 @@ rsvg-convert -w 2560 -h 1440 \
     "${REPO_ROOT}/branding/wallpaper.svg" \
     -o "${AIROOTFS}/usr/share/backgrounds/robinos/wallpaper.png"
 
+log "부트 스플래시 로고 렌더 (Plymouth)"
+THEME_DIR="${AIROOTFS}/usr/share/plymouth/themes/robinos"
+mkdir -p "$THEME_DIR"
+rsvg-convert -w 240 -h 240 \
+    "${REPO_ROOT}/branding/boot-logo.svg" \
+    -o "${THEME_DIR}/logo.png"
+
 log "profiledef 브랜딩"
 PROFILEDEF="${PROFILE}/profiledef.sh"
 sed -i \
@@ -71,6 +78,22 @@ done
 log "부트 메뉴 텍스트 리브랜딩 (Arch Linux → RobinOS)"
 grep -rl --null "Arch Linux" "${PROFILE}/efiboot" "${PROFILE}/grub" "${PROFILE}/syslinux" 2>/dev/null \
     | xargs -0 -r sed -i 's/Arch Linux/RobinOS/g'
+
+log "Plymouth 부트 스플래시 설정 (initramfs 훅 + splash 커맨드라인)"
+# 1) archiso initramfs HOOKS 에 plymouth 추가 (udev 뒤). 파일이 있을 때만.
+MKINIT="${AIROOTFS}/etc/mkinitcpio.conf.d/archiso.conf"
+if [ -f "$MKINIT" ] && grep -q 'plymouth' "$MKINIT"; then
+    : # 이미 있음
+elif [ -f "$MKINIT" ]; then
+    sed -i -E 's/\budev\b/udev plymouth/' "$MKINIT"
+    echo "  HOOKS: $(grep -E '^HOOKS' "$MKINIT" || true)"
+fi
+# 2) 부트 커맨드라인에 'splash' 추가 (quiet는 releng에 이미 있음).
+#    syslinux/grub/systemd-boot 항목의 커널 옵션 뒤에 붙인다.
+for cfg in "${PROFILE}"/syslinux/*.cfg "${PROFILE}"/grub/*.cfg "${PROFILE}"/efiboot/loader/entries/*.conf; do
+    [ -f "$cfg" ] || continue
+    sed -i -E 's/(archisobasedir=[^ ]+)/\1 splash/g' "$cfg"
+done
 
 log "mkarchiso 실행 — ISO 빌드 시작 (시간이 좀 걸린다)"
 mkarchiso -v -w "$WORK" -o "$OUT" "$PROFILE"
