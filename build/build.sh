@@ -75,6 +75,24 @@ for f in "${AIROOTFS}/usr/local/bin/"*; do
     sed -i "/^file_permissions=(/a\\  [\"${name}\"]=\"0:0:0755\"" "$PROFILEDEF"
 done
 
+log "비root 라이브 사용자 robin 생성"
+# releng passwd/shadow/group 에 robin 추가 (덮어쓰지 않고 append). uid/gid 1000.
+grep -q '^robin:' "${AIROOTFS}/etc/passwd" || \
+    printf 'robin:x:1000:1000:RobinOS:/home/robin:/usr/bin/bash\n' >> "${AIROOTFS}/etc/passwd"
+grep -q '^robin:' "${AIROOTFS}/etc/shadow" || \
+    printf 'robin::19000:0:99999:7:::\n' >> "${AIROOTFS}/etc/shadow"
+grep -q '^robin:' "${AIROOTFS}/etc/group" || \
+    printf 'robin:x:1000:\n' >> "${AIROOTFS}/etc/group"
+# 홈 = skel (데스크톱 dotfiles + 셸 프로필)
+mkdir -p "${AIROOTFS}/home/robin"
+cp -a "${REPO_ROOT}/iso/skel/." "${AIROOTFS}/home/robin/"
+# 홈 소유권 보정 서비스 활성화 (부팅 시 chown -R robin)
+mkdir -p "${AIROOTFS}/etc/systemd/system/multi-user.target.wants"
+ln -sf /etc/systemd/system/robinos-home.service \
+    "${AIROOTFS}/etc/systemd/system/multi-user.target.wants/robinos-home.service"
+# 권한: 홈 소유권(1000) + sudoers(0440)
+sed -i '/^file_permissions=(/a\  ["/home/robin"]="1000:1000:0750"\n  ["/etc/sudoers.d/robinos"]="0:0:0440"' "$PROFILEDEF"
+
 log "부트 메뉴 텍스트 리브랜딩 (Arch Linux → RobinOS)"
 grep -rl --null "Arch Linux" "${PROFILE}/efiboot" "${PROFILE}/grub" "${PROFILE}/syslinux" 2>/dev/null \
     | xargs -0 -r sed -i 's/Arch Linux/RobinOS/g'

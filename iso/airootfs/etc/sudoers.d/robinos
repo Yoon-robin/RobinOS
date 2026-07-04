@@ -1,0 +1,2 @@
+# RobinOS 라이브: robin 사용자 비밀번호 없이 sudo (라이브 편의).
+robin ALL=(ALL) NOPASSWD: ALL

@@ -1,0 +1,11 @@
+[Unit]
+Description=RobinOS 라이브 홈 소유권 보정
+Before=getty@tty1.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/chown -R robin:robin /home/robin
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
