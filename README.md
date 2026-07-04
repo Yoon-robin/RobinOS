@@ -37,7 +37,8 @@ RobinOS/
 2. **로컬 Docker** — Docker가 깔려 있으면 `bash scripts/build-docker.sh`.
 3. **로컬 Arch** — Arch에서 직접 `sudo bash build/build.sh`.
 
-자세한 내용은 [docs/BUILD.md](docs/BUILD.md), 디자인 방향은 [docs/DESIGN.md](docs/DESIGN.md).
+자세한 내용은 [docs/BUILD.md](docs/BUILD.md), 디자인 방향은 [docs/DESIGN.md](docs/DESIGN.md),
+실기기 테스트 방법은 [docs/TESTING.md](docs/TESTING.md).
 
 ## 상태
 
