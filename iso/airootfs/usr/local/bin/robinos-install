@@ -115,7 +115,7 @@ rsync -aHAX --numeric-ids \
     / /mnt/ 2>/dev/null || true
 
 say "fstab 생성"
-genfstab -U /mnt >> /mnt/etc/fstab
+genfstab -U /mnt > /mnt/etc/fstab   # 라이브 잔재 대신 새로 작성
 
 ROOT_UUID="$(blkid -s UUID -o value "$ROOT")"
 
@@ -133,7 +133,8 @@ locale-gen
 echo "LANG=$LOCALE" > /etc/locale.conf
 printf '%s\n' "127.0.0.1 localhost" "::1 localhost" "127.0.1.1 $HOSTNAME" > /etc/hosts
 
-# 실제 사용자 생성 (wheel = sudo)
+# 라이브 전용 robin 계정 제거(rsync로 딸려온 passwd/shadow 항목) 후 실제 사용자 생성
+userdel -r robin 2>/dev/null || true
 useradd -m -G wheel -s /usr/bin/bash "$USERNAME"
 echo "$USERNAME:$PASSWORD" | chpasswd
 echo '%wheel ALL=(ALL:ALL) ALL' > /etc/sudoers.d/wheel
