@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# RobinOS 스크린샷 — 영역 선택 → ~/Pictures 저장 + 클립보드 복사 + 알림.
+set -euo pipefail
+
+dir="${HOME}/Pictures"
+mkdir -p "$dir"
+file="${dir}/robinos-$(date +%Y%m%d-%H%M%S).png"
+
+if grim -g "$(slurp)" "$file" 2>/dev/null; then
+    wl-copy < "$file" 2>/dev/null || true
+    notify-send -i "$file" "스크린샷 저장됨" "$file" 2>/dev/null || true
+fi

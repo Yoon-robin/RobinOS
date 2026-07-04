@@ -3,6 +3,12 @@
 ## [Unreleased]
 
 ### Added
+- swaync 알림센터 RobinOS 브랜딩(다크+블루, 한국어 라벨) + hypridle(유휴 시 화면 절전).
+- 스크린샷을 `~/Pictures`에 저장 + 알림(`robinos-screenshot`).
+- Robin 비서: 볼륨/밝기 현재값 조회, `robin config`(설정 보기), `robin ask <질문>`(LLM 강제).
+- Plymouth 부트 스플래시(커스텀 테마) + hyprlock 로그인/잠금 화면(둘 다 실기기 시각확인 대기).
+
+### Added (이전)
 - 초기 프로젝트 골격 (Arch `releng` 위에 RobinOS 레이어를 얹는 방식).
 - Hyprland 데스크톱 기본 설정: waybar, wofi, swaync, kitty, hyprpaper, 한글 입력(fcitx5).
 - RobinOS 브랜딩: os-release, 배경화면(SVG → 빌드 시 PNG 렌더), 부트 메뉴 텍스트.

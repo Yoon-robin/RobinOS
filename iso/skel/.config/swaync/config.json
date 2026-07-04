@@ -1,0 +1,25 @@
+{
+    "$schema": "/etc/xdg/swaync/configSchema.json",
+    "positionX": "right",
+    "positionY": "top",
+    "control-center-margin-top": 10,
+    "control-center-margin-bottom": 10,
+    "control-center-margin-right": 12,
+    "control-center-margin-left": 10,
+    "control-center-width": 380,
+    "notification-window-width": 380,
+    "notification-icon-size": 48,
+    "notification-body-image-height": 100,
+    "timeout": 6,
+    "timeout-low": 4,
+    "timeout-critical": 0,
+    "fit-to-screen": true,
+    "keyboard-shortcuts": true,
+    "image-visibility": "when-available",
+    "transition-time": 200,
+    "widgets": ["title", "dnd", "notifications"],
+    "widget-config": {
+        "title": { "text": "RobinOS 알림", "clear-all-button": true, "button-text": "모두 지우기" },
+        "dnd": { "text": "방해 금지" }
+    }
+}

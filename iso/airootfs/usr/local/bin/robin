@@ -101,11 +101,14 @@ def parse(text: str) -> Intent:
 
     # 스크린샷
     if re.search(r"스크린샷|화면\s*캡[처쳐]|screenshot|캡처", t):
-        return Intent("run", reply="영역을 드래그해서 캡처해 — 클립보드에 복사한다.",
-                      shell='grim -g "$(slurp)" - | wl-copy')
+        return Intent("run", reply="영역을 드래그해서 캡처해 — ~/Pictures에 저장하고 복사한다.",
+                      command=["robinos-screenshot"])
 
     # 볼륨 (퍼센트 지정 우선)
     if re.search(r"볼륨|소리|음량|volume|sound|음소거|뮤트|mute", t):
+        if re.search(r"얼마|몇|현재|get", t):
+            return Intent("readout", reply="현재 볼륨:",
+                          command=["wpctl", "get-volume", "@DEFAULT_AUDIO_SINK@"])
         if re.search(r"음소거|뮤트|mute|꺼|끄", t):
             return Intent("run", reply="음소거 토글.",
                           command=["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"])
@@ -124,6 +127,9 @@ def parse(text: str) -> Intent:
 
     # 밝기 (퍼센트 지정 우선)
     if re.search(r"밝기|화면\s*밝|brightness", t):
+        if re.search(r"얼마|몇|현재|get", t):
+            return Intent("readout", reply="현재 밝기:",
+                          shell="brightnessctl -m | cut -d, -f4")
         m = re.search(r"(\d{1,3})\s*(%|퍼센트|프로)", t)
         if m:
             pct = min(int(m.group(1)), 100)
@@ -180,6 +186,20 @@ def _run(intent: Intent) -> None:
         subprocess.run(cmd, check=False)
     except Exception as e:  # noqa: BLE001
         print(f"{DIM}(실행 실패: {e}){RESET}")
+
+
+def _capture(intent: Intent) -> str:
+    """명령/셸의 출력을 잡아서 돌려준다 (조회용)."""
+    try:
+        if intent.shell:
+            r = subprocess.run(["bash", "-c", intent.shell], capture_output=True, text=True, timeout=5)
+        else:
+            if not shutil.which(intent.command[0]):
+                return f"({intent.command[0]} 없음)"
+            r = subprocess.run(intent.command, capture_output=True, text=True, timeout=5)
+        return (r.stdout or r.stderr).strip() or "(출력 없음)"
+    except Exception as e:  # noqa: BLE001
+        return f"(실패: {e})"
 
 
 def _gather_status() -> str:
@@ -263,9 +283,12 @@ HELP = f"""{BOLD}Robin 명령{RESET}
   {BLUE}브라우저 열어줘{RESET}    앱 실행 (터미널/파일/편집기)
   {BLUE}OOO 검색해줘{RESET}       웹 검색
   {BLUE}스크린샷{RESET}          영역 캡처 → 클립보드
+  {BLUE}볼륨/밝기 얼마{RESET}     현재 값 조회
   {BLUE}화면 잠가{RESET}         잠금
   {BLUE}재부팅 / 시스템 종료{RESET} 전원 (확인 후)
-  {BLUE}종료{RESET}              비서 나가기"""
+  {BLUE}종료{RESET}              비서 나가기
+
+{DIM}  터미널: robin config (설정) · robin ask <질문> (LLM){RESET}"""
 
 
 def handle(intent: Intent, cfg: dict) -> bool:
@@ -283,6 +306,9 @@ def handle(intent: Intent, cfg: dict) -> bool:
         return True
     if intent.kind == "network":
         print(_network())
+        return True
+    if intent.kind == "readout":
+        print(f"{PURPLE}Robin{RESET} › {intent.reply} {_capture(intent)}")
         return True
     if intent.kind in ("say",):
         print(f"{PURPLE}Robin{RESET} › {intent.reply}")
@@ -335,6 +361,25 @@ def main(argv: list) -> int:
         print(BANNER)
         print(_gather_status())
         print(f"\n{DIM}'robin' 으로 비서를 부르거나 SUPER+A.{RESET}")
+        return 0
+    # 설정 보기
+    if argv[1:] == ["config"]:
+        enabled = cfg.get("llm_enabled", False)
+        print(f"{BOLD}Robin 설정{RESET}")
+        print(f"  설정 파일   {CONFIG_PATH}")
+        print(f"  LLM 사용    {'켜짐' if enabled else '꺼짐'}")
+        print(f"  Ollama URL  {cfg.get('ollama_url', 'http://localhost:11434')}")
+        print(f"  모델        {cfg.get('model', 'qwen2.5')}")
+        print(f"\n{DIM}LLM을 켜려면 {CONFIG_PATH} 에 "
+              f'{{"llm_enabled": true, "model": "qwen2.5"}} 저장 (Ollama 필요).{RESET}')
+        return 0
+    # 명시적 LLM 질문: robin ask <질문>
+    if len(argv) > 2 and argv[1] == "ask":
+        q = " ".join(argv[2:])
+        try:
+            print(f"{PURPLE}Robin{RESET} › {_llm_reply(q, cfg)}")
+        except Exception:  # noqa: BLE001
+            print(f"{PURPLE}Robin{RESET} › LLM에 연결 못 했어. 'robin config' 확인 (Ollama 필요).")
         return 0
     if len(argv) > 1:
         handle(parse(" ".join(argv[1:])), cfg)
