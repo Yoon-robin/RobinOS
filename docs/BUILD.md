@@ -63,6 +63,9 @@ sudo robinos-install
 # 자동 (주의: 대상 디스크 전체 삭제)
 sudo robinos-install --disk /dev/sda --user 이름 --password 비번 \
      --hostname robinos --yes
+
+# 모의 실행 — 디스크를 건드리지 않고 설치 계획만 확인 (권장: 먼저 이걸로 점검)
+sudo robinos-install --disk /dev/sda --user 이름 --password 비번 --dry-run
 ```
 
 동작: GPT 파티션(bios_grub+ESP+root) → 라이브를 디스크로 rsync 미러링 →

@@ -12,7 +12,7 @@
 set -euo pipefail
 
 DISK="" USERNAME="" PASSWORD="" HOSTNAME="robinos"
-TIMEZONE="Asia/Seoul" LOCALE="ko_KR.UTF-8" ASSUME_YES=0
+TIMEZONE="Asia/Seoul" LOCALE="ko_KR.UTF-8" ASSUME_YES=0 DRY_RUN=0
 
 C_B=$'\033[38;2;120;170;255m'; C_P=$'\033[38;2;125;95;255m'
 C_R=$'\033[38;2;255;107;129m'; C_D=$'\033[2m'; C_X=$'\033[0m'
@@ -28,6 +28,7 @@ RobinOS 설치기
   --hostname <이름>  호스트명 (기본 robinos)
   --timezone <TZ>    기본 Asia/Seoul
   --yes              확인 없이 진행 (자동화용)
+  --dry-run          디스크를 건드리지 않고 설치 계획만 출력
 EOF
 }
 
@@ -39,6 +40,7 @@ while [ $# -gt 0 ]; do
         --hostname) HOSTNAME="$2"; shift 2 ;;
         --timezone) TIMEZONE="$2"; shift 2 ;;
         --yes) ASSUME_YES=1; shift ;;
+        --dry-run) DRY_RUN=1; shift ;;
         -h|--help) usage; exit 0 ;;
         *) err "알 수 없는 인자: $1"; usage; exit 1 ;;
     esac
@@ -72,6 +74,21 @@ for guard in "$live_src" "$run_src"; do
         err "$DISK 는 라이브/현재 시스템 디스크다. 설치 대상으로 쓸 수 없다."; exit 1
     fi
 done
+
+if [ "$DRY_RUN" -eq 1 ]; then
+    cat <<EOF
+${C_B}[모의 실행 — 디스크를 건드리지 않는다]${C_X}
+  대상 디스크   $DISK  (실제 실행 시 전체 삭제)
+  파티션        1) BIOSboot 1M  2) EFI 550M(FAT32)  3) RobinOS 나머지(ext4)
+  설치 방식     라이브 시스템을 rsync로 미러링 → 설치본 = RobinOS
+  사용자        $USERNAME (wheel/sudo)
+  호스트명      $HOSTNAME
+  시간대/로케일 $TIMEZONE / $LOCALE
+  부트로더      UEFI=systemd-boot / BIOS=GRUB (자동 감지)
+실제 설치하려면 --dry-run 을 빼고 다시 실행해라.
+EOF
+    exit 0
+fi
 
 if [ "$ASSUME_YES" -ne 1 ]; then
     printf '%s%s 를 전부 지우고 RobinOS를 설치한다.%s\n' "$C_R" "$DISK" "$C_X"
