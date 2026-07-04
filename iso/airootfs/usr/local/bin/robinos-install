@@ -131,6 +131,13 @@ rsync -aHAX --numeric-ids \
     --exclude='/home/robin' \
     / /mnt/ 2>/dev/null || true
 
+# 커널이 실제로 복사됐는지 확인 (없으면 부팅 불가 → 조용히 넘어가지 말고 중단)
+if [ ! -e /mnt/boot/vmlinuz-linux ]; then
+    err "커널(/boot/vmlinuz-linux)이 복사되지 않았다 — 설치 중단."
+    umount -R /mnt || true
+    exit 1
+fi
+
 say "fstab 생성"
 genfstab -U /mnt > /mnt/etc/fstab   # 라이브 잔재 대신 새로 작성
 

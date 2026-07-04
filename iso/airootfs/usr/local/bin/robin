@@ -356,6 +356,13 @@ def repl(cfg: dict) -> None:
 
 def main(argv: list) -> int:
     cfg = _load_config()
+    # 표준 CLI 관용 플래그
+    if argv[1:] and argv[1] in ("--help", "-h"):
+        print(HELP)
+        return 0
+    if argv[1:] and argv[1] in ("--version", "-v"):
+        print("Robin — RobinOS 내장 비서 (rolling)")
+        return 0
     # 터미널 환영: 배너 + 시스템 요약 (셸 시작 시 호출)
     if argv[1:] == ["welcome"]:
         print(BANNER)
