@@ -2,6 +2,10 @@
 
 Arch Linux 기반의 개인용 OS. 실제로 USB로 부팅·설치되는 라이브 ISO를 만든다.
 
+![RobinOS 데스크톱](docs/screenshot.png)
+
+*Hyprland 데스크톱 — waybar(Robin 버튼·시계·오디오·전원) + 시그니처 배경. (VMware, 소프트웨어 렌더링)*
+
 데스크톱은 **Hyprland**(Wayland 컴포지터)를 쓴다. 가볍고, 애니메이션·블러·둥근 모서리 같은
 시각 효과가 강하며 Arch 생태계에서 가장 활발하다. 베이스는 공식 Arch 그대로 두고 그 위에
 RobinOS 패키지 세트·데스크톱 설정·브랜딩만 얹는 구조라 "Arch처럼" 동작하면서도 켜자마자
