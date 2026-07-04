@@ -3,6 +3,12 @@
 ## [Unreleased]
 
 ### Added
+- **전용 설치기 `robinos-install`(베타)** — 라이브를 디스크로 rsync 미러링해 설치본==RobinOS.
+  chroot에서 실제 사용자·부트로더(UEFI systemd-boot / BIOS GRUB)·initramfs 구성. VM 테스트 예정.
+- 비root 라이브 사용자 `robin`(무비번 autologin, sudo) — root 대신 일반 사용자로 데스크톱 실행,
+  per-user 파이프와이어로 오디오 정상화. Hyprland `--i-am-really-stupid` 불필요.
+
+### Added
 - swaync 알림센터 RobinOS 브랜딩(다크+블루, 한국어 라벨) + hypridle(유휴 시 화면 절전).
 - 스크린샷을 `~/Pictures`에 저장 + 알림(`robinos-screenshot`).
 - Robin 비서: 볼륨/밝기 현재값 조회, `robin config`(설정 보기), `robin ask <질문>`(LLM 강제).

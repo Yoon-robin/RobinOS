@@ -1,0 +1,186 @@
+#!/usr/bin/env bash
+#
+# RobinOS 설치기 (베타) — 라이브 시스템을 디스크에 미러링해 설치한다.
+# 설치본이 곧 RobinOS(데스크톱·Robin·브랜딩 그대로)가 되도록 rsync로 복사한 뒤
+# chroot에서 실제 사용자·부트로더·initramfs를 구성한다.
+#
+# 사용:
+#   sudo robinos-install                      # 대화형
+#   sudo robinos-install --disk /dev/sda --user robin --password pw \
+#        --hostname robinos --yes             # 자동(주의: 디스크 전체 삭제)
+#
+set -euo pipefail
+
+DISK="" USERNAME="" PASSWORD="" HOSTNAME="robinos"
+TIMEZONE="Asia/Seoul" LOCALE="ko_KR.UTF-8" ASSUME_YES=0
+
+C_B=$'\033[38;2;120;170;255m'; C_P=$'\033[38;2;125;95;255m'
+C_R=$'\033[38;2;255;107;129m'; C_D=$'\033[2m'; C_X=$'\033[0m'
+say() { printf '%s[robinos-install]%s %s\n' "$C_B" "$C_X" "$*"; }
+err() { printf '%s[오류]%s %s\n' "$C_R" "$C_X" "$*" >&2; }
+
+usage() {
+    cat <<EOF
+RobinOS 설치기
+  --disk <경로>      설치 대상 디스크 (예: /dev/sda) — 전체가 지워진다
+  --user <이름>      만들 사용자 계정
+  --password <비번>  사용자 비밀번호
+  --hostname <이름>  호스트명 (기본 robinos)
+  --timezone <TZ>    기본 Asia/Seoul
+  --yes              확인 없이 진행 (자동화용)
+EOF
+}
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --disk) DISK="$2"; shift 2 ;;
+        --user) USERNAME="$2"; shift 2 ;;
+        --password) PASSWORD="$2"; shift 2 ;;
+        --hostname) HOSTNAME="$2"; shift 2 ;;
+        --timezone) TIMEZONE="$2"; shift 2 ;;
+        --yes) ASSUME_YES=1; shift ;;
+        -h|--help) usage; exit 0 ;;
+        *) err "알 수 없는 인자: $1"; usage; exit 1 ;;
+    esac
+done
+
+[ "$(id -u)" -eq 0 ] || { err "root 권한이 필요하다 (sudo)."; exit 1; }
+
+# --- 대화형 입력 (빠진 값만) ---
+if [ -z "$DISK" ]; then
+    say "설치 가능한 디스크:"
+    lsblk -dno NAME,SIZE,MODEL | grep -vE 'loop|sr[0-9]' || true
+    read -rp "설치할 디스크 (예: /dev/sda): " DISK
+fi
+[ -z "$USERNAME" ] && read -rp "사용자 이름: " USERNAME
+if [ -z "$PASSWORD" ]; then
+    read -rsp "비밀번호: " PASSWORD; echo
+fi
+
+# --- 안전 점검 ---
+[ -b "$DISK" ] || { err "블록 장치가 아니다: $DISK"; exit 1; }
+[ -n "$USERNAME" ] || { err "사용자 이름이 필요하다."; exit 1; }
+[ -n "$PASSWORD" ] || { err "비밀번호가 필요하다."; exit 1; }
+
+# 라이브 매체/현재 루트가 있는 디스크는 거부
+live_src="$(findmnt -no SOURCE / 2>/dev/null || true)"
+run_src="$(findmnt -no SOURCE /run/archiso/bootmnt 2>/dev/null || true)"
+for guard in "$live_src" "$run_src"; do
+    [ -n "$guard" ] || continue
+    gdisk="/dev/$(lsblk -no PKNAME "$guard" 2>/dev/null | head -1)"
+    if [ "$gdisk" = "$DISK" ]; then
+        err "$DISK 는 라이브/현재 시스템 디스크다. 설치 대상으로 쓸 수 없다."; exit 1
+    fi
+done
+
+if [ "$ASSUME_YES" -ne 1 ]; then
+    printf '%s%s 를 전부 지우고 RobinOS를 설치한다.%s\n' "$C_R" "$DISK" "$C_X"
+    read -rp "정말 진행하려면 'yes' 입력: " ans
+    [ "$ans" = "yes" ] || { say "취소했다."; exit 0; }
+fi
+
+# --- 파티션 (GPT: bios_grub 1M + ESP 550M + root) — BIOS·UEFI 둘 다 지원 ---
+say "파티션 생성"
+sgdisk --zap-all "$DISK" >/dev/null
+sgdisk -n1:0:+1M   -t1:ef02 -c1:BIOSboot \
+       -n2:0:+550M -t2:ef00 -c2:EFI \
+       -n3:0:0     -t3:8300 -c3:RobinOS "$DISK" >/dev/null
+partprobe "$DISK"; sleep 1
+if [[ "$DISK" == *nvme* || "$DISK" == *mmcblk* ]]; then P="${DISK}p"; else P="${DISK}"; fi
+ESP="${P}2"; ROOT="${P}3"
+
+say "포맷"
+mkfs.fat -F32 -n EFI "$ESP" >/dev/null
+mkfs.ext4 -F -L RobinOS "$ROOT" >/dev/null
+
+# UEFI면 ESP를 /boot에(systemd-boot), BIOS면 /boot는 root에 두고 ESP는 안 씀(GRUB).
+say "마운트"
+mount "$ROOT" /mnt
+if [ -d /sys/firmware/efi ]; then
+    mkdir -p /mnt/boot
+    mount "$ESP" /mnt/boot
+fi
+
+# --- 라이브 → 타겟 미러 ---
+say "시스템 복사 (rsync — 몇 분 걸린다)"
+rsync -aHAX --numeric-ids \
+    --exclude='/dev/*' --exclude='/proc/*' --exclude='/sys/*' \
+    --exclude='/tmp/*' --exclude='/run/*' --exclude='/mnt/*' \
+    --exclude='/media/*' --exclude='/lost+found' \
+    --exclude='/etc/sudoers.d/robinos' \
+    --exclude='/etc/systemd/system/getty@tty1.service.d/autologin.conf' \
+    --exclude='/etc/systemd/system/multi-user.target.wants/robinos-home.service' \
+    --exclude='/etc/systemd/system/robinos-home.service' \
+    --exclude='/home/robin' \
+    / /mnt/ 2>/dev/null || true
+
+say "fstab 생성"
+genfstab -U /mnt >> /mnt/etc/fstab
+
+ROOT_UUID="$(blkid -s UUID -o value "$ROOT")"
+
+# --- chroot 구성 ---
+say "시스템 구성 (chroot)"
+arch-chroot /mnt /usr/bin/bash <<CHROOT
+set -e
+# 호스트명/시간대/로케일
+echo "$HOSTNAME" > /etc/hostname
+ln -sf "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
+hwclock --systohc 2>/dev/null || true
+grep -q "^$LOCALE" /etc/locale.gen || echo "$LOCALE UTF-8" >> /etc/locale.gen
+sed -i "s/^#\\($LOCALE\\)/\\1/" /etc/locale.gen 2>/dev/null || true
+locale-gen
+echo "LANG=$LOCALE" > /etc/locale.conf
+printf '%s\n' "127.0.0.1 localhost" "::1 localhost" "127.0.1.1 $HOSTNAME" > /etc/hosts
+
+# 실제 사용자 생성 (wheel = sudo)
+useradd -m -G wheel -s /usr/bin/bash "$USERNAME"
+echo "$USERNAME:$PASSWORD" | chpasswd
+echo '%wheel ALL=(ALL:ALL) ALL' > /etc/sudoers.d/wheel
+chmod 0440 /etc/sudoers.d/wheel
+passwd -l root || true
+
+# 설치본도 tty1 자동로그인 → 데스크톱 (라이브와 동일 UX)
+mkdir -p /etc/systemd/system/getty@tty1.service.d
+cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf <<EOF
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty -o '-p -- \\\\u' --noclear --autologin $USERNAME - \\\$TERM
+EOF
+
+# initramfs: archiso 훅 제거, 일반 훅(+plymouth) 재설정
+echo 'HOOKS=(base udev plymouth autodetect microcode modconf kms keyboard keymap consolefont block filesystems fsck)' \
+    > /etc/mkinitcpio.conf.d/robinos.conf
+rm -f /etc/mkinitcpio.conf.d/archiso.conf 2>/dev/null || true
+mkinitcpio -P
+
+# 네트워크 (설치본): NetworkManager 없으면 iwd+networkd 유지. systemd-networkd/resolved 켜기.
+systemctl enable systemd-networkd systemd-resolved 2>/dev/null || true
+systemctl enable iwd 2>/dev/null || true
+
+# 부트로더 (UEFI: systemd-boot)
+if [ -d /sys/firmware/efi ]; then
+    bootctl install
+    cat > /boot/loader/loader.conf <<EOF
+default robinos
+timeout 3
+console-mode max
+EOF
+    cat > /boot/loader/entries/robinos.conf <<EOF
+title   RobinOS
+linux   /vmlinuz-linux
+initrd  /initramfs-linux.img
+options root=UUID=$ROOT_UUID rw quiet splash
+EOF
+else
+    # BIOS: GRUB
+    grub-install --target=i386-pc "$DISK"
+    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"/' /etc/default/grub 2>/dev/null || true
+    grub-mkconfig -o /boot/grub/grub.cfg
+fi
+CHROOT
+
+say "정리"
+umount -R /mnt || true
+
+printf '\n%s✔ RobinOS 설치 완료.%s USB를 빼고 재부팅해라.\n' "$C_P" "$C_X"
