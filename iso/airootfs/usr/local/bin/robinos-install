@@ -172,7 +172,21 @@ echo 'HOOKS=(base udev plymouth autodetect microcode modconf kms keyboard keymap
 rm -f /etc/mkinitcpio.conf.d/archiso.conf 2>/dev/null || true
 mkinitcpio -P
 
-# 네트워크 (설치본): NetworkManager 없으면 iwd+networkd 유지. systemd-networkd/resolved 켜기.
+# 네트워크 (설치본): systemd-networkd + resolved + iwd(무선). 유선 DHCP 기본 설정.
+mkdir -p /etc/systemd/network
+cat > /etc/systemd/network/20-wired.network <<'EOF'
+[Match]
+Name=en* eth*
+[Network]
+DHCP=yes
+EOF
+cat > /etc/systemd/network/25-wireless.network <<'EOF'
+[Match]
+Name=wl*
+[Network]
+DHCP=yes
+EOF
+ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf 2>/dev/null || true
 systemctl enable systemd-networkd systemd-resolved 2>/dev/null || true
 systemctl enable iwd 2>/dev/null || true
 
