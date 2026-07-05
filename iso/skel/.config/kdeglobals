@@ -1,0 +1,9 @@
+[General]
+ColorScheme=BreezeDark
+AccentColor=120,170,255
+
+[KDE]
+widgetStyle=Breeze
+
+[Icons]
+Theme=breeze-dark

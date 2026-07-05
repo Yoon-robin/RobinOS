@@ -90,6 +90,12 @@ cp -a "${REPO_ROOT}/iso/skel/." "${AIROOTFS}/home/robin/"
 mkdir -p "${AIROOTFS}/etc/systemd/system/multi-user.target.wants"
 ln -sf /etc/systemd/system/robinos-home.service \
     "${AIROOTFS}/etc/systemd/system/multi-user.target.wants/robinos-home.service"
+
+log "KDE Plasma: SDDM 로그인 + 그래픽 타깃 활성화"
+# 기본 부팅 타깃 = graphical → SDDM 시작
+ln -sf /usr/lib/systemd/system/graphical.target "${AIROOTFS}/etc/systemd/system/default.target"
+# 디스플레이 매니저 = SDDM (releng의 tty1 root 자동로그인과 충돌하지 않게 sddm이 getty@tty1을 대체)
+ln -sf /usr/lib/systemd/system/sddm.service "${AIROOTFS}/etc/systemd/system/display-manager.service"
 # 권한: 홈 소유권(1000) + sudoers(0440)
 sed -i '/^file_permissions=(/a\  ["/home/robin"]="1000:1000:0750"\n  ["/etc/sudoers.d/robinos"]="0:0:0440"' "$PROFILEDEF"
 

@@ -1,8 +1,8 @@
 
 RobinOS 라이브 환경
 
-  - 데스크톱(Hyprland)은 tty1에서 자동으로 뜬다.
-  - 비서 Robin:  터미널에서  robin   또는 데스크톱에서 SUPER+A
-  - 설치:        sudo archinstall
-  - Wi-Fi:       iwctl  → station <장치> connect <SSID>
+  - KDE Plasma 데스크톱이 자동으로 뜬다.
+  - 비서 Robin:  터미널(Konsole/kitty)에서  robin
+  - 설치:        sudo robinos-install   (또는 sudo archinstall)
+  - Wi-Fi:       Plasma 네트워크 위젯 또는  iwctl
 
