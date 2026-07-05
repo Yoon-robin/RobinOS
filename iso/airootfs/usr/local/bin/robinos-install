@@ -125,6 +125,7 @@ rsync -aHAX --numeric-ids \
     --exclude='/tmp/*' --exclude='/run/*' --exclude='/mnt/*' \
     --exclude='/media/*' --exclude='/lost+found' \
     --exclude='/etc/sudoers.d/robinos' \
+    --exclude='/etc/sddm.conf.d/autologin.conf' \
     --exclude='/etc/systemd/system/getty@tty1.service.d/autologin.conf' \
     --exclude='/etc/systemd/system/multi-user.target.wants/robinos-home.service' \
     --exclude='/etc/systemd/system/robinos-home.service' \
@@ -165,13 +166,9 @@ echo '%wheel ALL=(ALL:ALL) ALL' > /etc/sudoers.d/wheel
 chmod 0440 /etc/sudoers.d/wheel
 passwd -l root || true
 
-# 설치본도 tty1 자동로그인 → 데스크톱 (라이브와 동일 UX)
-mkdir -p /etc/systemd/system/getty@tty1.service.d
-cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf <<EOF
-[Service]
-ExecStart=
-ExecStart=-/sbin/agetty -o '-p -- \\\\u' --noclear --autologin $USERNAME - \\\$TERM
-EOF
+# 설치본: SDDM 로그인 화면(그래픽) — 실제 비번으로 로그인 (자동로그인 안 함).
+systemctl enable sddm 2>/dev/null || true
+systemctl set-default graphical.target 2>/dev/null || true
 
 # initramfs: archiso 훅 제거, 일반 훅(+plymouth) 재설정
 echo 'HOOKS=(base udev plymouth autodetect microcode modconf kms keyboard keymap consolefont block filesystems fsck)' \

@@ -32,13 +32,13 @@ RESET = "\033[0m"
 
 CONFIG_PATH = os.path.expanduser("~/.config/robin/config.json")
 
-# 앱 별칭 → 실행 명령
+# 앱 별칭 → 실행 명령 (KDE Plasma 기준)
 APPS = {
     "browser": ("firefox", ["브라우저", "browser", "파이어폭스", "firefox", "인터넷"]),
-    "terminal": ("kitty", ["터미널", "terminal", "kitty", "콘솔"]),
-    "files": ("thunar", ["파일", "files", "탐색기", "thunar", "파일관리자"]),
-    "editor": ("nano", ["편집기", "에디터", "editor", "메모장"]),
-    "settings": ("pavucontrol", ["소리설정", "볼륨설정", "audio"]),
+    "terminal": ("konsole", ["터미널", "terminal", "konsole", "kitty", "콘솔"]),
+    "files": ("dolphin", ["파일", "files", "탐색기", "dolphin", "파일관리자"]),
+    "editor": ("kate", ["편집기", "에디터", "editor", "메모장", "kate"]),
+    "settings": ("systemsettings", ["설정", "settings", "환경설정"]),
 }
 
 
@@ -76,9 +76,9 @@ def parse(text: str) -> Intent:
         return Intent("say", reply="나는 Robin. RobinOS에 들어있는 비서야. 시스템 제어를 도와줘.")
 
     # 전원 (확인 필요) — status/network 보다 먼저. 로그아웃·재부팅을 종료보다 먼저.
-    if re.search(r"로그아웃|logout|세션\s*종료|hyprland\s*종료", t):
-        return Intent("run", reply="데스크톱 세션을 종료한다.", confirm=True,
-                      command=["hyprctl", "dispatch", "exit"])
+    if re.search(r"로그아웃|logout|세션\s*종료", t):
+        return Intent("run", reply="로그아웃한다.", confirm=True,
+                      shell='loginctl terminate-user "$(whoami)"')
     if re.search(r"재부팅|재시작|reboot|restart", t):
         return Intent("run", reply="재부팅한다.", confirm=True,
                       command=["systemctl", "reboot"])
@@ -99,10 +99,10 @@ def parse(text: str) -> Intent:
     if re.search(r"상태|status|정보|시스템|spec|사양|fetch", t):
         return Intent("status")
 
-    # 스크린샷
+    # 스크린샷 (KDE Spectacle — 영역 선택)
     if re.search(r"스크린샷|화면\s*캡[처쳐]|screenshot|캡처", t):
-        return Intent("run", reply="영역을 드래그해서 캡처해 — ~/Pictures에 저장하고 복사한다.",
-                      command=["robinos-screenshot"])
+        return Intent("run", reply="영역을 드래그해서 캡처해.",
+                      command=["spectacle", "-r"])
 
     # 볼륨 (퍼센트 지정 우선)
     if re.search(r"볼륨|소리|음량|volume|sound|음소거|뮤트|mute", t):
@@ -146,17 +146,17 @@ def parse(text: str) -> Intent:
         names = " · ".join(sorted(APPS))
         return Intent("say", reply=f"열 수 있는 앱: {names}\n(예: '브라우저 열어줘')")
 
-    # 앱 실행
+    # 앱 실행 (setsid로 데스크톱과 분리 실행)
     if re.search(r"열어|실행|켜|띄워|open|launch|start", t):
         for canon, (cmd, aliases) in APPS.items():
             if any(a in t for a in aliases):
                 return Intent("run", reply=f"{cmd} 실행할게.",
-                              command=["hyprctl", "dispatch", "exec", cmd])
-        return Intent("say", reply="어떤 앱? (브라우저 / 터미널 / 파일 / 편집기)")
+                              command=["setsid", "-f", cmd])
+        return Intent("say", reply="어떤 앱? (브라우저 / 터미널 / 파일 / 편집기 / 설정)")
 
-    # 잠금
+    # 잠금 (KDE)
     if re.search(r"잠[그가궈]|lock|화면\s*잠", t):
-        return Intent("run", reply="화면 잠글게.", command=["hyprlock"])
+        return Intent("run", reply="화면 잠글게.", command=["loginctl", "lock-session"])
 
     # 인터넷 검색
     m = re.search(r"(.+?)\s*(검색|찾아|search)", t)
@@ -164,7 +164,7 @@ def parse(text: str) -> Intent:
         q = m.group(1).strip()
         url = "https://duckduckgo.com/?q=" + urllib.parse.quote(q)
         return Intent("run", reply=f"'{q}' 검색할게.",
-                      command=["hyprctl", "dispatch", "exec", f"firefox {url}"])
+                      command=["setsid", "-f", "firefox", url])
 
     return Intent("unknown", reply="아직 그건 못 알아들어. 'help' 쳐봐.", payload={"text": text})
 

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# RobinOS 룩 적용 (Plasma 로그인 시) — 다크 색 구성 + 시그니처 배경화면.
+# Plasma가 자체 설정을 생성하므로 kdeglobals(skel)보다 이 방식이 확실하다.
+
+plasma-apply-colorscheme BreezeDark 2>/dev/null || true
+
+wall=/usr/share/backgrounds/robinos/wallpaper.png
+if [ -f "$wall" ]; then
+    plasma-apply-wallpaperimage "$wall" 2>/dev/null || true
+fi
