@@ -1,0 +1,8 @@
+[Desktop Entry]
+DefaultProfile=RobinOS.profile
+
+[KonsoleWindow]
+RememberWindowSize=false
+
+[MainWindow]
+MenuBar=Disabled
