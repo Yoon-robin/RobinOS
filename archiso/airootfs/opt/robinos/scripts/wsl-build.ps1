@@ -203,7 +203,7 @@ echo 'WSL 빌드 환경이 준비됐어요.'
 }
 
 if ($Task -eq "check") {
-    Invoke-Wsl "cd '$wslRoot' && bash scripts/check-desktop.sh && bash scripts/qmllint.sh"
+    Invoke-Wsl "cd '$wslRoot' && bash scripts/check-desktop.sh && bash scripts/qmllint.sh && bash scripts/test-robinctl.sh"
     exit 0
 }
 
