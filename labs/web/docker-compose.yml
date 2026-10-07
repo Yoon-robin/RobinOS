@@ -3,13 +3,13 @@ services:
     image: bkimminich/juice-shop
     container_name: robinos-juice-shop
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     restart: unless-stopped
 
   dvwa:
     image: vulnerables/web-dvwa
     container_name: robinos-dvwa
     ports:
-      - "8080:80"
+      - "127.0.0.1:8080:80"
     restart: unless-stopped
 
