@@ -4,8 +4,12 @@
 
 서비스:
 
-- OWASP Juice Shop: http://localhost:3000
-- DVWA: http://localhost:8080
+- OWASP Juice Shop: http://localhost:3000 (`bkimminich/juice-shop:v20.2.0`)
+- DVWA: http://localhost:8080 (DVWA 공식 이미지 `ghcr.io/digininja/dvwa`, 데이터베이스는 MariaDB 10 컨테이너)
+
+이미지 버전을 고정해 둬서 안내와 실제 화면이 같아요. 처음 시작할 때 이미지를 내려받느라 몇 분 걸려요.
+
+DVWA는 처음에 http://localhost:8080/setup.php 에서 "Create / Reset Database"를 누르고 `admin` / `password`로 로그인해요. "DVWA Security"에서 난이도를 low부터 올려 가며 연습해요.
 
 시작:
 
