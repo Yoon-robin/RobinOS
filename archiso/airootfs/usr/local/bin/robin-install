@@ -52,6 +52,7 @@ WINDOWS_TYPES = {
 SUBVOLUMES = [("@", ""), ("@home", "home"), ("@log", "var/log"),
               ("@pkg", "var/cache/pacman/pkg"), ("@snapshots", ".snapshots")]
 MOUNT_OPTIONS = "noatime,compress=zstd:1"
+UDEV_HOOKS = "base udev autodetect microcode modconf kms keyboard keymap consolefont block filesystems fsck"
 
 log_file = None
 
@@ -299,6 +300,16 @@ def configure_system(plan):
     chroot("locale-gen")
     write("/etc/locale.conf", "LANG=ko_KR.UTF-8\n")
     write("/etc/vconsole.conf", "KEYMAP=us\n")
+
+    # A udev initramfs like archinstall's instead of Arch's systemd default: the
+    # grub-btrfs-overlayfs hook that robinctl snapshot setup adds (and builds the
+    # images with) only works there, and it makes a snapshot booted from the GRUB
+    # menu writable in memory, so the desktop starts too (docs/recovery.md)
+    with open(f"{TARGET}/etc/mkinitcpio.conf") as f:
+        mkinitcpio, count = re.subn(r"(?m)^HOOKS=\(.*\)$", f"HOOKS=({UDEV_HOOKS})", f.read())
+    if count == 0:
+        mkinitcpio += f"\nHOOKS=({UDEV_HOOKS})\n"
+    write("/etc/mkinitcpio.conf", mkinitcpio)
 
     write("/etc/hostname", plan["hostname"] + "\n")
     write("/etc/hosts", f"127.0.0.1 localhost\n::1 localhost\n127.0.1.1 {plan['hostname']}\n")
