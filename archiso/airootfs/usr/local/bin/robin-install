@@ -2,24 +2,23 @@
 set -euo pipefail
 
 cat <<'EOF'
-RobinOS installer prototype
+RobinOS 설치기 (프로토타입)
 
-This is not a full disk installer yet.
+아직 디스크에 직접 설치하는 설치기는 없어요.
 
-Current recommended flow:
-  1. Install Arch Linux with archinstall or the manual Arch guide.
-  2. Reboot into the installed system.
-  3. Clone or copy the RobinOS repository.
-  4. Run: sudo scripts/post-install.sh
-  5. Run: robinctl doctor
+지금은 이 순서로 설치해요:
+  1. archinstall이나 Arch 설치 가이드로 Arch Linux를 설치해요.
+  2. 설치한 시스템으로 재부팅해요.
+  3. RobinOS 저장소를 클론하거나 복사해요.
+  4. 실행: sudo scripts/post-install.sh
+  5. 실행: robinctl doctor
 
-From the live ISO, the project files are also staged at:
+라이브 ISO에는 RobinOS 파일이 이 폴더에도 들어 있어요:
   /opt/robinos
 
-After installing Arch, you can copy that directory into the installed system
-and run:
+Arch를 설치한 뒤 이 폴더를 설치한 시스템에 복사하고 실행하세요:
   sudo /opt/robinos/scripts/post-install.sh
 
-The future RobinOS installer will provide guided disk layout, Btrfs snapshots,
-desktop setup, Korean defaults, and security lab profiles.
+앞으로 나올 RobinOS 설치기는 디스크 구성, Btrfs 스냅샷, 데스크톱 설정,
+한국어 기본값, 보안 실습 프로필 선택까지 안내해 줄 거예요.
 EOF

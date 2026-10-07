@@ -19,32 +19,48 @@ CORE_PACKAGES="${PROJECT_ROOT}/packages/core.txt"
 SECURITY_PACKAGES="${PROJECT_ROOT}/packages/security-baseline.txt"
 OPTIONAL_PACKAGES="${PROJECT_ROOT}/packages/security-optional.txt"
 
+if [[ -t 1 ]]; then
+  C_BOLD=$'\033[1m'
+  C_DIM=$'\033[2m'
+  C_GREEN=$'\033[32m'
+  C_RED=$'\033[31m'
+  C_YELLOW=$'\033[33m'
+  C_RESET=$'\033[0m'
+else
+  C_BOLD="" C_DIM="" C_GREEN="" C_RED="" C_YELLOW="" C_RESET=""
+fi
+
 usage() {
   cat <<'EOF'
-robinctl - RobinOS control tool
+robinctl - RobinOS 관리 도구
 
-Usage:
-  robinctl version
-  robinctl doctor
-  robinctl update [--dry-run]
-  robinctl snapshot create [name]
-  robinctl profile list
-  robinctl profile security [--dry-run]
-  robinctl packages core
-  robinctl packages security
-  robinctl packages optional
-  robinctl lab list
-  robinctl lab info web
-  robinctl lab status web
-  robinctl lab start web
-  robinctl lab stop web
+사용법:
+  robinctl version                      버전 보기
+  robinctl doctor                       시스템 점검
+  robinctl update [--dry-run]           스냅샷을 만든 뒤 시스템 업데이트
+  robinctl snapshot create [이름]       스냅샷 만들기
+  robinctl profile list                 설치할 수 있는 프로필 보기
+  robinctl profile security [--dry-run] 보안 실습 도구 설치
+  robinctl packages core                기본 패키지 목록
+  robinctl packages security            보안 실습 패키지 목록
+  robinctl packages optional            선택 패키지 목록
+  robinctl learn                        리눅스 기초 미션과 진행도
+  robinctl learn show [번호]            미션 설명 보기
+  robinctl learn check [번호]           미션 결과 확인
+  robinctl learn reset                  미션 진행도 초기화
+  robinctl lab list                     실습 랩 목록
+  robinctl lab info web                 웹 보안 랩 안내
+  robinctl lab status web               웹 보안 랩 상태
+  robinctl lab start web                웹 보안 랩 시작
+  robinctl lab stop web                 웹 보안 랩 중지
 
-RobinOS is for authorized security learning, CTF practice, and local labs.
+RobinOS는 허가받은 환경에서 보안을 배우는 시스템이에요.
+실습은 내 컴퓨터 안의 랩과 허락받은 대상에서만 하세요.
 EOF
 }
 
 die() {
-  printf 'error: %s\n' "$*" >&2
+  printf '오류: %s\n' "$*" >&2
   exit 1
 }
 
@@ -54,13 +70,13 @@ have_cmd() {
 
 need_root() {
   if [[ "${EUID}" -ne 0 ]]; then
-    die "this command needs root privileges"
+    die "관리자 권한이 필요해요. 앞에 sudo를 붙여 실행하세요."
   fi
 }
 
 package_file() {
   local file="$1"
-  [[ -f "${file}" ]] || die "package file not found: ${file}"
+  [[ -f "${file}" ]] || die "패키지 목록이 없어요: ${file}"
   grep -Ev '^\s*(#|$)' "${file}"
 }
 
@@ -68,110 +84,87 @@ print_version() {
   printf '%s %s\n' "${ROBINOS_NAME}" "${ROBINOS_VERSION}"
 }
 
+# Prints one doctor line: "  <label>: 정상" or "  <label>: 없음[ (<hint>)]".
+check_line() {
+  local label="$1"
+  local found="$2"
+  local hint="${3:-}"
+
+  if [[ "${found}" == "true" ]]; then
+    printf '  %s: 정상\n' "${label}"
+  elif [[ -n "${hint}" ]]; then
+    printf '  %s: 없음 (%s)\n' "${label}" "${hint}"
+  else
+    printf '  %s: 없음\n' "${label}"
+  fi
+}
+
+cmd_found() {
+  if have_cmd "$1"; then printf 'true'; else printf 'false'; fi
+}
+
+path_found() {
+  if [[ -e "$1" ]]; then printf 'true'; else printf 'false'; fi
+}
+
 doctor() {
   print_version
-  printf '\nSystem checks:\n'
+  printf '\n시스템 점검:\n'
 
-  local os_name="unknown"
+  local os_name="알 수 없음"
   if [[ -r /etc/os-release ]]; then
     # shellcheck disable=SC1091
     . /etc/os-release
-    os_name="${PRETTY_NAME:-${NAME:-unknown}}"
+    os_name="${PRETTY_NAME:-${NAME:-알 수 없음}}"
   fi
   printf '  OS: %s\n' "${os_name}"
 
-  if have_cmd pacman; then
-    printf '  pacman: ok\n'
-  else
-    printf '  pacman: missing\n'
-  fi
+  check_line "pacman" "$(cmd_found pacman)"
+  check_line "systemd" "$(cmd_found systemctl)"
+  check_line "snapper" "$(cmd_found snapper)"
+  check_line "docker" "$(cmd_found docker)"
 
-  if have_cmd systemctl; then
-    printf '  systemd: ok\n'
-  else
-    printf '  systemd: missing\n'
-  fi
-
-  if have_cmd snapper; then
-    printf '  snapper: ok\n'
-  else
-    printf '  snapper: missing\n'
-  fi
-
-  if have_cmd docker; then
-    printf '  docker: ok\n'
-  else
-    printf '  docker: missing\n'
-  fi
-
+  local compose="false"
   if have_cmd docker && docker compose version >/dev/null 2>&1; then
-    printf '  docker compose: ok\n'
-  else
-    printf '  docker compose: missing\n'
+    compose="true"
   fi
+  check_line "docker compose" "${compose}"
 
-  if have_cmd fcitx5; then
-    printf '  fcitx5: ok\n'
-  else
-    printf '  fcitx5: missing\n'
-  fi
+  check_line "fcitx5 (한글 입력)" "$(cmd_found fcitx5)"
 
+  local korean="false"
   if have_cmd locale && locale -a 2>/dev/null | grep -qi '^ko_kr\.utf'; then
-    printf '  Korean locale: ok\n'
-  else
-    printf '  Korean locale: missing\n'
+    korean="true"
   fi
+  check_line "한국어 로캘" "${korean}"
 
-  if [[ -f "${CONFIG_FILE}" ]]; then
-    printf '  config: %s\n' "${CONFIG_FILE}"
-  else
-    printf '  config: missing (%s)\n' "${CONFIG_FILE}"
-  fi
+  check_line "설정 파일" "$(path_found "${CONFIG_FILE}")" "${CONFIG_FILE}"
+  check_line "Hyprland" "$(cmd_found Hyprland)"
+  check_line "Quickshell" "$(cmd_found qs)"
 
-  if have_cmd Hyprland; then
-    printf '  hyprland: ok\n'
-  else
-    printf '  hyprland: missing\n'
-  fi
-
-  if have_cmd qs; then
-    printf '  quickshell: ok\n'
-  else
-    printf '  quickshell: missing\n'
-  fi
-
+  local shell_ok="false"
   if [[ -f "${SHELL_DIR}/shell.qml" && -f "${SESSION_FILE}" ]]; then
-    printf '  desktop shell: ok\n'
-  else
-    printf '  desktop shell: missing (run scripts/install-desktop.sh)\n'
+    shell_ok="true"
   fi
+  check_line "RobinOS 셸" "${shell_ok}" "scripts/install-desktop.sh를 실행하세요"
 
   if [[ -n "${ROBINOS_RENDER:-}" ]]; then
-    printf '  rendering: %s\n' "${ROBINOS_RENDER}"
+    printf '  렌더링: %s\n' "${ROBINOS_RENDER}"
   fi
 
-  if [[ -d "${SDDM_THEME_DIR}" ]]; then
-    printf '  sddm theme: ok\n'
-  else
-    printf '  sddm theme: missing\n'
-  fi
-
-  if [[ -f "${GRUB_THEME_FILE}" ]]; then
-    printf '  grub theme: ok\n'
-  else
-    printf '  grub theme: missing\n'
-  fi
+  check_line "로그인 화면 테마 (SDDM)" "$(path_found "${SDDM_THEME_DIR}")"
+  check_line "부팅 메뉴 테마 (GRUB)" "$(path_found "${GRUB_THEME_FILE}")"
 }
 
 update_system() {
   local dry_run="false"
   [[ "${1:-}" == "--dry-run" ]] && dry_run="true"
 
-  have_cmd pacman || die "pacman is required"
+  have_cmd pacman || die "pacman이 필요해요"
 
   if [[ "${dry_run}" == "true" ]]; then
-    printf 'Would create pre-update snapshot if snapper is available.\n'
-    printf 'Would run: pacman -Syu\n'
+    printf 'snapper가 있으면 업데이트 전에 스냅샷을 만들어요.\n'
+    printf '실행할 명령: pacman -Syu\n'
     return
   fi
 
@@ -184,7 +177,7 @@ update_system() {
 
 snapshot_create() {
   need_root
-  have_cmd snapper || die "snapper is required"
+  have_cmd snapper || die "snapper가 필요해요"
 
   local name="${1:-manual}"
   snapper create --description "RobinOS ${name} $(date -Iseconds)"
@@ -192,9 +185,9 @@ snapshot_create() {
 
 profile_list() {
   cat <<'EOF'
-Available profiles:
-  core      Minimal RobinOS base workstation
-  security  Security learning tools for CTF, web, network, reversing, and forensics
+설치할 수 있는 프로필:
+  core      RobinOS 기본 작업 환경
+  security  CTF, 웹, 네트워크, 리버싱, 포렌식 학습 도구
 EOF
 }
 
@@ -202,10 +195,10 @@ profile_security() {
   local dry_run="false"
   [[ "${1:-}" == "--dry-run" ]] && dry_run="true"
 
-  have_cmd pacman || die "pacman is required"
+  have_cmd pacman || die "pacman이 필요해요"
 
   if [[ "${dry_run}" == "true" ]]; then
-    printf 'Would install RobinOS Security Lab packages:\n'
+    printf '설치할 RobinOS 보안 실습 패키지:\n'
     package_file "${SECURITY_PACKAGES}" | sed 's/^/  /'
     return
   fi
@@ -227,80 +220,513 @@ packages_print() {
       package_file "${OPTIONAL_PACKAGES}"
       ;;
     *)
-      die "unknown package group: ${1:-}"
+      die "알 수 없는 패키지 묶음이에요: ${1:-} (core, security, optional 중 하나)"
       ;;
   esac
 }
 
+# ---- Learning missions: Linux basics ----
+#
+# Missions are solved in a real terminal. `robinctl learn check N` looks at the
+# result (files under ~/practice) and records progress in the user's state dir.
+
+readonly LEARN_COUNT=5
+LEARN_DIR="${HOME:-/root}/practice"
+LEARN_STATE="${XDG_STATE_HOME:-${HOME:-/root}/.local/state}/robinos/learn"
+LEARN_FAILS=0
+
+learn_title() {
+  case "$1" in
+    1) printf '폴더 만들고 이동하기' ;;
+    2) printf '파일 만들고 읽기' ;;
+    3) printf '복사, 이동, 삭제' ;;
+    4) printf '실행 권한 주기' ;;
+    5) printf '찾기와 파이프' ;;
+  esac
+}
+
+learn_tools() {
+  case "$1" in
+    1) printf 'pwd ls cd mkdir' ;;
+    2) printf 'echo cat > >> nano' ;;
+    3) printf 'cp mv rm' ;;
+    4) printf 'ls -l chmod ./' ;;
+    5) printf 'grep | wc >' ;;
+  esac
+}
+
+learn_is_done() {
+  [[ -f "${LEARN_STATE}/done" ]] && grep -qx "$1" "${LEARN_STATE}/done"
+}
+
+learn_mark_done() {
+  mkdir -p "${LEARN_STATE}"
+  if ! learn_is_done "$1"; then
+    printf '%s\n' "$1" >>"${LEARN_STATE}/done"
+  fi
+}
+
+learn_done_count() {
+  local count=0 i
+  for ((i = 1; i <= LEARN_COUNT; i++)); do
+    if learn_is_done "${i}"; then
+      count=$((count + 1))
+    fi
+  done
+  printf '%s' "${count}"
+}
+
+# First mission that is not done yet, or nothing when all are done.
+learn_next() {
+  local i
+  for ((i = 1; i <= LEARN_COUNT; i++)); do
+    if ! learn_is_done "${i}"; then
+      printf '%s' "${i}"
+      return
+    fi
+  done
+}
+
+learn_mission_arg() {
+  local n="${1:-}"
+  if [[ -z "${n}" ]]; then
+    n="$(learn_next)"
+    [[ -n "${n}" ]] || n="${LEARN_COUNT}"
+  fi
+  [[ "${n}" =~ ^[1-5]$ ]] || die "미션 번호는 1부터 ${LEARN_COUNT}까지예요"
+  printf '%s' "${n}"
+}
+
+learn_list() {
+  local finished next i mark
+  finished="$(learn_done_count)"
+  next="$(learn_next)"
+
+  printf '%sRobinOS 학습 미션 · 리눅스 기초%s  %s%s/%s 완료%s\n\n' \
+    "${C_BOLD}" "${C_RESET}" "${C_DIM}" "${finished}" "${LEARN_COUNT}" "${C_RESET}"
+
+  for ((i = 1; i <= LEARN_COUNT; i++)); do
+    if learn_is_done "${i}"; then
+      mark="${C_GREEN}✓${C_RESET}"
+    elif [[ "${i}" == "${next}" ]]; then
+      mark="${C_YELLOW}→${C_RESET}"
+    else
+      mark=" "
+    fi
+    printf '  %s %s. %s  %s%s%s\n' "${mark}" "${i}" "$(learn_title "${i}")" \
+      "${C_DIM}" "$(learn_tools "${i}")" "${C_RESET}"
+  done
+
+  printf '\n'
+  if [[ -n "${next}" ]]; then
+    printf '미션 보기: %srobinctl learn show %s%s\n' "${C_BOLD}" "${next}" "${C_RESET}"
+  else
+    printf '리눅스 기초 미션을 모두 끝냈어요. 다음은 웹 보안 랩이에요: %srobinctl lab info web%s\n' \
+      "${C_BOLD}" "${C_RESET}"
+  fi
+}
+
+learn_heading() {
+  printf '%s미션 %s · %s%s\n\n' "${C_BOLD}" "$1" "$(learn_title "$1")" "${C_RESET}"
+}
+
+learn_section() {
+  printf '\n%s%s%s\n' "${C_BOLD}" "$1" "${C_RESET}"
+}
+
+learn_show_1() {
+  cat <<'EOF'
+윈도우에서는 탐색기에서 "새 폴더"를 만들고 더블클릭해서 들어가요.
+리눅스 터미널에서는 mkdir로 폴더를 만들고 cd로 들어가요.
+지금 어느 폴더에 있는지는 pwd, 폴더 안에 뭐가 있는지는 ls로 봐요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  홈 폴더에 practice 폴더를 만들고, 그 안에 notes 폴더를 만드세요.
+  완성되면 ~/practice/notes 폴더가 생겨요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  pwd                지금 있는 폴더 보기
+  ls                 폴더 안의 목록 보기 (윈도우의 dir)
+  mkdir practice     practice 폴더 만들기
+  cd practice        practice 폴더로 들어가기
+  mkdir notes        notes 폴더 만들기
+  cd ..              한 단계 위로 나가기 (cd와 .. 사이를 띄어 써요)
+
+  ~는 내 홈 폴더예요. 윈도우의 C:\Users\내이름과 같은 곳이에요.
+EOF
+}
+
+learn_show_2() {
+  cat <<'EOF'
+윈도우에서는 메모장을 열어 글을 쓰고 저장해요.
+리눅스에서는 명령 한 줄로도 파일에 글을 쓸 수 있어요.
+  echo 글 > 파일     파일을 새로 만들고 글을 써요 (원래 내용은 지워져요)
+  echo 글 >> 파일    파일 끝에 한 줄을 덧붙여요
+  cat 파일           파일 내용을 보여 줘요
+  nano 파일          터미널 안의 메모장이에요 (Ctrl+O 저장, Ctrl+X 나가기)
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  ~/practice/notes/hello.txt 파일을 만드세요.
+  첫 줄은 hello linux로 쓰고, 그 아래에 아무 글이나 한 줄 이상 덧붙이세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  cd ~/practice/notes
+  echo "hello linux" > hello.txt
+  echo "리눅스 첫날" >> hello.txt
+  cat hello.txt
+
+  한글은 오른쪽 Alt(한/영 키)로 바꿔서 쓸 수 있어요.
+EOF
+}
+
+learn_show_3() {
+  cat <<'EOF'
+윈도우에서는 Ctrl+C, Ctrl+V로 복사하고, 끌어다 놓아 옮기고, Delete로 지워요.
+리눅스에서는 cp로 복사하고, mv로 옮기거나 이름을 바꾸고, rm으로 지워요.
+rm으로 지운 파일은 휴지통을 거치지 않고 바로 사라지니 조심하세요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  1. 미션 2에서 만든 hello.txt를 ~/practice/backup 폴더에 복사하세요.
+  2. ~/practice/notes/hello.txt의 이름을 memo.txt로 바꾸세요.
+  3. 연습용 파일 ~/practice/old.txt를 지우세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  mkdir ~/practice/backup
+  cp ~/practice/notes/hello.txt ~/practice/backup/
+  mv ~/practice/notes/hello.txt ~/practice/notes/memo.txt
+  rm ~/practice/old.txt
+  ls ~/practice ~/practice/notes ~/practice/backup
+EOF
+}
+
+learn_show_4() {
+  cat <<'EOF'
+윈도우에서는 .exe나 .bat 같은 확장자를 보고 실행 파일을 알아봐요.
+리눅스에서는 확장자가 아니라 실행 권한(x)이 있어야 실행돼요.
+ls -l로 보면 맨 앞의 -rwxr-xr-x 같은 글자에서 x가 실행 권한이에요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  ~/practice/hello.sh 스크립트를 만들고 실행 권한을 주세요.
+  실행하면 hello가 들어간 글이 나와야 해요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  cd ~/practice
+  nano hello.sh           아래 두 줄을 쓰고 Ctrl+O, Enter, Ctrl+X
+      #!/bin/bash
+      echo "hello robinos"
+  ls -l hello.sh          권한 보기 (아직 x가 없어요)
+  chmod +x hello.sh       실행 권한 주기
+  ./hello.sh              실행하기 (./는 "지금 폴더에 있는"이라는 뜻이에요)
+EOF
+}
+
+learn_show_5() {
+  cat <<'EOF'
+윈도우에서는 findstr이나 Ctrl+F로 글자를 찾아요.
+리눅스에서는 grep으로 찾고, |(파이프)로 앞 명령의 결과를 다음 명령에 넘겨요.
+>를 쓰면 화면에 나올 결과를 파일에 저장해요.
+
+/etc/passwd에는 이 컴퓨터의 사용자 목록이 있어요. 한 줄이 사용자 한 명이고,
+줄 끝에는 그 사용자가 쓰는 셸이 적혀 있어요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  /etc/passwd에서 bash가 들어간 줄만 골라 ~/practice/bash-users.txt에 저장하세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  cat /etc/passwd                     전체 보기
+  grep bash /etc/passwd               bash가 들어간 줄만 보기
+  grep bash /etc/passwd | wc -l       몇 줄인지 세기
+  grep bash /etc/passwd > ~/practice/bash-users.txt
+  cat ~/practice/bash-users.txt
+EOF
+}
+
+# Mission 3 needs a file to delete. It is created the first time the mission is shown.
+learn_prepare_3() {
+  if [[ -f "${LEARN_STATE}/prepared-3" ]]; then
+    return
+  fi
+  mkdir -p "${LEARN_DIR}" "${LEARN_STATE}"
+  printf '미션 3에서 지워 볼 연습용 파일이에요.\n' >"${LEARN_DIR}/old.txt"
+  : >"${LEARN_STATE}/prepared-3"
+  printf '\n%s연습용 파일 ~/practice/old.txt를 만들어 뒀어요.%s\n' "${C_DIM}" "${C_RESET}"
+}
+
+learn_show() {
+  local n
+  n="$(learn_mission_arg "${1:-}")"
+  learn_heading "${n}"
+  "learn_show_${n}"
+  if [[ "${n}" == "3" ]]; then
+    learn_prepare_3
+  fi
+  printf '\n다 했으면 확인해요: %srobinctl learn check %s%s\n' "${C_BOLD}" "${n}" "${C_RESET}"
+}
+
+learn_ok() {
+  printf '  %s✓%s %s\n' "${C_GREEN}" "${C_RESET}" "$1"
+}
+
+learn_bad() {
+  printf '  %s✗%s %s\n' "${C_RED}" "${C_RESET}" "$1"
+  if [[ -n "${2:-}" ]]; then
+    printf '    %s%s%s\n' "${C_DIM}" "$2" "${C_RESET}"
+  fi
+  LEARN_FAILS=$((LEARN_FAILS + 1))
+}
+
+learn_check_1() {
+  if [[ -d "${LEARN_DIR}" ]]; then
+    learn_ok "~/practice 폴더가 있어요"
+  else
+    learn_bad "~/practice 폴더가 없어요" "mkdir ~/practice"
+  fi
+
+  if [[ -d "${LEARN_DIR}/notes" ]]; then
+    learn_ok "~/practice/notes 폴더가 있어요"
+  else
+    learn_bad "~/practice/notes 폴더가 없어요" "cd ~/practice로 들어간 뒤 mkdir notes"
+  fi
+}
+
+learn_check_2() {
+  local file="${LEARN_DIR}/notes/hello.txt"
+
+  if [[ ! -f "${file}" ]]; then
+    learn_bad "~/practice/notes/hello.txt 파일이 없어요" 'echo "hello linux" > ~/practice/notes/hello.txt'
+    return
+  fi
+  learn_ok "hello.txt 파일이 있어요"
+
+  local first lines
+  first="$(head -n 1 "${file}" | tr -d '\r' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
+  if [[ "${first,,}" == "hello linux" ]]; then
+    learn_ok "첫 줄이 hello linux예요"
+  else
+    learn_bad "첫 줄이 '${first}'예요" '> 를 쓰면 새로 써요: echo "hello linux" > hello.txt'
+  fi
+
+  lines="$(grep -c '[^[:space:]]' "${file}" || true)"
+  if ((lines >= 2)); then
+    learn_ok "글이 ${lines}줄 있어요"
+  else
+    learn_bad "글이 ${lines}줄뿐이에요" '>> 로 한 줄 덧붙여 보세요: echo "리눅스 첫날" >> hello.txt'
+  fi
+}
+
+learn_check_3() {
+  local backup="${LEARN_DIR}/backup/hello.txt"
+  local memo="${LEARN_DIR}/notes/memo.txt"
+
+  if [[ -f "${backup}" ]]; then
+    learn_ok "~/practice/backup/hello.txt로 복사했어요"
+  else
+    learn_bad "~/practice/backup/hello.txt가 없어요" "mkdir ~/practice/backup 후 cp로 복사해 보세요"
+  fi
+
+  if [[ ! -f "${memo}" ]]; then
+    learn_bad "~/practice/notes/memo.txt가 없어요" "mv ~/practice/notes/hello.txt ~/practice/notes/memo.txt"
+  elif [[ -e "${LEARN_DIR}/notes/hello.txt" ]]; then
+    learn_bad "notes 폴더에 hello.txt가 아직 있어요" "cp는 복사라서 원래 파일이 남아요. 이름 바꾸기는 mv로 해요"
+  else
+    learn_ok "hello.txt의 이름을 memo.txt로 바꿨어요"
+  fi
+
+  if [[ -f "${backup}" && -f "${memo}" ]]; then
+    if cmp -s "${backup}" "${memo}"; then
+      learn_ok "복사본과 memo.txt 내용이 같아요"
+    else
+      learn_bad "복사본과 memo.txt 내용이 달라요" "hello.txt를 복사한 뒤에 이름을 바꿨는지 확인해 보세요"
+    fi
+  fi
+
+  if [[ ! -f "${LEARN_STATE}/prepared-3" ]]; then
+    learn_bad "아직 연습용 파일을 만들지 않았어요" "robinctl learn show 3을 먼저 실행하세요"
+  elif [[ -e "${LEARN_DIR}/old.txt" ]]; then
+    learn_bad "~/practice/old.txt가 아직 있어요" "rm ~/practice/old.txt"
+  else
+    learn_ok "old.txt를 지웠어요"
+  fi
+}
+
+learn_check_4() {
+  local script="${LEARN_DIR}/hello.sh"
+
+  if [[ ! -f "${script}" ]]; then
+    learn_bad "~/practice/hello.sh 파일이 없어요" "cd ~/practice 후 nano hello.sh"
+    return
+  fi
+  learn_ok "hello.sh 파일이 있어요"
+
+  if [[ "$(head -c 2 "${script}")" == "#!" ]]; then
+    learn_ok "첫 줄에 #!가 있어요"
+  else
+    learn_bad "첫 줄이 #!/bin/bash가 아니에요" "어떤 프로그램으로 실행할지 첫 줄에 적어야 해요"
+  fi
+
+  if [[ ! -x "${script}" ]]; then
+    learn_bad "실행 권한(x)이 없어요" "chmod +x ~/practice/hello.sh"
+    return
+  fi
+  learn_ok "실행 권한이 있어요"
+
+  local output
+  output="$(cd "${LEARN_DIR}" && timeout 5 ./hello.sh 2>&1 </dev/null || true)"
+  if [[ "${output,,}" == *hello* ]]; then
+    learn_ok "실행하면 '${output%%$'\n'*}'가 나와요"
+  else
+    learn_bad "실행 결과에 hello가 없어요" 'echo "hello robinos" 줄이 있는지 확인해 보세요'
+  fi
+}
+
+learn_check_5() {
+  local file="${LEARN_DIR}/bash-users.txt"
+
+  if [[ ! -s "${file}" ]]; then
+    learn_bad "~/practice/bash-users.txt가 없거나 비어 있어요" "grep bash /etc/passwd > ~/practice/bash-users.txt"
+    return
+  fi
+  learn_ok "bash-users.txt 파일이 있어요"
+
+  local expected actual
+  expected="$(grep -c bash /etc/passwd || true)"
+  actual="$(grep -c . "${file}" || true)"
+
+  if grep -v bash "${file}" | grep -q . || grep -vxFf /etc/passwd "${file}" | grep -q .; then
+    learn_bad "/etc/passwd에 없는 줄이나 bash가 없는 줄이 섞여 있어요" "직접 쓰지 말고 grep의 결과를 >로 저장해 보세요"
+  else
+    learn_ok "모든 줄이 /etc/passwd에서 bash가 들어간 줄이에요"
+  fi
+
+  if [[ "${actual}" == "${expected}" ]]; then
+    learn_ok "bash를 쓰는 사용자 ${expected}명을 모두 찾았어요"
+  else
+    learn_bad "${expected}줄이어야 하는데 ${actual}줄이에요" "grep bash /etc/passwd | wc -l로 세어 보세요"
+  fi
+}
+
+learn_check() {
+  local n next
+  n="$(learn_mission_arg "${1:-}")"
+
+  printf '%s미션 %s 확인%s · %s\n\n' "${C_BOLD}" "${n}" "${C_RESET}" "$(learn_title "${n}")"
+  LEARN_FAILS=0
+  "learn_check_${n}"
+  printf '\n'
+
+  if ((LEARN_FAILS > 0)); then
+    printf '아직이에요. %s✗%s 항목을 고친 뒤 다시 확인해요: %srobinctl learn check %s%s\n' \
+      "${C_RED}" "${C_RESET}" "${C_BOLD}" "${n}" "${C_RESET}"
+    return 1
+  fi
+
+  learn_mark_done "${n}"
+  printf '%s%s통과했어요!%s %s/%s 완료\n' "${C_GREEN}" "${C_BOLD}" "${C_RESET}" "$(learn_done_count)" "${LEARN_COUNT}"
+  next="$(learn_next)"
+  if [[ -n "${next}" ]]; then
+    printf '다음 미션: %srobinctl learn show %s%s\n' "${C_BOLD}" "${next}" "${C_RESET}"
+  else
+    printf '리눅스 기초 미션을 모두 끝냈어요. 다음은 웹 보안 랩이에요: %srobinctl lab info web%s\n' \
+      "${C_BOLD}" "${C_RESET}"
+  fi
+}
+
+learn_reset() {
+  rm -f "${LEARN_STATE}/done" "${LEARN_STATE}"/prepared-*
+  printf '미션 진행도를 초기화했어요. ~/practice 폴더는 그대로 뒀어요.\n'
+}
+
+learn() {
+  if [[ "${EUID}" -eq 0 ]]; then
+    die "학습 미션은 sudo 없이 내 계정으로 실행하세요"
+  fi
+
+  case "${1:-list}" in
+    list)
+      learn_list
+      ;;
+    show)
+      learn_show "${2:-}"
+      ;;
+    check)
+      learn_check "${2:-}"
+      ;;
+    reset)
+      learn_reset
+      ;;
+    *)
+      die "사용법: robinctl learn [list|show|check|reset] [번호]"
+      ;;
+  esac
+}
+
+# ---- Labs ----
+
 lab_list() {
   cat <<'EOF'
-Available labs:
-  web  Local web security lab stack with OWASP Juice Shop and DVWA
+실습 랩:
+  web  OWASP Juice Shop과 DVWA로 꾸린 로컬 웹 보안 랩
 EOF
+}
+
+lab_compose_file() {
+  local compose_file="${PROJECT_ROOT}/labs/web/docker-compose.yml"
+  [[ -f "${compose_file}" ]] || die "랩 파일이 없어요: ${compose_file}"
+  have_cmd docker || die "docker가 필요해요"
+  printf '%s' "${compose_file}"
 }
 
 lab_info() {
   case "${1:-}" in
     web)
       cat <<'EOF'
-RobinOS Web Lab
+RobinOS 웹 랩
 
-Targets:
+실습 대상:
   OWASP Juice Shop  http://localhost:3000
   DVWA              http://localhost:8080
 
-Commands:
+명령:
   robinctl lab start web
   robinctl lab status web
   robinctl lab stop web
 
-Use these targets only as local learning environments.
+두 대상 모두 내 컴퓨터 안에서만 열리는 학습용 환경이에요.
 EOF
       ;;
     *)
-      die "unknown lab: ${1:-}"
+      die "알 수 없는 랩이에요: ${1:-}"
       ;;
   esac
 }
 
-lab_status() {
-  case "${1:-}" in
-    web)
-      local compose_file="${PROJECT_ROOT}/labs/web/docker-compose.yml"
-      [[ -f "${compose_file}" ]] || die "missing lab file: ${compose_file}"
-      have_cmd docker || die "docker is required"
+lab_run() {
+  local action="$1"
+  local lab="${2:-}"
+  local compose_file
+
+  [[ "${lab}" == "web" ]] || die "알 수 없는 랩이에요: ${lab}"
+  compose_file="$(lab_compose_file)"
+
+  case "${action}" in
+    status)
       docker compose -f "${compose_file}" ps
       ;;
-    *)
-      die "unknown lab: ${1:-}"
-      ;;
-  esac
-}
-
-lab_start() {
-  case "${1:-}" in
-    web)
-      local compose_file="${PROJECT_ROOT}/labs/web/docker-compose.yml"
-      [[ -f "${compose_file}" ]] || die "missing lab file: ${compose_file}"
-      have_cmd docker || die "docker is required"
+    start)
       docker compose -f "${compose_file}" up -d
       ;;
-    *)
-      die "unknown lab: ${1:-}"
-      ;;
-  esac
-}
-
-lab_stop() {
-  case "${1:-}" in
-    web)
-      local compose_file="${PROJECT_ROOT}/labs/web/docker-compose.yml"
-      [[ -f "${compose_file}" ]] || die "missing lab file: ${compose_file}"
-      have_cmd docker || die "docker is required"
+    stop)
       docker compose -f "${compose_file}" down
-      ;;
-    *)
-      die "unknown lab: ${1:-}"
       ;;
   esac
 }
@@ -319,7 +745,7 @@ main() {
       ;;
     snapshot)
       shift
-      [[ "${1:-}" == "create" ]] || die "usage: robinctl snapshot create [name]"
+      [[ "${1:-}" == "create" ]] || die "사용법: robinctl snapshot create [이름]"
       shift
       snapshot_create "${1:-}"
       ;;
@@ -334,13 +760,17 @@ main() {
           profile_security "${1:-}"
           ;;
         *)
-          die "usage: robinctl profile list|security [--dry-run]"
+          die "사용법: robinctl profile list|security [--dry-run]"
           ;;
       esac
       ;;
     packages)
       shift
       packages_print "${1:-}"
+      ;;
+    learn)
+      shift
+      learn "$@"
       ;;
     lab)
       shift
@@ -352,20 +782,11 @@ main() {
           shift
           lab_info "${1:-}"
           ;;
-        status)
-          shift
-          lab_status "${1:-}"
-          ;;
-        start)
-          shift
-          lab_start "${1:-}"
-          ;;
-        stop)
-          shift
-          lab_stop "${1:-}"
+        status|start|stop)
+          lab_run "$1" "${2:-}"
           ;;
         *)
-          die "usage: robinctl lab list|info|status|start|stop"
+          die "사용법: robinctl lab list|info|status|start|stop"
           ;;
       esac
       ;;
@@ -373,7 +794,7 @@ main() {
       usage
       ;;
     *)
-      die "unknown command: ${1}"
+      die "알 수 없는 명령이에요: ${1} (robinctl help로 목록을 볼 수 있어요)"
       ;;
   esac
 }
