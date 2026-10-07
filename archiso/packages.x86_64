@@ -93,3 +93,61 @@ docker
 docker-compose
 virt-manager
 qemu-full
+
+# Live ISO boot (from the archiso releng profile)
+mkinitcpio
+mkinitcpio-archiso
+mkinitcpio-nfs-utils
+nbd
+syslinux
+memtest86+
+memtest86+-efi
+edk2-shell
+amd-ucode
+intel-ucode
+zsh
+grml-zsh-config
+
+# Hardware and VM guests on the live ISO
+sof-firmware
+linux-firmware-marvell
+wireless-regdb
+wpa_supplicant
+iw
+usbutils
+usb_modeswitch
+bolt
+hyperv
+open-vm-tools
+qemu-guest-agent
+virtualbox-guest-utils-nox
+
+# Accessibility (speech boot entry)
+alsa-utils
+livecd-sounds
+espeakup
+brltty
+
+# Disks, install and rescue
+arch-install-scripts
+archinstall
+cryptsetup
+lvm2
+mdadm
+e2fsprogs
+dosfstools
+xfsprogs
+gptfdisk
+parted
+smartmontools
+nvme-cli
+
+# Learning Linux in the live session
+man-db
+man-pages
+less
+diffutils
+rsync
+openssh
+tmux
+openvpn

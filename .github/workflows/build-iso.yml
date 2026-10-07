@@ -48,7 +48,7 @@ jobs:
             -v "$PWD:/repo" \
             -w /repo \
             archlinux:latest \
-            bash -lc 'pacman -Syu --noconfirm --needed archiso sudo git && bash scripts/build-iso.sh'
+            bash -lc 'pacman -Syu --noconfirm --needed archiso grub sudo git && bash scripts/build-iso.sh'
 
       - name: Show result
         run: |

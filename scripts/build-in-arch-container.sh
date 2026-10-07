@@ -21,7 +21,7 @@ docker run --rm -it \
   -w /repo \
   archlinux:latest \
   bash -lc '
-    pacman -Sy --noconfirm archiso git qemu-full edk2-ovmf
+    pacman -Sy --noconfirm archiso grub git qemu-full edk2-ovmf
     scripts/doctor-build.sh
     scripts/build-iso.sh
   '

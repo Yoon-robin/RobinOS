@@ -26,6 +26,10 @@ rm -f \
   "${systemd_dir}/sockets.target.wants/systemd-networkd.socket" \
   "${systemd_dir}/dbus-org.freedesktop.network1.service"
 
+# The live user's password (robin) is public, so never start an SSH server on
+# the live ISO. The ssh client stays available.
+rm -f "${systemd_dir}/multi-user.target.wants/sshd.service"
+
 "${ROOT_DIR}/scripts/sync-archiso-files.sh"
 cp -a "${ROOT_DIR}/archiso/airootfs/." "${OUT_PROFILE}/airootfs/"
 "${ROOT_DIR}/scripts/fetch-fonts.sh" "${OUT_PROFILE}/airootfs/usr/share/fonts/robinos"

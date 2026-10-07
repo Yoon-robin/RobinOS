@@ -46,6 +46,13 @@ else
   fail "mkarchiso (install archiso)"
 fi
 
+# mkarchiso runs grub-install on the build host for the uefi.grub boot mode
+if have_cmd grub-install; then
+  ok "grub-install"
+else
+  fail "grub-install (install grub)"
+fi
+
 if have_cmd sudo; then
   ok "sudo"
 else
