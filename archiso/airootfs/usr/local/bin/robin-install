@@ -338,7 +338,9 @@ def install_robinos(plan):
         # Fallback path for firmware that forgets boot entries; the disk is ours
         chroot("grub-install", "--target=x86_64-efi", "--efi-directory=/efi", "--boot-directory=/boot",
                "--removable")
-    chroot("grub-mkconfig", "-o", "/boot/grub/grub.cfg")
+    # LC_ALL=C: GRUB's Korean messages break its os-prober script (see
+    # config/grub/10-robinos-theme.cfg, which post-install.sh installs later)
+    chroot("env", "LC_ALL=C", "grub-mkconfig", "-o", "/boot/grub/grub.cfg")
 
     progress(85, "RobinOS 데스크톱과 스냅샷")
     chroot("env", f"SUDO_USER={plan['user']}", f"{ROBINOS}/scripts/post-install.sh", "--yes")
@@ -359,7 +361,7 @@ def grub_mkconfig_with_udev():
             run("mount", "--rbind", f"/{name}", f"{TARGET}/{name}")
             mounted.append(name)
             run("mount", "--make-rslave", f"{TARGET}/{name}")
-        run("chroot", TARGET, "grub-mkconfig", "-o", "/boot/grub/grub.cfg")
+        run("chroot", TARGET, "env", "LC_ALL=C", "grub-mkconfig", "-o", "/boot/grub/grub.cfg")
     finally:
         for name in reversed(mounted):
             subprocess.run(["umount", "-R", f"{TARGET}/{name}"], capture_output=True)
