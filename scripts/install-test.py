@@ -138,7 +138,8 @@ class Console:
         self.count += 1
         n = self.count
         log(f"$ {command}")
-        self.send(f"printf '__B%s__\\n' {n}\n{command}\nprintf '__E%s_%s__\\n' {n} \"$?\"\n")
+        # One line, so the shell prints no prompt ("# ") inside the captured output
+        self.send(f"printf '__B%s__\\n' {n}; {command}; printf '__E%s_%s__\\n' {n} \"$?\"\n")
         self.expect(rf"__B{n}__\r?\n", timeout)
         match = self.expect(rf"([\s\S]*?)__E{n}_(\d+)__", timeout)
         return int(match.group(2)), match.group(1).replace("\r", "")
