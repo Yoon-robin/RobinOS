@@ -43,6 +43,12 @@ if command -v Hyprland >/dev/null 2>&1; then
   hypr_args=(--verify-config -c "${ROOT_DIR}/desktop/hypr/robinos.lua")
   # Containers and CI run as root, which Hyprland refuses without this flag
   [[ "${EUID}" -eq 0 ]] && hypr_args+=(--i-am-really-stupid)
+  # Hyprland exits before reading the config when there is no runtime dir (CI containers)
+  if [[ -z "${XDG_RUNTIME_DIR:-}" ]]; then
+    XDG_RUNTIME_DIR="$(mktemp -d)"
+    chmod 700 "${XDG_RUNTIME_DIR}"
+    export XDG_RUNTIME_DIR
+  fi
   if output="$(Hyprland "${hypr_args[@]}" 2>&1)"; then
     ok "desktop/hypr/robinos.lua"
   else
