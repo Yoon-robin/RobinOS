@@ -406,14 +406,10 @@ def check_windows_kept(con, before):
     con.run("! test -e /mnt/efi/EFI/BOOT/BOOTX64.EFI")
     # Windows keeps the hardware clock in local time
     con.run("grep -qx LOCAL /mnt/etc/adjtime")
-    # os-prober should put Windows in the GRUB menu (the stand-in may not fool it)
-    if con.run("grep -q 'Windows Boot Manager' /mnt/boot/grub/grub.cfg", check=False) == 0:
-        log("GRUB menu has Windows Boot Manager")
-    else:
-        log("GRUB menu has no Windows entry (os-prober did not detect the stand-in boot manager)")
-        # What os-prober sees from the installed system, for docs/tasks.md T-006
-        con.run("cat /mnt/etc/default/grub.d/*.cfg; arch-chroot /mnt os-prober; echo \"os-prober: $?\"",
-                check=False, timeout=300)
+    # robin-install writes the last grub.cfg where os-prober can ask udev about
+    # the EFI partition, so Windows is in the boot menu
+    con.run("grep -q 'Windows Boot Manager' /mnt/boot/grub/grub.cfg")
+    log("GRUB menu has Windows Boot Manager")
     log("Windows partitions, its EFI files and C: are unchanged")
 
 
@@ -439,7 +435,14 @@ def phase_live(con, qmp):
     # Serial console and a GRUB menu the test can see on the installed system
     con.put_file("/mnt/etc/default/grub.d/99-install-test.cfg", GRUB_TEST_CFG)
     con.run("arch-chroot /mnt systemctl enable serial-getty@ttyS0.service")
-    con.run("arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg > /dev/null 2>&1")
+    if INSTALLER == "windows":
+        # Like robin-install: os-prober needs the live system's /run (udev), which
+        # arch-chroot hides, or Windows drops out of the menu again
+        con.run("(for d in proc sys dev run; do mount --rbind /$d /mnt/$d && mount --make-rslave /mnt/$d; done;"
+                " chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg > /dev/null 2>&1; s=$?;"
+                " for d in run dev sys proc; do umount -R /mnt/$d; done; exit $s)")
+    else:
+        con.run("arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg > /dev/null 2>&1")
     con.run("cat /mnt/etc/fstab; ls /mnt/boot", check=False)
     con.run("sync; umount -R /mnt")
     log("powering off the live system")
