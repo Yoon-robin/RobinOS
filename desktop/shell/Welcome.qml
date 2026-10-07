@@ -132,14 +132,27 @@ PanelWindow {
             shadowVerticalOffset: 16
         }
 
-        Keys.onReturnPressed: root.next()
-        Keys.onEnterPressed: root.next()
-        Keys.onEscapePressed: root.skip()
-        Keys.onRightPressed: {
-            if (!root.last)
+        // Holding a key must not race through the steps (auto-repeat is ignored)
+        Keys.onReturnPressed: event => {
+            if (!event.isAutoRepeat)
+                root.next();
+        }
+        Keys.onEnterPressed: event => {
+            if (!event.isAutoRepeat)
+                root.next();
+        }
+        Keys.onEscapePressed: event => {
+            if (!event.isAutoRepeat)
+                root.skip();
+        }
+        Keys.onRightPressed: event => {
+            if (!event.isAutoRepeat && !root.last)
                 root.step++;
         }
-        Keys.onLeftPressed: root.back()
+        Keys.onLeftPressed: event => {
+            if (!event.isAutoRepeat)
+                root.back();
+        }
 
         ColumnLayout {
             id: column

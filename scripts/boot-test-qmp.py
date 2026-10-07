@@ -68,7 +68,9 @@ def wait(seconds):
 def keys(qmp, *names):
     """Press a key combination, e.g. keys(qmp, "meta_l", "spc")."""
     qmp.execute("send-key", keys=[{"type": "qcode", "data": n} for n in names], **{"hold-time": 80})
-    time.sleep(0.15)
+    # A slow (TCG) guest that falls behind sees the release late and auto-repeats
+    # the key, so give it time to catch up between keys.
+    time.sleep(0.15 * SPEED)
 
 
 def type_text(qmp, text):
@@ -120,8 +122,7 @@ def main():
     type_text(qmp, "term")
     wait(2)
     shot(qmp, "launcher-search")
-    for _ in "term":
-        keys(qmp, "backspace")
+    keys(qmp, "ctrl", "a")  # select the query so typing replaces it
     type_text(qmp, "notepad")
     wait(2)
     shot(qmp, "launcher-windows-name")
