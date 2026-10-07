@@ -107,7 +107,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test -Installer robinos
 ```
 
-패키지를 내려받으니 인터넷이 필요해요. KVM이 없으면 한 시간 넘게 걸릴 수 있어요. 결과(스크린샷, 단계별 시리얼 로그)는 `build\install-test`에 생겨요.
+패키지를 내려받으니 인터넷이 필요해요. Windows용 QEMU가 있으면 부팅 테스트처럼 WHPX로 돌아요(UEFI 펌웨어는 QEMU에 들어 있는 `edk2-x86_64-code.fd`, 공유 폴더는 `fat:` 디스크). 없으면 WSL 안에서 TCG로 돌아서 한 시간 넘게 걸릴 수 있어요. 결과(스크린샷, 단계별 시리얼 로그)는 `build\install-test`에 생겨요.
 
 ## VM에서 직접 써 보기
 

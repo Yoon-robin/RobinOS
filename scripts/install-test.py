@@ -148,8 +148,12 @@ class Console:
 
 
 def connect_unix(path):
+    """path: a unix socket, or tcp:HOST:PORT (QEMU for Windows, see wsl-build.ps1)."""
     for _ in range(120):
         try:
+            if path.startswith("tcp:"):
+                host, port = path[4:].rsplit(":", 1)
+                return socket.create_connection((host, int(port)))
             sock = socket.socket(socket.AF_UNIX)
             sock.connect(path)
             return sock
@@ -457,8 +461,9 @@ def phase_installed(con, qmp):
 
 
 def main():
-    con = Console(os.path.join(OUT, "serial.sock"))
-    qmp = Qmp(os.path.join(OUT, "qmp.sock"))
+    # install-test.sh uses unix sockets in OUT; wsl-build.ps1 (WHPX) passes TCP addresses
+    con = Console(os.environ.get("ROBINOS_SERIAL", os.path.join(OUT, "serial.sock")))
+    qmp = Qmp(os.environ.get("ROBINOS_QMP", os.path.join(OUT, "qmp.sock")))
     try:
         if PHASE == "live":
             phase_live(con, qmp)
