@@ -84,8 +84,9 @@ Confirm:
 
 - Boot menu says RobinOS Security Learning Live
 - SDDM uses the RobinOS theme
-- Desktop wallpaper is installed
-- Konsole can see the RobinOS color scheme
+- The RobinOS desktop starts: top bar, dock, and dot-grid wallpaper
+- `Super+Space` opens the launcher and `Super+S` opens quick settings
+- foot uses the RobinOS colors and Korean input toggles with Right Alt
 - `/opt/robinos` contains docs, scripts, packages, labs, assets, and themes
 
 More detail: `docs/vm-smoke-test.md`.

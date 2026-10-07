@@ -6,7 +6,6 @@ This directory contains first-pass RobinOS visual identity assets for the live I
 
 - `themes/sddm/robinos`: SDDM login theme prototype
 - `themes/grub/robinos`: GRUB boot menu theme prototype
-- `themes/konsole/RobinOS.colorscheme`: Konsole terminal color scheme
 - `assets/wallpapers/robinos-default.svg`: default desktop wallpaper
 - `assets/wallpapers/robinos-lock.svg`: lock/login wallpaper
 
@@ -18,8 +17,9 @@ Future packaging should install:
 assets/wallpapers/*.svg -> /usr/share/wallpapers/RobinOS/
 themes/sddm/robinos -> /usr/share/sddm/themes/robinos
 themes/grub/robinos -> /usr/share/grub/themes/robinos
-themes/konsole/RobinOS.colorscheme -> /usr/share/konsole/RobinOS.colorscheme
 ```
+
+Desktop themes (shell, Hyprland, foot, GTK/Qt, fonts) live in `desktop/` and are installed by `scripts/install-desktop.sh`. See `docs/desktop.md`.
 
 For the current prototype:
 

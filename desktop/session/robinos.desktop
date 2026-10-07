@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=RobinOS
+Comment=RobinOS desktop (Hyprland + Quickshell)
+Exec=/usr/share/robinos/bin/robinos-session
+Type=Application
+DesktopNames=Hyprland

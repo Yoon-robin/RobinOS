@@ -1,0 +1,11 @@
+[Hotkey]
+EnumerateWithTriggerKeys=True
+
+[Hotkey/TriggerKeys]
+# Right Alt is mapped to Hangul by Hyprland (korean:ralt_hangul)
+0=Hangul
+1=Control+space
+
+[Behavior]
+# Keep 한/영 state the same across windows
+ShareInputState=All

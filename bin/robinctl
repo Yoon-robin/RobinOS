@@ -4,7 +4,8 @@ set -euo pipefail
 readonly ROBINOS_NAME="RobinOS"
 readonly ROBINOS_VERSION="0.1.0-dev"
 readonly CONFIG_FILE="/etc/robinos/config.toml"
-readonly WALLPAPER_FILE="/usr/share/wallpapers/RobinOS/robinos-default.svg"
+readonly SHELL_DIR="/usr/share/robinos/shell"
+readonly SESSION_FILE="/usr/share/wayland-sessions/robinos.desktop"
 readonly SDDM_THEME_DIR="/usr/share/sddm/themes/robinos"
 readonly GRUB_THEME_FILE="/usr/share/grub/themes/robinos/theme.txt"
 
@@ -127,10 +128,26 @@ doctor() {
     printf '  config: missing (%s)\n' "${CONFIG_FILE}"
   fi
 
-  if [[ -f "${WALLPAPER_FILE}" ]]; then
-    printf '  wallpaper: ok\n'
+  if have_cmd Hyprland; then
+    printf '  hyprland: ok\n'
   else
-    printf '  wallpaper: missing\n'
+    printf '  hyprland: missing\n'
+  fi
+
+  if have_cmd qs; then
+    printf '  quickshell: ok\n'
+  else
+    printf '  quickshell: missing\n'
+  fi
+
+  if [[ -f "${SHELL_DIR}/shell.qml" && -f "${SESSION_FILE}" ]]; then
+    printf '  desktop shell: ok\n'
+  else
+    printf '  desktop shell: missing (run scripts/install-desktop.sh)\n'
+  fi
+
+  if [[ -n "${ROBINOS_RENDER:-}" ]]; then
+    printf '  rendering: %s\n' "${ROBINOS_RENDER}"
   fi
 
   if [[ -d "${SDDM_THEME_DIR}" ]]; then

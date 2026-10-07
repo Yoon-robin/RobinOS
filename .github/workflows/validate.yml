@@ -36,3 +36,21 @@ jobs:
             bash -n "$script"
           done < <(find scripts bin installer archiso/airootfs/root archiso/airootfs/usr/local/bin -type f \( -name '*.sh' -o -name 'robinctl' -o -name 'robin-install' \) -print0)
 
+  desktop-check:
+    name: Desktop config check (Lua, Hyprland, QML)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run desktop checks in Arch Linux container
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v "$PWD:/repo" \
+            -w /repo \
+            archlinux:latest \
+            bash -lc 'pacman -Syu --noconfirm --needed lua qt6-declarative hyprland && bash scripts/check-desktop.sh'
+

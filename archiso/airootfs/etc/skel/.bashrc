@@ -2,6 +2,12 @@
 # RobinOS default shell profile
 #
 
+# Only interactive shells
+[[ $- != *i* ]] && return
+
+# Windows command hints (ipconfig -> ip a, dir -> ls -l, ...)
+[[ -r /usr/share/robinos/bash/robinos-hints.sh ]] && . /usr/share/robinos/bash/robinos-hints.sh
+
 alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'

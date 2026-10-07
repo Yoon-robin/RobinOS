@@ -94,7 +94,21 @@ $requiredPaths = @(
     "docs/hyperv-vm.md",
     "themes/sddm/robinos/Main.qml",
     "themes/grub/robinos/theme.txt",
-    "themes/konsole/RobinOS.colorscheme"
+    "themes/sddm/robinos/Glyph.qml",
+    "packages/desktop.txt",
+    "docs/design.md",
+    "docs/desktop.md",
+    "scripts/install-desktop.sh",
+    "scripts/fetch-fonts.sh",
+    "scripts/check-desktop.sh",
+    "desktop/install-map.txt",
+    "desktop/shell/shell.qml",
+    "desktop/shell/Theme.qml",
+    "desktop/shell/ShellState.qml",
+    "desktop/hypr/robinos.lua",
+    "desktop/hypr/hyprland.lua",
+    "desktop/bin/robinos-session",
+    "desktop/session/robinos.desktop"
 )
 
 foreach ($path in $requiredPaths) {
@@ -121,18 +135,42 @@ foreach ($path in $svgFiles) {
     Validate-XmlFile $path
 }
 
+Validate-XmlFile "desktop/fontconfig/56-robinos-fonts.conf"
+
+# Every source in the desktop install map must exist
+foreach ($line in Get-Content (Join-Path $root "desktop/install-map.txt")) {
+    $line = $line.Trim()
+    if (-not $line -or $line.StartsWith("#")) {
+        continue
+    }
+    $fields = $line -split "\s+"
+    if ($fields.Count -ne 3) {
+        Add-Error "Malformed line in desktop/install-map.txt: $line"
+        continue
+    }
+    Require-Path $fields[0].TrimEnd("/")
+}
+
 Validate-UniquePackages "packages/core.txt"
+Validate-UniquePackages "packages/desktop.txt"
 Validate-UniquePackages "packages/security-baseline.txt"
 Validate-UniquePackages "packages/security-optional.txt"
 Validate-UniquePackages "archiso/packages.x86_64"
 
 $core = Read-PackageList "packages/core.txt"
+$desktop = Read-PackageList "packages/desktop.txt"
 $security = Read-PackageList "packages/security-baseline.txt"
 $iso = Read-PackageList "archiso/packages.x86_64"
 
 foreach ($pkg in $core) {
     if ($iso -notcontains $pkg) {
         Add-Error "Core package '$pkg' is missing from archiso/packages.x86_64"
+    }
+}
+
+foreach ($pkg in $desktop) {
+    if ($iso -notcontains $pkg) {
+        Add-Error "Desktop package '$pkg' is missing from archiso/packages.x86_64"
     }
 }
 
@@ -187,7 +225,14 @@ $overlayPaths = @(
     "archiso/airootfs/usr/share/sddm/themes/robinos/Main.qml",
     "archiso/airootfs/usr/share/wallpapers/RobinOS/robinos-default.svg",
     "archiso/airootfs/etc/sddm.conf.d/10-robinos-theme.conf",
-    "archiso/airootfs/etc/default/grub.d/10-robinos-theme.cfg"
+    "archiso/airootfs/etc/default/grub.d/10-robinos-theme.cfg",
+    "archiso/airootfs/etc/sddm.conf.d/20-robinos-live.conf",
+    "archiso/airootfs/etc/xdg/hypr/hyprland.lua",
+    "archiso/airootfs/usr/share/robinos/shell/shell.qml",
+    "archiso/airootfs/usr/share/robinos/hypr/robinos.lua",
+    "archiso/airootfs/usr/share/robinos/bin/robinos-session",
+    "archiso/airootfs/usr/share/wayland-sessions/robinos.desktop",
+    "archiso/airootfs/usr/share/sddm/themes/robinos/Glyph.qml"
 )
 
 foreach ($path in $overlayPaths) {

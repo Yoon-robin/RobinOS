@@ -1,9 +1,11 @@
 # RobinOS Roadmap
 
+The v0.1 scope and its status are tracked in `docs/design.md`.
+
 ## Phase 0: Identity
 
 - Define name, logo direction, color system, and desktop tone
-- Decide default desktop: KDE Plasma for polish or Xfce for lightness
+- Decide default desktop: Hyprland + Quickshell shell (decided, see `docs/design.md`)
 - Write Korean and English one-line descriptions
 - Define ethical-use policy
 
@@ -13,7 +15,7 @@
 - Create post-install setup script
 - Configure Korean fonts, input, locale, and timezone
 - Add terminal prompt branding
-- Add wallpaper and login theme placeholders
+- Add wallpaper and login theme placeholders - done (shell-drawn wallpaper, new SDDM theme)
 
 ## Phase 2: `robinctl`
 

@@ -6,6 +6,8 @@ RobinOS is an Arch-based security learning operating system focused on ethical h
 
 The goal is not to clone Kali Linux. RobinOS should feel like its own learning workstation: safer defaults, Korean-friendly setup, guided tooling, reproducible labs, and a clean security-focused desktop experience.
 
+RobinOS is meant to be used every day by people coming from Windows, while they learn Linux and security along the way. The full design is in [docs/design.md](docs/design.md) (Korean).
+
 ## Positioning
 
 RobinOS is for:
@@ -24,6 +26,8 @@ RobinOS is not for:
 ## Core Ideas
 
 - Arch base with curated security profiles
+- Hyprland desktop with RobinOS's own Quickshell shell in the shadcn/ui zinc style ([docs/desktop.md](docs/desktop.md))
+- Windows-friendly defaults: floating windows, a dock, `Alt+Tab`, `Alt+F4`, `Super+E`
 - Btrfs snapshots before risky updates
 - Korean input, fonts, locale, and docs by default
 - `robinctl` command for setup, profiles, snapshots, diagnostics, and lab tools
@@ -49,7 +53,7 @@ Bootable live ISO for workshops, classes, quick practice, and recovery-style wor
 The first milestone is a bootable Arch ISO with:
 
 - Branded boot, login, wallpaper, and terminal prompt
-- KDE Plasma or Xfce desktop profile
+- Hyprland desktop with the RobinOS shell, with automatic software rendering in VMs
 - Korean input and font defaults
 - `robinctl doctor`
 - `robinctl profile security`
@@ -74,7 +78,7 @@ bin/robinctl lab info web
 bin/robinctl lab status web
 ```
 
-`robinctl doctor` also checks the early RobinOS branding layer: wallpaper, SDDM theme, and installed-system GRUB theme.
+`robinctl doctor` also checks the desktop (Hyprland, Quickshell, the RobinOS shell) and the branding layer: SDDM theme and installed-system GRUB theme.
 
 On a future RobinOS install, it can be installed with:
 
@@ -101,6 +105,7 @@ On Arch Linux:
 
 ```bash
 scripts/check-arch-packages.sh
+scripts/check-desktop.sh
 scripts/build-iso.sh
 ```
 
@@ -110,7 +115,7 @@ To create a Hyper-V Arch VM from Windows, see `docs/hyperv-vm.md`.
 
 GitHub Actions:
 
-- `Validate`: static project checks and Bash syntax checks
+- `Validate`: static project checks, Bash syntax checks, and desktop config checks (Lua, Hyprland, QML) in an Arch container
 - `Arch Package Check`: manual/weekly package-name check against Arch repositories
 
 Local CI fallback:

@@ -33,10 +33,43 @@ if [[ "${DRY_RUN}" != "true" ]]; then
 fi
 
 mapfile -t core_packages < <(package_file "${ROOT_DIR}/packages/core.txt")
+mapfile -t desktop_packages < <(package_file "${ROOT_DIR}/packages/desktop.txt")
 
-run pacman -Syu --needed "${core_packages[@]}"
+run pacman -Syu --needed "${core_packages[@]}" "${desktop_packages[@]}"
 run install -Dm755 "${ROOT_DIR}/bin/robinctl" /usr/local/bin/robinctl
 run install -Dm644 "${ROOT_DIR}/config/robinos.toml" /etc/robinos/config.toml
+
+# Desktop: Hyprland + Quickshell shell, themes, input method and font defaults
+if [[ "${DRY_RUN}" == "true" ]]; then
+  "${ROOT_DIR}/scripts/install-desktop.sh" --dry-run
+  printf 'Would download Geist and Pretendard into /usr/share/fonts/robinos\n'
+else
+  run "${ROOT_DIR}/scripts/install-desktop.sh"
+  run "${ROOT_DIR}/scripts/fetch-fonts.sh" /usr/share/fonts/robinos
+fi
+run dconf update
+run fc-cache -f
+
+# New users get the defaults from /etc/skel; copy them for the user running sudo too.
+if [[ -n "${SUDO_USER:-}" && "${SUDO_USER}" != "root" ]]; then
+  user_home="$(getent passwd "${SUDO_USER}" | cut -d: -f6)"
+  for config in qt6ct/qt6ct.conf fcitx5/profile fcitx5/config; do
+    if [[ -n "${user_home}" && ! -e "${user_home}/.config/${config}" ]]; then
+      run install -Dm644 -o "${SUDO_USER}" -g "$(id -gn "${SUDO_USER}")" \
+        "/etc/skel/.config/${config}" "${user_home}/.config/${config}"
+    fi
+  done
+
+  hints_line='[[ -r /usr/share/robinos/bash/robinos-hints.sh ]] && . /usr/share/robinos/bash/robinos-hints.sh'
+  if [[ -n "${user_home}" ]] && ! grep -qF "robinos-hints.sh" "${user_home}/.bashrc" 2>/dev/null; then
+    if [[ "${DRY_RUN}" == "true" ]]; then
+      printf 'Would add Windows command hints to %s/.bashrc\n' "${user_home}"
+    else
+      printf '\n# Windows command hints (RobinOS)\n%s\n' "${hints_line}" >>"${user_home}/.bashrc"
+      chown "${SUDO_USER}:$(id -gn "${SUDO_USER}")" "${user_home}/.bashrc"
+    fi
+  fi
+fi
 
 if [[ -x "${ROOT_DIR}/scripts/install-branding.sh" ]]; then
   if [[ "${DRY_RUN}" == "true" ]]; then
@@ -57,10 +90,12 @@ fi
 
 run localectl set-locale LANG=ko_KR.UTF-8
 
-for service in NetworkManager sddm docker; do
+for service in NetworkManager sddm bluetooth docker; do
   if [[ "${DRY_RUN}" == "true" ]] || systemctl list-unit-files "${service}.service" >/dev/null 2>&1; then
     run systemctl enable "${service}.service"
   fi
 done
+
+run systemctl set-default graphical.target
 
 printf 'RobinOS post-install complete.\n'

@@ -49,7 +49,9 @@ ls /usr/share/grub/themes/robinos
 
 - Boot menu says RobinOS Security Learning Live
 - SDDM uses the RobinOS theme
-- RobinOS wallpaper is installed
-- Konsole can see the RobinOS color scheme
+- The RobinOS desktop starts: top bar, dock, and dot-grid wallpaper
+- `Super+Space` opens the launcher and `Super+S` opens quick settings
+- foot uses the RobinOS colors and Korean input toggles with Right Alt
+- `~/.local/state/robinos/session.log` shows the rendering mode (software in most VMs)
 - Ethics notice appears in `/etc/motd`
 

@@ -18,6 +18,7 @@ cp -a "${ROOT_DIR}/archiso/." "${OUT_PROFILE}/"
 
 "${ROOT_DIR}/scripts/sync-archiso-files.sh"
 cp -a "${ROOT_DIR}/archiso/airootfs/." "${OUT_PROFILE}/airootfs/"
+"${ROOT_DIR}/scripts/fetch-fonts.sh" "${OUT_PROFILE}/airootfs/usr/share/fonts/robinos"
 "${ROOT_DIR}/scripts/customize-iso-boot.sh" "${OUT_PROFILE}"
 
 printf 'Prepared RobinOS archiso profile at %s\n' "${OUT_PROFILE}"

@@ -48,8 +48,9 @@ ls /usr/share/grub/themes/robinos
 
 - Live boot menu says RobinOS Security Learning Live
 - SDDM shows the RobinOS theme
-- Desktop wallpaper is available in `/usr/share/wallpapers/RobinOS`
-- Konsole color scheme is installed
+- The RobinOS desktop starts: top bar, dock, and dot-grid wallpaper
+- `Super+Space` opens the launcher and `Super+S` opens quick settings
+- foot uses the RobinOS colors and Korean input toggles with Right Alt
 
 ## Publish
 

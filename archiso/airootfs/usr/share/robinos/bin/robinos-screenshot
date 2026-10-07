@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Usage: robinos-screenshot [region|screen]
+# Saves to ~/Pictures/Screenshots, copies the image to the clipboard, and notifies.
+
+mode="${1:-region}"
+dir="$(xdg-user-dir PICTURES 2>/dev/null || printf '%s/Pictures' "${HOME}")/Screenshots"
+file="${dir}/$(date +%Y%m%d-%H%M%S).png"
+
+mkdir -p "${dir}"
+
+case "${mode}" in
+  region)
+    geometry="$(slurp -d -b '#09090b99' -c '#fafafaff' -w 1)" || exit 0
+    grim -g "${geometry}" "${file}"
+    ;;
+  screen)
+    grim "${file}"
+    ;;
+  *)
+    printf 'usage: %s [region|screen]\n' "$0" >&2
+    exit 1
+    ;;
+esac
+
+wl-copy --type image/png <"${file}"
+notify-send --app-name=RobinOS --icon="${file}" "스크린샷을 저장했어요" "${file/#${HOME}/\~}"

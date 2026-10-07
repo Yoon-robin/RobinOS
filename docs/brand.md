@@ -19,12 +19,31 @@ The mark combines:
 
 ## Palette
 
-- Charcoal: `#10151C`
-- Panel: `#18212C`
-- Text: `#EAF7FA`
-- Cyan: `#5EEBFF`
-- Cyan dark: `#1BA6C9`
-- Robin red: `#D83B4B`
+RobinOS follows the shadcn/ui zinc palette with Robin red as the only accent. The source of truth is `desktop/shell/Theme.qml`.
+
+| Token | Dark (default) | Light |
+|---|---|---|
+| background | `#09090b` | `#ffffff` |
+| surface | `#121214` | `#ffffff` |
+| secondary | `#27272a` | `#f4f4f5` |
+| foreground | `#fafafa` | `#09090b` |
+| muted foreground | `#a1a1aa` | `#71717a` |
+| border | white 10% | `#e4e4e7` |
+| primary | `#fafafa` | `#18181b` |
+| accent (Robin red) | `#e5484d` | `#e5484d` |
+| destructive | `#f87171` | `#dc2626` |
+| success | `#4ade80` | `#16a34a` |
+
+Other accents the user can pick: orange `#f76b15`, green `#30a46c`, blue `#3e63dd`, violet `#8e4ec6`, neutral `#a1a1aa`.
+
+## Type and Shape
+
+- Interface: Geist, with Pretendard for Hangul
+- Code and terminal: Geist Mono / GeistMono Nerd Font
+- Radius: 6 (small), 8 (inputs, buttons), 10 (cards), 14 (windows, popovers), 18 (dock)
+- Icons: Lucide stroke icons, 2px stroke on a 24px grid
+
+The cyan palette of the first logo files (`assets/brand/*.svg`) predates this palette and still needs a refresh.
 
 ## Usage
 

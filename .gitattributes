@@ -11,8 +11,16 @@
 *.desktop text eol=lf
 *.colorscheme text eol=lf
 *.qml text eol=lf
+*.js text eol=lf
+*.lua text eol=lf
+*.ini text eol=lf
 *.txt text eol=lf
 *.md text eol=lf
+
+desktop/** text eol=lf
+archiso/airootfs/usr/share/robinos/** text eol=lf
+archiso/airootfs/usr/share/wayland-sessions/** text eol=lf
+archiso/airootfs/opt/robinos/desktop/** text eol=lf
 
 bin/* text eol=lf
 installer/* text eol=lf

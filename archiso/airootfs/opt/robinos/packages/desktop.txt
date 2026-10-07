@@ -1,0 +1,56 @@
+# RobinOS desktop: Hyprland + Quickshell shell (see docs/desktop.md)
+
+# Compositor and shell
+hyprland
+quickshell
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+hyprlock
+hypridle
+hyprpolkitagent
+qt6-wayland
+qt6-svg
+qt6ct
+
+# Login screen (the SDDM greeter runs on X11)
+sddm
+xorg-server
+
+# Look and feel (Geist and Pretendard come from scripts/fetch-fonts.sh)
+adw-gtk-theme
+papirus-icon-theme
+inter-font
+otf-geist-mono-nerd
+dconf
+
+# Input and hardware
+fcitx5-gtk
+fcitx5-qt
+brightnessctl
+bluez
+bluez-utils
+upower
+
+# Screenshots, clipboard, notifications
+grim
+slurp
+wl-clipboard
+libnotify
+xdg-user-dirs
+xdg-utils
+
+# Everyday apps for people coming from Windows
+foot
+nautilus
+firefox
+firefox-i18n-ko
+gnome-text-editor
+loupe
+evince
+file-roller
+gnome-calculator
+mission-center
+pavucontrol
+flatpak
+ntfs-3g
+exfatprogs

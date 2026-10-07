@@ -5,7 +5,8 @@ base = "arch"
 purpose = "security-learning-live"
 
 [desktop]
-default = "kde-plasma"
+default = "hyprland"
+shell = "quickshell"
 locale = "ko_KR.UTF-8"
 input_method = "fcitx5-hangul"
 

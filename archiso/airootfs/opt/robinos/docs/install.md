@@ -54,5 +54,5 @@ sudo /opt/robinos/scripts/post-install.sh
 - Bootloader setup
 - User creation
 - Korean input and locale setup
-- KDE Plasma branding
+- RobinOS desktop (Hyprland + Quickshell shell)
 - Security Lab profile selection

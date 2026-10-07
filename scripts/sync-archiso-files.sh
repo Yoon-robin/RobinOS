@@ -18,11 +18,14 @@ install -Dm644 "${ROOT_DIR}"/scripts/*.ps1 -t "${ROOT_DIR}/archiso/airootfs/opt/
 mkdir -p "${ROOT_DIR}/archiso/airootfs/opt/robinos"
 rm -rf "${ROOT_DIR}/archiso/airootfs/opt/robinos/labs"
 cp -a "${ROOT_DIR}/labs" "${ROOT_DIR}/archiso/airootfs/opt/robinos/labs"
+rm -rf "${ROOT_DIR}/archiso/airootfs/opt/robinos/desktop"
+cp -a "${ROOT_DIR}/desktop" "${ROOT_DIR}/archiso/airootfs/opt/robinos/desktop"
+
+"${ROOT_DIR}/scripts/install-desktop.sh" --root "${ROOT_DIR}/archiso/airootfs"
 
 install -Dm644 "${ROOT_DIR}/assets/wallpapers/robinos-default.svg" "${ROOT_DIR}/archiso/airootfs/usr/share/wallpapers/RobinOS/robinos-default.svg"
 install -Dm644 "${ROOT_DIR}/assets/wallpapers/robinos-lock.svg" "${ROOT_DIR}/archiso/airootfs/usr/share/wallpapers/RobinOS/robinos-lock.svg"
 install -Dm644 "${ROOT_DIR}/assets/brand/robinos-mark.svg" "${ROOT_DIR}/archiso/airootfs/usr/share/pixmaps/robinos-mark.svg"
-install -Dm644 "${ROOT_DIR}/themes/konsole/RobinOS.colorscheme" "${ROOT_DIR}/archiso/airootfs/usr/share/konsole/RobinOS.colorscheme"
 mkdir -p "${ROOT_DIR}/archiso/airootfs/usr/share/grub/themes/robinos"
 cp -a "${ROOT_DIR}/themes/grub/robinos/." "${ROOT_DIR}/archiso/airootfs/usr/share/grub/themes/robinos/"
 install -Dm644 "${ROOT_DIR}/config/grub/10-robinos-theme.cfg" "${ROOT_DIR}/archiso/airootfs/etc/default/grub.d/10-robinos-theme.cfg"

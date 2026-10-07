@@ -32,6 +32,7 @@ check_file() {
 }
 
 check_file "${ROOT_DIR}/packages/core.txt"
+check_file "${ROOT_DIR}/packages/desktop.txt"
 check_file "${ROOT_DIR}/packages/security-baseline.txt"
 check_file "${ROOT_DIR}/archiso/packages.x86_64"
 

@@ -30,4 +30,11 @@ file_permissions=(
   ["/opt/robinos/scripts/prepare-archiso.sh"]="0:0:755"
   ["/opt/robinos/scripts/run-vm.sh"]="0:0:755"
   ["/opt/robinos/scripts/sync-archiso-files.sh"]="0:0:755"
+  ["/opt/robinos/scripts/install-desktop.sh"]="0:0:755"
+  ["/opt/robinos/scripts/fetch-fonts.sh"]="0:0:755"
+  ["/opt/robinos/scripts/check-desktop.sh"]="0:0:755"
+  ["/opt/robinos/desktop/bin/robinos-session"]="0:0:755"
+  ["/opt/robinos/desktop/bin/robinos-screenshot"]="0:0:755"
+  ["/usr/share/robinos/bin/robinos-session"]="0:0:755"
+  ["/usr/share/robinos/bin/robinos-screenshot"]="0:0:755"
 )

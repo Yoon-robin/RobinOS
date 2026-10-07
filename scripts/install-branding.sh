@@ -24,7 +24,6 @@ run() {
 run install -Dm644 "${ROOT_DIR}/assets/wallpapers/robinos-default.svg" /usr/share/wallpapers/RobinOS/robinos-default.svg
 run install -Dm644 "${ROOT_DIR}/assets/wallpapers/robinos-lock.svg" /usr/share/wallpapers/RobinOS/robinos-lock.svg
 run install -Dm644 "${ROOT_DIR}/assets/brand/robinos-mark.svg" /usr/share/pixmaps/robinos-mark.svg
-run install -Dm644 "${ROOT_DIR}/themes/konsole/RobinOS.colorscheme" /usr/share/konsole/RobinOS.colorscheme
 run install -Dm644 "${ROOT_DIR}/config/grub/10-robinos-theme.cfg" /etc/default/grub.d/10-robinos-theme.cfg
 
 run mkdir -p /usr/share/sddm/themes/robinos

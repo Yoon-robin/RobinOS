@@ -1,0 +1,21 @@
+# RobinOS desktop files: <source in repo> <destination> <mode>
+# Read by scripts/install-desktop.sh (Linux) and scripts/sync-archiso-files.ps1 (Windows).
+# A source ending in "/" is copied as a whole directory (mode "dir").
+desktop/shell/                            /usr/share/robinos/shell/                        dir
+desktop/hypr/robinos.lua                  /usr/share/robinos/hypr/robinos.lua              644
+desktop/hypr/hyprlock.conf                /usr/share/robinos/hypr/hyprlock.conf            644
+desktop/hypr/hypridle.conf                /usr/share/robinos/hypr/hypridle.conf            644
+desktop/hypr/hyprland.lua                 /etc/xdg/hypr/hyprland.lua                       644
+desktop/bin/robinos-session               /usr/share/robinos/bin/robinos-session           755
+desktop/bin/robinos-screenshot            /usr/share/robinos/bin/robinos-screenshot        755
+desktop/bash/robinos-hints.sh             /usr/share/robinos/bash/robinos-hints.sh         644
+desktop/session/robinos.desktop           /usr/share/wayland-sessions/robinos.desktop      644
+desktop/foot/foot.ini                     /etc/xdg/foot/foot.ini                           644
+desktop/qt6ct/RobinOS-Dark.conf           /usr/share/robinos/qt6ct/RobinOS-Dark.conf       644
+desktop/qt6ct/RobinOS-Light.conf          /usr/share/robinos/qt6ct/RobinOS-Light.conf      644
+desktop/qt6ct/qt6ct.conf                  /etc/skel/.config/qt6ct/qt6ct.conf               644
+desktop/fcitx5/profile                    /etc/skel/.config/fcitx5/profile                 644
+desktop/fcitx5/config                     /etc/skel/.config/fcitx5/config                  644
+desktop/fontconfig/56-robinos-fonts.conf  /etc/fonts/conf.d/56-robinos-fonts.conf          644
+desktop/dconf/profile-user                /etc/dconf/profile/user                          644
+desktop/dconf/00-robinos                  /etc/dconf/db/local.d/00-robinos                 644

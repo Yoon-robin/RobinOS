@@ -7,13 +7,17 @@ CPUS="2"
 ISO_PATH=""
 UEFI="false"
 ENABLE_KVM="auto"
+GL="false"
 
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/run-vm.sh [--iso path] [--memory mib] [--cpus n] [--uefi] [--no-kvm]
+  scripts/run-vm.sh [--iso path] [--memory mib] [--cpus n] [--uefi] [--no-kvm] [--gl]
 
 Boots a RobinOS ISO in QEMU for smoke testing.
+
+--gl uses a virtio GPU with OpenGL (virgl) so Hyprland runs with GPU
+acceleration. Without it the desktop starts in software rendering.
 
 Examples:
   scripts/run-vm.sh
@@ -42,6 +46,10 @@ while [[ "$#" -gt 0 ]]; do
       ;;
     --no-kvm)
       ENABLE_KVM="false"
+      shift
+      ;;
+    --gl)
+      GL="true"
       shift
       ;;
     -h|--help)
@@ -84,8 +92,13 @@ qemu_args=(
   -boot d
   -netdev user,id=net0
   -device virtio-net-pci,netdev=net0
-  -display gtk
 )
+
+if [[ "${GL}" == "true" ]]; then
+  qemu_args+=(-device virtio-vga-gl -display gtk,gl=on)
+else
+  qemu_args+=(-display gtk)
+fi
 
 if [[ "${ENABLE_KVM}" == "auto" && -e /dev/kvm ]]; then
   qemu_args+=(-enable-kvm -cpu host)
