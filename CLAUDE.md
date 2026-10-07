@@ -14,6 +14,9 @@ RobinOS는 Arch Linux 기반의 한국어 우선 보안 학습 OS예요. Hyprlan
 
 [docs/loop.md](docs/loop.md)의 순서를 따라요. 작업 목록과 진행 상태는 [docs/tasks.md](docs/tasks.md)가 원본이에요. 어떤 문서에 무엇을 쓰는지는 [docs/README.md](docs/README.md)에 있어요.
 
+- **루프는 스스로 멈추지 않아요.** 할 일이 떨어지면 [docs/loop.md](docs/loop.md)의 "백로그 채우기"로 새 작업을 만들고, 막힌 작업은 `막힘`으로 두고 다른 일을 해요.
+- **회차는 언제나 다음 회차 예약(`ScheduleWakeup`)으로 끝나요.** 오류나 실패가 있어도 마찬가지예요. 사용자가 멈추라고 할 때만 멈춰요.
+
 ## 주요 명령 (PowerShell, 저장소 루트)
 
 ```powershell
