@@ -295,7 +295,10 @@ ARCHINSTALL_CONFIG = {
     },
     "hostname": "robinos",
     "kernels": ["linux"],
-    "locale_config": {"kb_layout": "us", "sys_enc": "UTF-8", "sys_lang": "ko_KR"},
+    # kb_layout stays empty: setting it makes archinstall boot the target in
+    # systemd-nspawn and run `systemd-run --pty localectl`, which hangs without
+    # a terminal. post-install.sh sets up the keyboard and input method anyway.
+    "locale_config": {"kb_layout": "", "sys_enc": "UTF-8", "sys_lang": "ko_KR"},
     "mirror_config": {
         "custom_servers": [{"url": MIRROR}],
         "mirror_regions": {},
