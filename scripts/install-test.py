@@ -177,7 +177,7 @@ class Console:
     def put_file(self, path, content):
         """Writes a file in the guest (base64 in short lines over the console)."""
         data = base64.b64encode(content.encode()).decode()
-        self.run(f": > {path}.b64")
+        self.run(f"mkdir -p \"$(dirname {path})\" && : > {path}.b64")
         for i in range(0, len(data), 512):
             self.run(f"printf '%s' '{data[i:i + 512]}' >> {path}.b64")
         self.run(f"base64 -d {path}.b64 > {path} && rm {path}.b64")
