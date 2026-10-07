@@ -111,6 +111,12 @@ Singleton {
             "gsettings set org.gnome.desktop.interface icon-theme '" + icons + "'",
             "gsettings set org.gnome.desktop.interface accent-color '" + gnomeAccent + "'",
             "pkill -" + footSignal + " -x foot",
+            // New foot windows: keep a small user config that includes the system one
+            // and sets the starting theme (left alone once the user edits it).
+            "f=\"${XDG_CONFIG_HOME:-$HOME/.config}/foot/foot.ini\"",
+            "if [ ! -e \"$f\" ] || grep -q '^# robinos-managed' \"$f\"; then mkdir -p \"${f%/*}\""
+                + " && printf '# robinos-managed\\n[main]\\ninclude=/etc/xdg/foot/foot.ini\\ninitial-color-theme=%s\\n' "
+                + (dark ? "dark" : "light") + " > \"$f\"; fi",
             "conf=\"${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/qt6ct.conf\"",
             "[ -f \"$conf\" ] && sed -i"
                 + " -e 's|^color_scheme_path=.*|color_scheme_path=/usr/share/robinos/qt6ct/" + palette + "|'"

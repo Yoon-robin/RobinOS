@@ -188,7 +188,7 @@ PanelWindow {
 
         if (item.kind === "app") {
             if (item.entry.runInTerminal)
-                Quickshell.execDetached(["foot"].concat(item.entry.command));
+                Quickshell.execDetached(["foot"].concat(ShellState.toArray(item.entry.command)));
             else
                 item.entry.execute();
             return;

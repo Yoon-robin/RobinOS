@@ -41,12 +41,15 @@ Rectangle {
     Connections {
         target: sddm
 
+        // Clear the field first: its onTextChanged resets the message
         function onLoginFailed() {
-            root.message = "비밀번호가 맞지 않아요";
             password.text = "";
+            root.message = "비밀번호가 맞지 않아요";
             password.forceActiveFocus();
         }
     }
+
+    Component.onCompleted: (root.otherUser ? userField : password).forceActiveFocus()
 
     // Collect session names for the session switcher
     Repeater {
@@ -271,7 +274,6 @@ Rectangle {
                             font.family: root.font
                             font.pixelSize: 14
                             clip: true
-                            focus: true
                             onTextChanged: root.message = ""
                             Keys.onReturnPressed: root.login()
                             Keys.onEnterPressed: root.login()

@@ -37,6 +37,19 @@ Singleton {
         Quickshell.execDetached(["hyprctl", "eval", "robinos.floatByDefault:set_enabled(" + (!tiling) + ")"]);
     }
 
+    // A Hyprland config reload rebuilds its Lua state, which re-enables the float
+    // rule and resets the light-theme border colors. Apply our choices again.
+    Connections {
+        target: Hyprland
+
+        function onRawEvent(event) {
+            if (event.name === "configreloaded") {
+                root.applyTiling();
+                Theme.applySystem();
+            }
+        }
+    }
+
     FileView {
         id: desktopStore
 

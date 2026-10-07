@@ -51,6 +51,7 @@ PanelWindow {
     }
 
     readonly property var extras: {
+        DesktopEntries.applications.values; // re-evaluate after the background scan
         const seen = {};
         const out = [];
         for (let i = 0; i < toplevels.length; i++) {

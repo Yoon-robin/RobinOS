@@ -45,6 +45,9 @@ PanelWindow {
         const top = ToplevelManager.activeToplevel;
         if (!top || !top.activated)
             return "";
+        if (top.appId === "")
+            return top.title;
+        DesktopEntries.applications.values; // re-evaluate after the background scan
         const entry = DesktopEntries.heuristicLookup(top.appId);
         return entry?.name ?? top.appId;
     }
