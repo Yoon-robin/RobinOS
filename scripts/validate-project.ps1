@@ -243,6 +243,24 @@ foreach ($path in $overlayPaths) {
     Require-Path $path
 }
 
+# Scripts must be executable in git, or Linux checkouts cannot run them.
+# Windows does not track the bit; fix with: git update-index --chmod=+x <file>
+if (Get-Command git -ErrorAction SilentlyContinue) {
+    Push-Location $root
+    try {
+        $entries = git ls-files -s -- "scripts/*.sh" "scripts/*.py" "bin/*" "installer/*" "desktop/bin/*" 2>$null
+        foreach ($entry in $entries) {
+            $mode, $rest = $entry -split "\s+", 2
+            $path = ($entry -split "`t", 2)[1]
+            if ($mode -ne "100755") {
+                Add-Error "Script is not executable in git: $path (run: git update-index --chmod=+x $path)"
+            }
+        }
+    } finally {
+        Pop-Location
+    }
+}
+
 if ($errors.Count -gt 0) {
     Write-Host ""
     Write-Host "Validation failed:" -ForegroundColor Red

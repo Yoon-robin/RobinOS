@@ -51,6 +51,7 @@ if command -v Hyprland >/dev/null 2>&1; then
   fi
   if output="$(Hyprland "${hypr_args[@]}" 2>&1)"; then
     ok "desktop/hypr/robinos.lua"
+    printf '%s\n' "${output}" | sed -n '/Config parsing result/,$p' | sed '/^\s*$/d; s/^/          /'
   else
     printf '%s\n' "${output}" >&2
     fail "desktop/hypr/robinos.lua"
