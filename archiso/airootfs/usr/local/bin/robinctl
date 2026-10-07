@@ -561,6 +561,9 @@ snapshot_rollback() {
     unmount_btrfs_top "${top}"
     die "스냅샷을 복사하지 못해서 원래대로 뒀어요."
   fi
+  # snap-pac takes "pre" snapshots while pacman holds its lock, so they carry
+  # db.lck; left in place, pacman would refuse to run after the rollback
+  rm -f "${top}/@/var/lib/pacman/db.lck"
 
   # The EFI /boot is not in the snapshot: put back the kernel it was taken with,
   # from the copy the boot backup hooks keep in /.bootbackup.
