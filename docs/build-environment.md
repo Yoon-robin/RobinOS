@@ -26,8 +26,8 @@ See `docs/hyperv-vm.md`.
 ```bash
 sudo pacman -Syu
 sudo pacman -S --needed git archiso qemu-full edk2-ovmf
-git clone https://github.com/Yoon-robin/RobinOS-Security-Lab.git
-cd RobinOS-Security-Lab
+git clone https://github.com/Yoon-robin/RobinOS.git
+cd RobinOS
 scripts/doctor-build.sh
 scripts/build-iso.sh
 scripts/run-vm.sh
