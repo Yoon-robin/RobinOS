@@ -37,7 +37,7 @@
 
 | 영역 | 요구사항 | 구현 |
 |---|---|---|
-| 설치 | 윈도우를 지우지 않고 나란히 설치, 부팅할 때 선택 | 미결정 (아래 참고) |
+| 설치 | 윈도우를 지우지 않고 나란히 설치, 부팅할 때 선택 | 자체 설치기(아래 "설치기"), GRUB + os-prober |
 | 업데이트 | 업데이트로 망가져도 복구 가능 | `snapper` + `snap-pac`(pacman 전후 자동 스냅샷) + `grub-btrfs`(부팅 메뉴에서 스냅샷 부팅) |
 | 앱 | 앱 스토어, 브라우저, 오피스, 게임 | Flatpak + Flathub, Firefox, LibreOffice, Steam |
 | 하드웨어 | Wi-Fi, 블루투스, 프린터, 노트북 전원, NVIDIA | NetworkManager, BlueZ, CUPS, UPower, `nvidia-open` |
@@ -99,6 +99,16 @@
 
 다크/라이트와 강조 색상을 바꾸면 셸이 GTK, libadwaita, foot, qt6ct, Hyprland 창 테두리에 한꺼번에 적용해요.
 
+### 설치기: 직접 만든 Quickshell 화면 + Python 백엔드
+
+2026-10 결정. 화면은 셸 안의 `desktop/shell/Installer.qml`이고, 실제 설치는 `installer/robin-install`이 `sgdisk`, `mkfs.btrfs`, `pacstrap`, `grub-install`로 해요. 화면은 계획(디스크, 방식, 사용자)을 표준 입력으로 넘기고, 백엔드의 `@@ <퍼센트> <메시지>` 줄로 진행률을 그려요. 설치 방법은 [install.md](install.md)에 있어요.
+
+Calamares를 쓰지 않은 이유예요.
+
+- Arch 공식 저장소에 없어요. AUR에서 빌드해 RobinOS 전용 저장소를 운영해야 하고, 그 저장소의 서명과 갱신까지 맡아야 해요.
+- Qt Widgets 기반이라 shadcn/ui 기준의 셸과 모양을 맞추기 어려워요. 자체 화면은 셸의 `Theme`, 버튼, 입력 칸을 그대로 써요.
+- RobinOS에 필요한 설치는 하나로 정해져 있어요(GPT, Btrfs 하위 볼륨, `/efi`, GRUB, 스냅샷 설정). 백엔드는 400줄 남짓이고, VM 설치 테스트(`wsl-build.ps1 install-test -Installer robinos`)가 설치부터 스냅샷 되돌리기까지 확인해요.
+
 ### VM 대응: 렌더링 자동 전환
 
 학습자는 VM에서 먼저 써 보는 경우가 많아요. `robinos-session`이 그래픽 환경을 보고 렌더링 방식을 정해요.
@@ -112,13 +122,12 @@
 | # | 항목 | 상태 |
 |---|---|---|
 | 1 | VM과 실기기에서 부팅되는 라이브 ISO (Hyprland + RobinOS 셸) | QEMU 부팅 확인 (CI가 ISO마다 부팅 테스트), 실기기 검증 전 |
-| 2 | 윈도우와 나란히 설치되는 그래픽 설치기 | 미결정 |
+| 2 | 윈도우와 나란히 설치되는 그래픽 설치기 | 구현. 디스크 전체 설치는 VM 설치 테스트로 검증(2026-10-08), 윈도우 옆 설치는 검증 전 (T-006) |
 | 3 | 업데이트 전 자동 스냅샷, 부팅 메뉴에서 되돌리기 | 완료, VM 설치 테스트로 검증 (2026-10-08: snap-pac 전후 스냅샷, GRUB 스냅샷 메뉴, `robinctl snapshot rollback`) |
 | 4 | 환영 마법사, 리눅스 기초 미션 5개, 윈도우 명령어 번역기 | 번역기 완료 (터미널 `desktop/bash/robinos-hints.sh`, 런처 윈도우 이름 검색), 미션 완료 (`robinctl learn`), 환영 마법사 완료 (`desktop/shell/Welcome.qml`) |
 | 5 | 로컬 전용 웹 보안 랩 | 완료 (`127.0.0.1` 바인딩) |
 
 ## 미결정 사항
 
-- **그래픽 설치기**: Calamares는 Arch 공식 저장소에 없어요. (a) AUR에서 빌드해 RobinOS 전용 저장소로 배포하거나 (b) 직접 만들어요.
 - **창 제목 표시줄과 최소화**: Hyprland에는 기본 제목 표시줄이 없어요. GTK 앱과 Firefox는 자체 버튼이 있고, foot은 자체 제목 표시줄을 그리게 설정했어요. Qt 앱용 제목 표시줄(hyprbars 플러그인)과 작업 표시줄 클릭으로 최소화하는 기능은 v0.2에서 다뤄요.
 - **Win+D(바탕 화면 보기)**: Hyprland에 해당 기능이 없어 v0.2에서 다뤄요.

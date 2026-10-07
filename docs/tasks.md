@@ -10,7 +10,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 작업 | 시작 | 대상 | 결과 위치 | 상태 |
 |---|---|---|---|---|
-| ISO 빌드 → 부팅 테스트 → 설치 테스트 robinos (WHPX) | 2026-10-08 START | `HEAD` | `build\boot-test`, `build\install-test`, 로그 `build\loop-*.log`, 순서 결과 `build\loop-chain.log` | 실행 중 |
+| ISO 빌드 → 부팅 테스트 → 설치 테스트 robinos (WHPX) | 2026-10-08 05:23 | `f98c691` | `build\boot-test`, `build\install-test`, 로그 `build\loop-*.log`, 순서 결과 `build\loop-chain.log` | 실행 중 |
 
 ## 정기 점검
 
@@ -81,10 +81,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 할 일: 설치 테스트에 윈도우 흉내 디스크 시나리오 추가(GPT, 100MB ESP, NTFS 파티션, 빈 공간 40GB 이상). 설치 뒤 NTFS 파티션이 그대로인지, ESP에 `EFI/RobinOS`가 생겼는지, 시계가 localtime인지 확인
 - 완료 기준: 시나리오 통과
 
-### T-007 설치기 결정과 설치 문서 갱신
-- 목표: [design.md](design.md) 미결정 사항의 "그래픽 설치기"를 결정으로 옮기고(자체 설치기, `pacstrap`, Quickshell 화면, Calamares를 쓰지 않는 이유), [install.md](install.md)를 설치기 기준으로 다시 쓰기
-- 조건: T-004, T-005 끝난 뒤
-
 ### T-009 로고 SVG 색 정리
 - 상태: 검증 대기. 2026-10-08 로고 색을 바꿈(옛 청록 → zinc, 위쪽 날개만 Robin red, `2fca31f`). 설치 테스트에서 GRUB 테마도 옛 청록인 걸 보고 GRUB 테마, 배경화면 SVG, SDDM 배경 사본까지 바꿈. rsvg-convert로 렌더링해서 확인. 남은 것: 다음 부팅 테스트의 `01-boot.png`(GRUB)
 - 목표: [brand.md](brand.md)에 적힌 대로 `assets/brand/*.svg`의 옛 청록색을 zinc와 Robin red로 바꾸기
@@ -101,6 +97,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 최근 것이 위에 있어요.
 
+- 2026-10-08 T-007 설치기 결정과 설치 문서: design.md에 자체 설치기 결정(Calamares를 쓰지 않는 이유)을 옮기고, install.md를 설치기 기준으로 다시 씀(준비, 설치기 단계, 윈도우 옆 설치 준비와 BitLocker·빠른 시작 안내, 명령 설치, archinstall 방법). README에 설치 절 추가
 - 2026-10-08 T-004 설치기 백엔드 검증: `robin-install`로 디스크 전체에 설치하는 설치 테스트가 다섯 단계 모두 통과(8분). EFI는 `/efi`, fstab에 `subvolid=` 없음(`6a472db`), 스냅샷으로 부팅할 때 그 스냅샷 안의 커널로 부팅됨(`/boot`가 `@` 안), chroot에서 돈 post-install과 스냅샷 설정도 정상. 첫 실행부터 통과했어요
 - 2026-10-08 검증 묶음(`c5e9794`): ISO 빌드 8분, 부팅 테스트 215초, 설치 테스트 archinstall 11분, robinos 8분
 - 2026-10-08 T-013 스냅샷으로 부팅한 상태에서 되돌리기: 설치 테스트에 `snapshot-boot` 단계를 넣고 통과. GRUB 스냅샷 메뉴에서 cowsay 설치 전 스냅샷을 골라 부팅하니 루트가 overlay였고, 그 안에서 `robinctl snapshot rollback` → 다음 부팅에서 cowsay가 사라짐(`5f22e5e`, `a82252a`)

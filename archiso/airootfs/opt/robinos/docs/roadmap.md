@@ -42,9 +42,9 @@ v0.1 범위와 진행 상황은 `docs/design.md`에서 관리해요.
 - 라이브 ISO 부팅 메뉴 브랜딩 추가 - 첫 프로토타입 완료
 - 프로젝트 정적 검증 추가 - 첫 프로토타입 완료
 - ISO 빌드와 체크섬 생성 과정 스크립트화 - 첫 프로토타입 완료
-- 설치기 또는 안내형 설치 후 스크립트 추가
+- 설치기 추가 - 자체 설치기(Quickshell 화면 + `robin-install`), 디스크 전체 설치 VM 검증 완료
 - VM에서 테스트 - QEMU 부팅 테스트 자동화 완료 (`Boot-test RobinOS ISO`)
-- 빌드 방법 문서화
+- 빌드 방법 문서화 - 완료 ([build-iso.md](build-iso.md), [build-environment.md](build-environment.md))
 
 ## 5단계: 안전과 복구
 
@@ -58,6 +58,6 @@ v0.1 범위와 진행 상황은 `docs/design.md`에서 관리해요.
 
 - 서명된 ISO 빌드
 - 체크섬 공개
-- 설치 가이드 작성
+- 설치 가이드 작성 - 초안 완료 ([install.md](install.md)), 윈도우 옆 설치 검증 뒤 다듬기
 - 첫 CTF 랩 가이드 작성
 - GitHub 릴리스 만들기

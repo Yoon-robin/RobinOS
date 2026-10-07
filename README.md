@@ -99,18 +99,9 @@ bin/robinctl lab status web
 
 실습 파일은 모두 `~/practice`에 만들고, 진행도는 `~/.local/state/robinos/learn`에 저장해요. 처음부터 다시 하려면 `robinctl learn reset`을 실행하세요.
 
-나중에 RobinOS를 설치한 시스템에서는 이렇게 설치할 수 있어요.
+## 설치
 
-```bash
-sudo scripts/install-robinctl.sh
-```
-
-Arch에서 설치 후 설정 프로토타입을 써 보려면 이렇게 해요.
-
-```bash
-sudo scripts/post-install.sh --dry-run
-sudo scripts/post-install.sh
-```
+라이브 USB로 부팅해서 독 맨 앞의 **RobinOS 설치**를 눌러요. 윈도우 옆에 설치하거나 디스크 전체를 쓸 수 있고, 디스크 나누기, 한국어 설정, 업데이트 전 자동 스냅샷까지 설치기가 알아서 해요. 이미 Arch를 쓰고 있다면 `sudo scripts/post-install.sh`로 RobinOS를 입힐 수 있어요. 자세한 방법은 [docs/install.md](docs/install.md)에 있어요.
 
 ## 빌드와 검증
 
