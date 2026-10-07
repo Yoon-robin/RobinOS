@@ -42,10 +42,10 @@ robinctl - RobinOS 관리 도구
   robinctl snapshot list                스냅샷 목록
   robinctl snapshot setup [--dry-run]   스냅샷 설정 (Btrfs 루트, 처음 한 번)
   robinctl snapshot rollback <번호>     그 스냅샷으로 시스템 되돌리기
-  robinctl profile list                 설치할 수 있는 프로필 보기
-  robinctl profile security [--dry-run] 보안 실습 도구 설치
+  robinctl profile list                 보안 실습 프로필 보기 (network, web, ...)
+  robinctl profile <이름> [--dry-run]   그 프로필의 도구 설치 (security는 전부)
   robinctl packages core                기본 패키지 목록
-  robinctl packages security            보안 실습 패키지 목록
+  robinctl packages <프로필>            보안 실습 프로필의 패키지 목록
   robinctl packages optional            선택 패키지 목록
   robinctl learn                        리눅스 기초 미션과 진행도
   robinctl learn show [번호]            미션 설명 보기
@@ -584,29 +584,78 @@ snapshot_rollback() {
   printf '잘 되는 걸 확인한 뒤 이전 시스템(@.broken-%s)을 지우는 방법은 docs/recovery.md에 있어요.\n' "${stamp}"
 }
 
-profile_list() {
-  cat <<'EOF'
-설치할 수 있는 프로필:
-  core      RobinOS 기본 작업 환경
-  security  CTF, 웹, 네트워크, 리버싱, 포렌식 학습 도구
-EOF
+# ---- Security learning profiles ----
+#
+# Security tools are installed a profile at a time as the learner gets there,
+# so the everyday system stays light (docs/design.md). The profiles are the
+# "# profile: <name>" sections of packages/security-baseline.txt; "security"
+# is all of them.
+
+readonly PROFILES=(network web forensics reversing passwords wireless vm)
+
+profile_title() {
+  case "$1" in
+    network) printf '네트워크 분석' ;;
+    web) printf '웹 보안 (로컬 웹 랩 포함)' ;;
+    forensics) printf '포렌식' ;;
+    reversing) printf '리버싱' ;;
+    passwords) printf '비밀번호 크래킹' ;;
+    wireless) printf '무선 보안' ;;
+    vm) printf '가상 머신 실습' ;;
+    security) printf '위 프로필 전부' ;;
+  esac
 }
 
-profile_security() {
-  local dry_run="false"
-  [[ "${1:-}" == "--dry-run" ]] && dry_run="true"
+profile_known() {
+  local name
+  [[ "$1" == "security" ]] && return 0
+  for name in "${PROFILES[@]}"; do
+    [[ "${name}" == "$1" ]] && return 0
+  done
+  return 1
+}
+
+# Packages of a profile, one per line
+profile_packages() {
+  [[ -f "${SECURITY_PACKAGES}" ]] || die "패키지 목록이 없어요: ${SECURITY_PACKAGES}"
+  awk -v want="$1" '
+    /^# profile: / { current = $3; next }
+    /^[[:space:]]*(#|$)/ { next }
+    want == "security" || current == want { print $1 }
+  ' "${SECURITY_PACKAGES}"
+}
+
+profile_list() {
+  local name
+  printf '보안 실습 프로필 (배우는 순서):\n'
+  for name in "${PROFILES[@]}" security; do
+    printf '  %-10s %s\n' "${name}" "$(profile_title "${name}")"
+    if [[ "${name}" != "security" ]]; then
+      printf '             %s%s%s\n' "${C_DIM}" "$(profile_packages "${name}" | tr '\n' ' ')" "${C_RESET}"
+    fi
+  done
+  printf '\n미리 보기: robinctl profile <이름> --dry-run\n'
+  printf '설치:      sudo robinctl profile <이름>\n'
+}
+
+profile_install() {
+  local name="$1" dry_run="false"
+  [[ "${2:-}" == "--dry-run" ]] && dry_run="true"
 
   have_cmd pacman || die "pacman이 필요해요"
+  local packages=()
+  mapfile -t packages < <(profile_packages "${name}")
+  [[ "${#packages[@]}" -gt 0 ]] || die "프로필 ${name}에 패키지가 없어요"
 
   if [[ "${dry_run}" == "true" ]]; then
-    printf '설치할 RobinOS 보안 실습 패키지:\n'
-    package_file "${SECURITY_PACKAGES}" | sed 's/^/  /'
+    printf '%s 프로필(%s)로 설치할 패키지:\n' "${name}" "$(profile_title "${name}")"
+    printf '  %s\n' "${packages[@]}"
     return
   fi
 
   need_root
-  mapfile -t packages < <(package_file "${SECURITY_PACKAGES}")
   pacman -S --needed "${packages[@]}"
+  printf '\n%s 프로필을 설치했어요. 도구는 내 컴퓨터의 랩이나 허가받은 대상에서만 써요(docs/ethics.md).\n' "${name}"
 }
 
 packages_print() {
@@ -614,14 +663,15 @@ packages_print() {
     core)
       package_file "${CORE_PACKAGES}"
       ;;
-    security)
-      package_file "${SECURITY_PACKAGES}"
-      ;;
     optional)
       package_file "${OPTIONAL_PACKAGES}"
       ;;
     *)
-      die "알 수 없는 패키지 묶음이에요: ${1:-} (core, security, optional 중 하나)"
+      if [[ -n "${1:-}" ]] && profile_known "$1"; then
+        profile_packages "$1"
+      else
+        die "알 수 없는 패키지 묶음이에요: ${1:-} (core, optional, 보안 프로필 이름 중 하나: robinctl profile list)"
+      fi
       ;;
   esac
 }
@@ -1193,15 +1243,12 @@ main() {
     profile)
       shift
       case "${1:-}" in
-        list)
+        list|"")
           profile_list
           ;;
-        security)
-          shift
-          profile_security "${1:-}"
-          ;;
         *)
-          die "사용법: robinctl profile list|security [--dry-run]"
+          profile_known "$1" || die "알 수 없는 프로필이에요: $1 (목록: robinctl profile list)"
+          profile_install "$1" "${2:-}"
           ;;
       esac
       ;;

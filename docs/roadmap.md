@@ -20,7 +20,7 @@ v0.1 범위와 진행 상황은 `docs/design.md`에서 관리해요.
 ## 2단계: `robinctl`
 
 - `robinctl doctor` 구현 - 첫 프로토타입 완료
-- `robinctl profile security` 구현 - 첫 프로토타입 완료
+- `robinctl profile` 구현 - 학습 단계별 프로필 7개(network, web, forensics, reversing, passwords, wireless, vm)와 전부(security)
 - `robinctl update` 구현 - 첫 프로토타입 완료
 - `robinctl snapshot create` 구현 - 첫 프로토타입 완료
 - `robinctl learn` 구현 - 리눅스 기초 미션 5개 완료
@@ -28,11 +28,11 @@ v0.1 범위와 진행 상황은 `docs/design.md`에서 관리해요.
 
 ## 3단계: 보안 프로필
 
-- 기본 CTF 도구 추가
-- 웹 보안 도구 추가
-- 네트워크 분석 도구 추가
-- 리버싱 도구 추가
-- 포렌식 도구 추가
+- 기본 CTF 도구 추가 - `passwords`, `forensics`, `reversing` 프로필
+- 웹 보안 도구 추가 - `web` 프로필
+- 네트워크 분석 도구 추가 - `network` 프로필
+- 리버싱 도구 추가 - `reversing` 프로필
+- 포렌식 도구 추가 - `forensics` 프로필
 - 컨테이너 기반 취약 랩 추가
 
 ## 4단계: ISO 빌드

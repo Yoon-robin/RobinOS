@@ -1,4 +1,10 @@
-# RobinOS Security Lab baseline package candidates
+# RobinOS Security Lab packages, by learning profile.
+# `robinctl profile <name>` installs one profile; `robinctl profile security`
+# installs them all. A "# profile: <name>" line starts a profile; other
+# comments and blank lines are ignored, so every tool can still read this as a
+# plain package list. Profiles follow the learning order in docs/design.md.
+
+# profile: network
 nmap
 wireshark-qt
 tcpdump
@@ -6,23 +12,36 @@ openbsd-netcat
 bind
 whois
 traceroute
+
+# profile: web
 sqlmap
 nikto
 gobuster
-john
-hashcat
-hydra
-aircrack-ng
+# The local web lab (robinctl lab) runs in Docker
+docker
+docker-compose
+
+# profile: forensics
 binwalk
+foremost
+testdisk
+perl-image-exiftool
+
+# profile: reversing
 radare2
 ghidra
 gdb
 strace
 ltrace
-foremost
-testdisk
-perl-image-exiftool
-docker
-docker-compose
+
+# profile: passwords
+john
+hashcat
+hydra
+
+# profile: wireless
+aircrack-ng
+
+# profile: vm
 virt-manager
 qemu-full

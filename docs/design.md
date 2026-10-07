@@ -31,7 +31,7 @@
 | 네트워크 | 일반 | 실습 대상은 `127.0.0.1`에만 노출 |
 | 실패했을 때 | 스냅샷으로 되돌리기 | 랩을 지우고 다시 만들기 |
 
-보안 도구는 처음부터 전부 깔지 않아요. 학습 단계에 맞춰 `robinctl profile`로 필요한 묶음만 설치해서 일상 시스템을 가볍게 유지해요.
+보안 도구는 처음부터 전부 깔지 않아요. 학습 단계에 맞춰 `robinctl profile`로 필요한 묶음만 설치해서 일상 시스템을 가볍게 유지해요. 묶음은 `network`, `web`, `forensics`, `reversing`, `passwords`, `wireless`, `vm`이고(`security`는 전부), 목록은 `packages/security-baseline.txt`의 `# profile:` 구역이에요.
 
 ## 실사용 요구사항
 

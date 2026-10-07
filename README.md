@@ -69,9 +69,10 @@ Core에 웹 보안, 네트워크 분석, CTF, 리버싱, 포렌식, 무선 보�
 bin/robinctl version
 bin/robinctl doctor
 bin/robinctl profile list
+bin/robinctl profile network --dry-run
 bin/robinctl profile security --dry-run
 bin/robinctl packages core
-bin/robinctl packages security
+bin/robinctl packages web
 bin/robinctl packages optional
 bin/robinctl snapshot setup --dry-run
 bin/robinctl snapshot list
