@@ -23,7 +23,8 @@ build/logs/mkarchiso-*.log
 - 패키지 검사 (빌드할 때 자동)
 - ISO 빌드 성공과 `SHA256SUMS`
 - 자동 부팅 테스트: 스크린샷을 한 장씩 보고 이상이 없는지
-- 설치 테스트: `archinstall`과 `robinos` 두 방식 모두
+- `robinctl` 테스트(`scripts/test-robinctl.sh`, `check`에 들어 있어요)
+- 설치 테스트: `archinstall`, `robinos`, `windows` 세 방식 모두, 한 번은 `-Lab`을 붙여 웹 랩까지
 - VM에서 직접 써 보기의 "눈으로 확인할 것" 목록
 - 실기기 한 대 이상에서 라이브 부팅
 - 문서와 `/etc/motd`에 윤리 안내가 보임

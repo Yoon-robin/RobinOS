@@ -40,6 +40,7 @@
 - [ci.md](ci.md): GitHub Actions (수동 실행만)
 - [boot-branding.md](boot-branding.md): 부팅 메뉴와 로그인 화면 브랜딩
 - [release.md](release.md): 릴리스 체크리스트
+- [release-notes-v0.1.md](release-notes-v0.1.md): v0.1 프리뷰 릴리스 노트 (공개 전 초안)
 - [../themes/README.md](../themes/README.md): 테마 파일
 
 작업 관리
