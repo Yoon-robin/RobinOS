@@ -380,6 +380,8 @@ def make_windows_disk(con):
     con.run("mkdir -p /tmp/esp /tmp/win"
             " && mount /dev/vda1 /tmp/esp && mkdir -p /tmp/esp/EFI/Microsoft/Boot"
             " && echo 'stand-in for the Windows boot manager' > /tmp/esp/EFI/Microsoft/Boot/bootmgfw.efi"
+            # os-prober's efi/20microsoft wants the boot configuration store next to it
+            " && echo 'stand-in for the boot configuration data' > /tmp/esp/EFI/Microsoft/Boot/BCD"
             " && umount /tmp/esp"
             " && mount -t ntfs-3g /dev/vda3 /tmp/win && mkdir -p /tmp/win/Windows/System32"
             " && echo robinos-install-test > /tmp/win/marker.txt && umount /tmp/win")

@@ -10,7 +10,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 작업 | 시작 | 대상 | 결과 위치 | 상태 |
 |---|---|---|---|---|
-| ISO 빌드 → 부팅 테스트 → 설치 테스트 windows (WHPX) | 2026-10-08 START | `HEAD` | `build\boot-test`, `build\install-test`, 로그 `build\loop-*.log`, 순서 결과 `build\loop-chain.log` | 실행 중 |
+| ISO 빌드 → 부팅 테스트 → 설치 테스트 windows (WHPX) | 2026-10-08 07:23 | `db1b494` | `build\boot-test`, `build\install-test`, 로그 `build\loop-*.log`, 순서 결과 `build\loop-chain.log` | 실행 중 |
 
 ## 정기 점검
 
