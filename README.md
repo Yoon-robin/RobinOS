@@ -28,7 +28,7 @@ RobinOS는 윈도우에서 넘어온 사람이 매일 쓰는 OS예요. 쓰면서
 - Arch 기반, 골라 둔 보안 프로필
 - Hyprland 데스크톱과 shadcn/ui zinc 스타일로 만든 RobinOS 전용 Quickshell 셸 ([docs/desktop.md](docs/desktop.md))
 - 윈도우 사용자에게 익숙한 기본값: 자유 배치 창, 독, `Alt+Tab`, `Alt+F4`, `Super+E`
-- 위험한 업데이트 전에 Btrfs 스냅샷
+- pacman 작업 전후 자동 Btrfs 스냅샷과 부팅 메뉴에서 되돌리기 ([docs/recovery.md](docs/recovery.md))
 - 한글 입력, 한글 글꼴, 한국어 로캘과 문서가 기본
 - 설정, 프로필, 스냅샷, 진단, 랩 도구를 다루는 `robinctl` 명령
 - 모의해킹 패키지를 전부 쏟아 넣지 않고 학습 순서에 맞춰 정리한 도구 구성
@@ -73,6 +73,8 @@ bin/robinctl profile security --dry-run
 bin/robinctl packages core
 bin/robinctl packages security
 bin/robinctl packages optional
+bin/robinctl snapshot setup --dry-run
+bin/robinctl snapshot list
 bin/robinctl learn
 bin/robinctl learn show 1
 bin/robinctl learn check 1

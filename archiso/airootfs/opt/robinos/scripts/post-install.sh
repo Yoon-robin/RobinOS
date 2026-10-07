@@ -3,10 +3,22 @@ set -euo pipefail
 
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 DRY_RUN="false"
+PACMAN_ARGS=(-Syu --needed)
 
-if [[ "${1:-}" == "--dry-run" ]]; then
-  DRY_RUN="true"
-fi
+# --dry-run: print what would happen. --yes: answer pacman's questions (unattended installs).
+for arg in "$@"; do
+  case "${arg}" in
+    --dry-run) DRY_RUN="true" ;;
+    --yes)
+      PACMAN_ARGS+=(--noconfirm)
+      export ROBINOS_ASSUME_YES="true"
+      ;;
+    *)
+      printf 'usage: %s [--dry-run] [--yes]\n' "$0" >&2
+      exit 2
+      ;;
+  esac
+done
 
 die() {
   printf 'error: %s\n' "$*" >&2
@@ -35,7 +47,7 @@ fi
 mapfile -t core_packages < <(package_file "${ROOT_DIR}/packages/core.txt")
 mapfile -t desktop_packages < <(package_file "${ROOT_DIR}/packages/desktop.txt")
 
-run pacman -Syu --needed "${core_packages[@]}" "${desktop_packages[@]}"
+run pacman "${PACMAN_ARGS[@]}" "${core_packages[@]}" "${desktop_packages[@]}"
 run install -Dm755 "${ROOT_DIR}/bin/robinctl" /usr/local/bin/robinctl
 run install -Dm644 "${ROOT_DIR}/config/robinos.toml" /etc/robinos/config.toml
 
@@ -97,5 +109,18 @@ for service in NetworkManager sddm bluetooth docker; do
 done
 
 run systemctl set-default graphical.target
+
+# Snapshots around every pacman transaction and in the GRUB menu (Btrfs root only).
+# Runs after install-branding.sh so its grub-mkconfig keeps the theme.
+root_fs="$(findmnt -no FSTYPE / 2>/dev/null || true)"
+if [[ "${root_fs}" == "btrfs" ]]; then
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    "${ROOT_DIR}/bin/robinctl" snapshot setup --dry-run
+  else
+    run /usr/local/bin/robinctl snapshot setup
+  fi
+else
+  printf 'Root filesystem is %s, not Btrfs: skipping snapshot setup\n' "${root_fs:-unknown}"
+fi
 
 printf 'RobinOS post-install complete.\n'

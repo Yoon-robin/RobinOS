@@ -6,7 +6,13 @@ ISO와 설치기가 자리 잡을 때까지는 아래 프로토타입 절차를 
 
 ## 방법 A: 이미 설치된 Arch
 
-Arch가 설치된 시스템에서 실행해요.
+archinstall로 새로 설치한다면 이렇게 고르세요. 업데이트 전 자동 스냅샷과 부팅 메뉴에서 되돌리기를 쓸 수 있어요([recovery.md](recovery.md)).
+
+- 파일 시스템: Btrfs, 기본 하위 볼륨 그대로
+- 부트로더: GRUB
+- 디스크 구성: 기본 구성("best-effort default partition layout") 그대로
+
+Arch가 설치된 시스템에서 실행해요. 루트가 Btrfs면 스냅샷 설정(`robinctl snapshot setup`)까지 해 줘요.
 
 ```bash
 sudo scripts/post-install.sh --dry-run

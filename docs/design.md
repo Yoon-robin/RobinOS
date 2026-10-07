@@ -113,7 +113,7 @@
 |---|---|---|
 | 1 | VM과 실기기에서 부팅되는 라이브 ISO (Hyprland + RobinOS 셸) | QEMU 부팅 확인 (CI가 ISO마다 부팅 테스트), 실기기 검증 전 |
 | 2 | 윈도우와 나란히 설치되는 그래픽 설치기 | 미결정 |
-| 3 | 업데이트 전 자동 스냅샷, 부팅 메뉴에서 되돌리기 | 예정 |
+| 3 | 업데이트 전 자동 스냅샷, 부팅 메뉴에서 되돌리기 | 구현 (`robinctl snapshot setup`, [recovery.md](recovery.md)), 설치 테스트로 검증 전 |
 | 4 | 환영 마법사, 리눅스 기초 미션 5개, 윈도우 명령어 번역기 | 번역기 완료 (터미널 `desktop/bash/robinos-hints.sh`, 런처 윈도우 이름 검색), 미션 완료 (`robinctl learn`), 환영 마법사 완료 (`desktop/shell/Welcome.qml`) |
 | 5 | 로컬 전용 웹 보안 랩 | 완료 (`127.0.0.1` 바인딩) |
 

@@ -97,6 +97,7 @@ $requiredPaths = @(
     "themes/sddm/robinos/Glyph.qml",
     "packages/desktop.txt",
     "docs/design.md",
+    "docs/recovery.md",
     "docs/desktop.md",
     "scripts/install-desktop.sh",
     "scripts/fetch-fonts.sh",

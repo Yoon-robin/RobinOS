@@ -14,6 +14,9 @@ pacman-contrib
 fastfetch
 btrfs-progs
 snapper
+snap-pac
+grub-btrfs
+inotify-tools
 grub
 efibootmgr
 os-prober

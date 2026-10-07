@@ -39,6 +39,9 @@ robinctl - RobinOS 관리 도구
   robinctl doctor                       시스템 점검
   robinctl update [--dry-run]           스냅샷을 만든 뒤 시스템 업데이트
   robinctl snapshot create [이름]       스냅샷 만들기
+  robinctl snapshot list                스냅샷 목록
+  robinctl snapshot setup [--dry-run]   스냅샷 설정 (Btrfs 루트, 처음 한 번)
+  robinctl snapshot rollback <번호>     그 스냅샷으로 시스템 되돌리기
   robinctl profile list                 설치할 수 있는 프로필 보기
   robinctl profile security [--dry-run] 보안 실습 도구 설치
   robinctl packages core                기본 패키지 목록
@@ -154,6 +157,20 @@ doctor() {
 
   check_line "로그인 화면 테마 (SDDM)" "$(path_found "${SDDM_THEME_DIR}")"
   check_line "부팅 메뉴 테마 (GRUB)" "$(path_found "${GRUB_THEME_FILE}")"
+
+  local fstype
+  fstype="$(root_fstype)"
+  if [[ "${fstype}" == "btrfs" ]]; then
+    printf '  루트 파일 시스템: btrfs\n'
+    check_line "스냅샷 설정 (snapper)" "$(path_found "${SNAPPER_CONFIG}")" "sudo robinctl snapshot setup"
+    local snap_pac="false" grub_btrfs="false"
+    if pkg_installed snap-pac; then snap_pac="true"; fi
+    if systemctl is-enabled --quiet grub-btrfsd.service 2>/dev/null; then grub_btrfs="true"; fi
+    check_line "업데이트 자동 스냅샷 (snap-pac)" "${snap_pac}" "sudo robinctl snapshot setup"
+    check_line "부팅 메뉴 스냅샷 (grub-btrfs)" "${grub_btrfs}" "sudo robinctl snapshot setup"
+  else
+    printf '  루트 파일 시스템: %s (스냅샷은 Btrfs 설치에서만 써요)\n' "${fstype}"
+  fi
 }
 
 update_system() {
@@ -162,25 +179,382 @@ update_system() {
 
   have_cmd pacman || die "pacman이 필요해요"
 
+  # snap-pac takes pre/post snapshots around every pacman transaction once the
+  # root config exists; otherwise take one ourselves when we can.
+  local mode="none"
+  if snapshot_ready && pkg_installed snap-pac; then
+    mode="snap-pac"
+  elif snapshot_ready; then
+    mode="manual"
+  fi
+
   if [[ "${dry_run}" == "true" ]]; then
-    printf 'snapper가 있으면 업데이트 전에 스냅샷을 만들어요.\n'
+    case "${mode}" in
+      snap-pac) printf '업데이트 전후 스냅샷은 snap-pac이 자동으로 만들어요.\n' ;;
+      manual) printf '업데이트 전에 스냅샷을 만들어요.\n' ;;
+      none) printf '스냅샷이 설정되지 않아서 업데이트 전 스냅샷을 만들지 않아요 (설정: sudo robinctl snapshot setup).\n' ;;
+    esac
     printf '실행할 명령: pacman -Syu\n'
     return
   fi
 
   need_root
-  if have_cmd snapper; then
-    snapper create --description "RobinOS pre-update $(date -Iseconds)" || true
-  fi
+  case "${mode}" in
+    manual)
+      snapper --no-dbus -c root create --description "RobinOS 업데이트 전" --cleanup-algorithm number
+      ;;
+    none)
+      printf '%s알림:%s 스냅샷이 설정되지 않아서 업데이트 전 스냅샷 없이 진행해요. 설정: sudo robinctl snapshot setup\n' \
+        "${C_YELLOW}" "${C_RESET}" >&2
+      ;;
+  esac
   pacman -Syu
+}
+
+# ---- Snapshots: snapper + snap-pac + grub-btrfs on a Btrfs root ----
+#
+# Layout: the system is the @ subvolume, and snapshots live in a top-level
+# @snapshots subvolume mounted on /.snapshots, so any snapshot can become the
+# new @ (rollback) without being inside the old one. archinstall's default
+# Btrfs layout (@, @home, @log, @pkg) has no @snapshots; `snapshot setup`
+# creates it and adds it to fstab. Details for users: docs/recovery.md.
+#
+# Root runs snapper with --no-dbus so this also works from a chroot.
+
+readonly SNAPPER_CONFIG="/etc/snapper/configs/root"
+readonly SNAPSHOT_PACKAGES=(snapper snap-pac grub-btrfs inotify-tools rsync)
+readonly BOOT_BACKUP_DIR="/.bootbackup"
+ASSUME_YES="${ROBINOS_ASSUME_YES:-false}"
+
+pkg_installed() {
+  have_cmd pacman && pacman -Q "$1" >/dev/null 2>&1
+}
+
+root_fstype() {
+  findmnt -no FSTYPE / 2>/dev/null || printf '알 수 없음'
+}
+
+# "/dev/vda2" from "/dev/vda2[/@]"
+root_device() {
+  findmnt -no SOURCE / | sed 's/\[.*//'
+}
+
+snapshot_ready() {
+  [[ -f "${SNAPPER_CONFIG}" ]]
+}
+
+# Where grub.cfg lives: /boot/grub, or /efi/grub when the EFI partition is on /efi
+grub_dir() {
+  local dir
+  for dir in /boot/grub /efi/grub /boot/efi/grub; do
+    if [[ -f "${dir}/grub.cfg" ]]; then
+      printf '%s' "${dir}"
+      return
+    fi
+  done
+}
+
+# True when /boot is the EFI partition, which Btrfs snapshots don't include
+boot_is_esp() {
+  [[ "$(findmnt -no FSTYPE /boot 2>/dev/null)" == "vfat" ]]
+}
+
+# With /boot on the EFI partition, keep a copy of it in / around every kernel
+# change so each snapshot carries its kernel (Arch wiki: Snapper, "Backup non-Btrfs
+# boot partition"). 04- runs before snap-pac's pre snapshot, zy- after mkinitcpio
+# and before snap-pac's post snapshot.
+write_boot_backup_hooks() {
+  local when name
+  mkdir -p /etc/pacman.d/hooks
+  for when in PreTransaction PostTransaction; do
+    name="04-robinos-boot-backup.hook"
+    [[ "${when}" == "PostTransaction" ]] && name="zy-robinos-boot-backup.hook"
+    cat >"/etc/pacman.d/hooks/${name}" <<EOF
+# RobinOS: copy the EFI /boot into ${BOOT_BACKUP_DIR} so snapshots include the
+# kernel. Written by robinctl snapshot setup; restored by robinctl snapshot rollback.
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Type = Path
+Target = usr/lib/modules/*/vmlinuz
+Target = usr/lib/initcpio/*
+Target = boot/*
+
+[Action]
+Description = Backing up /boot for snapshots...
+When = ${when}
+Exec = /usr/bin/rsync -a --delete --exclude=/grub /boot/ ${BOOT_BACKUP_DIR}/
+EOF
+  done
+}
+
+need_snapshots() {
+  snapshot_ready || die "스냅샷이 아직 설정되지 않았어요. 먼저 실행하세요: sudo robinctl snapshot setup"
+}
+
+# Mounts the top level (subvolid=5) of the root filesystem and prints where.
+mount_btrfs_top() {
+  local dir
+  dir="$(mktemp -d /tmp/robinos-btrfs.XXXXXX)"
+  mount -o subvolid=5 "$(root_device)" "${dir}"
+  printf '%s' "${dir}"
+}
+
+unmount_btrfs_top() {
+  umount "$1" && rmdir "$1"
 }
 
 snapshot_create() {
   need_root
-  have_cmd snapper || die "snapper가 필요해요"
+  need_snapshots
 
-  local name="${1:-manual}"
-  snapper create --description "RobinOS ${name} $(date -Iseconds)"
+  local name="${1:-직접 만든 스냅샷}"
+  snapper --no-dbus -c root create --description "RobinOS ${name}" --print-number
+}
+
+snapshot_list() {
+  need_snapshots
+  if [[ "${EUID}" -eq 0 ]]; then
+    snapper --no-dbus -c root list
+  else
+    snapper -c root list
+  fi
+}
+
+# Runs a setup step, or only prints it with --dry-run.
+setup_step() {
+  if [[ "${SETUP_DRY_RUN}" == "true" ]]; then
+    printf '  %s\n' "$*"
+  else
+    "$@"
+  fi
+}
+
+# Enables a unit, and starts it too unless we are in a chroot.
+setup_enable() {
+  setup_step systemctl enable "$1"
+  if [[ -d /run/systemd/system ]]; then
+    setup_step systemctl start "$1"
+  fi
+}
+
+# Creates the top-level @snapshots subvolume and its fstab line if missing.
+setup_snapshot_subvolume() {
+  if [[ "$(findmnt -no FSROOT /)" != "/@" ]]; then
+    printf '  루트가 @ 하위 볼륨이 아니에요 (%s). 되돌리기는 @ 기준이라 직접 해야 할 수 있어요.\n' \
+      "$(findmnt -no FSROOT /)"
+  fi
+
+  if findmnt --fstab -n /.snapshots >/dev/null 2>&1; then
+    printf '  fstab에 /.snapshots가 이미 있어요\n'
+    return
+  fi
+
+  # Same mount options as /, pointed at @snapshots
+  local options line
+  options="$(findmnt --fstab -no OPTIONS / | sed -E 's/(^|,)subvolid=[0-9]+//; s#subvol=[^,]*#subvol=/@snapshots#; s/^,//')"
+  [[ "${options}" == *subvol=/@snapshots* ]] || options="${options:+${options},}subvol=/@snapshots"
+  line="UUID=$(findmnt -no UUID /) /.snapshots btrfs ${options} 0 0"
+
+  if [[ "${SETUP_DRY_RUN}" == "true" ]]; then
+    printf '  btrfs subvolume create <Btrfs 최상위>/@snapshots\n'
+    printf '  /etc/fstab에 추가: %s\n' "${line}"
+    return
+  fi
+
+  local top
+  top="$(mount_btrfs_top)"
+  if [[ ! -d "${top}/@snapshots" ]]; then
+    btrfs subvolume create "${top}/@snapshots"
+  fi
+  unmount_btrfs_top "${top}"
+
+  printf '\n# Snapshots (robinctl snapshot setup)\n%s\n' "${line}" >>/etc/fstab
+  systemctl daemon-reload 2>/dev/null || true
+}
+
+# snapper wants to create /.snapshots itself. Let it, then swap the nested
+# subvolume it made for @snapshots from fstab (Arch wiki: Snapper).
+setup_snapper_config() {
+  if mountpoint -q /.snapshots; then
+    setup_step umount /.snapshots
+  fi
+  if [[ -d /.snapshots ]]; then
+    if [[ "${SETUP_DRY_RUN}" == "true" ]]; then
+      printf '  rmdir /.snapshots\n'
+    else
+      rmdir /.snapshots || die "/.snapshots 폴더가 비어 있지 않아요. 안의 파일을 옮긴 뒤 다시 실행하세요."
+    fi
+  fi
+
+  if [[ "${SETUP_DRY_RUN}" == "true" ]]; then
+    printf '  snapper --no-dbus -c root create-config /\n'
+  elif ! snapper --no-dbus -c root create-config /; then
+    # Leave fstab's mount point usable, or the next boot stops at it
+    mkdir -p /.snapshots
+    mount /.snapshots || true
+    die "snapper 설정을 만들지 못했어요. /.snapshots는 원래대로 돌려놨어요."
+  fi
+
+  setup_step btrfs subvolume delete /.snapshots
+  setup_step mkdir /.snapshots
+  setup_step mount /.snapshots
+}
+
+snapshot_setup() {
+  SETUP_DRY_RUN="false"
+  [[ "${1:-}" == "--dry-run" ]] && SETUP_DRY_RUN="true"
+
+  local fstype
+  fstype="$(root_fstype)"
+  [[ "${fstype}" == "btrfs" ]] ||
+    die "루트(/)가 Btrfs가 아니에요 (지금: ${fstype}). 스냅샷은 Btrfs로 설치한 시스템에서만 써요."
+
+  if [[ "${SETUP_DRY_RUN}" == "true" ]]; then
+    printf '실행할 명령:\n'
+  else
+    need_root
+  fi
+
+  local pacman_args=(-S --needed)
+  [[ "${ASSUME_YES}" == "true" ]] && pacman_args+=(--noconfirm)
+
+  printf '%s1. 필요한 패키지%s\n' "${C_BOLD}" "${C_RESET}"
+  setup_step pacman "${pacman_args[@]}" "${SNAPSHOT_PACKAGES[@]}"
+
+  printf '%s2. 스냅샷 저장 공간과 설정%s\n' "${C_BOLD}" "${C_RESET}"
+  if snapshot_ready; then
+    printf '  이미 설정돼 있어요 (%s)\n' "${SNAPPER_CONFIG}"
+  else
+    setup_snapshot_subvolume
+    setup_snapper_config
+  fi
+  setup_step chmod 750 /.snapshots
+  setup_step snapper --no-dbus -c root set-config TIMELINE_CREATE=no NUMBER_LIMIT=10 NUMBER_LIMIT_IMPORTANT=5 \
+    ALLOW_GROUPS=wheel SYNC_ACL=yes
+  setup_enable snapper-cleanup.timer
+
+  if boot_is_esp; then
+    printf '  /boot가 EFI 파티션이라 커널을 %s에 복사해 스냅샷에 같이 남겨요\n' "${BOOT_BACKUP_DIR}"
+    if [[ "${SETUP_DRY_RUN}" == "true" ]]; then
+      printf '  /etc/pacman.d/hooks/04-robinos-boot-backup.hook, zy-robinos-boot-backup.hook 쓰기\n'
+    else
+      write_boot_backup_hooks
+    fi
+    setup_step rsync -a --delete --exclude=/grub /boot/ "${BOOT_BACKUP_DIR}/"
+  fi
+
+  local grub
+  grub="$(grub_dir)"
+
+  printf '%s3. 부팅 메뉴의 스냅샷 항목 (grub-btrfs)%s\n' "${C_BOLD}" "${C_RESET}"
+  if [[ -n "${grub}" ]] && have_cmd grub-mkconfig; then
+    if [[ "${grub}" != "/boot/grub" ]]; then
+      setup_step sed -i -E "s|^#?GRUB_BTRFS_GRUB_DIRNAME=.*|GRUB_BTRFS_GRUB_DIRNAME=\"${grub}\"|" \
+        /etc/default/grub-btrfs/config
+    fi
+    setup_enable grub-btrfsd.service
+
+    # Snapshots boot read-only; this initramfs hook gives them a writable
+    # overlay in memory. It is a busybox runtime hook, so only for udev images.
+    if grep -q 'grub-btrfs-overlayfs' /etc/mkinitcpio.conf; then
+      printf '  읽기 전용 스냅샷 부팅 준비: 이미 돼 있어요\n'
+    elif grep -Eq '^HOOKS=\(.*\budev\b' /etc/mkinitcpio.conf; then
+      setup_step sed -i -E 's/^(HOOKS=\(.*)\)/\1 grub-btrfs-overlayfs)/' /etc/mkinitcpio.conf
+      setup_step mkinitcpio -P
+    else
+      printf '  initramfs가 systemd 방식이라 grub-btrfs-overlayfs를 넣지 않았어요. 스냅샷은 읽기 전용으로 부팅돼요.\n'
+    fi
+  else
+    printf '  GRUB을 찾지 못해서 건너뛰어요. 부팅 메뉴에서 스냅샷을 고르려면 GRUB으로 설치해야 해요.\n'
+  fi
+
+  printf '%s4. 첫 스냅샷%s\n' "${C_BOLD}" "${C_RESET}"
+  setup_step snapper --no-dbus -c root create --description "RobinOS 스냅샷 설정 직후" --userdata important=yes
+
+  # After the first snapshot, so the boot menu lists it right away
+  if [[ -n "${grub}" ]] && have_cmd grub-mkconfig; then
+    setup_step grub-mkconfig -o "${grub}/grub.cfg"
+  fi
+
+  if [[ "${SETUP_DRY_RUN}" != "true" ]]; then
+    printf '\n스냅샷 준비가 끝났어요. 이제 pacman으로 설치하거나 업데이트할 때마다 전후 스냅샷이 생겨요.\n'
+    printf '목록: robinctl snapshot list · 되돌리기: sudo robinctl snapshot rollback <번호>\n'
+  fi
+}
+
+# Makes snapshot N the system: the current @ is kept as @.broken-<time> and a
+# writable copy of the snapshot becomes @. Takes effect after a reboot. Works
+# from the normal system or after booting the snapshot from the GRUB menu.
+snapshot_rollback() {
+  local number="${1:-}"
+  [[ "${number}" =~ ^[0-9]+$ ]] ||
+    die "사용법: sudo robinctl snapshot rollback <번호> (번호는 robinctl snapshot list에서 봐요)"
+  [[ "${2:-}" == "--yes" ]] && ASSUME_YES="true"
+  need_root
+  [[ "$(root_fstype)" == "btrfs" ]] || die "루트(/)가 Btrfs가 아니에요"
+
+  local top source info description date stamp
+  top="$(mount_btrfs_top)"
+  source="${top}/@snapshots/${number}/snapshot"
+  if [[ ! -d "${source}" ]]; then
+    unmount_btrfs_top "${top}"
+    die "스냅샷 ${number}번을 찾지 못했어요 (@snapshots/${number}). robinctl snapshot list로 번호를 확인하세요."
+  fi
+  if [[ ! -d "${top}/@" ]]; then
+    unmount_btrfs_top "${top}"
+    die "@ 하위 볼륨이 없어서 자동으로 되돌릴 수 없어요. docs/recovery.md를 보고 직접 되돌리세요."
+  fi
+
+  info="${top}/@snapshots/${number}/info.xml"
+  description="$(sed -n 's:.*<description>\(.*\)</description>.*:\1:p' "${info}" 2>/dev/null)"
+  date="$(sed -n 's:.*<date>\(.*\)</date>.*:\1:p' "${info}" 2>/dev/null)"
+  printf '스냅샷 %s번: %s (%s UTC)\n' "${number}" "${description:-설명 없음}" "${date:-날짜 모름}"
+  printf '지금 시스템은 @.broken-<시각>으로 남겨 두고, 이 스냅샷으로 시스템을 되돌려요. /home의 내 파일은 그대로예요.\n'
+
+  if [[ "${ASSUME_YES}" != "true" ]]; then
+    local answer
+    printf '되돌릴까요? [y/N] '
+    read -r answer || answer=""
+    case "${answer}" in
+      y|Y|yes|ㅛ) ;;
+      *)
+        unmount_btrfs_top "${top}"
+        printf '그만뒀어요.\n'
+        return
+        ;;
+    esac
+  fi
+
+  stamp="$(date +%Y%m%d-%H%M%S)"
+  mv "${top}/@" "${top}/@.broken-${stamp}"
+  if ! btrfs subvolume snapshot "${source}" "${top}/@"; then
+    mv "${top}/@.broken-${stamp}" "${top}/@"
+    unmount_btrfs_top "${top}"
+    die "스냅샷을 복사하지 못해서 원래대로 뒀어요."
+  fi
+
+  # The EFI /boot is not in the snapshot: put back the kernel it was taken with,
+  # from the copy the boot backup hooks keep in /.bootbackup.
+  local kernel_restored="false"
+  if boot_is_esp && compgen -G "${top}/@${BOOT_BACKUP_DIR}/vmlinuz-*" >/dev/null; then
+    cp -f "${top}/@${BOOT_BACKUP_DIR}"/vmlinuz-* /boot/
+    cp -f "${top}/@${BOOT_BACKUP_DIR}"/initramfs-*.img /boot/ 2>/dev/null || true
+    cp -f "${top}/@${BOOT_BACKUP_DIR}"/*-ucode.img /boot/ 2>/dev/null || true
+    kernel_restored="true"
+  fi
+  unmount_btrfs_top "${top}"
+
+  printf '\n%s되돌렸어요.%s 다시 시작하면 스냅샷 %s번 상태로 켜져요: sudo reboot\n' \
+    "${C_GREEN}${C_BOLD}" "${C_RESET}" "${number}"
+  if [[ "${kernel_restored}" == "true" ]]; then
+    printf 'EFI 파티션의 커널도 그 시점의 것으로 바꿨어요.\n'
+  elif boot_is_esp; then
+    printf '%s알림:%s 이 스냅샷에는 커널 사본(%s)이 없어서 커널은 그대로예요. 재부팅 뒤 문제가 있으면 sudo pacman -S linux로 맞춰 주세요.\n' \
+      "${C_YELLOW}" "${C_RESET}" "${BOOT_BACKUP_DIR}"
+  fi
+  printf '잘 되는 걸 확인한 뒤 이전 시스템(@.broken-%s)을 지우는 방법은 docs/recovery.md에 있어요.\n' "${stamp}"
 }
 
 profile_list() {
@@ -745,9 +1119,23 @@ main() {
       ;;
     snapshot)
       shift
-      [[ "${1:-}" == "create" ]] || die "사용법: robinctl snapshot create [이름]"
-      shift
-      snapshot_create "${1:-}"
+      case "${1:-}" in
+        create)
+          snapshot_create "${2:-}"
+          ;;
+        list)
+          snapshot_list
+          ;;
+        setup)
+          snapshot_setup "${2:-}"
+          ;;
+        rollback)
+          snapshot_rollback "${2:-}" "${3:-}"
+          ;;
+        *)
+          die "사용법: robinctl snapshot create|list|setup|rollback"
+          ;;
+      esac
       ;;
     profile)
       shift

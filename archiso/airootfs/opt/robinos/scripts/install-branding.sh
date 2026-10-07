@@ -57,10 +57,18 @@ fi
 if [[ "${DRY_RUN}" == "true" ]]; then
   printf 'Would regenerate GRUB config if grub-mkconfig is available\n'
 elif command -v grub-mkconfig >/dev/null 2>&1; then
-  if [[ -d /boot/grub ]]; then
-    grub-mkconfig -o /boot/grub/grub.cfg
+  # grub.cfg is in /efi/grub when the EFI partition is mounted on /efi
+  grub_dir=""
+  for dir in /boot/grub /efi/grub /boot/efi/grub; do
+    if [[ -f "${dir}/grub.cfg" ]]; then
+      grub_dir="${dir}"
+      break
+    fi
+  done
+  if [[ -n "${grub_dir}" ]]; then
+    grub-mkconfig -o "${grub_dir}/grub.cfg"
   else
-    printf 'warning: /boot/grub not found; skipped grub-mkconfig\n' >&2
+    printf 'warning: no grub.cfg in /boot/grub or /efi/grub; skipped grub-mkconfig\n' >&2
   fi
 fi
 

@@ -13,6 +13,10 @@ reflector
 pacman-contrib
 btrfs-progs
 snapper
+snap-pac
+grub-btrfs
+inotify-tools
+rsync
 grub
 efibootmgr
 os-prober
