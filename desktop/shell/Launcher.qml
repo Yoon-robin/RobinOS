@@ -14,6 +14,8 @@ PanelWindow {
     property bool revealed: false
     property var results: []
     property int current: -1
+    // Last pointer position in window coordinates; (-1, -1) until the first hover event
+    property point pointer: Qt.point(-1, -1)
 
     screen: ShellState.overlayScreen ?? Quickshell.screens[0]
     visible: mapped
@@ -33,6 +35,7 @@ PanelWindow {
     onOpenChanged: {
         if (open) {
             search.text = "";
+            pointer = Qt.point(-1, -1);
             refresh();
             mapped = true;
             Qt.callLater(() => {
@@ -572,7 +575,15 @@ PanelWindow {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onEntered: root.current = row.index
+                            // The list also gets hover events when it opens under a pointer
+                            // that stays still; select by hover only once the mouse moves,
+                            // so Enter right after opening picks the first result
+                            onPositionChanged: mouse => {
+                                const p = mapToItem(null, mouse.x, mouse.y);
+                                if (root.pointer.x >= 0 && (p.x !== root.pointer.x || p.y !== root.pointer.y))
+                                    root.current = row.index;
+                                root.pointer = p;
+                            }
                             onClicked: root.activate(row.index)
                         }
                     }
