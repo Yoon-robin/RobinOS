@@ -14,8 +14,10 @@ PanelWindow {
     property bool revealed: false
     property var results: []
     property int current: -1
-    // Last pointer position in window coordinates; (-1, -1) until the first hover event
+    // Where the pointer was first seen after opening, in window coordinates
+    // ((-1, -1) until then), and whether it has moved away from there since
     property point pointer: Qt.point(-1, -1)
+    property bool pointerMoved: false
 
     screen: ShellState.overlayScreen ?? Quickshell.screens[0]
     visible: mapped
@@ -36,6 +38,7 @@ PanelWindow {
         if (open) {
             search.text = "";
             pointer = Qt.point(-1, -1);
+            pointerMoved = false;
             refresh();
             mapped = true;
             Qt.callLater(() => {
@@ -576,13 +579,18 @@ PanelWindow {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             // The list also gets hover events when it opens under a pointer
-                            // that stays still; select by hover only once the mouse moves,
-                            // so Enter right after opening picks the first result
+                            // that stays still, and the card's scale-in animation makes the
+                            // mapped position wobble by fractions of a pixel. Select by hover
+                            // only once the mouse really moves (3 px from where it was first
+                            // seen), so Enter right after opening picks the first result.
                             onPositionChanged: mouse => {
                                 const p = mapToItem(null, mouse.x, mouse.y);
-                                if (root.pointer.x >= 0 && (p.x !== root.pointer.x || p.y !== root.pointer.y))
+                                if (root.pointer.x < 0)
+                                    root.pointer = p;
+                                else if (Math.abs(p.x - root.pointer.x) + Math.abs(p.y - root.pointer.y) >= 3)
+                                    root.pointerMoved = true;
+                                if (root.pointerMoved)
                                     root.current = row.index;
-                                root.pointer = p;
                             }
                             onClicked: root.activate(row.index)
                         }
