@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
+import "keys.js" as Keyboard
 
 // Graphical installer for the live session: a regular window that collects the
 // choices and runs `sudo robin-install run -` (installer/robin-install) with the
@@ -371,6 +372,18 @@ FloatingWindow {
                             Accessible.name: root.diskLabel(modelData)
                             Accessible.checked: selected
 
+                            activeFocusOnTab: true
+                            Keys.onPressed: event => {
+                                if (Keyboard.activates(event)) {
+                                    root.chooseDisk(diskCard.modelData);
+                                    event.accepted = true;
+                                }
+                            }
+
+                            FocusRing {
+                                baseRadius: diskCard.radius
+                            }
+
                             RowLayout {
                                 anchors.fill: parent
                                 anchors.leftMargin: 14
@@ -456,6 +469,25 @@ FloatingWindow {
                             Accessible.name: modelData.title
                             Accessible.checked: selected
 
+                            function choose() {
+                                if (modelData.enabled) {
+                                    root.mode = modelData.key;
+                                    root.eraseConfirmed = false;
+                                }
+                            }
+
+                            activeFocusOnTab: modelData.enabled
+                            Keys.onPressed: event => {
+                                if (Keyboard.activates(event)) {
+                                    modeCard.choose();
+                                    event.accepted = true;
+                                }
+                            }
+
+                            FocusRing {
+                                baseRadius: modeCard.radius
+                            }
+
                             RowLayout {
                                 anchors.fill: parent
                                 anchors.leftMargin: 14
@@ -512,12 +544,7 @@ FloatingWindow {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: modeCard.modelData.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                onClicked: {
-                                    if (modeCard.modelData.enabled) {
-                                        root.mode = modeCard.modelData.key;
-                                        root.eraseConfirmed = false;
-                                    }
-                                }
+                                onClicked: modeCard.choose()
                             }
                         }
                     }
@@ -567,7 +594,7 @@ FloatingWindow {
                     Text {
                         Layout.fillWidth: true
                         text: userField.text !== "" && !root.userValid ? "영어 소문자로 시작하고 소문자, 숫자, -, _만 써요" : "영어 소문자로 써요"
-                        color: userField.text !== "" && !root.userValid ? Theme.destructive : Theme.subtle
+                        color: userField.text !== "" && !root.userValid ? Theme.destructive : Theme.muted
                         font.family: Theme.font
                         font.pixelSize: 12
                     }
@@ -575,7 +602,7 @@ FloatingWindow {
                     Text {
                         Layout.fillWidth: true
                         text: root.hostValid ? "네트워크에서 보이는 이름이에요" : "영어, 숫자, -만 써요"
-                        color: root.hostValid ? Theme.subtle : Theme.destructive
+                        color: root.hostValid ? Theme.muted : Theme.destructive
                         font.family: Theme.font
                         font.pixelSize: 12
                     }
@@ -657,6 +684,8 @@ FloatingWindow {
                     }
 
                     Rectangle {
+                        id: eraseBox
+
                         visible: root.mode === "whole"
                         Layout.fillWidth: true
                         Layout.topMargin: 10
@@ -665,6 +694,18 @@ FloatingWindow {
                         color: "transparent"
                         border.width: 1
                         border.color: Theme.destructive
+
+                        activeFocusOnTab: true
+                        Keys.onPressed: event => {
+                            if (Keyboard.activates(event)) {
+                                root.eraseConfirmed = !root.eraseConfirmed;
+                                event.accepted = true;
+                            }
+                        }
+
+                        FocusRing {
+                            baseRadius: eraseBox.radius
+                        }
 
                         RowLayout {
                             id: warnRow

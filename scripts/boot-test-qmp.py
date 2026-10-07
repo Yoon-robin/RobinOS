@@ -5,7 +5,8 @@ Usage: boot-test-qmp.py <qmp-socket | tcp:host:port> <output-dir> [speed]
 
 speed multiplies every wait (1 with KVM, about 4 with TCG). The scenario:
 boot -> welcome wizard (every step, then its missions terminal) -> desktop ->
-launcher (search, Windows app name) -> installer (first two steps) -> quick settings ->
+launcher (search, Windows app name) -> installer (first two steps) -> quick settings
+(also with Tab) ->
 terminal with a Windows command and the first learning mission -> lock
 screen -> unlock with the live password.
 """
@@ -150,6 +151,11 @@ def main():
     keys(qmp, "meta_l", "s")
     wait(3)
     shot(qmp, "quick-settings")
+    # Keyboard only: Tab moves a focus ring over the buttons and tiles
+    for _ in range(3):
+        keys(qmp, "tab")
+        wait(0.5)
+    shot(qmp, "quick-settings-keyboard")
     keys(qmp, "meta_l", "s")
     wait(2)
 

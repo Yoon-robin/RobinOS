@@ -1,6 +1,7 @@
 import QtQuick
+import "keys.js" as Keyboard
 
-// shadcn "ghost" / "outline" icon button.
+// shadcn "ghost" / "outline" icon button. Tab reaches it; Enter or Space presses it.
 Rectangle {
     id: root
 
@@ -22,6 +23,18 @@ Rectangle {
 
     Accessible.role: Accessible.Button
     Accessible.name: label
+
+    activeFocusOnTab: true
+    Keys.onPressed: event => {
+        if (Keyboard.activates(event)) {
+            root.clicked();
+            event.accepted = true;
+        }
+    }
+
+    FocusRing {
+        baseRadius: root.radius
+    }
 
     Behavior on color {
         ColorAnimation { duration: Theme.durFast }

@@ -1,8 +1,10 @@
 import QtQuick
 import QtQuick.Layouts
+import "keys.js" as Keyboard
 
 // Quick settings tile: primary (white) when on, secondary when off.
 // With hasDetail, a chevron on the right opens more settings.
+// Tab reaches the tile and its chevron; Enter or Space presses them.
 Rectangle {
     id: root
 
@@ -23,6 +25,18 @@ Rectangle {
     Accessible.role: Accessible.CheckBox
     Accessible.name: title
     Accessible.checked: checked
+
+    activeFocusOnTab: enabled
+    Keys.onPressed: event => {
+        if (Keyboard.activates(event)) {
+            root.toggled();
+            event.accepted = true;
+        }
+    }
+
+    FocusRing {
+        baseRadius: root.radius
+    }
 
     Behavior on color {
         ColorAnimation { duration: Theme.durFast }
@@ -72,6 +86,8 @@ Rectangle {
         }
 
         Rectangle {
+            id: detail
+
             visible: root.hasDetail
             Layout.preferredWidth: 26
             Layout.preferredHeight: 44
@@ -80,6 +96,19 @@ Rectangle {
 
             Accessible.role: Accessible.Button
             Accessible.name: root.title + " 설정"
+
+            activeFocusOnTab: root.enabled
+            Keys.onPressed: event => {
+                if (Keyboard.activates(event)) {
+                    root.detailRequested();
+                    event.accepted = true;
+                }
+            }
+
+            FocusRing {
+                baseRadius: detail.radius
+                anchors.margins: -1
+            }
 
             Icon {
                 anchors.centerIn: parent

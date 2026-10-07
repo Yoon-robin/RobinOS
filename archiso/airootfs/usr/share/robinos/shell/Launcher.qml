@@ -423,7 +423,7 @@ PanelWindow {
                         verticalAlignment: Text.AlignVCenter
                         visible: search.text === "" && search.preeditText === ""
                         text: "앱, 명령, 랩 검색…"
-                        color: Theme.subtle
+                        color: Theme.muted
                         font: search.font
                     }
                 }
@@ -533,7 +533,7 @@ PanelWindow {
                             Text {
                                 Layout.fillWidth: true
                                 text: row.modelData.subtitle ?? ""
-                                color: Theme.subtle
+                                color: Theme.muted
                                 font.family: row.modelData.mono ? Theme.mono : Theme.font
                                 font.pixelSize: row.modelData.mono ? 12 : 13
                                 elide: Text.ElideRight

@@ -3,6 +3,7 @@ import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
+import "keys.js" as Keyboard
 
 // Quick settings popover under the bar's status button (Super+S).
 PanelWindow {
@@ -208,6 +209,28 @@ PanelWindow {
                         Accessible.role: Accessible.Button
                         Accessible.name: modelData.title
 
+                        function press() {
+                            root.close();
+                            if (modelData.key === "logout")
+                                ShellState.logout();
+                            else if (modelData.key === "reboot")
+                                ShellState.reboot();
+                            else
+                                ShellState.powerOff();
+                        }
+
+                        activeFocusOnTab: true
+                        Keys.onPressed: event => {
+                            if (Keyboard.activates(event)) {
+                                powerButton.press();
+                                event.accepted = true;
+                            }
+                        }
+
+                        FocusRing {
+                            baseRadius: powerButton.radius
+                        }
+
                         RowLayout {
                             anchors.centerIn: parent
                             spacing: 6
@@ -232,15 +255,7 @@ PanelWindow {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                root.close();
-                                if (powerButton.modelData.key === "logout")
-                                    ShellState.logout();
-                                else if (powerButton.modelData.key === "reboot")
-                                    ShellState.reboot();
-                                else
-                                    ShellState.powerOff();
-                            }
+                            onClicked: powerButton.press()
                         }
                     }
                 }
@@ -415,6 +430,18 @@ PanelWindow {
                         Accessible.name: Theme.accentLabels[modelData]
                         Accessible.checked: selected
 
+                        activeFocusOnTab: true
+                        Keys.onPressed: event => {
+                            if (Keyboard.activates(event)) {
+                                Theme.setAccent(swatch.modelData);
+                                event.accepted = true;
+                            }
+                        }
+
+                        FocusRing {
+                            baseRadius: swatch.radius
+                        }
+
                         Rectangle {
                             anchors.centerIn: parent
                             width: swatch.selected ? 14 : 18
@@ -485,6 +512,8 @@ PanelWindow {
                 }
 
                 Text {
+                    id: labText
+
                     text: ShellState.labRunning ? "localhost:3000" : "랩 시작"
                     color: labLink.containsMouse ? Theme.fg : Theme.muted
                     font.family: ShellState.labRunning ? Theme.mono : Theme.font
@@ -494,18 +523,32 @@ PanelWindow {
                     Accessible.role: Accessible.Link
                     Accessible.name: ShellState.labRunning ? "Juice Shop 열기" : "웹 보안 랩 시작"
 
+                    function open() {
+                        root.close();
+                        if (ShellState.labRunning)
+                            ShellState.openUrl("http://localhost:3000");
+                        else
+                            ShellState.runInTerminal("robinctl lab start web");
+                    }
+
+                    activeFocusOnTab: true
+                    Keys.onPressed: event => {
+                        if (Keyboard.activates(event)) {
+                            labText.open();
+                            event.accepted = true;
+                        }
+                    }
+
+                    FocusRing {
+                        baseRadius: 4
+                    }
+
                     MouseArea {
                         id: labLink
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.close();
-                            if (ShellState.labRunning)
-                                ShellState.openUrl("http://localhost:3000");
-                            else
-                                ShellState.runInTerminal("robinctl lab start web");
-                        }
+                        onClicked: labText.open()
                     }
                 }
             }

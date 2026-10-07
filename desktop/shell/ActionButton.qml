@@ -1,6 +1,8 @@
 import QtQuick
+import "keys.js" as Keyboard
 
 // shadcn button: "default" (primary), "outline" or "ghost".
+// Tab reaches it; Enter or Space presses it.
 Rectangle {
     id: root
 
@@ -20,6 +22,18 @@ Rectangle {
 
     Accessible.role: Accessible.Button
     Accessible.name: text
+
+    activeFocusOnTab: true
+    Keys.onPressed: event => {
+        if (Keyboard.activates(event)) {
+            root.clicked();
+            event.accepted = true;
+        }
+    }
+
+    FocusRing {
+        baseRadius: root.radius
+    }
 
     Behavior on color {
         ColorAnimation { duration: Theme.durFast }

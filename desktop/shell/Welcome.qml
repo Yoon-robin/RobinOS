@@ -3,6 +3,7 @@ import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
+import "keys.js" as Keyboard
 
 // First-login welcome wizard: theme, 한/영 shortcut, a learning goal and a short
 // shortcut tour. Opens until it is finished or skipped once (ShellState.welcome*);
@@ -291,6 +292,8 @@ PanelWindow {
                                 spacing: 8
 
                                 Rectangle {
+                                    id: themeTile
+
                                     Layout.fillWidth: true
                                     implicitHeight: 120
                                     radius: Theme.radius
@@ -301,6 +304,18 @@ PanelWindow {
                                     Accessible.role: Accessible.RadioButton
                                     Accessible.name: themeChoice.modelData.title
                                     Accessible.checked: themeChoice.selected
+
+                                    activeFocusOnTab: true
+                                    Keys.onPressed: event => {
+                                        if (Keyboard.activates(event)) {
+                                            Theme.setDark(themeChoice.modelData.dark);
+                                            event.accepted = true;
+                                        }
+                                    }
+
+                                    FocusRing {
+                                        baseRadius: themeTile.radius
+                                    }
 
                                     // Miniature desktop: bar, a window and the dock
                                     Rectangle {
@@ -394,6 +409,18 @@ PanelWindow {
                                 Accessible.name: Theme.accentLabels[modelData]
                                 Accessible.checked: selected
 
+                                activeFocusOnTab: true
+                                Keys.onPressed: event => {
+                                    if (Keyboard.activates(event)) {
+                                        Theme.setAccent(swatch.modelData);
+                                        event.accepted = true;
+                                    }
+                                }
+
+                                FocusRing {
+                                    baseRadius: swatch.radius
+                                }
+
                                 Rectangle {
                                     anchors.centerIn: parent
                                     width: swatch.selected ? 16 : 22
@@ -443,6 +470,18 @@ PanelWindow {
                             Accessible.role: Accessible.RadioButton
                             Accessible.name: modelData.title
                             Accessible.checked: selected
+
+                            activeFocusOnTab: true
+                            Keys.onPressed: event => {
+                                if (Keyboard.activates(event)) {
+                                    ShellState.setImeShortcut(imeChoice.modelData.key);
+                                    event.accepted = true;
+                                }
+                            }
+
+                            FocusRing {
+                                baseRadius: imeChoice.radius
+                            }
 
                             RowLayout {
                                 anchors.fill: parent
@@ -519,6 +558,7 @@ PanelWindow {
                             font.family: Theme.font
                             font.pixelSize: 14
                             clip: true
+                            activeFocusOnTab: true
 
                             Accessible.role: Accessible.EditableText
                             Accessible.name: "한/영 전환 연습"
@@ -532,7 +572,7 @@ PanelWindow {
                                 verticalAlignment: Text.AlignVCenter
                                 visible: tryInput.text === "" && tryInput.preeditText === ""
                                 text: "여기에 입력하며 한/영을 바꿔 보세요"
-                                color: Theme.subtle
+                                color: Theme.muted
                                 font: tryInput.font
                             }
                         }
@@ -587,6 +627,18 @@ PanelWindow {
                             Accessible.role: Accessible.RadioButton
                             Accessible.name: modelData.title
                             Accessible.checked: selected
+
+                            activeFocusOnTab: true
+                            Keys.onPressed: event => {
+                                if (Keyboard.activates(event)) {
+                                    root.goal = goalChoice.modelData.key;
+                                    event.accepted = true;
+                                }
+                            }
+
+                            FocusRing {
+                                baseRadius: goalChoice.radius
+                            }
 
                             RowLayout {
                                 anchors.fill: parent

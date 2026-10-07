@@ -41,6 +41,7 @@ Rectangle {
         echoMode: root.password ? TextInput.Password : TextInput.Normal
         passwordCharacter: "•"
         clip: true
+        activeFocusOnTab: true
 
         Accessible.role: Accessible.EditableText
         Accessible.name: root.placeholder
@@ -52,7 +53,7 @@ Rectangle {
             verticalAlignment: Text.AlignVCenter
             visible: input.text === "" && input.preeditText === ""
             text: root.placeholder
-            color: Theme.subtle
+            color: Theme.muted
             font.family: Theme.font
             font.pixelSize: 14
         }

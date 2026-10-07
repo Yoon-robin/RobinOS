@@ -175,7 +175,7 @@ PanelWindow {
                         Text {
                             visible: toast.n.appName !== ""
                             text: toast.n.appName
-                            color: Theme.subtle
+                            color: Theme.muted
                             font.family: Theme.font
                             font.pixelSize: 11
                         }
