@@ -125,8 +125,14 @@ run_qemu live \
   -append "archisobasedir=${base_dir} archisolabel=${label} console=tty0 console=ttyS0,115200" \
   -cdrom "${ISO}"
 
-printf '\n== Phase 2: post-install, snapshots and rollback on the installed system\n'
+# One QEMU run per boot (QEMU for Windows with WHPX can't reset a rebooting guest;
+# install-test.py is the same for both)
+printf '\n== Phase 2: first boot, post-install and the snapshot setup\n'
 run_qemu installed
+printf '\n== Phase 3: GRUB snapshot menu, snap-pac snapshots, rollback\n'
+run_qemu snapshots
+printf '\n== Phase 4: the rolled-back system and the desktop\n'
+run_qemu rollback
 
 printf '\nScreenshots:\n'
 ls -1 "${OUT_DIR}"/*.png 2>/dev/null || printf '  (none)\n'

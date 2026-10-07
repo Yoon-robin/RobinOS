@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
 """Drive the RobinOS install test (scripts/install-test.sh) over the serial console.
 
-Usage: install-test.py <live|installed> <out-dir> [speed]
+Usage: install-test.py <live|installed|snapshots|rollback> <out-dir> [speed]
 
-live       Boots the ISO, runs archinstall (default Btrfs layout, GRUB, EFI on
-           /boot), copies the shared checkout to /opt/robinos and prepares a
-           serial console for the next phase, then powers off.
-installed  Boots the installed disk, runs scripts/post-install.sh --yes, checks
-           the snapshot setup, installs a package to get a snap-pac pre/post
-           pair, rolls back to the pre snapshot, reboots and checks the package
-           is gone, then logs in on the desktop and takes screenshots.
+Each phase is one boot in its own QEMU run and ends by powering off (QEMU's
+WHPX can't handle a guest that reboots itself).
+
+live       Boots the ISO, installs (archinstall: default Btrfs layout, GRUB,
+           EFI on /boot; or robin-install), copies the shared checkout to
+           /opt/robinos and prepares a serial console for the next phases.
+installed  Boots the installed disk, runs scripts/post-install.sh --yes
+           (archinstall only) and checks the snapshot setup.
+snapshots  Screenshots the GRUB menu and its snapshot submenu, installs a
+           package to get a snap-pac pre/post pair and rolls back to the pre
+           snapshot.
+rollback   Checks the package is gone after the rollback, then logs in on the
+           desktop and takes screenshots.
 
 speed multiplies every timeout (1 with KVM, about 4 with TCG).
 """
@@ -464,7 +470,14 @@ def phase_installed(con, qmp):
     con.run("grep -q '^HOOKS=.*grub-btrfs-overlayfs' /etc/mkinitcpio.conf", check=False)
     con.run("test -s /boot/grub/grub-btrfs.cfg && grep -c 'menuentry' /boot/grub/grub-btrfs.cfg")
 
-    con.reboot()
+    # QEMU's WHPX can't reset a VM that reboots itself ("Unexpected VP exit code 4"),
+    # so every boot is its own QEMU run: power off here, the next phase boots again.
+    con.send("poweroff\n")
+    con.wait_closed(180)
+
+
+def phase_snapshots(con, qmp):
+    """Second boot: the snapshot submenu in GRUB, a snap-pac pair, then rollback."""
     boot_from_grub(con, qmp, "grub-menu", show_snapshots=True)
     con.login("root", PASSWORD)
 
@@ -482,7 +495,12 @@ def phase_installed(con, qmp):
 
     log(f"rolling back to snapshot {pre}")
     con.run(f"robinctl snapshot rollback {pre} --yes")
-    con.reboot()
+    con.send("poweroff\n")
+    con.wait_closed(180)
+
+
+def phase_rollback(con, qmp):
+    """Third boot: the rolled-back system, then the desktop."""
     boot_from_grub(con, qmp, "grub-after-rollback")
     con.login("root", PASSWORD)
     if con.run("command -v cowsay", check=False) == 0:
@@ -518,6 +536,10 @@ def main():
             phase_live(con, qmp)
         elif PHASE == "installed":
             phase_installed(con, qmp)
+        elif PHASE == "snapshots":
+            phase_snapshots(con, qmp)
+        elif PHASE == "rollback":
+            phase_rollback(con, qmp)
         else:
             raise SystemExit(f"unknown phase: {PHASE}")
     except Exception as error:

@@ -151,9 +151,12 @@ function Invoke-WhpxInstallTest {
             "-initrd", "`"$vm\$base\boot\x86_64\initramfs-linux.img`"",
             "-append", "`"$kernelArgs`"",
             "-cdrom", "`"$vm\robinos.iso`"") },
-        @{ name = "installed"; extra = @() }
+        # Every boot is its own QEMU run: WHPX can't reset a guest that reboots itself
+        @{ name = "installed"; extra = @() },
+        @{ name = "snapshots"; extra = @() },
+        @{ name = "rollback"; extra = @() }
     )
-    if ($reuse) { $phases = @($phases[1]) }
+    if ($reuse) { $phases = $phases[1..3] }
 
     $failed = $false
     foreach ($phase in $phases) {
