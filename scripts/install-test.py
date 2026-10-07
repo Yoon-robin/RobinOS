@@ -36,6 +36,8 @@ OUT = sys.argv[2]
 SPEED = float(sys.argv[3]) if len(sys.argv) > 3 else 1.0
 # "archinstall" (docs/install.md, option A) or "robinos" (installer/robin-install)
 INSTALLER = os.environ.get("ROBINOS_INSTALLER", "archinstall")
+# robin-install next to Windows puts RobinOS on the fourth partition
+ROOT_PART = "/dev/vda4" if INSTALLER == "windows" else "/dev/vda2"
 PASSWORD = "robin"  # root and the robin user, like the live ISO
 MIRROR = "https://geo.mirror.pkgbuild.com/$repo/os/$arch"
 
@@ -357,6 +359,58 @@ def wait_network(con):
             "curl -sfo /dev/null --max-time 10 https://geo.mirror.pkgbuild.com/", timeout=300)
 
 
+# ---- "windows": a disk that looks like a Windows install (T-006) ----
+#
+# GPT with Windows' usual layout: a 100 MB EFI partition holding a stand-in
+# Microsoft boot manager, the Microsoft reserved partition and an NTFS "C:"
+# with a marker file. The rest of the 64 GB disk is free, as after shrinking
+# C: in Disk Management. robin-install then installs next to it.
+
+WINDOWS_PARTITIONS = (1, 2, 3)
+
+
+def make_windows_disk(con):
+    con.run("sgdisk --zap-all /dev/vda > /dev/null"
+            " && sgdisk -n 1:0:+100M -t 1:ef00 -c '1:EFI system partition'"
+            " -n 2:0:+16M -t 2:0c01 -c '2:Microsoft reserved partition'"
+            " -n 3:0:+20G -t 3:0700 -c '3:Basic data partition' /dev/vda"
+            " && partprobe /dev/vda && udevadm settle")
+    con.run("mkfs.fat -F 32 -n SYSTEM /dev/vda1 > /dev/null && mkfs.ntfs -Q -L Windows /dev/vda3 > /dev/null")
+    con.run("mkdir -p /tmp/esp /tmp/win"
+            " && mount /dev/vda1 /tmp/esp && mkdir -p /tmp/esp/EFI/Microsoft/Boot"
+            " && echo 'stand-in for the Windows boot manager' > /tmp/esp/EFI/Microsoft/Boot/bootmgfw.efi"
+            " && umount /tmp/esp"
+            " && mount -t ntfs-3g /dev/vda3 /tmp/win && mkdir -p /tmp/win/Windows/System32"
+            " && echo robinos-install-test > /tmp/win/marker.txt && umount /tmp/win")
+
+
+def windows_state(con):
+    """What must not change: the Windows partitions' table entries and the start of C:."""
+    parts = " ; ".join(f"sgdisk -i {n} /dev/vda" for n in WINDOWS_PARTITIONS)
+    _, table = con.capture(parts)
+    _, head = con.capture("head -c 64M /dev/vda3 | sha256sum")
+    return table.strip() + "\n" + head.strip()
+
+
+def check_windows_kept(con, before):
+    after = windows_state(con)
+    if after != before:
+        print(f"before:\n{before}\nafter:\n{after}", flush=True)
+        raise RuntimeError("the Windows partitions changed")
+    con.run("mount -o ro -t ntfs-3g /dev/vda3 /tmp/win && grep -qx robinos-install-test /tmp/win/marker.txt; s=$?; umount /tmp/win; exit $s")
+    con.run("test -f /mnt/efi/EFI/Microsoft/Boot/bootmgfw.efi && test -f /mnt/efi/EFI/RobinOS/grubx64.efi")
+    # The firmware's fallback path belongs to Windows here; robin-install only adds EFI/RobinOS
+    con.run("! test -e /mnt/efi/EFI/BOOT/BOOTX64.EFI")
+    # Windows keeps the hardware clock in local time
+    con.run("grep -qx LOCAL /mnt/etc/adjtime")
+    # os-prober should put Windows in the GRUB menu (the stand-in may not fool it)
+    if con.run("grep -q 'Windows Boot Manager' /mnt/boot/grub/grub.cfg", check=False) == 0:
+        log("GRUB menu has Windows Boot Manager")
+    else:
+        log("GRUB menu has no Windows entry (os-prober did not detect the stand-in boot manager)")
+    log("Windows partitions, its EFI files and C: are unchanged")
+
+
 # ---- Phases ----
 
 def phase_live(con, qmp):
@@ -366,7 +420,12 @@ def phase_live(con, qmp):
 
     con.run("mkdir -p /share && (mount -o ro /dev/vdb1 /share 2>/dev/null || mount -o ro /dev/vdb /share)"
             " && test -f /share/robinos/bin/robinctl")
-    if INSTALLER == "robinos":
+    if INSTALLER == "windows":
+        make_windows_disk(con)
+        before = windows_state(con)
+        install_with_robin_install(con, mode="alongside")
+        check_windows_kept(con, before)
+    elif INSTALLER == "robinos":
         install_with_robin_install(con)
     else:
         install_with_archinstall(con)
@@ -382,14 +441,14 @@ def phase_live(con, qmp):
     con.wait_closed(180)
 
 
-def install_with_robin_install(con):
-    """installer/robin-install from this checkout, erasing the disk; leaves the target on /mnt."""
+def install_with_robin_install(con, mode="whole"):
+    """installer/robin-install from this checkout; leaves the target on /mnt."""
     con.run("cp -r /share/robinos/. /opt/robinos/"
             " && chmod +x /opt/robinos/bin/* /opt/robinos/installer/* /opt/robinos/scripts/*.sh"
             " /opt/robinos/scripts/*.py /opt/robinos/desktop/bin/*"
             " && install -m755 /opt/robinos/installer/robin-install /usr/local/bin/robin-install")
     con.run("robin-install disks", check=False)
-    plan = {"disk": "/dev/vda", "mode": "whole", "user": "robin", "password": PASSWORD,
+    plan = {"disk": "/dev/vda", "mode": mode, "user": "robin", "password": PASSWORD,
             "hostname": "robinos", "timezone": "Asia/Seoul"}
     con.put_file("/root/plan.json", json.dumps(plan))
     con.run("chmod 600 /root/plan.json")
@@ -401,7 +460,7 @@ def install_with_robin_install(con):
     if status != 0:
         raise RuntimeError(f"robin-install failed with {status}")
 
-    con.run("mount -o subvol=@ /dev/vda2 /mnt && mount /dev/vda1 /mnt/efi")
+    con.run(f"mount -o subvol=@ {ROOT_PART} /mnt && mount /dev/vda1 /mnt/efi")
     # robin-install locks root; the test logs in on the serial console as root
     con.run("arch-chroot /mnt sh -c 'echo root:robin | chpasswd'")
 
@@ -575,7 +634,7 @@ def phase_rollback(con, qmp):
     if con.run("command -v cowsay", check=False) == 0:
         raise RuntimeError("cowsay is still installed after the rollback")
     log("rollback ok: cowsay is gone")
-    con.run("findmnt -no FSROOT /; mount -o subvolid=5 /dev/vda2 /mnt && ls /mnt && umount /mnt", check=False)
+    con.run(f"findmnt -no FSROOT /; mount -o subvolid=5 {ROOT_PART} /mnt && ls /mnt && umount /mnt", check=False)
     con.run("robinctl snapshot list", check=False)
 
     # Desktop: SDDM on the screen, log in as robin

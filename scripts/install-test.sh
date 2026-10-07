@@ -17,7 +17,7 @@ set -euo pipefail
 # copy inside the ISO). scripts/install-test.py drives everything over the
 # serial console and takes screenshots over QMP.
 #
-# Usage: scripts/install-test.sh [--installer=archinstall|robinos] [path/to/robinos.iso]
+# Usage: scripts/install-test.sh [--installer=archinstall|robinos|windows] [path/to/robinos.iso]
 #   archinstall  docs/install.md option A: archinstall, then post-install.sh (default)
 #   robinos      installer/robin-install, erasing the disk (EFI on /efi)
 # Needs: qemu-system-x86_64, qemu-img, OVMF, bsdtar, python3.
@@ -30,7 +30,7 @@ if [[ "${1:-}" == --installer=* ]]; then
   ROBINOS_INSTALLER="${1#--installer=}"
   shift
 fi
-[[ "${ROBINOS_INSTALLER}" == "archinstall" || "${ROBINOS_INSTALLER}" == "robinos" ]] ||
+[[ "${ROBINOS_INSTALLER}" =~ ^(archinstall|robinos|windows)$ ]] ||
   { printf 'error: unknown installer: %s\n' "${ROBINOS_INSTALLER}" >&2; exit 1; }
 ISO="${1:-$(ls -t "${ROOT_DIR}"/out/robinos-*.iso 2>/dev/null | head -n1)}"
 
@@ -77,7 +77,10 @@ for dir in assets bin config desktop docs installer labs packages scripts themes
   cp -a "${ROOT_DIR}/${dir}" "${share}/"
 done
 
-qemu-img create -q -f qcow2 "${OUT_DIR}/disk.qcow2" 40G
+# "windows" needs room for a 20 GB C: and 40 GB of free space next to it
+disk_size=40G
+[[ "${ROBINOS_INSTALLER}" == "windows" ]] && disk_size=64G
+qemu-img create -q -f qcow2 "${OUT_DIR}/disk.qcow2" "${disk_size}"
 cp "${ovmf_vars}" "${OUT_DIR}/OVMF_VARS.fd"
 
 accel=(-accel tcg)
