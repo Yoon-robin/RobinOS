@@ -138,6 +138,31 @@ class Console:
         match = self.expect(rf"([\s\S]*?)__E{n}_(\d+)__", timeout)
         return int(match.group(2)), match.group(1).replace("\r", "")
 
+    def run_long(self, command, name, timeout, logs=()):
+        """Runs a long command in the background of the guest shell, printing the
+        tail of its output every 30 s so a hang shows where it stopped. On failure
+        or timeout prints the tail of the given log files too. Returns the status."""
+        out, rc = f"/root/{name}.out", f"/root/{name}.rc"
+        self.run(f"rm -f {rc}; ({command} > {out} 2>&1; echo $? > {rc}) &")
+        deadline = time.time() + timeout * SPEED
+        status = None
+        while time.time() < deadline:
+            time.sleep(30)
+            _, text = self.capture(f"cat {rc} 2>/dev/null; echo ---; tail -n 2 {out} | cut -c1-200")
+            done, _, tail = text.partition("---")
+            for line in tail.strip().splitlines():
+                log(f"{name}: {line}")
+            if done.strip().isdigit():
+                status = int(done.strip())
+                break
+        if status != 0:
+            self.run(f"tail -n 60 {out}", check=False)
+            for path in logs:
+                self.run(f"tail -n 80 {path}", check=False)
+        if status is None:
+            raise TimeoutError(f"{name} did not finish within {timeout * SPEED:.0f}s")
+        return status
+
     def put_file(self, path, content):
         """Writes a file in the guest (base64 in short lines over the console)."""
         data = base64.b64encode(content.encode()).decode()
@@ -344,8 +369,9 @@ def install_with_robin_install(con):
     con.run("chmod 600 /root/plan.json")
 
     log("robin-install")
-    status = con.run("robin-install run /root/plan.json > /root/robin-install.out 2>&1", timeout=5400, check=False)
-    con.run("grep '^@@' /root/robin-install.out; tail -n 40 /root/robin-install.out", check=False)
+    status = con.run_long("robin-install run /root/plan.json", "robin-install", timeout=5400,
+                          logs=("/var/log/robin-install.log",))
+    con.run("grep '^@@' /root/robin-install.out", check=False)
     if status != 0:
         raise RuntimeError(f"robin-install failed with {status}")
 
@@ -360,12 +386,10 @@ def install_with_archinstall(con):
     con.put_file("/root/creds.json", json.dumps(ARCHINSTALL_CREDS))
 
     log("archinstall")
-    status = con.run("archinstall --config /root/config.json --creds /root/creds.json --silent"
-                     " --skip-ntp --skip-wkd --skip-version-check > /root/archinstall.out 2>&1",
-                     timeout=3600, check=False)
-    con.run("tail -n 40 /root/archinstall.out", check=False)
+    status = con.run_long("archinstall --config /root/config.json --creds /root/creds.json --silent"
+                          " --skip-ntp --skip-wkd --skip-version-check", "archinstall",
+                          timeout=2400, logs=("/var/log/archinstall/install.log",))
     if status != 0:
-        con.run("tail -n 120 /var/log/archinstall/install.log", check=False)
         raise RuntimeError(f"archinstall failed with {status}")
 
     # archinstall may leave the target mounted; mount it the way we want it
@@ -405,9 +429,9 @@ def phase_installed(con, qmp):
     # robin-install already ran post-install.sh in its chroot
     if INSTALLER == "archinstall":
         log("post-install")
-        status = con.run("cd /opt/robinos && SUDO_USER=robin scripts/post-install.sh --yes > /root/post-install.out 2>&1",
-                         timeout=5400, check=False)
-        con.run("tail -n 60 /root/post-install.out", check=False)
+        status = con.run_long("cd /opt/robinos && SUDO_USER=robin scripts/post-install.sh --yes",
+                              "post-install", timeout=5400)
+        con.run("tail -n 30 /root/post-install.out", check=False)
         if status != 0:
             raise RuntimeError(f"post-install.sh failed with {status}")
 
