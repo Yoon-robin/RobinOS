@@ -1,33 +1,33 @@
-# RobinOS Desktop
+# RobinOS 데스크톱
 
-RobinOS uses Hyprland with its own Quickshell shell. The look follows the shadcn/ui zinc palette, and the defaults are tuned for people coming from Windows. The product reasoning is in `docs/design.md`.
+RobinOS는 Hyprland 위에 직접 만든 Quickshell 셸을 얹어 써요. 디자인은 shadcn/ui의 zinc 팔레트를 따르고, 기본값은 윈도우에서 넘어온 사용자에게 맞췄어요. 왜 이렇게 만들었는지는 `docs/design.md`에 있어요.
 
-## Components
+## 구성 요소
 
-| Part | Program | Source in this repo |
+| 부분 | 프로그램 | 저장소 안 위치 |
 |---|---|---|
-| Compositor | Hyprland 0.56+ (Lua config) | `desktop/hypr/robinos.lua` |
-| Shell: top bar, dock, launcher, quick settings, notifications, volume indicator, wallpaper | Quickshell 0.3 | `desktop/shell/` |
-| Session start and rendering fallback | `robinos-session` | `desktop/bin/robinos-session` |
-| Login screen | SDDM (Qt 6 theme) | `themes/sddm/robinos/` |
-| Lock screen and idle | hyprlock, hypridle | `desktop/hypr/hyprlock.conf`, `hypridle.conf` |
-| Terminal | foot | `desktop/foot/foot.ini` |
-| Files, browser | Nautilus, Firefox | - |
-| GTK and libadwaita apps | adw-gtk3, dconf defaults | `desktop/dconf/` |
-| Qt apps | qt6ct palettes | `desktop/qt6ct/` |
-| Korean input | fcitx5-hangul | `desktop/fcitx5/` |
-| Fonts | Geist, Geist Mono, Pretendard | `desktop/fontconfig/`, `scripts/fetch-fonts.sh` |
+| 컴포지터 | Hyprland 0.56+ (Lua 설정) | `desktop/hypr/robinos.lua` |
+| 셸: 상단 바, 독, 런처, 빠른 설정, 알림, 볼륨 표시, 배경화면 | Quickshell 0.3 | `desktop/shell/` |
+| 세션 시작, 렌더링 자동 전환 | `robinos-session` | `desktop/bin/robinos-session` |
+| 로그인 화면 | SDDM (Qt 6 테마) | `themes/sddm/robinos/` |
+| 잠금 화면과 대기 | hyprlock, hypridle | `desktop/hypr/hyprlock.conf`, `hypridle.conf` |
+| 터미널 | foot | `desktop/foot/foot.ini` |
+| 파일, 브라우저 | Nautilus, Firefox | - |
+| GTK, libadwaita 앱 | adw-gtk3, dconf 기본값 | `desktop/dconf/` |
+| Qt 앱 | qt6ct 팔레트 | `desktop/qt6ct/` |
+| 한글 입력 | fcitx5-hangul | `desktop/fcitx5/` |
+| 글꼴 | Geist, Geist Mono, Pretendard | `desktop/fontconfig/`, `scripts/fetch-fonts.sh` |
 
-Design tokens live in `desktop/shell/Theme.qml`. foot, hyprlock, the qt6ct palettes and the SDDM theme use the same values.
+디자인 토큰은 `desktop/shell/Theme.qml`에 있어요. foot, hyprlock, qt6ct 팔레트, SDDM 테마도 같은 값을 써요.
 
-## Install Targets
+## 설치 위치
 
-`desktop/install-map.txt` lists every file and where it goes. It is the single source for:
+`desktop/install-map.txt`에 모든 파일과 각 파일이 들어갈 위치가 적혀 있어요. 아래 스크립트는 모두 이 파일 하나만 보고 움직여요.
 
-- `scripts/install-desktop.sh` (installed systems, `--root` for other trees)
-- `scripts/sync-archiso-files.sh` and `scripts/sync-archiso-files.ps1` (live ISO overlay)
+- `scripts/install-desktop.sh` (설치된 시스템용. 다른 루트 경로에 설치할 때는 `--root`)
+- `scripts/sync-archiso-files.sh`, `scripts/sync-archiso-files.ps1` (라이브 ISO 오버레이)
 
-Main locations:
+주요 위치:
 
 ```text
 /usr/share/robinos/shell/                Quickshell config (qs -p /usr/share/robinos/shell)
@@ -37,46 +37,46 @@ Main locations:
 /usr/share/robinos/bin/robinos-session
 ```
 
-Geist and Pretendard are not in the Arch repositories. `scripts/fetch-fonts.sh` downloads pinned releases, checks their SHA-256 sums, and installs them into `/usr/share/fonts/robinos`. `scripts/prepare-archiso.sh` runs it for the ISO; `scripts/post-install.sh` runs it on installed systems.
+Geist와 Pretendard는 Arch 저장소에 없어요. `scripts/fetch-fonts.sh`가 버전을 고정해 둔 릴리스를 내려받아 SHA-256 체크섬을 확인하고 `/usr/share/fonts/robinos`에 설치해요. ISO를 만들 때는 `scripts/prepare-archiso.sh`가, 설치된 시스템에서는 `scripts/post-install.sh`가 이 스크립트를 실행해요.
 
-## Rendering in VMs
+## VM 렌더링
 
-`robinos-session` decides how to start Hyprland:
+`robinos-session`이 Hyprland를 어떤 방식으로 시작할지 정해요.
 
-1. Graphics drivers without 3D acceleration (`hyperv_drm`, `bochs`, `simpledrm`, `qxl`, ...) or a missing DRM render node start in software rendering.
-2. Otherwise Hyprland starts with GPU acceleration. If it exits within 8 seconds, the session restarts it with software rendering.
-3. `ROBINOS_RENDER=software` turns off Hyprland blur and shadows, and the shell skips its shadow effects.
+1. 3D 가속이 없는 그래픽 드라이버(`hyperv_drm`, `bochs`, `simpledrm`, `qxl` 등)를 쓰거나 DRM 렌더 노드가 없으면 소프트웨어 렌더링으로 시작해요.
+2. 그 밖에는 GPU 가속으로 Hyprland를 시작해요. 8초 안에 종료되면 세션이 소프트웨어 렌더링으로 다시 시작해요.
+3. `ROBINOS_RENDER=software`에서는 Hyprland의 블러와 그림자를 끄고, 셸도 그림자 효과를 그리지 않아요.
 
-The log is in `~/.local/state/robinos/session.log`. To force a mode, export `ROBINOS_RENDER=software` or `ROBINOS_RENDER=hardware` in `~/.bash_profile`.
+로그는 `~/.local/state/robinos/session.log`에 남아요. 렌더링 방식을 직접 정하고 싶으면 `~/.bash_profile`에서 `ROBINOS_RENDER=software`나 `ROBINOS_RENDER=hardware`를 export하면 돼요.
 
-For GPU-accelerated testing in QEMU, run `scripts/run-vm.sh --gl`.
+QEMU에서 GPU 가속으로 테스트하려면 `scripts/run-vm.sh --gl`을 실행하세요.
 
-## Keyboard Shortcuts
+## 단축키
 
-| Shortcut | Action |
+| 단축키 | 동작 |
 |---|---|
-| `Super+Space` or `Super+A` | Launcher (apps, labs, system commands) |
-| `Super+S` | Quick settings |
-| `Super+N` | Clear notifications |
-| `Super+Return` | Terminal |
-| `Super+E` | Files |
-| `Super+B` | Browser |
-| `Super+L` | Lock screen |
-| `Alt+Tab`, `Alt+Shift+Tab` | Next / previous window |
-| `Alt+F4` or `Super+Q` | Close window |
-| `Super+T` | Toggle the window between floating and tiled |
-| `Super+F`, `Super+M` | Fullscreen, maximize |
-| `Super+1`...`Super+9` | Switch workspace (`Shift` moves the window) |
-| `Super+drag` | Move (left button) or resize (right button) a window |
-| `Print`, `Shift+Print` | Region or full screenshot to `~/Pictures/Screenshots` and the clipboard |
-| `Right Alt` | 한/영 toggle (`Right Ctrl` is 한자) |
-| `Super+Shift+Escape` | Log out |
+| `Super+Space` 또는 `Super+A` | 런처 (앱, 학습 미션, 랩, 시스템 명령) |
+| `Super+S` | 빠른 설정 |
+| `Super+N` | 알림 지우기 |
+| `Super+Return` | 터미널 |
+| `Super+E` | 파일 |
+| `Super+B` | 브라우저 |
+| `Super+L` | 화면 잠금 |
+| `Alt+Tab`, `Alt+Shift+Tab` | 다음 창 / 이전 창 |
+| `Alt+F4` 또는 `Super+Q` | 창 닫기 |
+| `Super+T` | 창을 자유 배치와 타일 배치 사이에서 전환 |
+| `Super+F`, `Super+M` | 전체 화면, 최대화 |
+| `Super+1`...`Super+9` | 작업 공간 전환 (`Shift`를 같이 누르면 창을 옮겨요) |
+| `Super+drag` | 창 이동(왼쪽 버튼), 크기 조절(오른쪽 버튼) |
+| `Print`, `Shift+Print` | 영역 또는 전체 화면을 찍어 `~/Pictures/Screenshots`와 클립보드에 저장 |
+| `Right Alt` | 한/영 전환 (`Right Ctrl`은 한자) |
+| `Super+Shift+Escape` | 로그아웃 |
 
-New windows float like on Windows. Quick settings has a "창 자동 정렬" switch that makes new windows tile instead.
+새 창은 윈도우처럼 자유 배치로 떠요. 빠른 설정에서 "창 자동 정렬" 스위치를 켜면 새 창이 타일로 배치돼요.
 
-## Windows Command Hints
+## 윈도우 명령 힌트
 
-`desktop/bash/robinos-hints.sh` is sourced from `~/.bashrc`. Typing a Windows command in the terminal prints the Linux equivalent:
+`~/.bashrc`가 `desktop/bash/robinos-hints.sh`를 불러와요. 터미널에 윈도우 명령을 치면 같은 일을 하는 리눅스 명령을 알려 줘요.
 
 ```text
 $ ipconfig
@@ -84,15 +84,40 @@ ipconfig은(는) 윈도우 명령이에요. 리눅스에서는
   ip a  IP 주소와 네트워크 장치를 보여 줘요
 ```
 
-It covers about 30 commands (`dir`, `cls`, `cd..`, `copy`, `del`, `tasklist`, `tracert`, `netstat`, `findstr`, `notepad`, ...). New users get it through `/etc/skel/.bashrc`; `scripts/post-install.sh` adds it to the installing user's `~/.bashrc`.
+명령 30개쯤을 알아들어요(`dir`, `cls`, `cd..`, `copy`, `del`, `tasklist`, `tracert`, `netstat`, `findstr`, `notepad` 등). 새로 만드는 사용자는 `/etc/skel/.bashrc`로 바로 쓸 수 있고, 설치하는 사용자의 `~/.bashrc`에는 `scripts/post-install.sh`가 넣어 줘요.
 
-## Live Session
+## 윈도우 이름으로 앱 찾기
 
-The live ISO logs in automatically as `robin` (password `robin`) into the RobinOS session. Passwordless sudo is configured only on the live ISO (`/etc/sudoers.d/10-robinos-live`).
+런처에서 윈도우 앱 이름으로 검색해도 같은 일을 하는 앱이 나와요. 결과는 "윈도우에서 쓰던 이름" 아래에 "윈도우의 메모장에 해당해요"처럼 설명과 함께 보여요.
 
-## Customizing
+| 검색어 | 찾아 주는 것 |
+|---|---|
+| 메모장, `notepad` | 텍스트 편집기 |
+| 작업 관리자, `taskmgr` | Mission Center |
+| 파일 탐색기, 내 PC, `explorer` | 파일 (Nautilus) |
+| 명령 프롬프트, `cmd`, `powershell` | 터미널 (foot) |
+| Edge, 크롬, `chrome` | Firefox |
+| 사진 | 이미지 뷰어 (Loupe) |
+| 반디집, 알집, `7-zip` | 압축 관리자 |
+| 볼륨 믹서 | 음량 조절 (pavucontrol) |
+| Acrobat, `pdf` | 문서 뷰어 (Evince) |
+| 제어판, `control panel` | 빠른 설정 |
 
-Create `~/.config/hypr/hyprland.lua`, load the RobinOS defaults, then override:
+목록은 `desktop/shell/Launcher.qml`의 `windowsNames`에 있어요.
+
+## 리눅스 기초 미션
+
+런처의 "리눅스 기초 미션"을 고르면 터미널이 열리고 `robinctl learn`이 미션 목록과 진행도를 보여 줘요. 미션은 그 터미널에서 직접 풀고, `robinctl learn check`로 확인해요. 자세한 내용은 [README](../README.md#리눅스-기초-미션)에 있어요.
+
+셸이 작업용으로 여는 터미널은 `ROBINOS_NO_GREETING=1`로 시작해서 `~/.bashrc`가 fastfetch를 띄우지 않아요.
+
+## 라이브 세션
+
+라이브 ISO는 `robin` 계정(비밀번호 `robin`)으로 RobinOS 세션에 자동 로그인해요. 비밀번호 없는 sudo는 라이브 ISO에만 설정돼 있어요(`/etc/sudoers.d/10-robinos-live`).
+
+## 설정 바꾸기
+
+`~/.config/hypr/hyprland.lua`를 만들고 RobinOS 기본값을 불러온 다음, 바꾸고 싶은 값을 덮어쓰세요.
 
 ```lua
 require("/usr/share/robinos/hypr/robinos")
@@ -101,19 +126,19 @@ hl.config({ general = { gaps_out = 16 } })
 hl.bind("SUPER + W", hl.dsp.exec_cmd("firefox"))
 ```
 
-Theme and accent color are changed in quick settings. The choice is stored in `~/.local/state/quickshell/` and applied to GTK, libadwaita, foot, qt6ct and Hyprland borders.
+테마와 강조 색상은 빠른 설정에서 바꿔요. 고른 값은 `~/.local/state/quickshell/`에 저장되고 GTK, libadwaita, foot, qt6ct, Hyprland 창 테두리에 적용돼요.
 
-Shell IPC for scripts:
+스크립트에서는 셸 IPC를 쓸 수 있어요.
 
 ```bash
 qs ipc -p /usr/share/robinos/shell call shell launcher
 qs ipc -p /usr/share/robinos/shell call shell setDark false
 ```
 
-## Checks
+## 검사
 
 ```bash
 scripts/check-desktop.sh
 ```
 
-It checks Lua syntax, runs `Hyprland --verify-config`, parses every QML file with `qmlformat`, and checks the desktop scripts with `bash -n`. The `Validate` workflow runs it in an Arch Linux container.
+Lua 문법을 확인하고 `Hyprland --verify-config`를 실행해요. 모든 QML 파일은 `qmlformat`으로 파싱해 보고, 데스크톱 스크립트는 `bash -n`으로 검사해요. `Validate` 워크플로가 Arch Linux 컨테이너에서 이 스크립트를 실행해요.

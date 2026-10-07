@@ -1,12 +1,12 @@
-# Install RobinOS Prototype
+# RobinOS 프로토타입 설치
 
-RobinOS does not have a full disk installer yet.
+RobinOS에는 아직 디스크에 직접 설치하는 완전한 설치기가 없어요.
 
-Use this prototype flow while the ISO and installer mature.
+ISO와 설치기가 자리 잡을 때까지는 아래 프로토타입 절차를 써요.
 
-## Option A: Existing Arch Install
+## 방법 A: 이미 설치된 Arch
 
-On an installed Arch system:
+Arch가 설치된 시스템에서 실행해요.
 
 ```bash
 sudo scripts/post-install.sh --dry-run
@@ -14,45 +14,46 @@ sudo scripts/post-install.sh
 robinctl doctor
 ```
 
-Then install the security learning profile:
+그다음 보안 학습 프로필을 설치해요.
 
 ```bash
 sudo robinctl profile security --dry-run
 sudo robinctl profile security
 ```
 
-## Option B: Live ISO Prototype
+## 방법 B: 라이브 ISO 프로토타입
 
-Boot the RobinOS ISO, then inspect:
+RobinOS ISO로 부팅하고 아래 명령으로 살펴봐요.
 
 ```bash
 robinctl doctor
+robinctl learn
 robinctl lab info web
 robinctl lab list
 robin-install
 ```
 
-The current `robin-install` command is a guide, not a partitioning installer.
+지금의 `robin-install` 명령은 안내만 해 주고, 파티션을 나누는 설치기는 아니에요.
 
-The live ISO stages RobinOS files at:
+라이브 ISO는 RobinOS 파일을 여기에 준비해 둬요.
 
 ```bash
 /opt/robinos
 ```
 
-After installing Arch, copy that directory into the installed system and run:
+Arch를 설치한 뒤 이 디렉터리를 설치된 시스템에 복사하고 이 명령을 실행해요.
 
 ```bash
 sudo /opt/robinos/scripts/post-install.sh
 ```
 
-## Future Installer Goals
+## 앞으로 설치기에 넣을 것
 
-- Guided disk partitioning
-- Btrfs layout
-- Snapper setup
-- Bootloader setup
-- User creation
-- Korean input and locale setup
-- RobinOS desktop (Hyprland + Quickshell shell)
-- Security Lab profile selection
+- 단계별 안내가 있는 디스크 파티션 나누기
+- Btrfs 레이아웃
+- Snapper 설정
+- 부트로더 설정
+- 사용자 만들기
+- 한글 입력과 한국어 로캘 설정
+- RobinOS 데스크톱 (Hyprland + Quickshell 셸)
+- Security Lab 프로필 선택

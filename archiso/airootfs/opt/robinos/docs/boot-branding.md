@@ -1,25 +1,25 @@
-# RobinOS Boot Branding
+# RobinOS 부팅 브랜딩
 
-RobinOS has a first-pass boot branding stack.
+RobinOS에는 부팅 브랜딩의 첫 버전이 들어 있어요.
 
-## Included
+## 구성
 
-- GRUB theme: `themes/grub/robinos`
-- GRUB default snippet: `config/grub/10-robinos-theme.cfg`
-- SDDM theme: `themes/sddm/robinos`
-- Lock wallpaper: `assets/wallpapers/robinos-lock.svg`
-- Desktop wallpaper: `assets/wallpapers/robinos-default.svg`
+- GRUB 테마: `themes/grub/robinos`
+- GRUB 기본 설정 스니펫: `config/grub/10-robinos-theme.cfg`
+- SDDM 테마: `themes/sddm/robinos`
+- 잠금 화면 배경화면: `assets/wallpapers/robinos-lock.svg`
+- 데스크톱 배경화면: `assets/wallpapers/robinos-default.svg`
 
-## Installed System
+## 설치된 시스템
 
-On an installed Arch or RobinOS system:
+설치된 Arch나 RobinOS 시스템에서:
 
 ```bash
 sudo scripts/install-branding.sh --dry-run
 sudo scripts/install-branding.sh
 ```
 
-The script installs:
+스크립트가 설치하는 파일:
 
 ```text
 /usr/share/grub/themes/robinos
@@ -28,39 +28,39 @@ The script installs:
 /etc/sddm.conf.d/10-robinos-theme.conf
 ```
 
-If `grub-mkconfig` is available and `/boot/grub` exists, the script regenerates:
+`grub-mkconfig`를 쓸 수 있고 `/boot/grub`이 있으면 이 파일도 다시 만들어요.
 
 ```text
 /boot/grub/grub.cfg
 ```
 
-## Live ISO
+## 라이브 ISO
 
-The theme files are included inside the live filesystem at:
+테마 파일은 라이브 파일 시스템의 이 위치에 들어 있어요.
 
 ```text
 /usr/share/grub/themes/robinos
 /opt/robinos/themes/grub/robinos
 ```
 
-The live ISO boot menu is customized by:
+라이브 ISO 부팅 메뉴는 이 스크립트가 바꿔요.
 
 ```bash
 scripts/customize-iso-boot.sh build/archiso-profile
 ```
 
-This is run automatically by:
+이 스크립트는 아래 스크립트가 자동으로 실행해요.
 
 ```bash
 scripts/prepare-archiso.sh
 ```
 
-The customizer:
+커스터마이저가 하는 일:
 
-- Copies the RobinOS GRUB theme into the generated profile's `grub/themes/robinos`
-- Adds `set theme=/grub/themes/robinos/theme.txt` to GRUB config files when present
-- Renames GRUB menu text to RobinOS
-- Renames Syslinux menu titles to RobinOS when present
-- Renames systemd-boot loader entries when present
+- RobinOS GRUB 테마를 생성된 프로필의 `grub/themes/robinos`에 복사해요
+- GRUB 설정 파일이 있으면 `set theme=/grub/themes/robinos/theme.txt`를 추가해요
+- GRUB 메뉴 문구를 RobinOS로 바꿔요
+- Syslinux 메뉴 제목이 있으면 RobinOS로 바꿔요
+- systemd-boot 로더 항목이 있으면 이름을 바꿔요
 
-The customizer avoids changing low-level boot parameters such as archiso labels and boot paths.
+archiso 라벨이나 부팅 경로 같은 저수준 부팅 매개변수는 건드리지 않아요.

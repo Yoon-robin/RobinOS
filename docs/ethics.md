@@ -1,20 +1,19 @@
-# RobinOS Ethics
+# RobinOS 윤리 기준
 
-RobinOS is built for legal security learning, authorized testing, CTF practice, and defensive research.
+RobinOS는 합법적인 보안 학습, 허가받은 테스트, CTF 연습, 방어 연구를 위한 OS예요.
 
-Do:
+해야 할 것:
 
-- Practice in local labs, CTF platforms, and systems you own
-- Get explicit written permission before testing any real target
-- Keep notes and scope boundaries for authorized assessments
-- Prefer defensive understanding and responsible disclosure
+- 로컬 랩, CTF 플랫폼, 직접 소유한 시스템에서 연습하기
+- 실제 대상을 테스트하기 전에 명확한 서면 허가 받기
+- 허가받은 점검에서는 기록을 남기고 범위를 정해 두기
+- 방어 관점의 이해와 책임 있는 공개(responsible disclosure)를 우선하기
 
-Do not:
+하면 안 되는 것:
 
-- Attack systems without permission
-- Steal credentials, tokens, cookies, or private data
-- Build persistence, evasion, or covert access into RobinOS defaults
-- Use RobinOS to harm people, services, or organizations
+- 허가 없이 시스템 공격하기
+- 자격 증명, 토큰, 쿠키, 개인 데이터 훔치기
+- RobinOS 기본 구성에 지속성 확보, 탐지 회피, 은밀한 접근 기능 넣기
+- RobinOS로 사람, 서비스, 조직에 피해 주기
 
-RobinOS should make safe learning easier than unsafe behavior.
-
+RobinOS에서는 위험한 행동보다 안전하게 배우는 쪽이 더 쉬워야 해요.

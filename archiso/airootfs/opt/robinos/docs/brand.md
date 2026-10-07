@@ -1,76 +1,76 @@
-# RobinOS Brand
+# RobinOS 브랜드
 
-RobinOS uses a calm security-workstation identity: technical, trustworthy, and learning-first.
+RobinOS의 정체성은 차분한 보안 워크스테이션이에요. 기술적이고, 믿음직하고, 학습을 우선해요.
 
-## Logo Files
+## 로고 파일
 
-- `assets/brand/robinos-mark.svg`: square app/icon mark
-- `assets/brand/robinos-logo.svg`: full logo lockup
-- `assets/brand/robinos-logo-horizontal.svg`: header-friendly horizontal logo
+- `assets/brand/robinos-mark.svg`: 정사각형 앱·아이콘 마크
+- `assets/brand/robinos-logo.svg`: 전체 로고 락업
+- `assets/brand/robinos-logo-horizontal.svg`: 헤더에 쓰기 좋은 가로형 로고
 
-## Concept
+## 콘셉트
 
-The mark combines:
+마크에는 이런 요소가 들어 있어요.
 
-- Shield: safe lab boundaries and defensive learning
-- Wing shape: RobinOS identity and forward motion
-- Terminal prompt: hands-on Linux and security practice
-- Red accent: the RobinOS signature color
+- 방패: 안전한 랩 경계와 방어 학습
+- 날개 모양: RobinOS의 정체성과 앞으로 나아가는 움직임
+- 터미널 프롬프트: 직접 손으로 하는 리눅스·보안 실습
+- 빨간 강조색: RobinOS의 대표 색
 
-## Palette
+## 팔레트
 
-RobinOS follows the shadcn/ui zinc palette with Robin red as the only accent. The source of truth is `desktop/shell/Theme.qml`.
+RobinOS는 shadcn/ui의 zinc 팔레트를 따르고, 강조색은 Robin red 하나만 써요. 원본은 `desktop/shell/Theme.qml`이에요.
 
-| Token | Dark (default) | Light |
+| 토큰 | 다크 (기본) | 라이트 |
 |---|---|---|
 | background | `#09090b` | `#ffffff` |
 | surface | `#121214` | `#ffffff` |
 | secondary | `#27272a` | `#f4f4f5` |
 | foreground | `#fafafa` | `#09090b` |
 | muted foreground | `#a1a1aa` | `#71717a` |
-| border | white 10% | `#e4e4e7` |
+| border | 흰색 10% | `#e4e4e7` |
 | primary | `#fafafa` | `#18181b` |
 | accent (Robin red) | `#e5484d` | `#e5484d` |
 | destructive | `#f87171` | `#dc2626` |
 | success | `#4ade80` | `#16a34a` |
 
-Other accents the user can pick: orange `#f76b15`, green `#30a46c`, blue `#3e63dd`, violet `#8e4ec6`, neutral `#a1a1aa`.
+사용자는 다른 강조색도 고를 수 있어요. 주황 `#f76b15`, 초록 `#30a46c`, 파랑 `#3e63dd`, 보라 `#8e4ec6`, 무채색 `#a1a1aa`.
 
-## Type and Shape
+## 글꼴과 모양
 
-- Interface: Geist, with Pretendard for Hangul
-- Code and terminal: Geist Mono / GeistMono Nerd Font
-- Radius: 6 (small), 8 (inputs, buttons), 10 (cards), 14 (windows, popovers), 18 (dock)
-- Icons: Lucide stroke icons, 2px stroke on a 24px grid
+- 인터페이스: Geist, 한글은 Pretendard
+- 코드와 터미널: Geist Mono / GeistMono Nerd Font
+- 모서리 반경: 6 (작은 요소), 8 (입력창, 버튼), 10 (카드), 14 (창, 팝오버), 18 (독)
+- 아이콘: Lucide 선 아이콘, 24px 그리드에 2px 선
 
-The cyan palette of the first logo files (`assets/brand/*.svg`) predates this palette and still needs a refresh.
+첫 로고 파일(`assets/brand/*.svg`)의 청록색 팔레트는 이 팔레트보다 먼저 만든 거라 아직 새로 손봐야 해요.
 
-## Usage
+## 사용처
 
-Use the square mark for:
+정사각형 마크를 쓰는 곳:
 
-- App icon
-- Boot splash
-- SDDM avatar or badge
-- Favicon
+- 앱 아이콘
+- 부팅 스플래시
+- SDDM 아바타나 배지
+- 파비콘
 
-Use the horizontal logo for:
+가로형 로고를 쓰는 곳:
 
-- Documentation headers
-- Website navigation
-- Installer header
+- 문서 헤더
+- 웹사이트 내비게이션
+- 설치기 헤더
 
-Use the full lockup for:
+전체 로고 락업을 쓰는 곳:
 
-- README hero image
-- Release notes
-- ISO splash screens
+- README 대표 이미지
+- 릴리스 노트
+- ISO 스플래시 화면
 
-## Boot Branding
+## 부팅 브랜딩
 
-The first boot branding pass includes:
+1차 부팅 브랜딩에 들어간 파일:
 
-- `themes/grub/robinos`: GRUB boot menu theme
-- `themes/sddm/robinos`: SDDM login theme
-- `assets/wallpapers/robinos-default.svg`: desktop wallpaper
-- `assets/wallpapers/robinos-lock.svg`: login and lock wallpaper
+- `themes/grub/robinos`: GRUB 부팅 메뉴 테마
+- `themes/sddm/robinos`: SDDM 로그인 테마
+- `assets/wallpapers/robinos-default.svg`: 데스크톱 배경화면
+- `assets/wallpapers/robinos-lock.svg`: 로그인·잠금 화면 배경화면

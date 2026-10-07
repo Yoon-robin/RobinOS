@@ -1,21 +1,20 @@
-# RobinOS Web Lab
+# RobinOS 웹 랩
 
-This lab is for local web security learning only.
+이 랩은 로컬에서 웹 보안을 배울 때만 써요.
 
-Services:
+서비스:
 
 - OWASP Juice Shop: http://localhost:3000
 - DVWA: http://localhost:8080
 
-Start:
+시작:
 
 ```bash
 robinctl lab start web
 ```
 
-Stop:
+중지:
 
 ```bash
 robinctl lab stop web
 ```
-

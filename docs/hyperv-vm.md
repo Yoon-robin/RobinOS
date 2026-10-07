@@ -1,26 +1,26 @@
-# Hyper-V Arch VM for RobinOS
+# RobinOS용 Hyper-V Arch VM
 
-Use this when building RobinOS from Windows.
+윈도우에서 RobinOS를 빌드할 때 쓰는 방법이에요.
 
-## Requirements
+## 요구사항
 
-- Windows 10/11 Pro, Enterprise, or Education
-- Administrator PowerShell
-- Virtualization enabled in firmware
-- Network access
+- Windows 10/11 Pro, Enterprise 또는 Education
+- 관리자 권한 PowerShell
+- 펌웨어 설정에서 가상화가 켜져 있을 것
+- 네트워크 연결
 
-## Create the VM
+## VM 만들기
 
-Open PowerShell as Administrator:
+PowerShell을 관리자 권한으로 열고 실행해요.
 
 ```powershell
 cd "C:\Users\robin\바탕화면\RobinOS"
 powershell -ExecutionPolicy Bypass -File scripts/setup-hyperv-arch-vm.ps1
 ```
 
-If the script enables Hyper-V, reboot Windows and run the same command again.
+스크립트가 Hyper-V를 켰다면 윈도우를 재부팅하고 같은 명령을 한 번 더 실행하세요.
 
-The script creates:
+스크립트가 만드는 VM은 다음과 같아요.
 
 ```text
 VM name: RobinOS-Builder
@@ -30,16 +30,16 @@ Disk: 60 GB
 ISO: %USERPROFILE%\Downloads\RobinOS-Builder\archlinux-x86_64.iso
 ```
 
-## Start the VM
+## VM 시작하기
 
 ```powershell
 Start-VM -Name "RobinOS-Builder"
 vmconnect.exe localhost "RobinOS-Builder"
 ```
 
-## Build RobinOS Inside Arch
+## Arch 안에서 RobinOS 빌드하기
 
-Inside the Arch environment:
+Arch 환경 안에서 실행해요.
 
 ```bash
 sudo pacman -Syu
@@ -50,9 +50,8 @@ scripts/doctor-build.sh
 scripts/build-iso.sh
 ```
 
-The built ISO will be in:
+빌드가 끝난 ISO는 여기에 생겨요.
 
 ```text
 out/
 ```
-

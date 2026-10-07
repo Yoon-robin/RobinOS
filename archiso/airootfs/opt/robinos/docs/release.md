@@ -1,10 +1,10 @@
-# RobinOS Release Checklist
+# RobinOS 릴리스 체크리스트
 
-This is the early release checklist for RobinOS preview ISOs.
+RobinOS 프리뷰 ISO를 낼 때 쓰는 초기 릴리스 체크리스트예요.
 
-## Build
+## 빌드
 
-On Arch Linux:
+Arch Linux에서:
 
 ```bash
 sudo pacman -S --needed archiso git
@@ -12,15 +12,15 @@ scripts/doctor-build.sh
 scripts/build-iso.sh
 ```
 
-For a faster rebuild when package names are already checked:
+패키지 이름을 이미 확인했다면 이렇게 더 빨리 다시 빌드할 수 있어요.
 
 ```bash
 scripts/build-iso.sh --skip-package-check
 ```
 
-## Artifacts
+## 빌드 결과물
 
-Expected files:
+나와야 하는 파일:
 
 ```text
 out/robinos-*.iso
@@ -28,9 +28,9 @@ out/SHA256SUMS
 build/logs/mkarchiso-*.log
 ```
 
-## Smoke Test
+## 스모크 테스트
 
-Boot the ISO in a VM and check:
+VM에서 ISO를 부팅하고 확인해요.
 
 ```bash
 scripts/run-vm.sh
@@ -44,21 +44,21 @@ ls /usr/share/sddm/themes/robinos
 ls /usr/share/grub/themes/robinos
 ```
 
-## Manual Visual Checks
+## 직접 화면 확인
 
-- Live boot menu says RobinOS Security Learning Live
-- SDDM shows the RobinOS theme
-- The RobinOS desktop starts: top bar, dock, and dot-grid wallpaper
-- `Super+Space` opens the launcher and `Super+S` opens quick settings
-- foot uses the RobinOS colors and Korean input toggles with Right Alt
+- 라이브 부팅 메뉴에 RobinOS Security Learning Live가 보여요
+- SDDM에 RobinOS 테마가 나와요
+- RobinOS 데스크톱이 떠요: 상단 바, 독, 점 격자 배경화면
+- `Super+Space`로 런처가, `Super+S`로 빠른 설정이 열려요
+- foot이 RobinOS 색상을 쓰고, 오른쪽 Alt로 한/영이 바뀌어요
 
-## Publish
+## 배포
 
-Do not publish until:
+아래 조건을 모두 채우기 전에는 배포하지 마세요.
 
-- Static validation passes
-- Arch package validation passes
-- ISO build succeeds
-- VM boot succeeds
-- SHA256SUMS is generated
-- Ethics notice is visible in docs and MOTD
+- 정적 검증 통과
+- Arch 패키지 검증 통과
+- ISO 빌드 성공
+- VM 부팅 성공
+- SHA256SUMS 생성
+- 문서와 MOTD에 윤리 안내가 보임

@@ -1,77 +1,77 @@
-# Build RobinOS ISO
+# RobinOS ISO 빌드
 
-Build on Arch Linux or an Arch-based VM.
+Arch Linux나 Arch 기반 VM에서 빌드해요.
 
-If you are on Windows, see `docs/build-environment.md` first.
+윈도우를 쓰고 있다면 `docs/build-environment.md`부터 보세요.
 
-## Requirements
+## 요구사항
 
 ```bash
 sudo pacman -S --needed archiso git
 ```
 
-Before building, check package names:
+빌드하기 전에 패키지 이름이 맞는지 확인해요.
 
 ```bash
 scripts/doctor-build.sh
 scripts/check-arch-packages.sh
 ```
 
-## Prepare Profile
+## 프로필 준비
 
-From the repository root on Arch Linux:
+Arch Linux에서 저장소 루트로 가서 실행해요.
 
 ```bash
 scripts/prepare-archiso.sh
 ```
 
-This copies Arch's official `releng` profile into `build/archiso-profile`, then overlays the RobinOS files.
-It also runs `scripts/customize-iso-boot.sh` to rename the live boot menus and stage the RobinOS GRUB theme into the generated profile.
+이 스크립트는 Arch 공식 `releng` 프로필을 `build/archiso-profile`에 복사한 뒤, 그 위에 RobinOS 파일을 덮어써요.
+`scripts/customize-iso-boot.sh`도 함께 실행해서 라이브 부팅 메뉴 이름을 바꾸고, 생성된 프로필에 RobinOS GRUB 테마를 넣어 둬요.
 
-On Windows PowerShell, you can only sync project files into the source overlay:
+Windows PowerShell에서는 프로젝트 파일을 소스 오버레이에 동기화하는 데까지만 할 수 있어요.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/sync-archiso-files.ps1
 ```
 
-The actual ISO build still needs Arch Linux.
+실제 ISO 빌드는 여전히 Arch Linux에서 해야 해요.
 
-The ISO profile sets executable permissions for RobinOS scripts through `archiso/profiledef.sh`.
+RobinOS 스크립트의 실행 권한은 ISO 프로필의 `archiso/profiledef.sh`에서 설정해요.
 
-## Build
+## 빌드
 
 ```bash
 scripts/build-iso.sh
 ```
 
-The ISO, checksum file, and build logs will be written to:
+ISO, 체크섬 파일, 빌드 로그는 아래 위치에 저장돼요.
 
 ```text
 out/
 build/logs/
 ```
 
-For a faster rebuild after packages are already checked:
+패키지 확인을 이미 마쳤다면 이렇게 더 빠르게 다시 빌드할 수 있어요.
 
 ```bash
 scripts/build-iso.sh --skip-package-check
 ```
 
-To clean generated build outputs:
+빌드로 생긴 결과물을 지우려면 아래 명령을 실행해요.
 
 ```bash
 scripts/clean-build.sh --yes
 ```
 
-To boot the latest generated ISO in QEMU:
+가장 최근에 만든 ISO를 QEMU로 부팅해 보려면 이렇게 해요.
 
 ```bash
 scripts/run-vm.sh
 ```
 
-## First VM Checks
+## VM에서 처음 확인할 것
 
-After booting the ISO:
+ISO로 부팅한 뒤 다음 명령을 실행해 봐요.
 
 ```bash
 robinctl version
@@ -82,4 +82,4 @@ ls /opt/robinos/assets/brand
 ls /usr/share/grub/themes/robinos
 ```
 
-The live ISO boot menu customization is applied to `build/archiso-profile`, not directly to the source `archiso/` overlay. Re-run `scripts/prepare-archiso.sh` whenever you want to regenerate the build profile.
+라이브 ISO 부팅 메뉴 수정은 소스 오버레이인 `archiso/`에 바로 하지 않고 `build/archiso-profile`에 적용돼요. 빌드 프로필을 새로 만들고 싶을 때마다 `scripts/prepare-archiso.sh`를 다시 실행하세요.

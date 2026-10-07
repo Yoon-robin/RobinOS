@@ -1,62 +1,63 @@
-# RobinOS Roadmap
+# RobinOS 로드맵
 
-The v0.1 scope and its status are tracked in `docs/design.md`.
+v0.1 범위와 진행 상황은 `docs/design.md`에서 관리해요.
 
-## Phase 0: Identity
+## 0단계: 정체성
 
-- Define name, logo direction, color system, and desktop tone
-- Decide default desktop: Hyprland + Quickshell shell (decided, see `docs/design.md`)
-- Write Korean and English one-line descriptions
-- Define ethical-use policy
+- 이름, 로고 방향, 색상 체계, 데스크톱 분위기 정하기
+- 기본 데스크톱 정하기: Hyprland + Quickshell 셸 (결정 완료, `docs/design.md` 참고)
+- 한국어·영어 한 줄 소개 쓰기
+- 윤리적 사용 정책 정하기
 
-## Phase 1: Reproducible Arch Workstation
+## 1단계: 재현 가능한 Arch 워크스테이션
 
-- Create package lists
-- Create post-install setup script
-- Configure Korean fonts, input, locale, and timezone
-- Add terminal prompt branding
-- Add wallpaper and login theme placeholders - done (shell-drawn wallpaper, new SDDM theme)
+- 패키지 목록 만들기
+- 설치 후 설정 스크립트 만들기
+- 한글 글꼴, 한글 입력, 로캘, 시간대 설정
+- 터미널 프롬프트 브랜딩 추가
+- 임시 배경화면과 로그인 테마 추가 - 완료 (셸이 직접 그리는 배경화면, 새 SDDM 테마)
 
-## Phase 2: `robinctl`
+## 2단계: `robinctl`
 
-- Implement `robinctl doctor` - initial prototype done
-- Implement `robinctl profile security` - initial prototype done
-- Implement `robinctl update` - initial prototype done
-- Implement `robinctl snapshot create` - initial prototype done
-- Add simple config file at `/etc/robinos/config.toml`
+- `robinctl doctor` 구현 - 첫 프로토타입 완료
+- `robinctl profile security` 구현 - 첫 프로토타입 완료
+- `robinctl update` 구현 - 첫 프로토타입 완료
+- `robinctl snapshot create` 구현 - 첫 프로토타입 완료
+- `robinctl learn` 구현 - 리눅스 기초 미션 5개 완료
+- `/etc/robinos/config.toml`에 간단한 설정 파일 추가
 
-## Phase 3: Security Profiles
+## 3단계: 보안 프로필
 
-- Add baseline CTF tools
-- Add web security tools
-- Add network analysis tools
-- Add reversing tools
-- Add forensics tools
-- Add containerized vulnerable labs
+- 기본 CTF 도구 추가
+- 웹 보안 도구 추가
+- 네트워크 분석 도구 추가
+- 리버싱 도구 추가
+- 포렌식 도구 추가
+- 컨테이너 기반 취약 랩 추가
 
-## Phase 4: ISO Build
+## 4단계: ISO 빌드
 
-- Create `archiso` profile - initial prototype done
-- Add RobinOS branding - initial prototype done
-- Add live ISO boot menu branding - initial prototype done
-- Add static project validation - initial prototype done
-- Add scripted ISO build and checksum flow - initial prototype done
-- Add installer or guided post-install script
-- Test in VM
-- Document build steps
+- `archiso` 프로필 만들기 - 첫 프로토타입 완료
+- RobinOS 브랜딩 추가 - 첫 프로토타입 완료
+- 라이브 ISO 부팅 메뉴 브랜딩 추가 - 첫 프로토타입 완료
+- 프로젝트 정적 검증 추가 - 첫 프로토타입 완료
+- ISO 빌드와 체크섬 생성 과정 스크립트화 - 첫 프로토타입 완료
+- 설치기 또는 안내형 설치 후 스크립트 추가
+- VM에서 테스트 - QEMU 부팅 테스트 자동화 완료 (`Boot-test RobinOS ISO`)
+- 빌드 방법 문서화
 
-## Phase 5: Safety and Recovery
+## 5단계: 안전과 복구
 
-- Btrfs layout
-- Snapper integration
-- Bootloader snapshot entries
-- `robinctl update` pre-update snapshot
-- Recovery documentation
+- Btrfs 레이아웃
+- Snapper 연동
+- 부트로더의 스냅샷 항목
+- `robinctl update`의 업데이트 전 스냅샷
+- 복구 문서
 
-## Phase 6: Public Preview
+## 6단계: 공개 프리뷰
 
-- Build signed ISO
-- Publish checksums
-- Write install guide
-- Write first CTF lab guide
-- Create GitHub releases
+- 서명된 ISO 빌드
+- 체크섬 공개
+- 설치 가이드 작성
+- 첫 CTF 랩 가이드 작성
+- GitHub 릴리스 만들기
