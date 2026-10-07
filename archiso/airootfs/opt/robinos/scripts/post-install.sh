@@ -57,7 +57,12 @@ if [[ "${DRY_RUN}" == "true" ]]; then
   printf 'Would download Geist and Pretendard into /usr/share/fonts/robinos\n'
 else
   run "${ROOT_DIR}/scripts/install-desktop.sh"
-  run "${ROOT_DIR}/scripts/fetch-fonts.sh" /usr/share/fonts/robinos
+  # robin-install copies the fonts from the live ISO, so there is nothing to download
+  if [[ -f "/usr/share/fonts/robinos/Geist[wght].ttf" && -f /usr/share/fonts/robinos/PretendardVariable.ttf ]]; then
+    printf 'RobinOS fonts are already installed\n'
+  else
+    run "${ROOT_DIR}/scripts/fetch-fonts.sh" /usr/share/fonts/robinos
+  fi
 fi
 run dconf update
 run fc-cache -f
@@ -100,7 +105,12 @@ else
   locale-gen
 fi
 
-run localectl set-locale LANG=ko_KR.UTF-8
+# localectl needs a running systemd; robin-install runs this script in a chroot
+if [[ "${DRY_RUN}" != "true" ]] && systemd-detect-virt --quiet --chroot; then
+  printf 'LANG=ko_KR.UTF-8\n' >/etc/locale.conf
+else
+  run localectl set-locale LANG=ko_KR.UTF-8
+fi
 
 for service in NetworkManager sddm bluetooth docker; do
   if [[ "${DRY_RUN}" == "true" ]] || systemctl list-unit-files "${service}.service" >/dev/null 2>&1; then

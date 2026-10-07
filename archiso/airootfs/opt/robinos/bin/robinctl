@@ -331,10 +331,10 @@ setup_step() {
   fi
 }
 
-# Enables a unit, and starts it too unless we are in a chroot.
+# Enables a unit, and starts it too unless we are in a chroot (robin-install).
 setup_enable() {
   setup_step systemctl enable "$1"
-  if [[ -d /run/systemd/system ]]; then
+  if [[ -d /run/systemd/system ]] && ! systemd-detect-virt --quiet --chroot 2>/dev/null; then
     setup_step systemctl start "$1"
   fi
 }

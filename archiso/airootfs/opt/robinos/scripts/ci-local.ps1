@@ -34,8 +34,7 @@ foreach ($scanRoot in $scanRoots) {
         $scripts += Get-ChildItem $fullRoot -Recurse -File |
             Where-Object {
                 $_.Name.EndsWith(".sh") -or
-                $_.Name -eq "robinctl" -or
-                $_.Name -eq "robin-install"
+                $_.Name -eq "robinctl"
             }
     }
 }

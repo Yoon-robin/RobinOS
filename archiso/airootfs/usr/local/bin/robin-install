@@ -1,24 +1,381 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/usr/bin/env python3
+"""RobinOS installer backend. Runs on the live ISO.
 
-cat <<'EOF'
-RobinOS 설치기 (프로토타입)
+  robin-install                       how to start the installer
+  robin-install disks                 disks the installer can use, as JSON
+  sudo robin-install run PLAN.json    install RobinOS, printing progress
+  sudo robin-install run -            the same, with the plan on stdin
 
-아직 디스크에 직접 설치하는 설치기는 없어요.
+The graphical installer (desktop/shell/Installer.qml) collects the choices and
+pipes them to `sudo robin-install run -`, so the password never lands in a
+file. A plan file is deleted after reading. The plan:
 
-지금은 이 순서로 설치해요:
-  1. archinstall이나 Arch 설치 가이드로 Arch Linux를 설치해요.
-  2. 설치한 시스템으로 재부팅해요.
-  3. RobinOS 저장소를 클론하거나 복사해요.
-  4. 실행: sudo scripts/post-install.sh
-  5. 실행: robinctl doctor
+  {
+    "disk": "/dev/nvme0n1",
+    "mode": "whole",          "whole" erases the disk; "alongside" keeps Windows
+                              and uses the largest free space on the disk
+    "user": "robin",
+    "password": "...",
+    "hostname": "robinos",
+    "timezone": "Asia/Seoul"
+  }
 
-라이브 ISO에는 RobinOS 파일이 이 폴더에도 들어 있어요:
-  /opt/robinos
+Layout: GPT; the EFI system partition on /efi (Windows' own one in
+"alongside"); Btrfs with @ on /, @home, @log, @pkg and @snapshots on
+/.snapshots. /boot stays inside @, so every snapshot carries its kernel
+(docs/recovery.md). UEFI only.
 
-Arch를 설치한 뒤 이 폴더를 설치한 시스템에 복사하고 실행하세요:
-  sudo /opt/robinos/scripts/post-install.sh
+Output: the commands and their output, plus lines for the GUI:
+  @@ <percent> <message>     progress
+  @@ error <message>         the install stopped
+A copy goes to /var/log/robin-install.log.
+"""
 
-앞으로 나올 RobinOS 설치기는 디스크 구성, Btrfs 스냅샷, 데스크톱 설정,
-한국어 기본값, 보안 실습 프로필 선택까지 안내해 줄 거예요.
-EOF
+import json
+import os
+import re
+import shlex
+import subprocess
+import sys
+
+ROBINOS = "/opt/robinos"
+TARGET = "/mnt"
+LOG_FILE = "/var/log/robin-install.log"
+MIN_SIZE = 40 * 1024**3
+ESP_TYPE = "c12a7328-f81f-11d2-ba4b-00a0c93ec93b"
+# Microsoft reserved, basic data and recovery partitions
+WINDOWS_TYPES = {
+    "e3c9e316-0b5c-4db8-817d-f92df00215ae",
+    "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7",
+    "de94bba4-06d1-4d40-a16a-bfd50179d6ac",
+}
+SUBVOLUMES = [("@", ""), ("@home", "home"), ("@log", "var/log"),
+              ("@pkg", "var/cache/pacman/pkg"), ("@snapshots", ".snapshots")]
+MOUNT_OPTIONS = "noatime,compress=zstd:1"
+
+log_file = None
+
+
+class InstallError(Exception):
+    pass
+
+
+def say(text):
+    print(text, flush=True)
+    if log_file:
+        log_file.write(text + "\n")
+        log_file.flush()
+
+
+def progress(percent, message):
+    say(f"@@ {percent} {message}")
+
+
+def run(*cmd, input=None, on_line=None):
+    """Runs a command, streaming its output; raises InstallError on failure."""
+    say("$ " + shlex.join(cmd))
+    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE if input else subprocess.DEVNULL,
+                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                            errors="replace")
+    if input:
+        proc.stdin.write(input)
+        proc.stdin.close()
+    for line in proc.stdout:
+        line = line.rstrip("\n")
+        say(line)
+        if on_line:
+            on_line(line)
+    if proc.wait() != 0:
+        raise InstallError(f"명령이 실패했어요 ({proc.returncode}): {cmd[0]}")
+
+
+def output(*cmd):
+    return subprocess.run(cmd, capture_output=True, text=True, check=True).stdout
+
+
+def chroot(*cmd, input=None):
+    run("arch-chroot", TARGET, *cmd, input=input)
+
+
+def write(path, text, mode=0o644):
+    full = TARGET + path
+    os.makedirs(os.path.dirname(full), exist_ok=True)
+    with open(full, "w") as f:
+        f.write(text)
+    os.chmod(full, mode)
+    say(f"# {path} 작성")
+
+
+def package_list(name):
+    with open(f"{ROBINOS}/packages/{name}.txt") as f:
+        return [line.strip() for line in f if line.strip() and not line.startswith("#")]
+
+
+# ---- Disks ----
+
+def live_disk():
+    """The disk the ISO booted from (a USB stick); never offered as a target."""
+    try:
+        source = output("findmnt", "-no", "SOURCE", "/run/archiso/bootmnt").strip()
+        parent = output("lsblk", "-no", "PKNAME", source).strip().splitlines()
+        return "/dev/" + parent[0] if parent and parent[0] else source
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+
+
+def free_spaces(disk):
+    """[(start, end, size)] in bytes from `parted -m ... print free`."""
+    spaces = []
+    for line in output("parted", "-m", "-s", disk, "unit", "B", "print", "free").splitlines():
+        fields = line.rstrip(";").split(":")
+        if len(fields) >= 5 and fields[4] == "free":
+            start, end, size = (int(field.rstrip("B")) for field in fields[1:4])
+            spaces.append((start, end, size))
+    return spaces
+
+
+def list_disks():
+    data = json.loads(output("lsblk", "-J", "-b", "-o",
+                             "NAME,PATH,SIZE,TYPE,MODEL,TRAN,RM,RO,PTTYPE,PARTTYPE,FSTYPE,LABEL"))
+    live = live_disk()
+    disks = []
+    for dev in data.get("blockdevices", []):
+        if dev.get("type") != "disk" or dev.get("ro") or dev["path"] == live:
+            continue
+        if dev["path"].startswith(("/dev/zram", "/dev/loop", "/dev/sr")):
+            continue
+        parts = dev.get("children") or []
+        esp = next((p["path"] for p in parts if (p.get("parttype") or "").lower() == ESP_TYPE), None)
+        windows = any(p.get("fstype") == "ntfs" or (p.get("parttype") or "").lower() in WINDOWS_TYPES
+                      for p in parts)
+        largest_free = 0
+        if dev.get("pttype") == "gpt":
+            try:
+                largest_free = max((size for _, _, size in free_spaces(dev["path"])), default=0)
+            except subprocess.CalledProcessError:
+                pass
+        disks.append({
+            "path": dev["path"],
+            "size": int(dev.get("size") or 0),
+            "model": (dev.get("model") or "").strip(),
+            "transport": dev.get("tran") or "",
+            "removable": bool(dev.get("rm")),
+            "pttype": dev.get("pttype") or "",
+            "esp": esp,
+            "windows": windows,
+            "free": largest_free,
+            "can_whole": int(dev.get("size") or 0) >= MIN_SIZE,
+            "can_alongside": dev.get("pttype") == "gpt" and esp is not None and largest_free >= MIN_SIZE,
+        })
+    return disks
+
+
+def partitions(disk):
+    """{partition number: path} for a disk, from sysfs."""
+    found = {}
+    for line in output("lsblk", "-lnp", "-o", "NAME,TYPE", disk).splitlines():
+        name, kind = line.split()
+        number_file = f"/sys/class/block/{os.path.basename(name)}/partition"
+        if kind == "part" and os.path.exists(number_file):
+            with open(number_file) as f:
+                found[int(f.read())] = name
+    return found
+
+
+def settle(disk):
+    run("partprobe", disk)
+    run("udevadm", "settle")
+
+
+# ---- Install ----
+
+def read_plan(path):
+    if path == "-":
+        plan = json.load(sys.stdin)
+    else:
+        with open(path) as f:
+            plan = json.load(f)
+        os.remove(path)  # it holds the password
+
+    for key in ("disk", "mode", "user", "password", "hostname", "timezone"):
+        if not plan.get(key):
+            raise InstallError(f"설치 계획에 {key}가 없어요")
+    if plan["mode"] not in ("whole", "alongside"):
+        raise InstallError(f"알 수 없는 설치 방식이에요: {plan['mode']}")
+    if not re.fullmatch(r"[a-z_][a-z0-9_-]{0,31}", plan["user"]) or plan["user"] == "root":
+        raise InstallError("사용자 이름은 영어 소문자로 시작하고 소문자, 숫자, -, _만 쓸 수 있어요")
+    if not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9-]{0,62}", plan["hostname"]):
+        raise InstallError("컴퓨터 이름은 영어, 숫자, -만 쓸 수 있어요")
+    if not os.path.isfile(f"/usr/share/zoneinfo/{plan['timezone']}"):
+        raise InstallError(f"알 수 없는 시간대예요: {plan['timezone']}")
+    return plan
+
+
+def prepare_disk(plan, disk):
+    """Partitions and formats; returns (esp, root) partition paths."""
+    progress(2, "디스크 준비")
+    if plan["mode"] == "whole":
+        if not disk["can_whole"]:
+            raise InstallError("디스크가 40GB보다 작아요")
+        run("sgdisk", "--zap-all", disk["path"])
+        run("sgdisk", "-n", "1:0:+1G", "-t", "1:ef00", "-c", "1:EFI",
+            "-n", "2:0:0", "-t", "2:8300", "-c", "2:RobinOS", disk["path"])
+        settle(disk["path"])
+        parts = partitions(disk["path"])
+        esp, root = parts[1], parts[2]
+        run("mkfs.fat", "-F", "32", "-n", "EFI", esp)
+    else:
+        if not disk["can_alongside"]:
+            raise InstallError("윈도우 옆에 설치하려면 GPT 디스크에 EFI 파티션과 40GB 이상 빈 공간이 있어야 해요")
+        before = set(partitions(disk["path"]).values())
+        # 0:0:0 = next number, the largest free block, all of it
+        run("sgdisk", "-n", "0:0:0", "-t", "0:8300", "-c", "0:RobinOS", disk["path"])
+        settle(disk["path"])
+        new = set(partitions(disk["path"]).values()) - before
+        if len(new) != 1:
+            raise InstallError("새 파티션을 찾지 못했어요")
+        esp, root = disk["esp"], new.pop()
+    run("mkfs.btrfs", "-f", "-L", "RobinOS", root)
+    return esp, root
+
+
+def mount_target(esp, root):
+    progress(8, "Btrfs 하위 볼륨")
+    run("mount", root, TARGET)
+    for name, _ in SUBVOLUMES:
+        run("btrfs", "subvolume", "create", f"{TARGET}/{name}")
+    run("umount", TARGET)
+    for name, path in SUBVOLUMES:
+        where = os.path.join(TARGET, path) if path else TARGET
+        os.makedirs(where, exist_ok=True)
+        run("mount", "-o", f"{MOUNT_OPTIONS},subvol=/{name}", root, where)
+    os.makedirs(f"{TARGET}/efi", exist_ok=True)
+    run("mount", esp, f"{TARGET}/efi")
+
+
+def install_packages():
+    progress(12, "패키지 설치")
+    packages = package_list("core") + package_list("desktop") + ["amd-ucode", "intel-ucode"]
+    counter = re.compile(r"\(\s*(\d+)/(\d+)\) installing")
+
+    def on_line(line):
+        match = counter.search(line)
+        if match:
+            done, total = int(match.group(1)), int(match.group(2))
+            if done % 10 == 0 or done == total:
+                progress(12 + 58 * done // total, f"패키지 설치 ({done}/{total})")
+
+    run("pacstrap", "-K", TARGET, *packages, on_line=on_line)
+    fstab = output("genfstab", "-U", TARGET)
+    with open(f"{TARGET}/etc/fstab", "a") as f:
+        f.write(fstab)
+    say("# /etc/fstab 작성")
+
+
+def configure_system(plan):
+    progress(72, "시스템 설정")
+    chroot("ln", "-sf", f"/usr/share/zoneinfo/{plan['timezone']}", "/etc/localtime")
+    # Windows keeps the hardware clock in local time; agree with it when sharing the PC
+    chroot("hwclock", "--systohc", "--localtime" if plan["mode"] == "alongside" else "--utc")
+
+    with open(f"{TARGET}/etc/locale.gen") as f:
+        locale_gen = f.read()
+    for locale in ("ko_KR.UTF-8 UTF-8", "en_US.UTF-8 UTF-8"):
+        locale_gen = locale_gen.replace(f"#{locale}", locale)
+    write("/etc/locale.gen", locale_gen)
+    chroot("locale-gen")
+    write("/etc/locale.conf", "LANG=ko_KR.UTF-8\n")
+    write("/etc/vconsole.conf", "KEYMAP=us\n")
+
+    write("/etc/hostname", plan["hostname"] + "\n")
+    write("/etc/hosts", f"127.0.0.1 localhost\n::1 localhost\n127.0.1.1 {plan['hostname']}\n")
+
+    chroot("useradd", "-m", "-G", "wheel", "-s", "/bin/bash", plan["user"])
+    say(f"$ chpasswd ({plan['user']})")
+    subprocess.run(["arch-chroot", TARGET, "chpasswd"], input=f"{plan['user']}:{plan['password']}\n",
+                   text=True, check=True, capture_output=True)
+    chroot("passwd", "-l", "root")
+    write("/etc/sudoers.d/10-robinos-wheel", "%wheel ALL=(ALL:ALL) ALL\n", 0o440)
+
+
+def install_robinos(plan):
+    progress(76, "RobinOS 파일")
+    run("cp", "-a", ROBINOS, f"{TARGET}/opt/")
+    # Fetched when the ISO was built; saves post-install.sh a download
+    if os.path.isdir("/usr/share/fonts/robinos"):
+        run("cp", "-a", "/usr/share/fonts/robinos", f"{TARGET}/usr/share/fonts/")
+
+    progress(80, "부트로더 (GRUB)")
+    if plan["mode"] == "alongside":
+        write("/etc/default/grub.d/20-robinos-dual-boot.cfg", "# Windows in the GRUB menu\nGRUB_DISABLE_OS_PROBER=false\n")
+    chroot("grub-install", "--target=x86_64-efi", "--efi-directory=/efi", "--boot-directory=/boot",
+           "--bootloader-id=RobinOS")
+    if plan["mode"] == "whole":
+        # Fallback path for firmware that forgets boot entries; the disk is ours
+        chroot("grub-install", "--target=x86_64-efi", "--efi-directory=/efi", "--boot-directory=/boot",
+               "--removable")
+    chroot("grub-mkconfig", "-o", "/boot/grub/grub.cfg")
+
+    progress(85, "RobinOS 데스크톱과 스냅샷")
+    chroot("env", f"SUDO_USER={plan['user']}", f"{ROBINOS}/scripts/post-install.sh", "--yes")
+
+
+def install(plan_path):
+    if os.geteuid() != 0:
+        raise InstallError("관리자 권한이 필요해요: sudo robin-install run <계획 파일>")
+    if not os.path.isdir("/sys/firmware/efi"):
+        raise InstallError("UEFI 모드로 부팅한 컴퓨터에만 설치할 수 있어요")
+
+    plan = read_plan(plan_path)
+    disk = next((d for d in list_disks() if d["path"] == plan["disk"]), None)
+    if disk is None:
+        raise InstallError(f"설치할 수 없는 디스크예요: {plan['disk']}")
+    say(f"# RobinOS 설치: {disk['path']} ({disk['model'] or '이름 없음'}), 방식 {plan['mode']}")
+
+    subprocess.run(["umount", "-R", TARGET], capture_output=True)
+    esp, root = prepare_disk(plan, disk)
+    mount_target(esp, root)
+    install_packages()
+    configure_system(plan)
+    install_robinos(plan)
+
+    progress(97, "마무리")
+    run("sync")
+    run("umount", "-R", TARGET)
+    progress(100, "설치가 끝났어요")
+
+
+def guide():
+    print("""RobinOS 설치기
+
+라이브 화면의 런처(Super+Space)에서 "RobinOS 설치"를 골라 시작하세요.
+
+명령으로 쓰려면:
+  robin-install disks                설치할 수 있는 디스크 보기
+  sudo robin-install run 계획.json    계획 파일대로 설치
+
+이미 Arch Linux를 설치했다면 그 시스템에서 이렇게 해도 돼요:
+  sudo /opt/robinos/scripts/post-install.sh""")
+
+
+def main():
+    global log_file
+    command = sys.argv[1] if len(sys.argv) > 1 else ""
+    if command == "disks":
+        print(json.dumps(list_disks(), ensure_ascii=False, indent=2))
+        return 0
+    if command == "run" and len(sys.argv) == 3:
+        try:
+            log_file = open(LOG_FILE, "a") if os.geteuid() == 0 else None
+            install(sys.argv[2])
+            return 0
+        except (InstallError, subprocess.CalledProcessError, OSError, KeyError, ValueError) as error:
+            say(f"@@ error {error}")
+            subprocess.run(["umount", "-R", TARGET], capture_output=True)
+            return 1
+    guide()
+    return 0 if command in ("", "help", "-h", "--help") else 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

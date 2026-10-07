@@ -27,6 +27,8 @@ import uuid
 PHASE = sys.argv[1]
 OUT = sys.argv[2]
 SPEED = float(sys.argv[3]) if len(sys.argv) > 3 else 1.0
+# "archinstall" (docs/install.md, option A) or "robinos" (installer/robin-install)
+INSTALLER = os.environ.get("ROBINOS_INSTALLER", "archinstall")
 PASSWORD = "robin"  # root and the robin user, like the live ISO
 MIRROR = "https://geo.mirror.pkgbuild.com/$repo/os/$arch"
 
@@ -309,6 +311,47 @@ def phase_live(con, qmp):
 
     con.run("mkdir -p /share && (mount -o ro /dev/vdb1 /share 2>/dev/null || mount -o ro /dev/vdb /share)"
             " && test -f /share/robinos/bin/robinctl")
+    if INSTALLER == "robinos":
+        install_with_robin_install(con)
+    else:
+        install_with_archinstall(con)
+
+    # Serial console and a GRUB menu the test can see on the installed system
+    con.put_file("/mnt/etc/default/grub.d/99-install-test.cfg", GRUB_TEST_CFG)
+    con.run("arch-chroot /mnt systemctl enable serial-getty@ttyS0.service")
+    con.run("arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg > /dev/null 2>&1")
+    con.run("cat /mnt/etc/fstab; ls /mnt/boot", check=False)
+    con.run("sync; umount -R /mnt")
+    log("powering off the live system")
+    con.send("poweroff\n")
+    con.wait_closed(180)
+
+
+def install_with_robin_install(con):
+    """installer/robin-install from this checkout, erasing the disk; leaves the target on /mnt."""
+    con.run("cp -r /share/robinos/. /opt/robinos/"
+            " && chmod +x /opt/robinos/bin/* /opt/robinos/installer/* /opt/robinos/scripts/*.sh"
+            " /opt/robinos/scripts/*.py /opt/robinos/desktop/bin/*"
+            " && install -m755 /opt/robinos/installer/robin-install /usr/local/bin/robin-install")
+    con.run("robin-install disks", check=False)
+    plan = {"disk": "/dev/vda", "mode": "whole", "user": "robin", "password": PASSWORD,
+            "hostname": "robinos", "timezone": "Asia/Seoul"}
+    con.put_file("/root/plan.json", json.dumps(plan))
+    con.run("chmod 600 /root/plan.json")
+
+    log("robin-install")
+    status = con.run("robin-install run /root/plan.json > /root/robin-install.out 2>&1", timeout=5400, check=False)
+    con.run("grep '^@@' /root/robin-install.out; tail -n 40 /root/robin-install.out", check=False)
+    if status != 0:
+        raise RuntimeError(f"robin-install failed with {status}")
+
+    con.run("mount -o subvol=@ /dev/vda2 /mnt && mount /dev/vda1 /mnt/efi")
+    # robin-install locks root; the test logs in on the serial console as root
+    con.run("arch-chroot /mnt sh -c 'echo root:robin | chpasswd'")
+
+
+def install_with_archinstall(con):
+    """archinstall with the default Btrfs layout; leaves the target on /mnt with /opt/robinos."""
     con.put_file("/root/config.json", json.dumps(ARCHINSTALL_CONFIG, indent=2))
     con.put_file("/root/creds.json", json.dumps(ARCHINSTALL_CREDS))
 
@@ -326,14 +369,6 @@ def phase_live(con, qmp):
     con.run("rm -rf /mnt/opt/robinos && mkdir -p /mnt/opt && cp -r /share/robinos /mnt/opt/robinos"
             " && chmod +x /mnt/opt/robinos/bin/* /mnt/opt/robinos/installer/* /mnt/opt/robinos/scripts/*.sh"
             " /mnt/opt/robinos/scripts/*.py /mnt/opt/robinos/desktop/bin/*")
-    con.put_file("/mnt/etc/default/grub.d/99-install-test.cfg", GRUB_TEST_CFG)
-    con.run("arch-chroot /mnt systemctl enable serial-getty@ttyS0.service")
-    con.run("arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg > /dev/null 2>&1")
-    con.run("cat /mnt/etc/fstab; ls /mnt/boot", check=False)
-    con.run("sync; umount -R /mnt")
-    log("powering off the live system")
-    con.send("poweroff\n")
-    con.wait_closed(180)
 
 
 def boot_from_grub(con, qmp, name, show_snapshots=False):
@@ -359,16 +394,18 @@ def boot_from_grub(con, qmp, name, show_snapshots=False):
 
 
 def phase_installed(con, qmp):
-    boot_from_grub(con, qmp, "grub-before-post-install")
+    boot_from_grub(con, qmp, "grub-first-boot")
     con.login("root", PASSWORD)
     wait_network(con)
 
-    log("post-install")
-    status = con.run("cd /opt/robinos && SUDO_USER=robin scripts/post-install.sh --yes > /root/post-install.out 2>&1",
-                     timeout=5400, check=False)
-    con.run("tail -n 60 /root/post-install.out", check=False)
-    if status != 0:
-        raise RuntimeError(f"post-install.sh failed with {status}")
+    # robin-install already ran post-install.sh in its chroot
+    if INSTALLER == "archinstall":
+        log("post-install")
+        status = con.run("cd /opt/robinos && SUDO_USER=robin scripts/post-install.sh --yes > /root/post-install.out 2>&1",
+                         timeout=5400, check=False)
+        con.run("tail -n 60 /root/post-install.out", check=False)
+        if status != 0:
+            raise RuntimeError(f"post-install.sh failed with {status}")
 
     con.run("robinctl doctor", check=False)
     con.run("robinctl snapshot list")

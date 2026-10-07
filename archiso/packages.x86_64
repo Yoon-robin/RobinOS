@@ -154,3 +154,6 @@ rsync
 openssh
 tmux
 openvpn
+
+# Installer backend (installer/robin-install)
+python
