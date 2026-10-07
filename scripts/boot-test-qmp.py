@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Drive a booting RobinOS VM over QMP and take screenshots.
 
-Usage: boot-test-qmp.py <qmp-socket> <output-dir> [speed]
+Usage: boot-test-qmp.py <qmp-socket | tcp:host:port> <output-dir> [speed]
 
 speed multiplies every wait (1 with KVM, about 4 with TCG). The scenario:
 boot -> welcome wizard (every step, then its missions terminal) -> desktop ->
@@ -27,11 +27,16 @@ QCODES = {" ": "spc", "\n": "ret", "-": "minus", ".": "dot", "/": "slash"}
 
 class Qmp:
     def __init__(self, path):
+        """path: a unix socket, or tcp:HOST:PORT (QEMU on Windows, see wsl-build.ps1)."""
         self.sock = None
         for _ in range(120):
             try:
-                sock = socket.socket(socket.AF_UNIX)
-                sock.connect(path)
+                if path.startswith("tcp:"):
+                    host, port = path[4:].rsplit(":", 1)
+                    sock = socket.create_connection((host, int(port)))
+                else:
+                    sock = socket.socket(socket.AF_UNIX)
+                    sock.connect(path)
                 self.sock = sock
                 break
             except OSError:

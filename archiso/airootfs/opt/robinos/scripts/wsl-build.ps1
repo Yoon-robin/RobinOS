@@ -24,6 +24,12 @@ param(
     # install-test: archinstall (docs/install.md option A) or robinos (installer/robin-install)
     [ValidateSet("archinstall", "robinos")]
     [string]$Installer = "archinstall",
+    # boot-test: whpx runs QEMU for Windows with the Windows Hypervisor Platform,
+    # several times faster than TCG in WSL (no KVM on Windows 10). auto = whpx
+    # when QEMU for Windows is at -Qemu, otherwise tcg.
+    [ValidateSet("auto", "whpx", "tcg")]
+    [string]$Accel = "auto",
+    [string]$Qemu = "$env:USERPROFILE\RobinOS-tools\qemu\qemu-system-x86_64.exe",
     [string]$Distro = "archlinux"
 )
 
@@ -32,11 +38,54 @@ $env:WSL_UTF8 = "1"
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 
 function Invoke-Wsl([string]$script) {
+    # A Windows checkout of this file has CRLF line endings; bash would keep the \r
+    $script = $script -replace "`r", ""
     # -e: run bash directly; without it wsl.exe passes the line through a shell first
     wsl.exe -d $Distro -u root -e bash -lc $script
     if ($LASTEXITCODE -ne 0) {
         throw "WSL 명령이 실패했어요 (종료 코드 $LASTEXITCODE)"
     }
+}
+
+# Boot test with QEMU for Windows (WHPX). WSL prepares the ISO (scripts/vm-prepare.sh),
+# QEMU runs here, and scripts/boot-test-qmp.py drives it over QMP on TCP.
+function Invoke-WhpxBootTest {
+    $out = Join-Path $root "build\boot-test"
+    $vm = Join-Path $root "build\vm"
+    if (Test-Path $out) { Remove-Item $out -Recurse -Force }
+    New-Item -ItemType Directory -Force $out, $vm | Out-Null
+    $wslVm = (wsl.exe -d $Distro -u root -e wslpath -a ($vm -replace "\\", "/")).Trim()
+
+    $prepared = wsl.exe -d $Distro -u root -e bash "$wslRoot/scripts/vm-prepare.sh" $wslVm
+    if ($LASTEXITCODE -ne 0) { throw "ISO를 준비하지 못했어요" }
+    $base, $label, $isoName = (($prepared | Select-Object -Last 1) -split " ")
+    Write-Host "ISO: $isoName (WHPX)"
+
+    $port = 47011
+    $kernelArgs = "archisobasedir=$base archisolabel=$label console=tty0 console=ttyS0,115200 systemd.journald.forward_to_console=1 robinos.debug"
+    # Start-Process joins the arguments with spaces, so quote the ones that have them
+    $qemuArgs = @(
+        "-machine", "q35", "-accel", "whpx", "-m", "6144", "-smp", "4",
+        "-kernel", "`"$vm\$base\boot\x86_64\vmlinuz-linux`"",
+        "-initrd", "`"$vm\$base\boot\x86_64\initramfs-linux.img`"",
+        "-append", "`"$kernelArgs`"",
+        "-cdrom", "`"$vm\robinos.iso`"",
+        "-vga", "none", "-device", "VGA,edid=on,xres=1600,yres=900", "-display", "none",
+        "-netdev", "user,id=net0", "-device", "virtio-net-pci,netdev=net0",
+        "-qmp", "tcp:127.0.0.1:$port,server,nowait",
+        "-serial", "`"file:$out\serial.log`""
+    )
+    $proc = Start-Process -FilePath $Qemu -ArgumentList $qemuArgs -PassThru -WindowStyle Hidden `
+        -RedirectStandardError "$out\qemu-stderr.log" -RedirectStandardOutput "$out\qemu-stdout.log"
+
+    python "$root\scripts\boot-test-qmp.py" "tcp:127.0.0.1:$port" $out 1
+    if (-not $proc.WaitForExit(30000)) { $proc.Kill() }
+
+    Write-Host "`n시리얼 로그의 주요 줄:"
+    Select-String -Path "$out\serial.log" -Pattern "robinos-session|Reached target .*Graphical|Failed to start|hyprland.*(ERR|error|CRIT)" |
+        Select-Object -Last 20 | ForEach-Object { $_.Line -replace "\x1b\[[0-9;]*m", "" }
+    Write-Host "`n스크린샷:"
+    Get-ChildItem "$out\*.png" | ForEach-Object { "  $($_.Name)" }
 }
 
 $distros = (wsl.exe -l -q) -replace "`0", "" | Where-Object { $_.Trim() -ne "" }
@@ -97,7 +146,12 @@ switch ($Task) {
         Invoke-Wsl "cd /root/RobinOS && scripts/build-iso.sh"
     }
     "boot-test" {
-        Invoke-Wsl "cd /root/RobinOS && scripts/boot-test.sh; rc=`$?; mkdir -p '$wslRoot/build' && rm -rf '$wslRoot/build/boot-test' && cp -r build/boot-test '$wslRoot/build/'; exit `$rc"
+        if ($Accel -eq "auto") { $Accel = if (Test-Path $Qemu) { "whpx" } else { "tcg" } }
+        if ($Accel -eq "whpx") {
+            Invoke-WhpxBootTest
+        } else {
+            Invoke-Wsl "cd /root/RobinOS && scripts/boot-test.sh; rc=`$?; mkdir -p '$wslRoot/build' && rm -rf '$wslRoot/build/boot-test' && cp -r build/boot-test '$wslRoot/build/'; exit `$rc"
+        }
         Write-Host "결과: $root\build\boot-test"
     }
     "install-test" {
