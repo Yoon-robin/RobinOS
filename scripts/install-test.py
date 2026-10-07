@@ -98,7 +98,8 @@ class Console:
                     raise
         self.send(user + "\n")
         if password is not None:
-            self.expect(r"Password: ", 60)
+            # PAM's prompt is translated on a Korean system ("비밀번호:")
+            self.expect(r"[Pp]assword: ?|비밀번호: ?|암호: ?", 60)
             self.send(password + "\n")
         self.expect(r"[#$] $|[#$] \x1b|[#$] \r", 60)
         # The live ISO's root shell is zsh (grml); use a plain bash without echo,
