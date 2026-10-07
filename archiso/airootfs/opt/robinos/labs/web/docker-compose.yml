@@ -1,15 +1,38 @@
+# RobinOS web lab: deliberately vulnerable apps, reachable only from this
+# computer (127.0.0.1) and only while `robinctl lab start web` has them running
+# (restart: "no"). Images are pinned so the lab guide matches what starts.
 services:
   juice-shop:
-    image: bkimminich/juice-shop
+    image: docker.io/bkimminich/juice-shop:v20.2.0
     container_name: robinos-juice-shop
     ports:
       - "127.0.0.1:3000:3000"
     restart: "no"
 
+  # DVWA's own image (github.com/digininja/DVWA), tagged by commit, with the
+  # MariaDB container its compose.yml uses
   dvwa:
-    image: vulnerables/web-dvwa
+    image: ghcr.io/digininja/dvwa:088256f
     container_name: robinos-dvwa
+    environment:
+      DB_SERVER: dvwa-db
+    depends_on:
+      - dvwa-db
     ports:
       - "127.0.0.1:8080:80"
     restart: "no"
 
+  dvwa-db:
+    image: docker.io/library/mariadb:10
+    container_name: robinos-dvwa-db
+    environment:
+      MYSQL_ROOT_PASSWORD: dvwa
+      MYSQL_DATABASE: dvwa
+      MYSQL_USER: dvwa
+      MYSQL_PASSWORD: p@ssw0rd
+    volumes:
+      - dvwa-db:/var/lib/mysql
+    restart: "no"
+
+volumes:
+  dvwa-db:

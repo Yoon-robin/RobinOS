@@ -654,7 +654,9 @@ profile_install() {
   fi
 
   need_root
-  pacman -S --needed "${packages[@]}"
+  local pacman_args=(-S --needed)
+  [[ "${ASSUME_YES}" == "true" ]] && pacman_args+=(--noconfirm)
+  pacman "${pacman_args[@]}" "${packages[@]}"
   printf '\n%s 프로필을 설치했어요. 도구는 내 컴퓨터의 랩이나 허가받은 대상에서만 써요(docs/ethics.md).\n' "${name}"
 }
 
@@ -1365,11 +1367,17 @@ RobinOS 웹 랩
   DVWA              http://localhost:8080
 
 명령:
-  robinctl lab start web
-  robinctl lab status web
-  robinctl lab stop web
+  robinctl lab start web     시작 (처음에는 이미지를 내려받아서 몇 분 걸려요)
+  robinctl lab status web    상태
+  robinctl lab stop web      중지 (다 쓰면 꼭 꺼 두세요)
+
+DVWA 처음 쓸 때:
+  1. http://localhost:8080/setup.php 에서 "Create / Reset Database"를 눌러요
+  2. admin / password 로 로그인해요
+  3. "DVWA Security"에서 난이도(low부터)를 골라요
 
 두 대상 모두 내 컴퓨터 안에서만 열리는 학습용 환경이에요.
+Docker가 필요해서 web 프로필이 있어야 해요: sudo robinctl profile web
 EOF
       ;;
     *)

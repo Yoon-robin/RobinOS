@@ -103,11 +103,13 @@ Windows용 QEMU가 준비돼 있으면 WHPX 가속으로 돌아요([build-enviro
 3. `pacman -S cowsay`로 snap-pac의 전후 스냅샷이 생기는지
 4. 다시 켜서 GRUB의 스냅샷 하위 메뉴로 cowsay 설치 전 스냅샷을 골라 부팅하고([recovery.md](recovery.md)의 비상 경로), 그 안에서 `robinctl snapshot rollback`
 5. 다시 켜서 cowsay가 사라졌는지 확인하고, SDDM에서 로그인한 데스크톱 스크린샷
+6. `-Lab`을 붙이면 마지막에 웹 랩을 실제로 띄워요: `robinctl profile web`으로 Docker를 설치하고 `robinctl lab start web`으로 고정한 이미지를 받아 켠 뒤, Juice Shop과 DVWA가 `127.0.0.1`에서만 응답하는지, 셸의 랩 상태 확인(docker-proxy)이 보는지 확인하고 꺼요. 이미지를 내려받아서 몇 분 더 걸려요
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test -Installer robinos
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test -Installer windows
+powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test -Lab
 ```
 
 패키지를 내려받으니 인터넷이 필요해요. Windows용 QEMU가 있으면 부팅 테스트처럼 WHPX로 돌아요(UEFI 펌웨어는 QEMU에 들어 있는 `edk2-x86_64-code.fd`, 공유 폴더는 `fat:` 디스크). 없으면 WSL 안에서 TCG로 돌아서 한 시간 넘게 걸릴 수 있어요. 결과(스크린샷, 단계별 시리얼 로그)는 `build\install-test`에 생겨요.
