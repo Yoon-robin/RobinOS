@@ -99,8 +99,8 @@ Windows용 QEMU가 준비돼 있으면 WHPX 가속으로 돌아요([build-enviro
 1. `robinctl doctor`, 스냅샷 설정, `/etc/fstab`의 `@snapshots`, grub-btrfs 항목
 2. 재부팅해서 GRUB 메뉴와 스냅샷 하위 메뉴 스크린샷
 3. `pacman -S cowsay`로 snap-pac의 전후 스냅샷이 생기는지
-4. 설치 전 스냅샷으로 `robinctl snapshot rollback` 하고 재부팅해서 cowsay가 사라졌는지
-5. SDDM에서 로그인한 데스크톱 스크린샷
+4. 다시 켜서 GRUB의 스냅샷 하위 메뉴로 cowsay 설치 전 스냅샷을 골라 부팅하고([recovery.md](recovery.md)의 비상 경로), 그 안에서 `robinctl snapshot rollback`
+5. 다시 켜서 cowsay가 사라졌는지 확인하고, SDDM에서 로그인한 데스크톱 스크린샷
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test

@@ -428,10 +428,16 @@ def install_with_archinstall(con):
             " /mnt/opt/robinos/scripts/*.py /mnt/opt/robinos/desktop/bin/*")
 
 
+GRUB_BTRFS_CFG = "/boot/grub/grub-btrfs.cfg"
+# The first boot after archinstall still has its "Arch Linux" menu;
+# post-install.sh renames it (config/grub/10-robinos-theme.cfg)
+MENU_ENTRY = r"(RobinOS|Arch) Linux"
+
+
 def boot_from_grub(con, qmp, name, show_snapshots=False):
     """Waits for the GRUB menu on the serial port, screenshots it, boots the default entry."""
     try:
-        con.expect(r"Arch Linux", 300)
+        con.expect(MENU_ENTRY, 300)
     except TimeoutError:
         log("GRUB menu not seen on the serial port; continuing")
         return
@@ -469,6 +475,9 @@ def phase_installed(con, qmp):
     con.run("grep -E 'snapshots|^UUID' /etc/fstab; ls /etc/pacman.d/hooks; ls /.bootbackup", check=False)
     con.run("grep -q '^HOOKS=.*grub-btrfs-overlayfs' /etc/mkinitcpio.conf", check=False)
     con.run("test -s /boot/grub/grub-btrfs.cfg && grep -c 'menuentry' /boot/grub/grub-btrfs.cfg")
+    # The boot menu says RobinOS, not Arch Linux
+    con.run("grep -q \"menuentry 'RobinOS Linux\" /boot/grub/grub.cfg"
+            " && grep -q \"submenu 'RobinOS snapshots'\" /boot/grub/grub.cfg")
 
     # QEMU's WHPX can't reset a VM that reboots itself ("Unexpected VP exit code 4"),
     # so every boot is its own QEMU run: power off here, the next phase boots again.
@@ -476,13 +485,8 @@ def phase_installed(con, qmp):
     con.wait_closed(180)
 
 
-def phase_snapshots(con, qmp):
-    """Second boot: the snapshot submenu in GRUB, a snap-pac pair, then rollback."""
-    boot_from_grub(con, qmp, "grub-menu", show_snapshots=True)
-    con.login("root", PASSWORD)
-
-    # snap-pac: a pacman transaction leaves a pre/post pair behind
-    con.run("pacman -S --noconfirm cowsay > /dev/null && command -v cowsay", timeout=600)
+def cowsay_pre_snapshot(con):
+    """Number of the snapshot snap-pac took before `pacman -S cowsay`."""
     _, listing = con.capture("snapper --no-dbus --csvout -c root list --columns number,type,description")
     print(listing, flush=True)
     pre = None
@@ -492,8 +496,73 @@ def phase_snapshots(con, qmp):
             pre = fields[0]
     if pre is None:
         raise RuntimeError("snap-pac made no pre snapshot for 'pacman -S cowsay'")
+    return pre
 
-    log(f"rolling back to snapshot {pre}")
+
+def phase_snapshots(con, qmp):
+    """Second boot: the snapshot submenu in GRUB and a snap-pac pair."""
+    boot_from_grub(con, qmp, "grub-menu", show_snapshots=True)
+    con.login("root", PASSWORD)
+
+    # snap-pac: a pacman transaction leaves a pre/post pair behind
+    con.run("pacman -S --noconfirm cowsay > /dev/null && command -v cowsay", timeout=600)
+    pre = cowsay_pre_snapshot(con)
+
+    # Where that snapshot sits in GRUB's snapshot submenu, for the next boot.
+    # grub-btrfsd rebuilds the menu when snapshots appear; give it a moment.
+    entry = f"@snapshots/{pre}/snapshot"
+    con.run(f"for i in $(seq 30); do grep -q '{entry}' {GRUB_BTRFS_CFG} && break; sleep 2; done", timeout=120)
+    # grub-btrfs.cfg: a header line "menuentry '| Date | Snapshot ...' { echo }",
+    # then one unindented "submenu '| date | @snapshots/N/snapshot | ...'" per snapshot
+    _, menu = con.capture(f"grep -E \"^(menuentry|submenu) '\" {GRUB_BTRFS_CFG}")
+    print(menu, flush=True)
+    items = [line for line in menu.splitlines() if line.startswith(("menuentry '", "submenu '"))]
+    position = next((i for i, item in enumerate(items) if entry in item), None)
+    if position is None:
+        raise RuntimeError(f"{entry} is not in GRUB's snapshot menu")
+    with open(os.path.join(OUT, "snapshot-entry.txt"), "w") as f:
+        f.write(f"{position} {pre}\n")
+    log(f"snapshot {pre} is item {position} of the GRUB snapshot menu")
+
+    con.send("poweroff\n")
+    con.wait_closed(180)
+
+
+def phase_snapshot_boot(con, qmp):
+    """Third boot: the snapshot from before cowsay, picked in the GRUB menu like
+    docs/recovery.md says, and the rollback done from inside it."""
+    position, pre = open(os.path.join(OUT, "snapshot-entry.txt")).read().split()
+    con.expect(MENU_ENTRY, 300)
+    time.sleep(3)
+    qmp.keys("end")  # "RobinOS snapshots" is the last entry
+    time.sleep(1)
+    qmp.keys("ret")
+    time.sleep(3)
+    for _ in range(int(position)):  # from the header line down to the snapshot
+        qmp.keys("down")
+        time.sleep(0.5)
+    shot(qmp, "grub-snapshot-pick")
+    # The snapshot's own submenu: its title as a dummy entry, then one entry per kernel
+    qmp.keys("ret")
+    time.sleep(3)
+    qmp.keys("down")
+    time.sleep(1)
+    shot(qmp, "grub-snapshot-kernel")
+    qmp.keys("ret")
+    con.login("root", PASSWORD)
+
+    _, fstype = con.capture("findmnt -no FSTYPE /")
+    fstype = fstype.strip()
+    log(f"booted snapshot {pre}; / is {fstype}")
+    if con.run("command -v cowsay", check=False) == 0:
+        raise RuntimeError(f"cowsay is installed, so this is not snapshot {pre} from before it")
+    # With the grub-btrfs-overlayfs hook (udev initramfs) / is an overlay in memory
+    if con.run("grep -q '^HOOKS=.*grub-btrfs-overlayfs' /etc/mkinitcpio.conf", check=False) == 0 \
+            and fstype != "overlay":
+        raise RuntimeError(f"/ is {fstype}, not the overlay grub-btrfs-overlayfs should give")
+    con.run("robinctl doctor | tail -n 3", check=False)
+
+    log(f"rolling back to snapshot {pre} from inside it")
     con.run(f"robinctl snapshot rollback {pre} --yes")
     con.send("poweroff\n")
     con.wait_closed(180)
@@ -538,6 +607,8 @@ def main():
             phase_installed(con, qmp)
         elif PHASE == "snapshots":
             phase_snapshots(con, qmp)
+        elif PHASE == "snapshot-boot":
+            phase_snapshot_boot(con, qmp)
         elif PHASE == "rollback":
             phase_rollback(con, qmp)
         else:

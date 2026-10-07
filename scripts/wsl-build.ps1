@@ -154,9 +154,10 @@ function Invoke-WhpxInstallTest {
         # Every boot is its own QEMU run: WHPX can't reset a guest that reboots itself
         @{ name = "installed"; extra = @() },
         @{ name = "snapshots"; extra = @() },
+        @{ name = "snapshot-boot"; extra = @() },
         @{ name = "rollback"; extra = @() }
     )
-    if ($reuse) { $phases = $phases[1..3] }
+    if ($reuse) { $phases = $phases[1..4] }
 
     $failed = $false
     foreach ($phase in $phases) {

@@ -7,7 +7,10 @@ set -euo pipefail
 #   1. Live ISO: archinstall with the default Btrfs layout and GRUB
 #   2. Installed system: scripts/post-install.sh --yes (desktop, branding, snapshots)
 #   3. Reboot: GRUB menu with the snapshot submenu, snap-pac snapshots around a
-#      pacman install, robinctl snapshot rollback, then the desktop login
+#      pacman install
+#   4. Boot the snapshot from before that install from the GRUB menu and run
+#      robinctl snapshot rollback inside it
+#   5. The rolled-back system without the package, then the desktop login
 #
 # The repository checkout is shared with the VM as a read-only FAT disk, so the
 # installed system gets this checkout's bin/, scripts/, desktop/, ... (not the
@@ -129,9 +132,11 @@ run_qemu live \
 # install-test.py is the same for both)
 printf '\n== Phase 2: first boot, post-install and the snapshot setup\n'
 run_qemu installed
-printf '\n== Phase 3: GRUB snapshot menu, snap-pac snapshots, rollback\n'
+printf '\n== Phase 3: GRUB snapshot menu, snap-pac snapshots\n'
 run_qemu snapshots
-printf '\n== Phase 4: the rolled-back system and the desktop\n'
+printf '\n== Phase 4: boot a snapshot from the GRUB menu, roll back from there\n'
+run_qemu snapshot-boot
+printf '\n== Phase 5: the rolled-back system and the desktop\n'
 run_qemu rollback
 
 printf '\nScreenshots:\n'
