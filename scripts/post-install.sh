@@ -14,20 +14,20 @@ for arg in "$@"; do
       export ROBINOS_ASSUME_YES="true"
       ;;
     *)
-      printf 'usage: %s [--dry-run] [--yes]\n' "$0" >&2
+      printf '사용법: %s [--dry-run] [--yes]\n' "$0" >&2
       exit 2
       ;;
   esac
 done
 
 die() {
-  printf 'error: %s\n' "$*" >&2
+  printf '오류: %s\n' "$*" >&2
   exit 1
 }
 
 run() {
   if [[ "${DRY_RUN}" == "true" ]]; then
-    printf 'Would run: %s\n' "$*"
+    printf '실행할 명령: %s\n' "$*"
     return
   fi
   "$@"
@@ -35,13 +35,13 @@ run() {
 
 package_file() {
   local file="$1"
-  [[ -f "${file}" ]] || die "package file not found: ${file}"
+  [[ -f "${file}" ]] || die "패키지 목록이 없어요: ${file}"
   grep -Ev '^\s*(#|$)' "${file}"
 }
 
 if [[ "${DRY_RUN}" != "true" ]]; then
-  [[ "${EUID}" -eq 0 ]] || die "run as root"
-  command -v pacman >/dev/null 2>&1 || die "pacman is required"
+  [[ "${EUID}" -eq 0 ]] || die "관리자 권한이 필요해요. sudo를 붙여 실행하세요"
+  command -v pacman >/dev/null 2>&1 || die "pacman이 필요해요"
 fi
 
 mapfile -t core_packages < <(package_file "${ROOT_DIR}/packages/core.txt")
@@ -54,12 +54,12 @@ run install -Dm644 "${ROOT_DIR}/config/robinos.toml" /etc/robinos/config.toml
 # Desktop: Hyprland + Quickshell shell, themes, input method and font defaults
 if [[ "${DRY_RUN}" == "true" ]]; then
   "${ROOT_DIR}/scripts/install-desktop.sh" --dry-run
-  printf 'Would download Geist and Pretendard into /usr/share/fonts/robinos\n'
+  printf 'Geist와 Pretendard 글꼴을 /usr/share/fonts/robinos에 내려받아요\n'
 else
   run "${ROOT_DIR}/scripts/install-desktop.sh"
   # robin-install copies the fonts from the live ISO, so there is nothing to download
   if [[ -f "/usr/share/fonts/robinos/Geist[wght].ttf" && -f /usr/share/fonts/robinos/PretendardVariable.ttf ]]; then
-    printf 'RobinOS fonts are already installed\n'
+    printf 'RobinOS 글꼴이 이미 있어요\n'
   else
     run "${ROOT_DIR}/scripts/fetch-fonts.sh" /usr/share/fonts/robinos
   fi
@@ -80,7 +80,7 @@ if [[ -n "${SUDO_USER:-}" && "${SUDO_USER}" != "root" ]]; then
   hints_line='[[ -r /usr/share/robinos/bash/robinos-hints.sh ]] && . /usr/share/robinos/bash/robinos-hints.sh'
   if [[ -n "${user_home}" ]] && ! grep -qF "robinos-hints.sh" "${user_home}/.bashrc" 2>/dev/null; then
     if [[ "${DRY_RUN}" == "true" ]]; then
-      printf 'Would add Windows command hints to %s/.bashrc\n' "${user_home}"
+      printf '%s/.bashrc에 윈도우 명령 안내를 넣어요\n' "${user_home}"
     else
       printf '\n# Windows command hints (RobinOS)\n%s\n' "${hints_line}" >>"${user_home}/.bashrc"
       chown "${SUDO_USER}:$(id -gn "${SUDO_USER}")" "${user_home}/.bashrc"
@@ -97,7 +97,7 @@ if [[ -x "${ROOT_DIR}/scripts/install-branding.sh" ]]; then
 fi
 
 if [[ "${DRY_RUN}" == "true" ]]; then
-  printf 'Would enable locale ko_KR.UTF-8 in /etc/locale.gen\n'
+  printf '/etc/locale.gen에서 ko_KR.UTF-8을 켜요\n'
 else
   if grep -q '^#ko_KR.UTF-8 UTF-8' /etc/locale.gen; then
     sed -i 's/^#ko_KR.UTF-8 UTF-8/ko_KR.UTF-8 UTF-8/' /etc/locale.gen
@@ -130,7 +130,7 @@ if [[ "${root_fs}" == "btrfs" ]]; then
     run /usr/local/bin/robinctl snapshot setup
   fi
 else
-  printf 'Root filesystem is %s, not Btrfs: skipping snapshot setup\n' "${root_fs:-unknown}"
+  printf '루트 파일 시스템이 Btrfs가 아니라서(%s) 스냅샷 설정은 건너뛰어요\n' "${root_fs:-알 수 없음}"
 fi
 
-printf 'RobinOS post-install complete.\n'
+printf 'RobinOS 설치 후 설정이 끝났어요.\n'

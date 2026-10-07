@@ -28,7 +28,7 @@ while [[ "$#" -gt 0 ]]; do
       exit 0
       ;;
     *)
-      printf 'error: unknown argument: %s\n' "$1" >&2
+      printf '오류: 알 수 없는 인자예요: %s\n' "$1" >&2
       exit 1
       ;;
   esac
@@ -36,19 +36,19 @@ done
 
 run() {
   if [[ "${DRY_RUN}" == "true" ]]; then
-    printf 'Would run: %s\n' "$*"
+    printf '실행할 명령: %s\n' "$*"
     return
   fi
   "$@"
 }
 
 [[ -f "${MAP_FILE}" ]] || {
-  printf 'error: missing %s\n' "${MAP_FILE}" >&2
+  printf '오류: %s가 없어요\n' "${MAP_FILE}" >&2
   exit 1
 }
 
 if [[ "${TARGET_ROOT}" == "/" && "${DRY_RUN}" != "true" && "${EUID}" -ne 0 ]]; then
-  printf 'error: run as root to install into /\n' >&2
+  printf '오류: /에 설치하려면 관리자 권한이 필요해요. sudo를 붙여 실행하세요\n' >&2
   exit 1
 fi
 
@@ -66,4 +66,6 @@ while read -r src dest mode; do
   fi
 done <"${MAP_FILE}"
 
-printf 'Installed RobinOS desktop files into %s\n' "${TARGET_ROOT}"
+if [[ "${DRY_RUN}" != "true" ]]; then
+  printf 'RobinOS 데스크톱 파일을 %s에 설치했어요\n' "${TARGET_ROOT}"
+fi

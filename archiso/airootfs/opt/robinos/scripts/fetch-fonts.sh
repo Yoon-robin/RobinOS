@@ -24,14 +24,14 @@ PRETENDARD_URL="https://github.com/orioncactus/pretendard/releases/download/v1.3
 PRETENDARD_SHA256="04be351a74d6bf7d60c480a3087e51d185485d35a52023142af1df19eb8c428a"
 
 die() {
-  printf 'error: %s\n' "$*" >&2
+  printf '오류: %s\n' "$*" >&2
   exit 1
 }
 
-[[ -n "${DEST_DIR}" ]] || die "usage: scripts/fetch-fonts.sh <fonts-dir>"
+[[ -n "${DEST_DIR}" ]] || die "사용법: scripts/fetch-fonts.sh <글꼴 폴더>"
 
 for cmd in curl sha256sum bsdtar; do
-  command -v "${cmd}" >/dev/null 2>&1 || die "${cmd} is required"
+  command -v "${cmd}" >/dev/null 2>&1 || die "${cmd}가 필요해요"
 done
 
 fetch() {
@@ -44,10 +44,10 @@ fetch() {
     return
   fi
 
-  printf 'Downloading %s\n' "${url}" >&2
+  printf '내려받는 중: %s\n' "${url}" >&2
   curl --fail --location --silent --show-error --output "${file}.part" "${url}"
   printf '%s  %s\n' "${sha}" "${file}.part" | sha256sum --check --status \
-    || die "checksum mismatch for ${url}"
+    || die "체크섬이 맞지 않아요: ${url}"
   mv "${file}.part" "${file}"
   printf '%s\n' "${file}"
 }
@@ -71,4 +71,4 @@ install -m644 "${work_dir}/geist/geist-font/OFL.txt" "${DEST_DIR}/LICENSE-Geist.
 install -m644 "${work_dir}/pretendard/public/variable/PretendardVariable.ttf" "${DEST_DIR}/PretendardVariable.ttf"
 install -m644 "${work_dir}/pretendard/LICENSE.txt" "${DEST_DIR}/LICENSE-Pretendard.txt"
 
-printf 'Installed RobinOS fonts into %s\n' "${DEST_DIR}"
+printf 'RobinOS 글꼴을 %s에 설치했어요\n' "${DEST_DIR}"

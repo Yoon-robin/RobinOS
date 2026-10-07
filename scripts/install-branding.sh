@@ -10,14 +10,14 @@ fi
 
 run() {
   if [[ "${DRY_RUN}" == "true" ]]; then
-    printf 'Would run: %s\n' "$*"
+    printf '실행할 명령: %s\n' "$*"
     return
   fi
   "$@"
 }
 
 [[ "${DRY_RUN}" == "true" || "${EUID}" -eq 0 ]] || {
-  printf 'error: run as root\n' >&2
+  printf '오류: 관리자 권한이 필요해요. sudo를 붙여 실행하세요\n' >&2
   exit 1
 }
 
@@ -28,8 +28,8 @@ run install -Dm644 "${ROOT_DIR}/config/grub/10-robinos-theme.cfg" /etc/default/g
 
 run mkdir -p /usr/share/sddm/themes/robinos
 if [[ "${DRY_RUN}" == "true" ]]; then
-  printf 'Would copy themes/sddm/robinos to /usr/share/sddm/themes/robinos\n'
-  printf 'Would copy brand mark and lock wallpaper into the SDDM theme directory\n'
+  printf 'themes/sddm/robinos를 /usr/share/sddm/themes/robinos에 복사해요\n'
+  printf '로고와 잠금 화면 배경을 SDDM 테마 폴더에 복사해요\n'
 else
   cp -a "${ROOT_DIR}/themes/sddm/robinos/." /usr/share/sddm/themes/robinos/
   cp "${ROOT_DIR}/assets/brand/robinos-mark.svg" /usr/share/sddm/themes/robinos/logo.svg
@@ -39,14 +39,14 @@ fi
 
 run mkdir -p /usr/share/grub/themes/robinos
 if [[ "${DRY_RUN}" == "true" ]]; then
-  printf 'Would copy themes/grub/robinos to /usr/share/grub/themes/robinos\n'
+  printf 'themes/grub/robinos를 /usr/share/grub/themes/robinos에 복사해요\n'
 else
   cp -a "${ROOT_DIR}/themes/grub/robinos/." /usr/share/grub/themes/robinos/
 fi
 
 run mkdir -p /etc/sddm.conf.d
 if [[ "${DRY_RUN}" == "true" ]]; then
-  printf 'Would write /etc/sddm.conf.d/10-robinos-theme.conf\n'
+  printf '/etc/sddm.conf.d/10-robinos-theme.conf를 써요\n'
 else
   cat >/etc/sddm.conf.d/10-robinos-theme.conf <<'EOF'
 [Theme]
@@ -55,7 +55,7 @@ EOF
 fi
 
 if [[ "${DRY_RUN}" == "true" ]]; then
-  printf 'Would regenerate GRUB config if grub-mkconfig is available\n'
+  printf 'grub-mkconfig가 있으면 GRUB 설정을 다시 만들어요\n'
 elif command -v grub-mkconfig >/dev/null 2>&1; then
   # grub.cfg is in /efi/grub when the EFI partition is mounted on /efi
   grub_dir=""
@@ -68,8 +68,8 @@ elif command -v grub-mkconfig >/dev/null 2>&1; then
   if [[ -n "${grub_dir}" ]]; then
     grub-mkconfig -o "${grub_dir}/grub.cfg"
   else
-    printf 'warning: no grub.cfg in /boot/grub or /efi/grub; skipped grub-mkconfig\n' >&2
+    printf '알림: /boot/grub와 /efi/grub에 grub.cfg가 없어서 grub-mkconfig를 건너뛰었어요\n' >&2
   fi
 fi
 
-printf 'RobinOS branding install complete.\n'
+printf 'RobinOS 테마 설치가 끝났어요.\n'
