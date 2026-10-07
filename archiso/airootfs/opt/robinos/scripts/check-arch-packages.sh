@@ -31,10 +31,16 @@ check_file() {
   [[ "${failed}" == "false" ]]
 }
 
-check_file "${ROOT_DIR}/packages/core.txt"
-check_file "${ROOT_DIR}/packages/desktop.txt"
-check_file "${ROOT_DIR}/packages/security-baseline.txt"
-check_file "${ROOT_DIR}/archiso/packages.x86_64"
+# Check every list before failing so one run reports all missing packages
+status=0
+for list in packages/core.txt packages/desktop.txt packages/security-baseline.txt archiso/packages.x86_64; do
+  check_file "${ROOT_DIR}/${list}" || status=1
+done
+
+if [[ "${status}" -ne 0 ]]; then
+  printf 'Arch package check failed: rename the missing packages or move them to packages/security-optional.txt\n' >&2
+  exit 1
+fi
 
 printf 'Arch package check passed.\n'
 

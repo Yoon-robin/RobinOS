@@ -6,3 +6,4 @@ burpsuite
 zaproxy
 metasploit
 rustscan
+ffuf

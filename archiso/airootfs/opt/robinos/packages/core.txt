@@ -20,7 +20,7 @@ pipewire
 pipewire-alsa
 pipewire-pulse
 wireplumber
-ttf-noto
+noto-fonts
 noto-fonts-cjk
 noto-fonts-emoji
 fcitx5

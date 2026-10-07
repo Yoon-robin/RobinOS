@@ -189,7 +189,6 @@ $expectedSecurityInIso = @(
     "sqlmap",
     "nikto",
     "gobuster",
-    "ffuf",
     "john",
     "hashcat",
     "hydra",
