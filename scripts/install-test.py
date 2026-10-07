@@ -15,6 +15,7 @@ speed multiplies every timeout (1 with KVM, about 4 with TCG).
 """
 
 import base64
+import codecs
 import json
 import os
 import re
@@ -46,6 +47,9 @@ class Console:
         self.sock = connect_unix(path)
         self.buf = ""
         self.count = 0
+        # The serial port delivers a few bytes at a time; an incremental decoder
+        # keeps a Korean character that is split across reads in one piece.
+        self.decoder = codecs.getincrementaldecoder("utf-8")("replace")
 
     def _receive(self, timeout):
         ready, _, _ = select.select([self.sock], [], [], timeout)
@@ -54,7 +58,7 @@ class Console:
         data = self.sock.recv(65536)
         if not data:
             raise EOFError("serial console closed")
-        text = data.decode("utf-8", "replace")
+        text = self.decoder.decode(data)
         sys.stdout.write(text)
         sys.stdout.flush()
         self.buf = (self.buf + text)[-200000:]
@@ -503,6 +507,8 @@ def phase_installed(con, qmp):
 
 
 def main():
+    # On Windows stdout is the ANSI code page; console output can hold anything
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     # install-test.sh uses unix sockets in OUT; wsl-build.ps1 (WHPX) passes TCP addresses
     con = Console(os.environ.get("ROBINOS_SERIAL", os.path.join(OUT, "serial.sock")))
     qmp = Qmp(os.environ.get("ROBINOS_QMP", os.path.join(OUT, "qmp.sock")))

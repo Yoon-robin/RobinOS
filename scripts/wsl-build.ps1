@@ -30,6 +30,8 @@ param(
     [ValidateSet("auto", "whpx", "tcg")]
     [string]$Accel = "auto",
     [string]$Qemu = "$env:USERPROFILE\RobinOS-tools\qemu\qemu-system-x86_64.exe",
+    # install-test (WHPX): reuse the installed disk a failed run left behind
+    [switch]$ReuseDisk,
     [string]$Distro = "archlinux"
 )
 
@@ -99,7 +101,15 @@ function Invoke-WhpxInstallTest {
     $out = Join-Path $root "build\install-test"
     $vm = Join-Path $root "build\vm"
     $qemuDir = Split-Path -Parent $Qemu
-    if (Test-Path $out) { Remove-Item $out -Recurse -Force }
+    # -ReuseDisk: start from the disk a failed run left behind and skip the live phase
+    $reuse = $ReuseDisk -and (Test-Path "$out\disk.qcow2") -and (Test-Path "$out\OVMF_VARS.fd")
+    if ($reuse) {
+        Get-ChildItem $out -File | Where-Object { $_.Name -notin "disk.qcow2", "OVMF_VARS.fd" } | Remove-Item -Force
+        if (Test-Path "$out\share") { Remove-Item "$out\share" -Recurse -Force }
+        Write-Host "남아 있던 설치 디스크로 시작해요 (라이브 단계 건너뜀)"
+    } elseif (Test-Path $out) {
+        Remove-Item $out -Recurse -Force
+    }
     New-Item -ItemType Directory -Force $out, $vm | Out-Null
     $wslVm = (wsl.exe -d $Distro -u root -e wslpath -a ($vm -replace "\\", "/")).Trim()
 
@@ -115,8 +125,10 @@ function Invoke-WhpxInstallTest {
         Copy-Item (Join-Path $root $dir) $share -Recurse
     }
 
-    & (Join-Path $qemuDir "qemu-img.exe") create -q -f qcow2 "$out\disk.qcow2" 40G
-    Copy-Item (Join-Path $qemuDir "share\edk2-i386-vars.fd") "$out\OVMF_VARS.fd"
+    if (-not $reuse) {
+        & (Join-Path $qemuDir "qemu-img.exe") create -q -f qcow2 "$out\disk.qcow2" 40G
+        Copy-Item (Join-Path $qemuDir "share\edk2-i386-vars.fd") "$out\OVMF_VARS.fd"
+    }
 
     $env:ROBINOS_INSTALLER = $Installer
     $env:ROBINOS_SERIAL = "tcp:127.0.0.1:47021"
@@ -141,6 +153,7 @@ function Invoke-WhpxInstallTest {
             "-cdrom", "`"$vm\robinos.iso`"") },
         @{ name = "installed"; extra = @() }
     )
+    if ($reuse) { $phases = @($phases[1]) }
 
     $failed = $false
     foreach ($phase in $phases) {
@@ -155,10 +168,12 @@ function Invoke-WhpxInstallTest {
         if ($status -ne 0) { $failed = $true; break }
     }
     Remove-Item Env:ROBINOS_SERIAL, Env:ROBINOS_QMP, Env:ROBINOS_INSTALLER -ErrorAction SilentlyContinue
-    Remove-Item "$out\disk.qcow2" -ErrorAction SilentlyContinue  # 10 GB or so once installed
     Write-Host "`n스크린샷:"
     Get-ChildItem "$out\*.png" | ForEach-Object { "  $($_.Name)" }
-    if ($failed) { throw "설치 테스트가 실패했어요. $out\serial-*.log를 보세요" }
+    if ($failed) {
+        throw "설치 테스트가 실패했어요. $out\serial-*.log를 보세요. 설치 디스크를 남겨 뒀으니 -ReuseDisk로 이어서 할 수 있어요"
+    }
+    Remove-Item "$out\disk.qcow2" -ErrorAction SilentlyContinue  # 10 GB or so once installed
 }
 
 $distros = (wsl.exe -l -q) -replace "`0", "" | Where-Object { $_.Trim() -ne "" }
