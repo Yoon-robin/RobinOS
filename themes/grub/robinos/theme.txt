@@ -4,6 +4,8 @@
 # Some GRUB builds do not reliably render SVG assets in themes.
 
 desktop-color: "#09090B"
+# No "GRUB Boot Menu" heading; the labels below say RobinOS
+title-text: ""
 terminal-font: "Unifont Regular 16"
 terminal-left: "8%"
 terminal-top: "18%"

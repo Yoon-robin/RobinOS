@@ -19,3 +19,4 @@ desktop/fcitx5/config                     /etc/skel/.config/fcitx5/config       
 desktop/fontconfig/56-robinos-fonts.conf  /etc/fonts/conf.d/56-robinos-fonts.conf          644
 desktop/dconf/profile-user                /etc/dconf/profile/user                          644
 desktop/dconf/00-robinos                  /etc/dconf/db/local.d/00-robinos                 644
+desktop/fastfetch/config.jsonc            /etc/xdg/fastfetch/config.jsonc                  644
