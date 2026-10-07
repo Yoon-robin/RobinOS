@@ -10,7 +10,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 작업 | 시작 | 대상 | 결과 위치 | 상태 |
 |---|---|---|---|---|
-| ISO 빌드 → 부팅 테스트 → 설치 테스트 windows (WHPX) | 2026-10-08 05:47 | `2f1b087` | `build\boot-test`, `build\install-test`, 로그 `build\loop-*.log`, 순서 결과 `build\loop-chain.log` | 실행 중 |
+| ISO 빌드 → 부팅 테스트 → 설치 테스트 windows → 설치 테스트 archinstall -Lab (WHPX) | 2026-10-08 START | `HEAD` | `build\boot-test`, `build\install-test`, 로그 `build\loop-*.log`, 순서 결과 `build\loop-chain.log` | 실행 중 |
 
 ## 정기 점검
 
@@ -63,12 +63,13 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: 다음 부팅·설치 테스트 스크린샷에서 확인
 
 ### T-014 웹 랩 이미지 정리
+- 상태: 검증 대기. 2026-10-08 Juice Shop v20.2.0 고정, DVWA 공식 이미지(커밋 태그 `088256f`)와 MariaDB 10, `install-test -Lab`으로 실제 실행 확인을 넣음(`c4cd523`)
 - 목표: 랩 이미지 버전을 고정하고(`bkimminich/juice-shop:<버전>`), 2018년 이후 갱신이 없는 `vulnerables/web-dvwa`를 공식 `ghcr.io/digininja/dvwa`로 바꾸기
 - 확인: 이미지 태그와 포트(공식 DVWA 이미지의 포트, 첫 설정 화면), `robinctl lab info web` 안내, `labs/web/README.md`
 - 검증: WSL에 Docker를 깔 수 없으면 설치 테스트 VM에서 `robinctl lab start web` 후 `curl -s 127.0.0.1:3000`, `:8080`
 
 ### T-006 "윈도우 옆에 설치" 검증
-- 상태: 검증 대기. 2026-10-08 설치 테스트에 `windows` 방식을 넣음(`c00d0cf`). 아직 돌려 보지 않음
+- 상태: 검증 대기. 2026-10-08 설치 테스트에 `windows` 방식을 넣음(`c00d0cf`). 첫 실행에서 설치기의 "윈도우 옆에 설치"와 윈도우 파티션 표·해시 비교까지 통과했지만, C: 표시 파일을 확인하는 명령의 `exit`가 테스트 셸을 닫아서 멈춤(테스트 버그, `5975525`로 고침)
 - 목표: 윈도우가 있는 디스크에서 기존 파티션을 건드리지 않고 빈 공간에만 설치하는지
 - 할 일: 설치 테스트에 윈도우 흉내 디스크 시나리오 추가(GPT, 100MB ESP, NTFS 파티션, 빈 공간 40GB 이상). 설치 뒤 NTFS 파티션이 그대로인지, ESP에 `EFI/RobinOS`가 생겼는지, 시계가 localtime인지 확인
 - 완료 기준: 시나리오 통과
