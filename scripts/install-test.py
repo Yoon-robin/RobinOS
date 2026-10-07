@@ -534,9 +534,14 @@ def phase_installed(con, qmp):
     con.run("grep -E 'snapshots|^UUID' /etc/fstab; ls /etc/pacman.d/hooks; ls /.bootbackup", check=False)
     con.run("grep -q '^HOOKS=.*grub-btrfs-overlayfs' /etc/mkinitcpio.conf", check=False)
     con.run("test -s /boot/grub/grub-btrfs.cfg && grep -c 'menuentry' /boot/grub/grub-btrfs.cfg")
-    # The boot menu says RobinOS, not Arch Linux
+    # The boot menu says RobinOS, not Arch Linux, and has no firmware BootNext entries
     con.run("grep -q \"menuentry 'RobinOS Linux\" /boot/grub/grub.cfg"
-            " && grep -q \"submenu 'RobinOS snapshots'\" /boot/grub/grub.cfg")
+            " && grep -q \"submenu 'RobinOS snapshots'\" /boot/grub/grub.cfg"
+            " && ! grep -q 'EFI BootNext' /boot/grub/grub.cfg")
+    # Security learning profiles (T-010): listed, and a dry run names the packages
+    con.run("robinctl profile list")
+    con.run("robinctl profile network --dry-run | grep -qx '  nmap'"
+            " && robinctl packages web | grep -qx docker")
 
     # QEMU's WHPX can't reset a VM that reboots itself ("Unexpected VP exit code 4"),
     # so every boot is its own QEMU run: power off here, the next phase boots again.
