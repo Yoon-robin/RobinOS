@@ -49,7 +49,7 @@ v0.1 범위와 진행 상황은 `docs/design.md`에서 관리해요.
 ## 5단계: 안전과 복구
 
 - Btrfs 레이아웃 - archinstall 기본 하위 볼륨을 써요
-- Snapper 연동 - `robinctl snapshot setup`, 설치 테스트로 검증 전
+- Snapper 연동 - `robinctl snapshot setup`, 2026-10-08 VM 설치 테스트로 검증
 - 부트로더의 스냅샷 항목 - `robinctl snapshot setup`이 grub-btrfs를 설정해요
 - `robinctl update`의 업데이트 전 스냅샷 - snap-pac으로 모든 pacman 작업 전후에 만들어요
 - 복구 문서 - [recovery.md](recovery.md)

@@ -49,7 +49,7 @@ robinctl snapshot list
 
 시스템이 아예 안 켜지거나 데스크톱이 안 뜨면 이렇게 해요.
 
-1. 컴퓨터를 켜고 GRUB 메뉴에서 `Arch Linux snapshots`를 골라요.
+1. 컴퓨터를 켜고 GRUB 메뉴에서 `Arch Linux snapshots`를 골라요. 날짜, 종류(pre/post/single), 설명이 나와요. 부팅 메뉴는 한글을 제대로 보여 주지 못해서 RobinOS가 만드는 스냅샷 설명은 영어예요. `robinctl snapshot create`에 한글 이름을 주면 `manual`로 저장해요.
 2. 날짜와 설명을 보고 문제가 생기기 전 스냅샷을 골라요.
 3. 그 시점의 시스템으로 부팅돼요. `/home`은 따로 된 하위 볼륨이라 내 파일은 지금 그대로예요.
 

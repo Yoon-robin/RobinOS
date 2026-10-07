@@ -201,7 +201,7 @@ update_system() {
   need_root
   case "${mode}" in
     manual)
-      snapper --no-dbus -c root create --description "RobinOS 업데이트 전" --cleanup-algorithm number
+      snapper --no-dbus -c root create --description "RobinOS before update" --cleanup-algorithm number
       ;;
     none)
       printf '%s알림:%s 스냅샷이 설정되지 않아서 업데이트 전 스냅샷 없이 진행해요. 설정: sudo robinctl snapshot setup\n' \
@@ -309,7 +309,14 @@ snapshot_create() {
   need_root
   need_snapshots
 
-  local name="${1:-직접 만든 스냅샷}"
+  # Descriptions show up in the GRUB snapshot menu, where grub-btrfs prints
+  # snapper's XML escapes for non-ASCII text (&#xC2A4;...), so keep them ASCII
+  local name="${1:-manual}"
+  if [[ -n "$(printf '%s' "${name}" | LC_ALL=C tr -d '\040-\176')" ]]; then
+    printf '%s알림:%s 부팅 메뉴에서는 영어만 제대로 보여서 스냅샷 이름을 "manual"로 바꿔 저장해요.\n' \
+      "${C_YELLOW}" "${C_RESET}" >&2
+    name="manual"
+  fi
   snapper --no-dbus -c root create --description "RobinOS ${name}" --print-number
 }
 
@@ -471,7 +478,7 @@ snapshot_setup() {
   fi
 
   printf '%s4. 첫 스냅샷%s\n' "${C_BOLD}" "${C_RESET}"
-  setup_step snapper --no-dbus -c root create --description "RobinOS 스냅샷 설정 직후" --userdata important=yes
+  setup_step snapper --no-dbus -c root create --description "RobinOS snapshot setup" --userdata important=yes
 
   # After the first snapshot, so the boot menu lists it right away
   if [[ -n "${grub}" ]] && have_cmd grub-mkconfig; then

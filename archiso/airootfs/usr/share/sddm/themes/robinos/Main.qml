@@ -21,15 +21,24 @@ Rectangle {
     readonly property color destructive: "#f87171"
     readonly property string font: config.typeface || "Geist"
 
-    property int sessionIndex: sessionModel.lastIndex >= 0 ? sessionModel.lastIndex : 0
     property var sessionNames: []
-    property bool otherUser: userModel.lastUser === ""
+    property var userNames: []
+    // The remembered user, or the only user on a fresh install (SDDM remembers
+    // nobody before the first login)
+    readonly property string knownUser: userModel.lastUser !== "" ? userModel.lastUser
+                                        : userNames.length === 1 ? userNames[0] : ""
+    // SDDM 0.21 has no default session setting: without a remembered login its
+    // lastIndex is just the first session ("Hyprland"), so pick RobinOS then
+    property int sessionIndex: userModel.lastUser !== "" && sessionModel.lastIndex >= 0
+                               ? sessionModel.lastIndex : Math.max(0, sessionNames.indexOf("RobinOS"))
+    property bool chooseOther: false
+    readonly property bool otherUser: chooseOther || knownUser === ""
     property string message: ""
 
     readonly property var weekdays: ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"]
 
     function login() {
-        const user = root.otherUser ? userField.text.trim() : userModel.lastUser;
+        const user = root.otherUser ? userField.text.trim() : root.knownUser;
         if (user === "") {
             userField.forceActiveFocus();
             return;
@@ -49,7 +58,23 @@ Rectangle {
         }
     }
 
-    Component.onCompleted: (root.otherUser ? userField : password).forceActiveFocus()
+    // After the user and session lists below have filled in
+    Component.onCompleted: Qt.callLater(() => (root.otherUser ? userField : password).forceActiveFocus())
+
+    Repeater {
+        model: userModel
+
+        Item {
+            required property int index
+            required property string name
+
+            Component.onCompleted: {
+                const names = root.userNames.slice();
+                names[index] = name;
+                root.userNames = names;
+            }
+        }
+    }
 
     // Collect session names for the session switcher
     Repeater {
@@ -172,7 +197,7 @@ Rectangle {
 
                         Text {
                             anchors.centerIn: parent
-                            text: root.otherUser ? "?" : userModel.lastUser.charAt(0).toUpperCase()
+                            text: root.otherUser ? "?" : root.knownUser.charAt(0).toUpperCase()
                             color: root.fg
                             font.family: root.font
                             font.pixelSize: 22
@@ -183,7 +208,7 @@ Rectangle {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         visible: !root.otherUser
-                        text: userModel.lastUser
+                        text: root.knownUser
                         color: root.fg
                         font.family: root.font
                         font.pixelSize: 18
@@ -411,7 +436,7 @@ Rectangle {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                root.otherUser = true;
+                                root.chooseOther = true;
                                 userField.forceActiveFocus();
                             }
                         }
