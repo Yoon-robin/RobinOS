@@ -367,17 +367,13 @@ Singleton {
 
     property bool labRunning: false
 
+    // Users aren't in the docker group (robinctl lab asks for sudo), so `docker ps`
+    // doesn't work here. Docker runs a docker-proxy for each published port;
+    // look for the lab's ports instead.
     Process {
         id: labProc
-        command: ["docker", "ps", "--filter", "name=robinos-", "--format", "{{.Names}}"]
-        stdout: StdioCollector {
-            id: labOut
-            onStreamFinished: root.labRunning = labOut.text.indexOf("robinos-") !== -1
-        }
-        onExited: (exitCode, exitStatus) => {
-            if (exitCode !== 0)
-                root.labRunning = false;
-        }
+        command: ["pgrep", "-f", "docker-proxy .*-host-port (3000|8080)( |$)"]
+        onExited: (exitCode, exitStatus) => root.labRunning = exitCode === 0
     }
 
     function refreshLab() {

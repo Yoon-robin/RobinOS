@@ -168,6 +168,9 @@ doctor() {
     if systemctl is-enabled --quiet grub-btrfsd.service 2>/dev/null; then grub_btrfs="true"; fi
     check_line "업데이트 자동 스냅샷 (snap-pac)" "${snap_pac}" "sudo robinctl snapshot setup"
     check_line "부팅 메뉴 스냅샷 (grub-btrfs)" "${grub_btrfs}" "sudo robinctl snapshot setup"
+  elif [[ "${fstype}" == "overlay" ]] && root_on_btrfs; then
+    printf '  루트 파일 시스템: 스냅샷으로 부팅한 상태예요. 바꾼 내용은 재부팅하면 사라져요.\n'
+    printf '    이 상태로 되돌리려면: sudo robinctl snapshot rollback <번호>\n'
   else
     printf '  루트 파일 시스템: %s (스냅샷은 Btrfs 설치에서만 써요)\n' "${fstype}"
   fi
@@ -234,9 +237,23 @@ root_fstype() {
   findmnt -no FSTYPE / 2>/dev/null || printf '알 수 없음'
 }
 
-# "/dev/vda2" from "/dev/vda2[/@]"
+# "/dev/vda2" from "/dev/vda2[/@]". After booting a snapshot from the GRUB menu
+# with the grub-btrfs-overlayfs hook, / is an overlay in memory on top of the
+# snapshot, so the device comes from the kernel's root= instead.
 root_device() {
+  if [[ "$(root_fstype)" == "overlay" ]]; then
+    local root_arg
+    root_arg="$(sed -E -n 's/(^|.* )root=([^ ]+).*/\2/p' /proc/cmdline)"
+    findfs "${root_arg}" 2>/dev/null || printf '%s' "${root_arg}"
+    return
+  fi
   findmnt -no SOURCE / | sed 's/\[.*//'
+}
+
+# True when the system runs from Btrfs, also from a snapshot booted with an overlay
+root_on_btrfs() {
+  [[ "$(root_fstype)" == "btrfs" ]] ||
+    [[ "$(lsblk -no FSTYPE "$(root_device)" 2>/dev/null)" == "btrfs" ]]
 }
 
 snapshot_ready() {
@@ -500,7 +517,7 @@ snapshot_rollback() {
     die "사용법: sudo robinctl snapshot rollback <번호> (번호는 robinctl snapshot list에서 봐요)"
   [[ "${2:-}" == "--yes" ]] && ASSUME_YES="true"
   need_root
-  [[ "$(root_fstype)" == "btrfs" ]] || die "루트(/)가 Btrfs가 아니에요"
+  root_on_btrfs || die "루트(/)가 Btrfs가 아니에요"
 
   local top source info description date stamp
   top="$(mount_btrfs_top)"
@@ -1101,15 +1118,41 @@ lab_run() {
 
   case "${action}" in
     status)
-      docker compose -f "${compose_file}" ps
+      lab_docker compose -f "${compose_file}" ps
       ;;
     start)
-      docker compose -f "${compose_file}" up -d
+      if ! systemctl is-active --quiet docker.service 2>/dev/null; then
+        printf 'Docker를 켜요.\n'
+        lab_sudo systemctl start docker.service
+      fi
+      lab_docker compose -f "${compose_file}" up -d
+      printf '\n다 쓴 뒤에는 꺼 두세요: robinctl lab stop web\n'
       ;;
     stop)
-      docker compose -f "${compose_file}" down
+      lab_docker compose -f "${compose_file}" down
       ;;
   esac
+}
+
+# Docker needs root. RobinOS doesn't put users in the docker group, which would
+# be root without a password for anything running as the user; labs ask for
+# sudo instead when the Docker socket isn't writable.
+LAB_SUDO_NOTED="false"
+lab_sudo() {
+  if [[ "${EUID}" -eq 0 || -w /var/run/docker.sock ]]; then
+    "$@"
+    return
+  fi
+  if [[ "${LAB_SUDO_NOTED}" != "true" ]]; then
+    printf '%s랩은 Docker로 돌아가서 관리자 권한이 필요해요. 비밀번호를 물으면 입력하세요.%s\n' \
+      "${C_DIM}" "${C_RESET}" >&2
+    LAB_SUDO_NOTED="true"
+  fi
+  sudo "$@"
+}
+
+lab_docker() {
+  lab_sudo docker "$@"
 }
 
 main() {
