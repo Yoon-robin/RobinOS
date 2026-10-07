@@ -63,6 +63,9 @@ PanelWindow {
     // ---- Content ----
 
     readonly property var pinnedApps: ["foot", "org.gnome.Nautilus", "firefox"]
+    // foot also installs a client and a server entry; the client fails without a
+    // running server, and both read as "Terminal" next to the real one
+    readonly property var hiddenApps: ["footclient", "foot-server"]
     readonly property var labApps: ["org.wireshark.Wireshark", "ghidra", "virt-manager"]
 
     readonly property var commands: [
@@ -198,7 +201,7 @@ PanelWindow {
             const starts = [];
             const contains = [];
             for (const entry of apps) {
-                if (shownApps[entry.id])
+                if (shownApps[entry.id] || hiddenApps.indexOf(entry.id) !== -1)
                     continue;
                 const name = entry.name.toLowerCase();
                 if (name.startsWith(q))
