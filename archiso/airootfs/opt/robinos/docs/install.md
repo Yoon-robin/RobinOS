@@ -99,12 +99,15 @@ robinctl doctor
 robinctl learn
 ```
 
-`robinctl doctor`로 한글 입력, 스냅샷, 부팅 메뉴 설정을 확인하고, `robinctl learn`으로 리눅스 기초 미션을 시작해요. 보안 실습 도구는 필요할 때 설치해요.
+`robinctl doctor`로 한글 입력, 스냅샷, 부팅 메뉴 설정을 확인하고, `robinctl learn`으로 리눅스 기초 미션을 시작해요. 보안 실습 도구는 배우는 단계에 맞춰 프로필 하나씩 설치해요.
 
 ```bash
-sudo robinctl profile security --dry-run
-sudo robinctl profile security
+robinctl profile list
+robinctl profile network --dry-run
+sudo robinctl profile network
 ```
+
+프로필은 `network`(네트워크 분석), `web`(웹 보안과 로컬 웹 랩), `forensics`, `reversing`, `passwords`, `wireless`, `vm`이고, `security`는 전부예요.
 
 업데이트는 `sudo robinctl update`로 해요. 업데이트 전후에 스냅샷이 생겨서, 문제가 생기면 [recovery.md](recovery.md)대로 되돌리면 돼요.
 
