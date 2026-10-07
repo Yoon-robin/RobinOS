@@ -4,7 +4,8 @@
 Usage: boot-test-qmp.py <qmp-socket> <output-dir> [speed]
 
 speed multiplies every wait (1 with KVM, about 4 with TCG). The scenario:
-boot -> desktop -> launcher (search, Windows app name) -> quick settings ->
+boot -> welcome wizard (every step, then its missions terminal) -> desktop ->
+launcher (search, Windows app name) -> quick settings ->
 terminal with a Windows command and the first learning mission -> lock
 screen -> unlock with the live password.
 """
@@ -94,10 +95,24 @@ def shot(qmp, name):
 def main():
     qmp = Qmp(SOCK)
 
-    # Boot: live autologin goes straight into the RobinOS session
-    for seconds, name in ((30, "boot"), (30, "boot"), (30, "desktop"), (30, "desktop")):
+    # Boot: live autologin goes straight into the RobinOS session, which opens
+    # the welcome wizard on first login
+    for seconds, name in ((30, "boot"), (30, "boot"), (30, "session"), (30, "welcome")):
         wait(seconds)
         shot(qmp, name)
+
+    # Wizard: Enter moves to the next step; the last one opens the default goal
+    # (Linux basics missions) in a terminal, which we close again
+    for name in ("welcome-theme", "welcome-hangul", "welcome-goal", "welcome-tour"):
+        keys(qmp, "ret")
+        wait(2)
+        shot(qmp, name)
+    keys(qmp, "ret")
+    wait(6)
+    shot(qmp, "welcome-done")
+    keys(qmp, "alt", "f4")
+    wait(2)
+    shot(qmp, "desktop")
 
     keys(qmp, "meta_l", "spc")
     wait(3)

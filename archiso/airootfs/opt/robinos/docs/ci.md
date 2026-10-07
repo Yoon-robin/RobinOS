@@ -71,7 +71,7 @@ privileged 모드로 띄운 `archlinux:latest` 컨테이너 안에서 `scripts/b
 - `Build RobinOS ISO` 실행이 성공할 때마다
 - 수동 실행 (테스트할 빌드의 실행 ID를 지정할 수도 있어요)
 
-`scripts/boot-test.sh`가 QEMU에서 ISO를 부팅해요(KVM을 쓸 수 있으면 KVM 사용). Hyper-V처럼 평범한 VGA 디스플레이를 쓰기 때문에 데스크톱이 소프트웨어 렌더링으로 시작해요. 그다음 `scripts/boot-test-qmp.py`가 런처(검색, 윈도우 앱 이름 검색), 빠른 설정, 윈도우 명령과 첫 학습 미션을 띄운 터미널, 잠금 화면을 열면서 단계마다 스크린샷을 찍어요.
+`scripts/boot-test.sh`가 QEMU에서 ISO를 부팅해요(KVM을 쓸 수 있으면 KVM 사용). Hyper-V처럼 평범한 VGA 디스플레이를 쓰기 때문에 데스크톱이 소프트웨어 렌더링으로 시작해요. 그다음 `scripts/boot-test-qmp.py`가 환영 마법사의 모든 단계, 런처(검색, 윈도우 앱 이름 검색), 빠른 설정, 윈도우 명령과 첫 학습 미션을 띄운 터미널, 잠금 화면을 열면서 단계마다 스크린샷을 찍어요.
 
 결과:
 

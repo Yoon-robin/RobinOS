@@ -93,6 +93,8 @@ Singleton {
     }
 
     function toggleLauncher() {
+        if (welcomeOpen)
+            return;
         if (launcherOpen) {
             launcherOpen = false;
             return;
@@ -103,6 +105,8 @@ Singleton {
     }
 
     function toggleQuickSettings(screen) {
+        if (welcomeOpen)
+            return;
         if (quickSettingsOpen) {
             quickSettingsOpen = false;
             return;
@@ -110,6 +114,77 @@ Singleton {
         launcherOpen = false;
         overlayScreen = screen ?? focusedScreen;
         quickSettingsOpen = true;
+    }
+
+    // ---- First-login welcome wizard (Welcome.qml) ----
+
+    property bool welcomeOpen: false
+    readonly property string welcomeGoal: welcomeSettings.goal
+    readonly property string imeShortcut: welcomeSettings.imeShortcut
+
+    FileView {
+        id: welcomeStore
+
+        path: Quickshell.statePath("welcome.json")
+        printErrors: false
+
+        JsonAdapter {
+            id: welcomeSettings
+
+            property bool done: false
+            property string goal: ""
+            property string imeShortcut: "ctrl"
+        }
+    }
+
+    // Give the state file a moment to load; when it is missing this is the first login.
+    Timer {
+        interval: 2500
+        running: true
+        onTriggered: {
+            if (!welcomeSettings.done)
+                root.openWelcome();
+        }
+    }
+
+    function openWelcome() {
+        launcherOpen = false;
+        quickSettingsOpen = false;
+        overlayScreen = focusedScreen;
+        welcomeOpen = true;
+    }
+
+    // goal: "basics" or "web" opens that in a terminal; "" or "explore" just closes.
+    function finishWelcome(goal) {
+        welcomeSettings.done = true;
+        if (goal !== "")
+            welcomeSettings.goal = goal;
+        welcomeStore.writeAdapter();
+        welcomeOpen = false;
+
+        if (goal === "basics")
+            openTerminal("robinctl learn");
+        else if (goal === "web")
+            openTerminal("robinctl lab info web");
+    }
+
+    // 한/영 always toggles with the Hangul key (Right Alt, see robinos.lua). The
+    // extra shortcut is "ctrl" (Ctrl+Space), "shift" (Shift+Space) or "none".
+    // Rewrites ~/.config/fcitx5/config (the copy from /etc/skel) and reloads fcitx5.
+    function setImeShortcut(key) {
+        const extra = { "ctrl": "Control+space", "shift": "Shift+space" }[key] ?? "";
+        const lines = ["[Hotkey]", "EnumerateWithTriggerKeys=True", "", "[Hotkey/TriggerKeys]", "0=Hangul"];
+        if (extra !== "")
+            lines.push("1=" + extra);
+        lines.push("", "[Behavior]", "ShareInputState=All");
+
+        const file = "\"${XDG_CONFIG_HOME:-$HOME/.config}/fcitx5/config\"";
+        const script = "f=" + file + "; mkdir -p \"${f%/*}\" && printf '%s\\n' "
+            + lines.map(line => "'" + line + "'").join(" ") + " > \"$f\" && fcitx5-remote -r";
+        Quickshell.execDetached(["sh", "-c", script]);
+
+        welcomeSettings.imeShortcut = key;
+        welcomeStore.writeAdapter();
     }
 
     function focusWorkspace(id) {

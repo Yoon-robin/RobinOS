@@ -35,6 +35,8 @@ ShellRoot {
 
     Osd {}
 
+    Welcome {}
+
     // Bound in robinos.lua with hl.dsp.global("robinos:<name>")
     GlobalShortcut {
         appid: "robinos"
@@ -71,6 +73,10 @@ ShellRoot {
 
         function setDark(dark: bool): void {
             Theme.setDark(dark);
+        }
+
+        function welcome(): void {
+            ShellState.openWelcome();
         }
     }
 }

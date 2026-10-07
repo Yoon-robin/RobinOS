@@ -69,6 +69,7 @@ PanelWindow {
         { key: "doctor", group: "system", icon: "activity", title: "시스템 점검", subtitle: "robinctl doctor", mono: true, words: "doctor check 점검 진단" },
         { key: "wifi", group: "system", icon: "wifi", title: "Wi-Fi 연결", subtitle: "nmtui", mono: true, words: "wifi network 네트워크 인터넷" },
         { key: "settings", group: "system", icon: "sliders", title: "빠른 설정", subtitle: "Super + S", words: "settings quick 설정 빠른 설정 테마 다크 모드" },
+        { key: "welcome", group: "system", icon: "sparkles", title: "환영 마법사", subtitle: "테마, 한/영 키, 단축키 안내", words: "welcome tour setup 환영 마법사 처음 시작 안내 투어 한영" },
         { key: "lock", group: "power", icon: "lock", title: "화면 잠금", subtitle: "Super + L", words: "lock 잠금" },
         { key: "logout", group: "power", icon: "log-out", title: "로그아웃", subtitle: "", words: "logout exit 로그아웃" },
         { key: "reboot", group: "power", icon: "rotate-ccw", title: "다시 시작", subtitle: "", words: "reboot restart 재부팅 재시작" },
@@ -150,10 +151,8 @@ PanelWindow {
             }
 
             out.push({ kind: "header", title: "명령" });
-            for (const cmd of commands) {
-                if (cmd.group === "system" && cmd.key !== "wifi" && cmd.key !== "settings")
-                    out.push(commandItem(cmd));
-            }
+            for (const key of ["snapshot", "update", "doctor"])
+                out.push(commandItem(command(key)));
         } else {
             // Windows names first. A single Latin letter would match too much.
             const shownApps = {};
@@ -259,6 +258,9 @@ PanelWindow {
             break;
         case "settings":
             ShellState.toggleQuickSettings();
+            break;
+        case "welcome":
+            ShellState.openWelcome();
             break;
         case "lab-start":
             ShellState.runInTerminal("robinctl lab start web && printf '\\nJuice Shop  http://localhost:3000\\nDVWA        http://localhost:8080\\n'");

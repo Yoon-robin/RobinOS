@@ -7,7 +7,7 @@ RobinOS는 Hyprland 위에 직접 만든 Quickshell 셸을 얹어 써요. 디자
 | 부분 | 프로그램 | 저장소 안 위치 |
 |---|---|---|
 | 컴포지터 | Hyprland 0.56+ (Lua 설정) | `desktop/hypr/robinos.lua` |
-| 셸: 상단 바, 독, 런처, 빠른 설정, 알림, 볼륨 표시, 배경화면 | Quickshell 0.3 | `desktop/shell/` |
+| 셸: 상단 바, 독, 런처, 빠른 설정, 알림, 볼륨 표시, 배경화면, 환영 마법사 | Quickshell 0.3 | `desktop/shell/` |
 | 세션 시작, 렌더링 자동 전환 | `robinos-session` | `desktop/bin/robinos-session` |
 | 로그인 화면 | SDDM (Qt 6 테마) | `themes/sddm/robinos/` |
 | 잠금 화면과 대기 | hyprlock, hypridle | `desktop/hypr/hyprlock.conf`, `hypridle.conf` |
@@ -85,6 +85,22 @@ ipconfig은(는) 윈도우 명령이에요. 리눅스에서는
 ```
 
 명령 30개쯤을 알아들어요(`dir`, `cls`, `cd..`, `copy`, `del`, `tasklist`, `tracert`, `netstat`, `findstr`, `notepad` 등). 새로 만드는 사용자는 `/etc/skel/.bashrc`로 바로 쓸 수 있고, 설치하는 사용자의 `~/.bashrc`에는 `scripts/post-install.sh`가 넣어 줘요.
+
+## 환영 마법사
+
+처음 로그인하면 환영 마법사가 떠요(`desktop/shell/Welcome.qml`). 다섯 단계예요.
+
+1. RobinOS 소개
+2. 다크/라이트와 강조 색상. 고르는 즉시 화면에 적용돼요.
+3. 한/영 전환 단축키. 한/영 키와 오른쪽 Alt는 항상 되고, Ctrl+Space(기본), Shift+Space, 없음 중에서 하나를 더 골라요. `~/.config/fcitx5/config`를 다시 쓰고 `fcitx5-remote -r`로 바로 적용해요. 입력 칸에서 직접 바꿔 볼 수 있어요.
+4. 학습 목표: 리눅스 기초, 웹 보안, 먼저 둘러보기
+5. 단축키 안내. "미션 시작하기"를 누르면 고른 목표가 터미널에서 열려요.
+
+Enter는 다음, Esc는 건너뛰기예요. 끝내거나 건너뛰면 `~/.local/state/quickshell/` 아래 `welcome.json`에 기록돼서 다시 뜨지 않아요. 라이브 ISO는 부팅할 때마다 새로 시작하니 매번 떠요. 다시 보려면 런처에서 "환영 마법사"를 고르거나 이렇게 실행하세요.
+
+```bash
+qs ipc -p /usr/share/robinos/shell call shell welcome
+```
 
 ## 윈도우 이름으로 앱 찾기
 

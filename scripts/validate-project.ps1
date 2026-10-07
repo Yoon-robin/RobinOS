@@ -109,6 +109,8 @@ $requiredPaths = @(
     "desktop/shell/shell.qml",
     "desktop/shell/Theme.qml",
     "desktop/shell/ShellState.qml",
+    "desktop/shell/Welcome.qml",
+    "desktop/shell/ActionButton.qml",
     "desktop/hypr/robinos.lua",
     "desktop/hypr/hyprland.lua",
     "desktop/bin/robinos-session",
