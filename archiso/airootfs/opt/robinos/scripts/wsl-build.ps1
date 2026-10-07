@@ -21,8 +21,9 @@ param(
     [Parameter(Position = 0)]
     [ValidateSet("setup", "check", "status", "build", "boot-test", "install-test", "shell")]
     [string]$Task = "build",
-    # install-test: archinstall (docs/install.md option A) or robinos (installer/robin-install)
-    [ValidateSet("archinstall", "robinos")]
+    # install-test: archinstall (docs/install.md method 2), robinos (installer/robin-install on
+    # the whole disk) or windows (robin-install next to a stand-in Windows disk)
+    [ValidateSet("archinstall", "robinos", "windows")]
     [string]$Installer = "archinstall",
     # boot-test: whpx runs QEMU for Windows with the Windows Hypervisor Platform,
     # several times faster than TCG in WSL (no KVM on Windows 10). auto = whpx
@@ -126,7 +127,9 @@ function Invoke-WhpxInstallTest {
     }
 
     if (-not $reuse) {
-        & (Join-Path $qemuDir "qemu-img.exe") create -q -f qcow2 "$out\disk.qcow2" 40G
+        # "windows" needs room for a 20 GB C: and 40 GB of free space next to it
+        $diskSize = if ($Installer -eq "windows") { "64G" } else { "40G" }
+        & (Join-Path $qemuDir "qemu-img.exe") create -q -f qcow2 "$out\disk.qcow2" $diskSize
         Copy-Item (Join-Path $qemuDir "share\edk2-i386-vars.fd") "$out\OVMF_VARS.fd"
     }
 
