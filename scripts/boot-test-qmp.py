@@ -6,9 +6,9 @@ Usage: boot-test-qmp.py <qmp-socket | tcp:host:port> <output-dir> [speed]
 speed multiplies every wait (1 with KVM, about 4 with TCG). The scenario:
 boot -> welcome wizard (every step, then its missions terminal) -> desktop ->
 launcher (search, Windows app name) -> installer (first two steps) -> quick settings
-(also with Tab) -> terminal -> light mode (terminal, launcher, quick settings) ->
-terminal with a Windows command and the first learning mission -> lock
-screen -> unlock with the live password.
+(also with Tab) -> terminal with a Windows command and the first learning mission
+-> light mode (terminal, launcher, quick settings) -> lock screen -> unlock with
+the live password.
 """
 
 import json
