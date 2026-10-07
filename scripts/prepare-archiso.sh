@@ -30,6 +30,10 @@ rm -f \
 # the live ISO. The ssh client stays available.
 rm -f "${systemd_dir}/multi-user.target.wants/sshd.service"
 
+# releng also ships cloud-init, which sets up users and SSH from cloud metadata
+# or a "cidata" disk. A desktop live ISO has no use for it.
+rm -rf "${systemd_dir}/cloud-init.target.wants"
+
 "${ROOT_DIR}/scripts/sync-archiso-files.sh"
 cp -a "${ROOT_DIR}/archiso/airootfs/." "${OUT_PROFILE}/airootfs/"
 "${ROOT_DIR}/scripts/fetch-fonts.sh" "${OUT_PROFILE}/airootfs/usr/share/fonts/robinos"
