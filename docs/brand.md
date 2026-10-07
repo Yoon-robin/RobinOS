@@ -43,7 +43,7 @@ RobinOS는 shadcn/ui의 zinc 팔레트를 따르고, 강조색은 Robin red 하�
 - 모서리 반경: 6 (작은 요소), 8 (입력창, 버튼), 10 (카드), 14 (창, 팝오버), 18 (독)
 - 아이콘: Lucide 선 아이콘, 24px 그리드에 2px 선
 
-로고 파일(`assets/brand/*.svg`)도 이 팔레트를 따라요. 위쪽 날개와 가로줄만 Robin red이고, 방패와 아래쪽 날개, 설명 글은 zinc 색이에요.
+로고 파일(`assets/brand/*.svg`)도 이 팔레트를 따라요. 위쪽 날개와 가로줄만 Robin red이고, 방패와 아래쪽 날개, 설명 글은 zinc 색이에요. 배경화면 SVG(`assets/wallpapers/`)와 GRUB 테마(`themes/grub/robinos`)도 같아요. GRUB 메뉴는 고른 항목만 Robin red예요.
 
 ## 사용처
 

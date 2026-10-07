@@ -10,7 +10,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 작업 | 시작 | 대상 | 결과 위치 | 상태 |
 |---|---|---|---|---|
-| ISO 빌드 → 부팅 테스트 → 설치 테스트 archinstall → 설치 테스트 robinos (WHPX) | 2026-10-08 START | `HEAD` | `build\boot-test`, `build\install-test`(archinstall 결과는 `build\install-test-archinstall`로 옮겨 둠), 로그 `build\loop-*.log`, 순서 결과 `build\loop-chain.log` | 실행 중 |
+| ISO 빌드 → 부팅 테스트 → 설치 테스트 archinstall → 설치 테스트 robinos (WHPX) | 2026-10-08 04:50 | `c5e9794` | `build\boot-test`, `build\install-test`(archinstall 결과는 `build\install-test-archinstall`로 옮겨 둠), 로그 `build\loop-*.log`, 순서 결과 `build\loop-chain.log` | 실행 중 |
 
 ## 정기 점검
 
@@ -30,7 +30,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 | 코드 검토 | 2026-10-08 | `robin-install`(fstab의 `subvolid=`), `robinctl`(스냅샷 부팅 상태의 되돌리기, 랩 권한), `post-install.sh`(영어 출력), `Installer.qml`, `ShellState.qml`, `Launcher.qml`(열 때 hover 선택). 셸 QML의 나머지(QuickSettings, Welcome, Dock, Bar)는 아직 |
 | 문서와 코드 맞추기 | 2026-10-07 | 문서 체계 정리 때 전체를 읽음. 명령과 경로까지 하나하나 대조하지는 않음 |
 | 보안과 윤리 | 2026-10-08 | 웹 랩: docker 그룹 대신 sudo, 재부팅 때 자동 시작 끔, 기준을 ethics.md에 적음. 이미지 버전 고정과 DVWA 이미지 교체는 T-014 |
-| 접근성 | 아직 | |
+| 접근성 | 2026-10-08 | 버튼과 선택지가 마우스 전용이던 것(T-015), 보조 글자 대비(subtle 3.9:1·2.6:1 → muted). 화면 읽기 프로그램(Orca)은 아직 |
 | 성능 | 아직 | 메모: `ShellState.qml`이 한/영 상태를 보려고 `fcitx5-remote`를 1초마다 새로 실행해요 |
 | 업스트림 변화 | 2026-10-07 | 로컬 ISO 빌드 때 패키지 검사 통과, Hyprland 0.56.2, Quickshell 0.3.1 |
 
@@ -62,6 +62,10 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 상태: 검증 대기. 2026-10-08 루트가 overlay일 때 `robinctl`이 멈추던 걸 고침(`5f22e5e`), 설치 테스트에 `snapshot-boot` 단계를 넣음
 - 할 일: `install-test.py`의 snapshots 단계는 cowsay 설치까지 하고 끄기. 새 `snapshot-boot` 단계에서 GRUB의 스냅샷 하위 메뉴로 cowsay 설치 전(pre) 스냅샷을 골라 부팅하고(위치는 snapshots 단계가 `grub-btrfs.cfg`에서 찾아 `OUT`에 적어 둠), `findmnt -no FSTYPE /`가 overlay인지, cowsay가 없는지 본 뒤 거기서 `robinctl snapshot rollback`. `wsl-build.ps1`, `install-test.sh`의 단계 목록도 같이
 - 완료 기준: 설치 테스트 모든 단계 통과, `snapshot-boot` 단계의 GRUB 스냅샷 메뉴 스크린샷
+
+### T-015 셸 키보드 접근성
+- 상태: 검증 대기. 2026-10-08 `d4a4a60`(브랜치 `a11y`, 작업 트리 `..\RobinOS-a11y`): 버튼·타일·선택 카드에 Tab 이동, Enter·Space, 포커스 테두리(`FocusRing.qml`), 슬라이더 화살표 키, 보조 글자 색을 muted로. qmllint 통과
+- 남은 일: 실행 중인 설치 테스트가 파일을 복사해 간 뒤 main에 합치고, 다음 부팅 테스트의 `quick-settings-keyboard` 스크린샷에서 포커스 테두리 확인
 
 ### T-014 웹 랩 이미지 정리
 - 목표: 랩 이미지 버전을 고정하고(`bkimminich/juice-shop:<버전>`), 2018년 이후 갱신이 없는 `vulnerables/web-dvwa`를 공식 `ghcr.io/digininja/dvwa`로 바꾸기
@@ -98,7 +102,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 같이 고칠 것: `install-test.py`의 `boot_from_grub()`가 찾는 글자, `recovery.md`의 메뉴 이름
 
 ### T-009 로고 SVG 색 정리
-- 상태: 검증 대기. 2026-10-08 색을 바꿈(옛 청록 → zinc, 위쪽 날개만 Robin red), rsvg-convert로 렌더링해서 확인. 남은 것: 설치 테스트의 SDDM 스크린샷에서 로고 확인
+- 상태: 검증 대기. 2026-10-08 로고 색을 바꿈(옛 청록 → zinc, 위쪽 날개만 Robin red, `2fca31f`). 설치 테스트에서 GRUB 테마도 옛 청록인 걸 보고 GRUB 테마, 배경화면 SVG, SDDM 배경 사본까지 바꿈. rsvg-convert로 렌더링해서 확인. 남은 것: 다음 부팅 테스트의 `01-boot.png`(GRUB)
 - 목표: [brand.md](brand.md)에 적힌 대로 `assets/brand/*.svg`의 옛 청록색을 zinc와 Robin red로 바꾸기
 - 검증: 정적 검증(SVG 유효성), 부팅 테스트의 SDDM·GRUB 화면
 
