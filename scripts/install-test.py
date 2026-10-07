@@ -397,7 +397,9 @@ def check_windows_kept(con, before):
     if after != before:
         print(f"before:\n{before}\nafter:\n{after}", flush=True)
         raise RuntimeError("the Windows partitions changed")
-    con.run("mount -o ro -t ntfs-3g /dev/vda3 /tmp/win && grep -qx robinos-install-test /tmp/win/marker.txt; s=$?; umount /tmp/win; exit $s")
+    # A subshell: a bare "exit" would end the test's login shell
+    con.run("(mount -o ro -t ntfs-3g /dev/vda3 /tmp/win && grep -qx robinos-install-test /tmp/win/marker.txt;"
+            " s=$?; umount /tmp/win; exit $s)")
     con.run("test -f /mnt/efi/EFI/Microsoft/Boot/bootmgfw.efi && test -f /mnt/efi/EFI/RobinOS/grubx64.efi")
     # The firmware's fallback path belongs to Windows here; robin-install only adds EFI/RobinOS
     con.run("! test -e /mnt/efi/EFI/BOOT/BOOTX64.EFI")
