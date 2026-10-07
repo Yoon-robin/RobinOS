@@ -6,9 +6,9 @@ Usage: boot-test-qmp.py <qmp-socket | tcp:host:port> <output-dir> [speed]
 speed multiplies every wait (1 with KVM, about 4 with TCG). The scenario:
 boot -> welcome wizard (every step, then its missions terminal) -> desktop ->
 launcher (search, Windows app name) -> installer (first two steps) -> quick settings
-(also with Tab) ->
-terminal with a Windows command and the first learning mission -> lock
-screen -> unlock with the live password.
+(also with Tab) -> terminal with a Windows command and the first learning mission
+-> light mode (terminal, launcher, quick settings) -> lock screen -> unlock with
+the live password.
 """
 
 import json
@@ -168,6 +168,25 @@ def main():
     type_text(qmp, "robinctl learn show 1\n")
     wait(2)
     shot(qmp, "terminal-learn")
+
+    # Light mode, through the shell's IPC (the same as the quick settings tile)
+    type_text(qmp, "clear; qs ipc -p /usr/share/robinos/shell call shell setDark false\n")
+    wait(4)
+    type_text(qmp, "robinctl learn\n")
+    wait(2)
+    shot(qmp, "light-terminal")
+    keys(qmp, "meta_l", "spc")
+    wait(3)
+    shot(qmp, "light-launcher")
+    keys(qmp, "esc")
+    wait(2)
+    keys(qmp, "meta_l", "s")
+    wait(3)
+    shot(qmp, "light-quick-settings")
+    keys(qmp, "meta_l", "s")
+    wait(2)
+    type_text(qmp, "qs ipc -p /usr/share/robinos/shell call shell setDark true\n")
+    wait(3)
 
     keys(qmp, "meta_l", "l")
     wait(5)
