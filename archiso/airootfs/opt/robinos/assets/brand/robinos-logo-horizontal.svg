@@ -2,22 +2,22 @@
   <title id="title">RobinOS Horizontal Logo</title>
   <desc id="desc">Horizontal RobinOS logo for headers and documentation.</desc>
   <defs>
-    <linearGradient id="cyanEdge" x1="24" y1="20" x2="156" y2="160" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#5EEBFF"/>
-      <stop offset="1" stop-color="#1BA6C9"/>
+    <linearGradient id="edge" x1="24" y1="20" x2="156" y2="160" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#52525B"/>
+      <stop offset="1" stop-color="#27272A"/>
     </linearGradient>
   </defs>
-  <rect width="720" height="180" rx="28" fill="#10151C"/>
+  <rect width="720" height="180" rx="28" fill="#09090B"/>
   <g transform="translate(36 20) scale(.55)">
-    <path d="M128 28 206 61v66c0 50-30 82-78 105-48-23-78-55-78-105V61l78-33Z" fill="#18212C" stroke="url(#cyanEdge)" stroke-width="8" stroke-linejoin="round"/>
-    <path d="M128 54 181 77v48c0 34-18 58-53 77-35-19-53-43-53-77V77l53-23Z" fill="#111923"/>
-    <path d="M92 91h62c14 0 25 11 25 25v4c0 14-11 25-25 25h-35l-26 29v-29h-1c-14 0-25-11-25-25v-4c0-14 11-25 25-25Z" fill="#EAF7FA"/>
-    <path d="M91 110h35l-22 19 22 19H91l21-19-21-19Z" fill="#10151C"/>
-    <path d="M137 145h32v14h-32z" fill="#10151C"/>
-    <path d="M74 77c28-18 64-18 98 0-13 5-25 13-35 25-26-6-46-4-63 6V77Z" fill="#2ED3F7"/>
-    <path d="M75 128c24-18 54-24 90-18-30 9-55 26-75 52-9-9-15-20-15-34Z" fill="#D83B4B"/>
+    <path d="M128 28 206 61v66c0 50-30 82-78 105-48-23-78-55-78-105V61l78-33Z" fill="#18181B" stroke="url(#edge)" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M128 54 181 77v48c0 34-18 58-53 77-35-19-53-43-53-77V77l53-23Z" fill="#121214"/>
+    <path d="M92 91h62c14 0 25 11 25 25v4c0 14-11 25-25 25h-35l-26 29v-29h-1c-14 0-25-11-25-25v-4c0-14 11-25 25-25Z" fill="#FAFAFA"/>
+    <path d="M91 110h35l-22 19 22 19H91l21-19-21-19Z" fill="#09090B"/>
+    <path d="M137 145h32v14h-32z" fill="#09090B"/>
+    <path d="M74 77c28-18 64-18 98 0-13 5-25 13-35 25-26-6-46-4-63 6V77Z" fill="#E5484D"/>
+    <path d="M75 128c24-18 54-24 90-18-30 9-55 26-75 52-9-9-15-20-15-34Z" fill="#71717A"/>
   </g>
-  <text x="184" y="102" fill="#EAF7FA" font-family="Inter, Pretendard, Noto Sans, Arial, sans-serif" font-size="58" font-weight="800" letter-spacing="0">RobinOS</text>
-  <text x="188" y="136" fill="#5EEBFF" font-family="Inter, Pretendard, Noto Sans, Arial, sans-serif" font-size="19" font-weight="600" letter-spacing="0">Arch-based security learning OS</text>
+  <text x="184" y="102" fill="#FAFAFA" font-family="Inter, Pretendard, Noto Sans, Arial, sans-serif" font-size="58" font-weight="800" letter-spacing="0">RobinOS</text>
+  <text x="188" y="136" fill="#A1A1AA" font-family="Inter, Pretendard, Noto Sans, Arial, sans-serif" font-size="19" font-weight="600" letter-spacing="0">Arch-based security learning OS</text>
 </svg>
 

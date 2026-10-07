@@ -100,6 +100,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 같이 고칠 것: `install-test.py`의 `boot_from_grub()`가 찾는 글자, `recovery.md`의 메뉴 이름
 
 ### T-009 로고 SVG 색 정리
+- 상태: 검증 대기. 2026-10-08 색을 바꿈(옛 청록 → zinc, 위쪽 날개만 Robin red), rsvg-convert로 렌더링해서 확인. 남은 것: 설치 테스트의 SDDM 스크린샷에서 로고 확인
 - 목표: [brand.md](brand.md)에 적힌 대로 `assets/brand/*.svg`의 옛 청록색을 zinc와 Robin red로 바꾸기
 - 검증: 정적 검증(SVG 유효성), 부팅 테스트의 SDDM·GRUB 화면
 
