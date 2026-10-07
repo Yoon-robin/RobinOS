@@ -10,7 +10,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 작업 | 시작 | 대상 | 결과 위치 | 상태 |
 |---|---|---|---|---|
-| ISO 빌드 → 부팅 테스트 → 설치 테스트 archinstall (WHPX) | 2026-10-08 04:24 | `1295721` | `build\boot-test`, `build\install-test`, 로그 `build\loop-*.log`, 순서 결과 `build\loop-chain.log` | 실행 중 |
+| ISO 빌드 → 부팅 테스트 → 설치 테스트 archinstall → 설치 테스트 robinos (WHPX) | 2026-10-08 START | `HEAD` | `build\boot-test`, `build\install-test`(archinstall 결과는 `build\install-test-archinstall`로 옮겨 둠), 로그 `build\loop-*.log`, 순서 결과 `build\loop-chain.log` | 실행 중 |
 
 ## 정기 점검
 
@@ -41,8 +41,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
 | `6d13712` | 설치기 화면 | 부팅 테스트(설치기 1·2단계 스크린샷). 2026-10-08 실행에서 런처 hover 문제로 설치기가 안 열림 → `d5e4e47`로 고치고 다음 부팅 테스트에서 확인 |
-| `1295721` | SDDM 첫 로그인 사용자·세션, 스냅샷 설명 영어로 | 설치 테스트 (실행 중) |
-| `6a472db`~`ce4050e` | 설치기 fstab, 런처 hover, 스냅샷 부팅 상태에서 되돌리기, 웹 랩 sudo, 설치 스크립트 한국어 | 다음 ISO 빌드 + 부팅 테스트 + 설치 테스트 (T-013) |
+| `6a472db` 이후 | 설치기 fstab, 런처 hover, 스냅샷 부팅 상태에서 되돌리기, 웹 랩 sudo, 설치 스크립트 한국어, 로고 색, 부팅 메뉴 이름 | 실행 중인 빌드·부팅 테스트·설치 테스트 두 가지 (T-004, T-008, T-013) |
+
+`1295721`(SDDM 첫 로그인, 스냅샷 설명)은 2026-10-08 설치 테스트를 통과했어요. 앞의 `6d13712`을 기다려요.
 
 `f772062`까지는 2026-10-08에 검증을 마치고 푸시했어요.
 
@@ -56,14 +57,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 ## 할 일 (위에서부터)
 
-### T-012 설치본 첫 로그인 확인 (SDDM)
-- 상태: 검증 대기
-- 2026-10-08 설치 테스트에서 찾음: 설치 직후 SDDM이 기억한 사용자가 없어서 "사용자 이름" 칸을 비워 두고, 세션은 목록 첫 번째인 Hyprland(`robinos-session`의 렌더링 자동 전환이 빠짐)로 잡혔어요. 테마가 사용자가 한 명이면 그 사용자를, 처음 로그인이면 RobinOS 세션을 고르게 고침. snapper 스냅샷 설명의 한글은 GRUB에서 `&#xC2A4;`처럼 깨져서 영어로 바꿈
-- 완료 기준: 다음 설치 테스트의 `rollback-03-desktop.png`에 RobinOS 데스크톱(환영 마법사)이 보이고, `snapshots-02`의 설명이 깨지지 않음
-
 ### T-013 스냅샷으로 부팅한 상태에서 되돌리기 테스트
 - 목표: 복구 문서의 비상 경로(부팅 메뉴에서 스냅샷으로 부팅 → `robinctl snapshot rollback`)를 설치 테스트로 확인
-- 2026-10-08: 루트가 overlay일 때 `robinctl`이 멈추던 걸 고침(`5f22e5e`). 테스트는 아직
+- 상태: 검증 대기. 2026-10-08 루트가 overlay일 때 `robinctl`이 멈추던 걸 고침(`5f22e5e`), 설치 테스트에 `snapshot-boot` 단계를 넣음
 - 할 일: `install-test.py`의 snapshots 단계는 cowsay 설치까지 하고 끄기. 새 `snapshot-boot` 단계에서 GRUB의 스냅샷 하위 메뉴로 cowsay 설치 전(pre) 스냅샷을 골라 부팅하고(위치는 snapshots 단계가 `grub-btrfs.cfg`에서 찾아 `OUT`에 적어 둠), `findmnt -no FSTYPE /`가 overlay인지, cowsay가 없는지 본 뒤 거기서 `robinctl snapshot rollback`. `wsl-build.ps1`, `install-test.sh`의 단계 목록도 같이
 - 완료 기준: 설치 테스트 모든 단계 통과, `snapshot-boot` 단계의 GRUB 스냅샷 메뉴 스크린샷
 
@@ -73,6 +69,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 검증: WSL에 Docker를 깔 수 없으면 설치 테스트 VM에서 `robinctl lab start web` 후 `curl -s 127.0.0.1:3000`, `:8080`
 
 ### T-004 설치기 백엔드 검증
+- 상태: 검증 대기. 2026-10-08 처음으로 실행 중
 - 목표: `installer/robin-install`이 디스크 전체 설치를 끝까지 해내는지
 - 명령: `scripts/wsl-build.ps1 install-test -Installer robinos`
 - 완료 기준: 설치 테스트 모든 단계 통과. EFI는 `/efi`, `/.bootbackup` 없이 커널이 스냅샷에 들어가는지(`ls /.snapshots/*/snapshot/boot`), `/etc/fstab`의 Btrfs 줄에 `subvolid=`가 없는지
@@ -96,6 +93,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 조건: T-004, T-005 끝난 뒤
 
 ### T-008 부팅 메뉴 이름을 RobinOS로
+- 상태: 검증 대기. 2026-10-08 `GRUB_DISTRIBUTOR="RobinOS"`(메뉴는 "RobinOS Linux"), grub-btrfs 하위 메뉴는 "RobinOS snapshots". 설치 테스트가 `grub.cfg`에서 두 이름을 확인해요
 - 목표: 설치된 시스템의 GRUB 메뉴가 "Arch Linux" 대신 "RobinOS"로 보이게(`GRUB_DISTRIBUTOR`, grub-btrfs 하위 메뉴 이름)
 - 같이 고칠 것: `install-test.py`의 `boot_from_grub()`가 찾는 글자, `recovery.md`의 메뉴 이름
 
@@ -115,6 +113,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 최근 것이 위에 있어요.
 
+- 2026-10-08 T-012 설치본 첫 로그인 확인: 설치 테스트(`1295721`, 모든 단계 약 10분)에서 SDDM이 사용자 robin과 RobinOS 세션을 스스로 고르고, 로그인하면 환영 마법사가 뜨고, GRUB 스냅샷 메뉴의 설명이 영어로 제대로 보임
 - 2026-10-08 T-002 VM 테스트를 WHPX로: 부팅 테스트 207초(TCG의 몇 분의 일), 설치 테스트는 모든 단계 통과. WHPX가 게스트의 재부팅을 처리하지 못해서(`Unexpected VP exit code 4`) 설치 테스트는 부팅마다 QEMU를 새로 띄워요(`8c3293d`). QEMU 11.1은 `C:\Users\Blitz\RobinOS-tools\qemu`, OVMF는 QEMU에 들어 있는 edk2 파일을 써요
 - 2026-10-08 T-003 설치 테스트(archinstall 방식) 통과: archinstall 설치 → post-install → 스냅샷 설정(`@snapshots` fstab, 커널 백업 훅, grub-btrfs 항목) → GRUB 스냅샷 하위 메뉴 → cowsay 설치로 snap-pac 전후 스냅샷 → `robinctl snapshot rollback` → 다음 부팅에서 cowsay가 사라짐. 그 과정에서 테스트 쪽 문제 일곱 개를 고침(archinstall 무인 실행의 멈춤 두 가지, 한글 프롬프트와 UTF-8 조각, 캡처의 프롬프트, WHPX가 재부팅을 못 하는 문제 등, `90035c1`~`8c3293d`). 제품 쪽에서 찾은 것: 설치본 첫 로그인에서 SDDM이 사용자를 고르지 않고 세션이 Hyprland로 잡힘, 스냅샷 한글 설명이 GRUB에서 깨짐 → 고침(다음 설치 테스트에서 확인, T-012)
 - 2026-10-08 T-001 데스크톱 변경 부팅 테스트 확인: 마법사 5단계와 미션 터미널, `notepad` 검색, 미션 화면, 잠금 화면 모두 정상(WHPX 부팅 테스트, ISO `7a000b9`). 마법사 키 반복 무시(`12e6b2a`), ISO 빌드가 이전 빌드를 다시 포장하던 문제(`7a000b9`), WSL 동기화 CRLF 문제(`3f110df`)를 같이 고침
