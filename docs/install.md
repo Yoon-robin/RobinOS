@@ -39,7 +39,7 @@ robinctl lab list
 robin-install
 ```
 
-RobinOS 설치기는 만드는 중이에요. 백엔드(`robin-install disks`, `sudo robin-install run 계획.json`)는 있지만 아직 VM에서 검증하지 않았고 그래픽 화면도 없어요. 진행 상황은 [tasks.md](tasks.md)에 있어요. 그때까지는 방법 A를 쓰세요.
+RobinOS 설치기는 만드는 중이에요. 라이브 화면 런처(`Super+Space`)의 "RobinOS 설치"로 그래픽 설치기를 열 수 있고, 실제 설치는 백엔드(`robin-install disks`, `sudo robin-install run 계획.json`)가 해요. 아직 VM에서 끝까지 설치해 보지 않았으니 진행 상황은 [tasks.md](tasks.md)를 보고, 그때까지는 방법 A를 쓰세요.
 
 라이브 ISO는 RobinOS 파일을 여기에 준비해 둬요.
 

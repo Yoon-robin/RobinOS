@@ -266,10 +266,23 @@ def install_packages():
                 progress(12 + 58 * done // total, f"패키지 설치 ({done}/{total})")
 
     run("pacstrap", "-K", TARGET, *packages, on_line=on_line)
-    fstab = output("genfstab", "-U", TARGET)
+    fstab = without_subvolid(output("genfstab", "-U", TARGET))
     with open(f"{TARGET}/etc/fstab", "a") as f:
         f.write(fstab)
     say("# /etc/fstab 작성")
+
+
+def without_subvolid(fstab):
+    """Drops subvolid= from Btrfs lines. A rollback replaces @ with a copy of a
+    snapshot, which has another id, so mounts go by subvolume name only."""
+    lines = []
+    for line in fstab.splitlines():
+        fields = line.split()
+        if len(fields) >= 4 and fields[2] == "btrfs":
+            options = ",".join(o for o in fields[3].split(",") if not o.startswith("subvolid="))
+            line = line.replace(fields[3], options, 1)
+        lines.append(line)
+    return "\n".join(lines) + "\n"
 
 
 def configure_system(plan):

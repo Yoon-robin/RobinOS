@@ -27,7 +27,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 영역 | 마지막으로 본 날 | 메모 |
 |---|---|---|
-| 코드 검토 | 아직 | |
+| 코드 검토 | 2026-10-08 | `installer/robin-install`만 봄: genfstab의 `subvolid=`가 되돌리기 뒤 어긋날 수 있어 뺌. 다음은 `robinctl`, 셸 QML |
 | 문서와 코드 맞추기 | 2026-10-07 | 문서 체계 정리 때 전체를 읽음. 명령과 경로까지 하나하나 대조하지는 않음 |
 | 보안과 윤리 | 아직 | |
 | 접근성 | 아직 | |
@@ -63,7 +63,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ### T-004 설치기 백엔드 검증
 - 목표: `installer/robin-install`이 디스크 전체 설치를 끝까지 해내는지
 - 명령: `scripts/wsl-build.ps1 install-test -Installer robinos`
-- 완료 기준: 설치 테스트 모든 단계 통과. EFI는 `/efi`, `/.bootbackup` 없이 커널이 스냅샷에 들어가는지(`ls /.snapshots/*/snapshot/boot`)
+- 완료 기준: 설치 테스트 모든 단계 통과. EFI는 `/efi`, `/.bootbackup` 없이 커널이 스냅샷에 들어가는지(`ls /.snapshots/*/snapshot/boot`), `/etc/fstab`의 Btrfs 줄에 `subvolid=`가 없는지
 - 메모: 설치기는 post-install.sh를 chroot에서 돌려요. chroot에서 `systemd-detect-virt --chroot`, `localectl` 대체, `mountpoint /.snapshots`가 맞게 동작하는지 봐요.
 
 ### T-005 설치기 화면
