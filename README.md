@@ -86,9 +86,9 @@ bin/robinctl lab status web
 
 `robinctl doctor`는 데스크톱(Hyprland, Quickshell, RobinOS 셸)과 브랜딩 요소(SDDM 테마, 설치된 시스템의 GRUB 테마)도 확인해요.
 
-## 리눅스 기초 미션
+## 학습 미션
 
-`robinctl learn`은 터미널에서 직접 풀어 보는 미션 5개예요. 미션마다 윈도우에서는 어떻게 하는지와 비교해 설명하고, `robinctl learn check`가 결과를 확인해 진행도를 저장해요. 런처에서 "리눅스 기초 미션"을 골라도 열려요.
+`robinctl learn`은 터미널에서 직접 풀어 보는 미션 10개예요. 리눅스 기초 5개 다음에 네트워크 기초 5개가 이어져요. 미션마다 윈도우에서는 어떻게 하는지와 비교해 설명하고, `robinctl learn check`가 결과를 확인해 진행도를 저장해요. 런처에서 "학습 미션"을 골라도 열려요.
 
 | # | 미션 | 배우는 명령 |
 |---|---|---|
@@ -97,6 +97,11 @@ bin/robinctl lab status web
 | 3 | 복사, 이동, 삭제 | `cp`, `mv`, `rm` |
 | 4 | 실행 권한 주기 | `ls -l`, `chmod`, `./` |
 | 5 | 찾기와 파이프 | `grep`, `\|`, `wc`, `>` |
+| 6 | 내 IP 주소 보기 | `ip a` |
+| 7 | 이름으로 주소 찾기 | `getent hosts`, `/etc/hosts` |
+| 8 | 네트워크 도구 설치하기 | `robinctl profile network` (인터넷 필요) |
+| 9 | 포트 열고 확인하기 | `nc -l`, `ss -tln` |
+| 10 | 내 컴퓨터 스캔하기 | `nmap 127.0.0.1` (내 컴퓨터만) |
 
 실습 파일은 모두 `~/practice`에 만들고, 진행도는 `~/.local/state/robinos/learn`에 저장해요. 처음부터 다시 하려면 `robinctl learn reset`을 실행하세요.
 

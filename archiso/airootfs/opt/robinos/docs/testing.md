@@ -70,7 +70,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 `scripts/boot-test.sh`가 QEMU에서 ISO를 부팅하고, `scripts/boot-test-qmp.py`가 화면을 조작하면서 스크린샷을 찍어요.
 
 1. 부팅과 첫 로그인
-2. 환영 마법사의 모든 단계, 마지막에 열리는 리눅스 기초 미션 터미널
+2. 환영 마법사의 모든 단계, 마지막에 열리는 학습 미션 터미널
 3. 데스크톱
 4. 런처: 추천 목록, `term` 검색, 윈도우 이름 `notepad` 검색
 5. 설치기 첫 두 단계(테스트 VM에는 빈 64GB 디스크가 있어요)

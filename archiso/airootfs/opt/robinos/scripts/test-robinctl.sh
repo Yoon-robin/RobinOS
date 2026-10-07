@@ -95,8 +95,58 @@ in_home "echo 'root:x:0:0::/root:/bin/bash' > practice/bash-users.txt; echo 'mad
 check "5 fails with a made-up line" fail learn check 5
 in_home "grep bash /etc/passwd > practice/bash-users.txt"
 check "5 passes with grep's output" 0 learn check 5
-check "list after all five" 0 learn
-said "list says all done" "5/5"
+check "list after the first five" 0 learn
+said "list counts 5 of 10" "5/10"
+said "list shows the network group" "네트워크 기초"
+said "list points to mission 6" "robinctl learn show 6"
+
+# Network basics: answers written the way the missions ask
+in_home "mkdir -p practice/net"
+in_home "echo 10.255.255.254 > practice/net/my-ip.txt"
+check "6 fails with an address this machine doesn't have" fail learn check 6
+my_ip="$(ip -4 -o addr show | awk '{ split($4, a, "/"); print a[1] }' | grep -v '^127\.' | head -n 1)"
+[[ -n "${my_ip}" ]] || my_ip="127.0.0.1"
+if [[ "${my_ip}" != "127.0.0.1" ]]; then
+  in_home "echo 127.0.0.1 > practice/net/my-ip.txt"
+  check "6 fails with 127.0.0.1 when there is a real address" fail learn check 6
+  said "6 explains loopback" "자기 자신"
+fi
+in_home "echo ${my_ip} > practice/net/my-ip.txt"
+check "6 passes with this machine's address" 0 learn check 6
+
+in_home "echo 1.2.3.4 > practice/net/localhost.txt"
+check "7 fails with a wrong address" fail learn check 7
+in_home "getent hosts localhost > practice/net/localhost.txt || echo '127.0.0.1 localhost' > practice/net/localhost.txt"
+check "7 passes with getent's answer" 0 learn check 7
+
+NET_FAKE="${WORK}/netfake"
+mkdir -p "${NET_FAKE}"
+for cmd in nmap dig nc; do printf '#!/bin/sh\n' >"${NET_FAKE}/${cmd}"; done
+chmod 755 "${NET_FAKE}" "${NET_FAKE}"/*
+check "8 passes once nmap, dig and nc exist" 0 learner env PATH="${NET_FAKE}:/usr/bin:/bin" bash "${ROBINCTL}" learn check 8
+if ! command -v nmap >/dev/null && ! command -v dig >/dev/null; then
+  check "8 fails without the network profile" fail learn check 8
+  said "8 suggests the profile" "sudo robinctl profile network"
+fi
+
+in_home "echo 'LISTEN 0 1 127.0.0.1:8000 0.0.0.0:*' > practice/net/listen.txt"
+check "9 fails without port 9000" fail learn check 9
+in_home "echo 'LISTEN 0 1 127.0.0.1:9000 0.0.0.0:*' > practice/net/listen.txt"
+check "9 passes with ss's 9000 line" 0 learn check 9
+
+in_home "printf 'Nmap scan report for scanme.nmap.org (45.33.32.156)\n9000/tcp open  cslistener\n' > practice/net/scan.txt"
+check "10 fails when another host was scanned" fail learn check 10
+said "10 points to the ethics rules" "docs/ethics.md"
+in_home "printf 'Nmap scan report for localhost (127.0.0.1)\n22/tcp closed ssh\n' > practice/net/scan.txt"
+check "10 fails when 9000 isn't open" fail learn check 10
+in_home "printf '# Nmap 7.95 scan\nNmap scan report for localhost (127.0.0.1)\nPORT     STATE SERVICE\n9000/tcp open  cslistener\n' > practice/net/scan.txt"
+check "10 passes with 9000 open on 127.0.0.1" 0 learn check 10
+
+check "list after all ten" 0 learn
+said "list says all ten are done" "10/10"
+said "list points to the web lab" "robinctl lab info web"
+check "show 10" 0 learn show 10
+check "mission 11 doesn't exist" fail learn show 11
 check "reset" 0 learn reset
 check "check 1 still passes after reset (files stay)" 0 learn check 1
 

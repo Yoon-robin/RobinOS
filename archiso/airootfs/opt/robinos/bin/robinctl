@@ -47,7 +47,7 @@ robinctl - RobinOS 관리 도구
   robinctl packages core                기본 패키지 목록
   robinctl packages <프로필>            보안 실습 프로필의 패키지 목록
   robinctl packages optional            선택 패키지 목록
-  robinctl learn                        리눅스 기초 미션과 진행도
+  robinctl learn                        학습 미션(리눅스 기초, 네트워크 기초)과 진행도
   robinctl learn show [번호]            미션 설명 보기
   robinctl learn check [번호]           미션 결과 확인
   robinctl learn reset                  미션 진행도 초기화
@@ -676,13 +676,16 @@ packages_print() {
   esac
 }
 
-# ---- Learning missions: Linux basics ----
+# ---- Learning missions: Linux basics (1-5) and network basics (6-10) ----
 #
 # Missions are solved in a real terminal. `robinctl learn check N` looks at the
 # result (files under ~/practice) and records progress in the user's state dir.
+# The network missions work without the internet except mission 8, which
+# installs the network profile.
 
-readonly LEARN_COUNT=5
+readonly LEARN_COUNT=10
 LEARN_DIR="${HOME:-/root}/practice"
+LEARN_NET="${HOME:-/root}/practice/net"
 LEARN_STATE="${XDG_STATE_HOME:-${HOME:-/root}/.local/state}/robinos/learn"
 LEARN_FAILS=0
 
@@ -693,6 +696,19 @@ learn_title() {
     3) printf '복사, 이동, 삭제' ;;
     4) printf '실행 권한 주기' ;;
     5) printf '찾기와 파이프' ;;
+    6) printf '내 IP 주소 보기' ;;
+    7) printf '이름으로 주소 찾기' ;;
+    8) printf '네트워크 도구 설치하기' ;;
+    9) printf '포트 열고 확인하기' ;;
+    10) printf '내 컴퓨터 스캔하기' ;;
+  esac
+}
+
+# Mission groups, for the list
+learn_group() {
+  case "$1" in
+    1) printf '리눅스 기초' ;;
+    6) printf '네트워크 기초' ;;
   esac
 }
 
@@ -703,6 +719,11 @@ learn_tools() {
     3) printf 'cp mv rm' ;;
     4) printf 'ls -l chmod ./' ;;
     5) printf 'grep | wc >' ;;
+    6) printf 'ip a' ;;
+    7) printf 'getent hosts /etc/hosts' ;;
+    8) printf 'robinctl profile' ;;
+    9) printf 'nc -l ss -tln' ;;
+    10) printf 'nmap' ;;
   esac
 }
 
@@ -744,7 +765,7 @@ learn_mission_arg() {
     n="$(learn_next)"
     [[ -n "${n}" ]] || n="${LEARN_COUNT}"
   fi
-  [[ "${n}" =~ ^[1-5]$ ]] || die "미션 번호는 1부터 ${LEARN_COUNT}까지예요"
+  [[ "${n}" =~ ^([1-9]|10)$ ]] || die "미션 번호는 1부터 ${LEARN_COUNT}까지예요"
   printf '%s' "${n}"
 }
 
@@ -753,10 +774,13 @@ learn_list() {
   finished="$(learn_done_count)"
   next="$(learn_next)"
 
-  printf '%sRobinOS 학습 미션 · 리눅스 기초%s  %s%s/%s 완료%s\n\n' \
+  printf '%sRobinOS 학습 미션%s  %s%s/%s 완료%s\n' \
     "${C_BOLD}" "${C_RESET}" "${C_DIM}" "${finished}" "${LEARN_COUNT}" "${C_RESET}"
 
   for ((i = 1; i <= LEARN_COUNT; i++)); do
+    if [[ -n "$(learn_group "${i}")" ]]; then
+      printf '\n%s%s%s\n' "${C_BOLD}" "$(learn_group "${i}")" "${C_RESET}"
+    fi
     if learn_is_done "${i}"; then
       mark="${C_GREEN}✓${C_RESET}"
     elif [[ "${i}" == "${next}" ]]; then
@@ -764,7 +788,7 @@ learn_list() {
     else
       mark=" "
     fi
-    printf '  %s %s. %s  %s%s%s\n' "${mark}" "${i}" "$(learn_title "${i}")" \
+    printf '  %s %2s. %s  %s%s%s\n' "${mark}" "${i}" "$(learn_title "${i}")" \
       "${C_DIM}" "$(learn_tools "${i}")" "${C_RESET}"
   done
 
@@ -772,7 +796,7 @@ learn_list() {
   if [[ -n "${next}" ]]; then
     printf '미션 보기: %srobinctl learn show %s%s\n' "${C_BOLD}" "${next}" "${C_RESET}"
   else
-    printf '리눅스 기초 미션을 모두 끝냈어요. 다음은 웹 보안 랩이에요: %srobinctl lab info web%s\n' \
+    printf '학습 미션을 모두 끝냈어요. 다음은 웹 보안 랩이에요: %srobinctl lab info web%s\n' \
       "${C_BOLD}" "${C_RESET}"
   fi
 }
@@ -899,6 +923,105 @@ EOF
   grep bash /etc/passwd | wc -l       몇 줄인지 세기
   grep bash /etc/passwd > ~/practice/bash-users.txt
   cat ~/practice/bash-users.txt
+EOF
+}
+
+learn_show_6() {
+  cat <<'EOF'
+윈도우에서는 ipconfig로 IP 주소를 봐요.
+리눅스에서는 ip a(ip address)로 봐요. 장치마다 inet 뒤에 IPv4 주소가 나와요.
+lo는 컴퓨터 자기 자신(127.0.0.1)이고, enp...나 wlan... 같은 것이 실제 네트워크 장치예요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  실제 네트워크 장치의 IPv4 주소를 ~/practice/net/my-ip.txt에 적으세요.
+  주소만 적으면 돼요(예: 192.168.0.12). 네트워크에 연결돼 있지 않으면 127.0.0.1을 적어요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  ip a                    모든 장치와 주소
+  ip -4 addr              IPv4 주소만
+  ip -brief addr          장치마다 한 줄로 짧게
+  mkdir -p ~/practice/net
+  echo 192.168.0.12 > ~/practice/net/my-ip.txt    (내 주소로 바꿔서)
+EOF
+}
+
+learn_show_7() {
+  cat <<'EOF'
+윈도우에서는 nslookup이나 ping으로 이름이 어떤 주소인지 봐요.
+리눅스에서는 getent hosts 이름으로 봐요. 인터넷의 이름은 DNS 서버에 묻고,
+이 컴퓨터 안에서 정한 이름은 /etc/hosts 파일에 적혀 있어요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  localhost라는 이름이 어떤 주소로 풀리는지 ~/practice/net/localhost.txt에 저장하세요.
+  getent의 결과를 그대로 저장하면 돼요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  cat /etc/hosts                    이 컴퓨터가 직접 정한 이름
+  getent hosts localhost            localhost의 주소
+  getent hosts localhost > ~/practice/net/localhost.txt
+EOF
+}
+
+learn_show_8() {
+  cat <<'EOF'
+윈도우에서는 설치 파일을 내려받아 설치하지만, 리눅스에서는 패키지 관리자(pacman)로 설치해요.
+RobinOS는 보안 실습 도구를 배우는 단계별 묶음(프로필)으로 설치해요.
+이번에는 network 프로필을 설치해요. 인터넷 연결이 필요해요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  network 프로필을 설치하세요. nmap, dig, nc 명령이 생기면 돼요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  robinctl profile list                 프로필 목록
+  robinctl profile network --dry-run    설치할 패키지 미리 보기
+  sudo robinctl profile network         설치하기 (비밀번호를 물어요)
+  nmap --version                        설치됐는지 확인
+EOF
+}
+
+learn_show_9() {
+  cat <<'EOF'
+프로그램은 포트를 열고 연결을 기다려요(웹 서버는 보통 80번이나 443번).
+윈도우에서는 netstat -an으로 보고, 리눅스에서는 ss로 봐요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  터미널 두 개로 해요.
+  1. 첫 번째 터미널에서 nc -l 127.0.0.1 9000 을 실행해 9000번 포트를 열어 두세요.
+  2. 두 번째 터미널(Super+Return)에서 열린 포트 중 9000번 줄을 ~/practice/net/listen.txt에 저장하세요.
+  3. 첫 번째 터미널은 Ctrl+C로 닫아요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  nc -l 127.0.0.1 9000                  (첫 번째 터미널) 9000번 포트 열기
+  ss -tln                               열린 TCP 포트 (t: TCP, l: 기다리는 것, n: 숫자로)
+  ss -tln | grep 9000 > ~/practice/net/listen.txt
+EOF
+}
+
+learn_show_10() {
+  cat <<'EOF'
+포트 스캔은 어떤 포트가 열려 있는지 바깥에서 확인하는 거예요.
+허가 없이 남의 컴퓨터를 스캔하면 안 돼요. 연습은 내 컴퓨터(127.0.0.1)와 RobinOS 랩에서만 해요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  9000번 포트를 다시 열어 둔 채로 내 컴퓨터를 스캔하고, 결과를 ~/practice/net/scan.txt에 저장하세요.
+  결과에서 9000번이 open으로 나와야 해요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  nc -lk 127.0.0.1 9000                 (첫 번째 터미널) -k는 연결이 끝나도 계속 기다려요
+  nmap -p 1-10000 127.0.0.1             1번부터 10000번 포트 스캔
+  nmap -p 1-10000 127.0.0.1 -oN ~/practice/net/scan.txt
+
+  허가받은 곳에서만 쓰는 이유는 docs/ethics.md에 있어요.
 EOF
 }
 
@@ -1067,6 +1190,96 @@ learn_check_5() {
   fi
 }
 
+# The machine's IPv4 addresses, one per line
+learn_my_addresses() {
+  ip -4 -o addr show 2>/dev/null | awk '{ split($4, a, "/"); print a[1] }'
+}
+
+learn_check_6() {
+  local file="${LEARN_NET}/my-ip.txt" written
+  if [[ ! -s "${file}" ]]; then
+    learn_bad "~/practice/net/my-ip.txt가 없거나 비어 있어요" "mkdir -p ~/practice/net 후 echo 주소 > ~/practice/net/my-ip.txt"
+    return
+  fi
+  written="$(grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' "${file}" | head -n 1 || true)"
+  if [[ -z "${written}" ]]; then
+    learn_bad "IPv4 주소(숫자 네 개를 점으로 이은 것)가 없어요" "ip -4 addr에서 inet 뒤의 주소를 적어요 (/24 같은 뒷부분은 빼고)"
+    return
+  fi
+  if ! learn_my_addresses | grep -qxF "${written}"; then
+    learn_bad "${written}은(는) 이 컴퓨터의 주소가 아니에요" "ip -4 addr로 다시 확인해 보세요"
+  elif [[ "${written}" == 127.* ]] && learn_my_addresses | grep -qv '^127\.'; then
+    learn_bad "${written}은(는) 컴퓨터 자기 자신을 가리키는 주소예요" "ip a에서 lo가 아닌 장치의 inet을 찾아보세요"
+  else
+    learn_ok "${written}은(는) 이 컴퓨터의 주소예요"
+  fi
+}
+
+learn_check_7() {
+  local file="${LEARN_NET}/localhost.txt" address
+  if [[ ! -s "${file}" ]]; then
+    learn_bad "~/practice/net/localhost.txt가 없거나 비어 있어요" "getent hosts localhost > ~/practice/net/localhost.txt"
+    return
+  fi
+  local found="false"
+  while read -r address _; do
+    [[ -n "${address}" ]] && grep -qwF -- "${address}" "${file}" && found="true"
+  done < <(getent hosts localhost 2>/dev/null; printf '127.0.0.1\n::1\n')
+  if [[ "${found}" == "true" ]]; then
+    learn_ok "localhost의 주소를 찾았어요"
+  else
+    learn_bad "localhost의 주소가 아니에요" "getent hosts localhost의 결과를 그대로 저장해 보세요"
+  fi
+}
+
+learn_check_8() {
+  local cmd
+  for cmd in nmap dig nc; do
+    if have_cmd "${cmd}"; then
+      learn_ok "${cmd}이(가) 있어요"
+    else
+      learn_bad "${cmd}이(가) 없어요" "sudo robinctl profile network"
+    fi
+  done
+}
+
+learn_check_9() {
+  local file="${LEARN_NET}/listen.txt"
+  if [[ ! -s "${file}" ]]; then
+    learn_bad "~/practice/net/listen.txt가 없거나 비어 있어요" "nc -l 127.0.0.1 9000 을 켜 둔 채 ss -tln | grep 9000 > ~/practice/net/listen.txt"
+    return
+  fi
+  if grep -q 'LISTEN.*127\.0\.0\.1:9000\b' "${file}"; then
+    learn_ok "127.0.0.1의 9000번 포트가 열려 있었어요"
+  elif grep -q ':9000\b' "${file}"; then
+    learn_bad "9000번은 보이지만 127.0.0.1에서 기다리는 줄이 아니에요" "nc -l 127.0.0.1 9000 처럼 주소까지 적어 열어 보세요"
+  else
+    learn_bad "9000번 포트가 없어요" "첫 번째 터미널에서 nc -l 127.0.0.1 9000 이 실행 중일 때 저장해야 해요"
+  fi
+}
+
+learn_check_10() {
+  local file="${LEARN_NET}/scan.txt"
+  if [[ ! -s "${file}" ]]; then
+    learn_bad "~/practice/net/scan.txt가 없거나 비어 있어요" "nmap -p 1-10000 127.0.0.1 -oN ~/practice/net/scan.txt"
+    return
+  fi
+  if ! grep -q '^Nmap scan report for ' "${file}"; then
+    learn_bad "nmap 결과가 아니에요" "-oN 파일 이름으로 nmap 결과를 저장해요"
+    return
+  fi
+  if grep '^Nmap scan report for ' "${file}" | grep -qvE 'for (localhost|127\.0\.0\.1|::1)( |$)'; then
+    learn_bad "내 컴퓨터가 아닌 대상을 스캔했어요" "이번 미션은 127.0.0.1만 스캔해요. 다른 대상은 허가를 받아야 해요(docs/ethics.md)"
+    return
+  fi
+  learn_ok "내 컴퓨터(127.0.0.1)만 스캔했어요"
+  if grep -qE '^9000/tcp[[:space:]]+open' "${file}"; then
+    learn_ok "9000번 포트가 open으로 나왔어요"
+  else
+    learn_bad "9000번 포트가 open으로 나오지 않았어요" "nc -lk 127.0.0.1 9000 을 켜 둔 채 다시 스캔해 보세요"
+  fi
+}
+
 learn_check() {
   local n next
   n="$(learn_mission_arg "${1:-}")"
@@ -1084,11 +1297,14 @@ learn_check() {
 
   learn_mark_done "${n}"
   printf '%s%s통과했어요!%s %s/%s 완료\n' "${C_GREEN}" "${C_BOLD}" "${C_RESET}" "$(learn_done_count)" "${LEARN_COUNT}"
+  if [[ "${n}" == "5" ]]; then
+    printf '리눅스 기초를 끝냈어요. 6번부터는 네트워크 기초예요.\n'
+  fi
   next="$(learn_next)"
   if [[ -n "${next}" ]]; then
     printf '다음 미션: %srobinctl learn show %s%s\n' "${C_BOLD}" "${next}" "${C_RESET}"
   else
-    printf '리눅스 기초 미션을 모두 끝냈어요. 다음은 웹 보안 랩이에요: %srobinctl lab info web%s\n' \
+    printf '학습 미션을 모두 끝냈어요. 다음은 웹 보안 랩이에요: %srobinctl lab info web%s\n' \
       "${C_BOLD}" "${C_RESET}"
   fi
 }
