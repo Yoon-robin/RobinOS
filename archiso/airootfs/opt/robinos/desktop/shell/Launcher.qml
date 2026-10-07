@@ -60,6 +60,7 @@ PanelWindow {
     readonly property var labApps: ["org.wireshark.Wireshark", "ghidra", "virt-manager"]
 
     readonly property var commands: [
+        { key: "learn", group: "learn", icon: "graduation-cap", title: "리눅스 기초 미션", subtitle: "터미널에서 풀면 robinctl이 확인해요", words: "learn mission tutorial linux 학습 미션 공부 튜토리얼 리눅스 기초" },
         { key: "lab-start", group: "lab", icon: "flask", title: "웹 보안 랩 시작", subtitle: "Juice Shop · DVWA", badge: "로컬 전용", words: "lab web juice dvwa 랩 실습 docker" },
         { key: "lab-open", group: "lab", icon: "external", title: "Juice Shop 열기", subtitle: "http://localhost:3000", words: "lab juice shop browser 랩" },
         { key: "lab-stop", group: "lab", icon: "circle-stop", title: "웹 보안 랩 중지", subtitle: "robinctl lab stop web", mono: true, words: "lab stop 랩 중지" },
@@ -67,11 +68,31 @@ PanelWindow {
         { key: "update", group: "system", icon: "refresh", title: "시스템 업데이트", subtitle: "업데이트 전에 스냅샷을 자동으로 만들어요", words: "update upgrade pacman 업데이트" },
         { key: "doctor", group: "system", icon: "activity", title: "시스템 점검", subtitle: "robinctl doctor", mono: true, words: "doctor check 점검 진단" },
         { key: "wifi", group: "system", icon: "wifi", title: "Wi-Fi 연결", subtitle: "nmtui", mono: true, words: "wifi network 네트워크 인터넷" },
+        { key: "settings", group: "system", icon: "sliders", title: "빠른 설정", subtitle: "Super + S", words: "settings quick 설정 빠른 설정 테마 다크 모드" },
         { key: "lock", group: "power", icon: "lock", title: "화면 잠금", subtitle: "Super + L", words: "lock 잠금" },
         { key: "logout", group: "power", icon: "log-out", title: "로그아웃", subtitle: "", words: "logout exit 로그아웃" },
         { key: "reboot", group: "power", icon: "rotate-ccw", title: "다시 시작", subtitle: "", words: "reboot restart 재부팅 재시작" },
         { key: "poweroff", group: "power", icon: "power", title: "전원 끄기", subtitle: "", words: "poweroff shutdown 종료 전원" }
     ]
+
+    // Names people know from Windows, mapped to the app or command that does the
+    // same job here. Searching "메모장" or "notepad" finds the text editor and says so.
+    readonly property var windowsNames: [
+        { win: "메모장", words: "메모장 notepad 워드패드 wordpad", app: "org.gnome.TextEditor" },
+        { win: "작업 관리자", words: "작업 관리자 task manager taskmgr 리소스 모니터 resource monitor", app: "io.missioncenter.MissionCenter" },
+        { win: "파일 탐색기", words: "파일 탐색기 explorer 내 pc 내 컴퓨터 this pc my computer", app: "org.gnome.Nautilus" },
+        { win: "명령 프롬프트", words: "명령 프롬프트 command prompt cmd powershell 파워셸", app: "foot" },
+        { win: "Edge", words: "edge 엣지 internet explorer 인터넷 익스플로러 chrome 크롬", app: "firefox" },
+        { win: "사진 앱", words: "사진 photos 사진 보기 image viewer", app: "org.gnome.Loupe" },
+        { win: "반디집", words: "반디집 bandizip 알집 7-zip 7zip winrar 압축 풀기", app: "org.gnome.FileRoller" },
+        { win: "볼륨 믹서", words: "볼륨 믹서 volume mixer 소리 설정 sound settings", app: "org.pulseaudio.pavucontrol" },
+        { win: "Acrobat Reader", words: "acrobat 아크로뱃 adobe reader pdf 뷰어", app: "org.gnome.Evince" },
+        { win: "제어판", words: "제어판 control panel 윈도우 설정 windows settings", cmd: "settings" }
+    ]
+
+    function windowsHint(name) {
+        return "윈도우의 " + name + "에 해당해요";
+    }
 
     function appItem(entry) {
         return {
@@ -99,6 +120,10 @@ PanelWindow {
         return DesktopEntries.byId(id) ?? DesktopEntries.heuristicLookup(id);
     }
 
+    function command(key) {
+        return commands.find(c => c.key === key);
+    }
+
     function matches(text, query) {
         return (text ?? "").toLowerCase().indexOf(query) !== -1;
     }
@@ -114,9 +139,10 @@ PanelWindow {
                 if (entry)
                     out.push(appItem(entry));
             }
+            out.push(commandItem(command("learn")));
 
             out.push({ kind: "header", title: "보안 랩" });
-            out.push(commandItem(commands[0]));
+            out.push(commandItem(command("lab-start")));
             for (const id of labApps) {
                 const entry = lookup(id);
                 if (entry)
@@ -125,14 +151,47 @@ PanelWindow {
 
             out.push({ kind: "header", title: "명령" });
             for (const cmd of commands) {
-                if (cmd.group === "system" && cmd.key !== "wifi")
+                if (cmd.group === "system" && cmd.key !== "wifi" && cmd.key !== "settings")
                     out.push(commandItem(cmd));
             }
         } else {
+            // Windows names first. A single Latin letter would match too much.
+            const shownApps = {};
+            const shownCmds = {};
+            const known = [];
+            if (q.length >= 2 || /[^\x00-\x7f]/.test(q)) {
+                for (const name of windowsNames.filter(w => matches(w.words, q))) {
+                    let item = null;
+                    if (name.cmd) {
+                        if (!shownCmds[name.cmd]) {
+                            item = commandItem(command(name.cmd));
+                            shownCmds[name.cmd] = true;
+                        }
+                    } else {
+                        const entry = lookup(name.app);
+                        if (entry && !shownApps[entry.id]) {
+                            item = appItem(entry);
+                            shownApps[entry.id] = true;
+                        }
+                    }
+                    if (item) {
+                        item.subtitle = windowsHint(name.win);
+                        known.push(item);
+                    }
+                }
+            }
+            if (known.length > 0) {
+                out.push({ kind: "header", title: "윈도우에서 쓰던 이름" });
+                for (const item of known)
+                    out.push(item);
+            }
+
             const apps = ShellState.toArray(DesktopEntries.applications.values);
             const starts = [];
             const contains = [];
             for (const entry of apps) {
+                if (shownApps[entry.id])
+                    continue;
                 const name = entry.name.toLowerCase();
                 if (name.startsWith(q))
                     starts.push(entry);
@@ -147,7 +206,7 @@ PanelWindow {
                     out.push(appItem(entry));
             }
 
-            const cmds = commands.filter(c => matches(c.title, q) || matches(c.subtitle, q) || matches(c.words, q));
+            const cmds = commands.filter(c => !shownCmds[c.key] && (matches(c.title, q) || matches(c.subtitle, q) || matches(c.words, q)));
             if (cmds.length > 0) {
                 out.push({ kind: "header", title: "명령" });
                 for (const cmd of cmds)
@@ -195,6 +254,12 @@ PanelWindow {
         }
 
         switch (item.key) {
+        case "learn":
+            ShellState.openTerminal("robinctl learn");
+            break;
+        case "settings":
+            ShellState.toggleQuickSettings();
+            break;
         case "lab-start":
             ShellState.runInTerminal("robinctl lab start web && printf '\\nJuice Shop  http://localhost:3000\\nDVWA        http://localhost:8080\\n'");
             break;

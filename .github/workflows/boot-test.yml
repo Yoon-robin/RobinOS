@@ -85,6 +85,11 @@ jobs:
           if ! gh release view "${tag}" >/dev/null 2>&1; then
             gh release create "${tag}" --prerelease --title "Boot test screenshots" \
               --notes "Latest screenshots from the Boot-test RobinOS ISO workflow."
+          else
+            # Screenshot names change when the scenario does; drop the old set first
+            gh release view "${tag}" --json assets -q '.assets[].name' | while read -r old; do
+              gh release delete-asset "${tag}" "${old}" -y
+            done
           fi
           gh release upload "${tag}" "${shots[@]}" build/boot-test/serial.log --clobber
           {

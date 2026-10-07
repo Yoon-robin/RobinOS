@@ -317,6 +317,12 @@ Singleton {
                                  script + "; printf '\\n\\033[2mEnter를 누르면 창이 닫혀요\\033[0m'; read _"]);
     }
 
+    // Opens a regular terminal that runs a command first and then stays at the prompt.
+    // ROBINOS_NO_GREETING keeps ~/.bashrc from printing fastfetch over the output.
+    function openTerminal(script) {
+        Quickshell.execDetached(["foot", "env", "ROBINOS_NO_GREETING=1", "bash", "-c", script + "; exec bash"]);
+    }
+
     function openUrl(url) {
         Quickshell.execDetached(["xdg-open", url]);
     }

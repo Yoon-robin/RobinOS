@@ -4,8 +4,9 @@
 Usage: boot-test-qmp.py <qmp-socket> <output-dir> [speed]
 
 speed multiplies every wait (1 with KVM, about 4 with TCG). The scenario:
-boot -> desktop -> launcher -> quick settings -> terminal with a Windows
-command -> lock screen -> unlock with the live password.
+boot -> desktop -> launcher (search, Windows app name) -> quick settings ->
+terminal with a Windows command and the first learning mission -> lock
+screen -> unlock with the live password.
 """
 
 import json
@@ -104,6 +105,11 @@ def main():
     type_text(qmp, "term")
     wait(2)
     shot(qmp, "launcher-search")
+    for _ in "term":
+        keys(qmp, "backspace")
+    type_text(qmp, "notepad")
+    wait(2)
+    shot(qmp, "launcher-windows-name")
     keys(qmp, "esc")
     wait(2)
 
@@ -118,6 +124,10 @@ def main():
     type_text(qmp, "ipconfig\n")
     wait(2)
     shot(qmp, "terminal-windows-hint")
+    type_text(qmp, "clear\n")
+    type_text(qmp, "robinctl learn show 1\n")
+    wait(2)
+    shot(qmp, "terminal-learn")
 
     keys(qmp, "meta_l", "l")
     wait(5)
