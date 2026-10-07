@@ -411,6 +411,9 @@ def check_windows_kept(con, before):
         log("GRUB menu has Windows Boot Manager")
     else:
         log("GRUB menu has no Windows entry (os-prober did not detect the stand-in boot manager)")
+        # What os-prober sees from the installed system, for docs/tasks.md T-006
+        con.run("cat /mnt/etc/default/grub.d/*.cfg; arch-chroot /mnt os-prober; echo \"os-prober: $?\"",
+                check=False, timeout=300)
     log("Windows partitions, its EFI files and C: are unchanged")
 
 
@@ -642,6 +645,8 @@ def phase_rollback(con, qmp):
     if con.run("command -v cowsay", check=False) == 0:
         raise RuntimeError("cowsay is still installed after the rollback")
     log("rollback ok: cowsay is gone")
+    # The pre snapshot was taken mid-transaction; pacman must still work afterwards
+    con.run("test ! -e /var/lib/pacman/db.lck && pacman -Q pacman")
     con.run(f"findmnt -no FSROOT /; mount -o subvolid=5 {ROOT_PART} /mnt && ls /mnt && umount /mnt", check=False)
     con.run("robinctl snapshot list", check=False)
 
