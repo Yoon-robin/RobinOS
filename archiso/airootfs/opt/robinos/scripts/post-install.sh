@@ -112,9 +112,10 @@ else
   run localectl set-locale LANG=ko_KR.UTF-8
 fi
 
-for service in NetworkManager sddm bluetooth docker; do
-  if [[ "${DRY_RUN}" == "true" ]] || systemctl list-unit-files "${service}.service" >/dev/null 2>&1; then
-    run systemctl enable "${service}.service"
+# Docker (web profile) starts on first use through its socket, not at boot
+for unit in NetworkManager.service sddm.service bluetooth.service docker.socket; do
+  if [[ "${DRY_RUN}" == "true" ]] || systemctl list-unit-files "${unit}" >/dev/null 2>&1; then
+    run systemctl enable "${unit}"
   fi
 done
 

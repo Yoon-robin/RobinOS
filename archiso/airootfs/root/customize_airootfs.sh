@@ -31,6 +31,15 @@ systemctl enable sddm.service
 systemctl enable bluetooth.service
 systemctl set-default graphical.target
 
-if systemctl list-unit-files docker.service >/dev/null 2>&1; then
-  systemctl enable docker.service
+# Docker starts on first use (robinctl lab start, or the socket), not at boot:
+# docker.service at boot held the login screen back by about 5 s
+if systemctl list-unit-files docker.socket >/dev/null 2>&1; then
+  systemctl enable docker.socket
 fi
+
+# systemd's boot-time update jobs (ldconfig, the journal catalog) run when /usr
+# is newer than /etc/.updated and /var/.updated. A fresh live ISO has neither,
+# so every live boot spent about 14 s rebuilding the linker cache. Do them now.
+ldconfig
+journalctl --update-catalog
+touch /etc/.updated /var/.updated
