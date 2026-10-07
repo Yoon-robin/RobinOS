@@ -7,12 +7,20 @@ iso_application="RobinOS Security Learning Live ISO"
 iso_version="$(date +%Y.%m.%d)"
 install_dir="robinos"
 buildmodes=("iso")
-bootmodes=("bios.syslinux.mbr" "bios.syslinux.eltorito" "uefi-ia32.grub.esp" "uefi-x64.grub.esp")
+bootmodes=("bios.syslinux" "uefi.grub")
 arch="x86_64"
 pacman_conf="pacman.conf"
 airootfs_image_type="squashfs"
 airootfs_image_tool_options=("-comp" "xz" "-Xbcj" "x86" "-b" "1M" "-Xdict-size" "1M")
 file_permissions=(
+  # Kept from the releng profile this one replaces
+  ["/etc/shadow"]="0:0:400"
+  ["/root/.automated_script.sh"]="0:0:755"
+  ["/root/.gnupg"]="0:0:700"
+  ["/usr/local/bin/choose-mirror"]="0:0:755"
+  ["/usr/local/bin/Installation_guide"]="0:0:755"
+  ["/usr/local/bin/livecd-sound"]="0:0:755"
+  # RobinOS
   ["/root"]="0:0:750"
   ["/root/customize_airootfs.sh"]="0:0:755"
   ["/usr/local/bin/robinctl"]="0:0:755"

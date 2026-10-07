@@ -22,7 +22,7 @@ Copy-Item "$root\bin\robinctl" "$root\archiso\airootfs\usr\local\bin\robinctl" -
 Copy-Item "$root\installer\robin-install" "$root\archiso\airootfs\usr\local\bin\robin-install" -Force
 Copy-Item "$root\assets\*" "$root\archiso\airootfs\opt\robinos\assets" -Recurse -Force
 Copy-Item "$root\bin\*" "$root\archiso\airootfs\opt\robinos\bin" -Force
-Copy-Item "$root\config\*" "$root\archiso\airootfs\opt\robinos\config" -Force
+Copy-Item "$root\config\*" "$root\archiso\airootfs\opt\robinos\config" -Recurse -Force
 Copy-Item "$root\docs\*" "$root\archiso\airootfs\opt\robinos\docs" -Force
 Copy-Item "$root\packages\*.txt" "$root\archiso\airootfs\opt\robinos\packages" -Force
 Copy-Item "$root\labs\*" "$root\archiso\airootfs\opt\robinos\labs" -Recurse -Force

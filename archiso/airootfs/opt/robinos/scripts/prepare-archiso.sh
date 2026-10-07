@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-BASE_PROFILE="/usr/share/archiso/configs/releng"
+BASE_PROFILE="${ARCHISO_RELENG:-/usr/share/archiso/configs/releng}"
 OUT_PROFILE="${ROOT_DIR}/build/archiso-profile"
 
 [[ -d "${BASE_PROFILE}" ]] || {
@@ -15,6 +15,16 @@ rm -rf "${OUT_PROFILE}"
 mkdir -p "$(dirname "${OUT_PROFILE}")"
 cp -a "${BASE_PROFILE}" "${OUT_PROFILE}"
 cp -a "${ROOT_DIR}/archiso/." "${OUT_PROFILE}/"
+
+# RobinOS uses NetworkManager. releng enables systemd-networkd and iwd, which
+# would manage the same interfaces, so drop those enablement links.
+systemd_dir="${OUT_PROFILE}/airootfs/etc/systemd/system"
+rm -f \
+  "${systemd_dir}/multi-user.target.wants/systemd-networkd.service" \
+  "${systemd_dir}/multi-user.target.wants/iwd.service" \
+  "${systemd_dir}/network-online.target.wants/systemd-networkd-wait-online.service" \
+  "${systemd_dir}/sockets.target.wants/systemd-networkd.socket" \
+  "${systemd_dir}/dbus-org.freedesktop.network1.service"
 
 "${ROOT_DIR}/scripts/sync-archiso-files.sh"
 cp -a "${ROOT_DIR}/archiso/airootfs/." "${OUT_PROFILE}/airootfs/"
