@@ -23,7 +23,7 @@ SPEED = float(sys.argv[3]) if len(sys.argv) > 3 else 1.0
 LIVE_PASSWORD = "robin"
 
 # Characters we can type, mapped to QEMU key codes (qcode)
-QCODES = {" ": "spc", "\n": "ret", "-": "minus", ".": "dot", "/": "slash"}
+QCODES = {" ": "spc", "\n": "ret", "-": "minus", ".": "dot", "/": "slash", ";": "semicolon"}
 
 
 class Qmp:
