@@ -138,14 +138,18 @@ class Console:
         match = self.expect(rf"([\s\S]*?)__E{n}_(\d+)__", timeout)
         return int(match.group(2)), match.group(1).replace("\r", "")
 
-    def run_long(self, command, name, timeout, logs=()):
+    def run_long(self, command, name, timeout, logs=(), done_text=None, kill=None):
         """Runs a long command in the background of the guest shell, printing the
         tail of its output every 30 s so a hang shows where it stopped. On failure
-        or timeout prints the tail of the given log files too. Returns the status."""
+        or timeout prints the tail of the given log files too. Returns the status.
+
+        done_text: output that means the work is finished even if the process
+        lingers afterwards; it is then ended with `kill` and counts as success."""
         out, rc = f"/root/{name}.out", f"/root/{name}.rc"
         self.run(f"rm -f {rc}; ({command} > {out} 2>&1; echo $? > {rc}) &")
         deadline = time.time() + timeout * SPEED
         status = None
+        finished_seen = 0
         while time.time() < deadline:
             time.sleep(30)
             _, text = self.capture(f"cat {rc} 2>/dev/null; echo ---; tail -n 2 {out} | cut -c1-200")
@@ -155,6 +159,13 @@ class Console:
             if done.strip().isdigit():
                 status = int(done.strip())
                 break
+            if done_text and self.run(f"grep -qF '{done_text}' {out}", check=False) == 0:
+                finished_seen += 1
+                if finished_seen >= 2:  # give it a minute to exit on its own
+                    log(f"{name}: finished but still running, ending it")
+                    self.run(f"{kill}; sleep 3", check=False)
+                    status = 0
+                    break
         if status != 0:
             self.run(f"tail -n 60 {out}", check=False)
             for path in logs:
@@ -391,7 +402,10 @@ def install_with_archinstall(con):
     log("archinstall")
     status = con.run_long("archinstall --config /root/config.json --creds /root/creds.json --silent"
                           " --skip-ntp --skip-wkd --skip-version-check", "archinstall",
-                          timeout=2400, logs=("/var/log/archinstall/install.log",))
+                          timeout=2400, logs=("/var/log/archinstall/install.log",),
+                          # archinstall 4.5 prints this when done, then does not exit (seen 2026-10-08)
+                          done_text="You may reboot when ready",
+                          kill="pkill -TERM -f bin/archinstall; sleep 5; pkill -KILL -f bin/archinstall")
     if status != 0:
         raise RuntimeError(f"archinstall failed with {status}")
 

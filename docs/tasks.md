@@ -10,7 +10,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 작업 | 시작 | 대상 | 결과 위치 | 상태 |
 |---|---|---|---|---|
-| 설치 테스트 archinstall (WHPX) | 2026-10-08 00:51 | `e856cd9` | `build\install-test`, 로그 `build\loop-install-test.log` | 실행 중 |
+| 설치 테스트 archinstall (WHPX), 세 번째 | 2026-10-08 02:00 | `f4eef97` | `build\install-test`, 로그 `build\loop-install-test.log` | 실행 중 |
 
 ## 정기 점검
 
@@ -70,7 +70,10 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 목표: [install.md](install.md) 방법 A와 스냅샷/복구 기능(`robinctl snapshot setup/rollback`, `/.bootbackup` 훅)을 실제 설치본에서 검증
 - 명령: `scripts/wsl-build.ps1 install-test`
 - 완료 기준: `install-test.py`의 모든 단계 통과(스냅샷 생성, cowsay 설치 후 롤백하면 사라짐, 데스크톱 로그인). 통과하면 [design.md](design.md) v0.1 3번 상태를 "검증 완료"로, [roadmap.md](roadmap.md) 5단계도 갱신
-- 메모: archinstall 4.5 설정 형식은 소스(4.5 태그)를 보고 맞췄지만 실행해 본 적은 없어요. 처음 실패는 설정 형식 문제일 가능성이 커요(`/var/log/archinstall/install.log`).
+- 상태: 진행 중 (세 번째 실행 중)
+- 2026-10-08 첫 실행(`e856cd9`): archinstall이 60분 동안 출력 없이 끝나지 않아 시간 초과. 출력이 VM 안 파일로만 가서 원인을 못 봄 → 긴 단계는 30초마다 진행을 남기게 고침(`90035c1`)
+- 2026-10-08 두 번째 실행: 설정 형식은 문제없었고, 패키지 158개 내려받기(최대 8 MiB/s)와 initramfs까지 감. 그다음 키보드 배열을 설정하며 `systemd-run --pty localectl`에서 멈춤(터미널 없는 백그라운드라서). 설정의 `kb_layout`을 비워 건너뛰게 고침(`f4eef97`)
+- 메모: archinstall 4.5 설정 형식은 소스(4.5 태그)를 보고 맞췄어요. 실패하면 `/var/log/archinstall/install.log` 끝부분이 테스트 로그에 찍혀요.
 
 ### T-004 설치기 백엔드 검증
 - 목표: `installer/robin-install`이 디스크 전체 설치를 끝까지 해내는지
