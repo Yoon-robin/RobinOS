@@ -1,0 +1,97 @@
+name: Boot-test RobinOS ISO
+
+# Boots the ISO from a "Build RobinOS ISO" run in QEMU, drives the desktop
+# (launcher, quick settings, terminal, lock screen) and keeps screenshots.
+on:
+  workflow_run:
+    workflows:
+      - Build RobinOS ISO
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Build RobinOS ISO run ID to test (empty = latest successful build)"
+        required: false
+
+permissions:
+  contents: write # publish screenshots to the "boot-test" pre-release
+  actions: read   # download the ISO artifact from the build run
+
+jobs:
+  boot-test:
+    name: Boot ISO and capture the desktop
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download ISO
+        shell: bash
+        env:
+          RUN_ID: ${{ github.event.workflow_run.id || github.event.inputs.run_id }}
+        run: |
+          set -euo pipefail
+          if [ -z "${RUN_ID}" ]; then
+            RUN_ID="$(gh run list --workflow=build-iso.yml --status success --limit 1 --json databaseId -q '.[0].databaseId')"
+          fi
+          echo "Testing the ISO from run ${RUN_ID}"
+          gh run download "${RUN_ID}" -n robinos-iso -D out
+          ls -lh out/
+
+      - name: Install QEMU
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qemu-system-x86 libarchive-tools imagemagick
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          ls -l /dev/kvm || echo "KVM not available; QEMU will use TCG"
+
+      - name: Boot ISO and take screenshots
+        run: bash scripts/boot-test.sh
+
+      - name: Upload screenshots and serial log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: robinos-boot-test
+          path: |
+            build/boot-test/*.png
+            build/boot-test/serial.log
+          retention-days: 14
+          if-no-files-found: warn
+
+      # Release assets can be viewed in the browser, so the job summary can show the images.
+      - name: Publish screenshots
+        if: always()
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          shots=(build/boot-test/*.png)
+          [ "${#shots[@]}" -gt 0 ] || exit 0
+          tag=boot-test
+          if ! gh release view "${tag}" >/dev/null 2>&1; then
+            gh release create "${tag}" --prerelease --title "Boot test screenshots" \
+              --notes "Latest screenshots from the Boot-test RobinOS ISO workflow."
+          fi
+          gh release upload "${tag}" "${shots[@]}" build/boot-test/serial.log --clobber
+          {
+            echo "## Boot test screenshots"
+            for shot in "${shots[@]}"; do
+              name="$(basename "${shot}")"
+              echo "### ${name}"
+              echo "![${name}](https://github.com/${GH_REPO}/releases/download/${tag}/${name})"
+            done
+          } >>"${GITHUB_STEP_SUMMARY}"

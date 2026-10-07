@@ -117,6 +117,8 @@ GitHub Actions:
 
 - `Validate`: static project checks, Bash syntax checks, and desktop config checks (Lua, Hyprland, QML) in an Arch container
 - `Arch Package Check`: manual/weekly package-name check against Arch repositories
+- `Build RobinOS ISO`: builds the ISO in an Arch container on pushes to `main`
+- `Boot-test RobinOS ISO`: boots each new ISO in QEMU and publishes desktop screenshots (see [docs/ci.md](docs/ci.md))
 
 Local CI fallback:
 

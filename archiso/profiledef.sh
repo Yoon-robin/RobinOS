@@ -33,6 +33,7 @@ file_permissions=(
   ["/opt/robinos/scripts/install-desktop.sh"]="0:0:755"
   ["/opt/robinos/scripts/fetch-fonts.sh"]="0:0:755"
   ["/opt/robinos/scripts/check-desktop.sh"]="0:0:755"
+  ["/opt/robinos/scripts/boot-test.sh"]="0:0:755"
   ["/opt/robinos/desktop/bin/robinos-session"]="0:0:755"
   ["/opt/robinos/desktop/bin/robinos-screenshot"]="0:0:755"
   ["/usr/share/robinos/bin/robinos-session"]="0:0:755"

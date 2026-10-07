@@ -45,6 +45,14 @@ ls /usr/share/sddm/themes/robinos
 ls /usr/share/grub/themes/robinos
 ```
 
+## Automated Boot Test
+
+GitHub Actions boots every new ISO and takes desktop screenshots (`docs/ci.md`). On a Linux host you can run the same test:
+
+```bash
+scripts/boot-test.sh out/robinos-*.iso
+```
+
 ## Visual Checks
 
 - Boot menu says RobinOS Security Learning Live

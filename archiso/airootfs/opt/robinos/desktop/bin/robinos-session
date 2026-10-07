@@ -22,7 +22,15 @@ mkdir -p "${state_dir}"
 
 note() {
   printf '[robinos-session] %s\n' "$*" >>"${log}"
+  logger -t robinos-session -- "$*" 2>/dev/null || true
 }
+
+# The boot test (scripts/boot-test.sh) boots with "robinos.debug" so Hyprland and
+# shell output also reach the journal and the serial console.
+debug="false"
+if grep -qw robinos.debug /proc/cmdline 2>/dev/null; then
+  debug="true"
+fi
 
 # DRM drivers that only offer 2D framebuffers in common VMs.
 no_3d_driver() {
@@ -55,8 +63,13 @@ use_software() {
 run_hyprland() {
   local started
   started="$(date +%s)"
-  Hyprland >>"${log}" 2>&1
-  status=$?
+  if [[ "${debug}" == "true" ]]; then
+    Hyprland 2>&1 | tee -a "${log}" | systemd-cat -t hyprland
+    status=${PIPESTATUS[0]}
+  else
+    Hyprland >>"${log}" 2>&1
+    status=$?
+  fi
   ran_for=$(( $(date +%s) - started ))
   note "Hyprland exited with ${status} after ${ran_for}s (ROBINOS_RENDER=${ROBINOS_RENDER})"
 }

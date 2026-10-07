@@ -43,6 +43,50 @@ If GitHub Actions is unavailable because of billing, spending limits, or account
 powershell -ExecutionPolicy Bypass -File scripts/ci-local.ps1
 ```
 
+## Build RobinOS ISO
+
+Workflow:
+
+```text
+.github/workflows/build-iso.yml
+```
+
+Runs on:
+
+- Push to `main` that touches the ISO, desktop, packages, scripts or themes
+- Manual dispatch
+
+Builds the ISO with `scripts/build-iso.sh` inside a privileged `archlinux:latest` container, so no Arch VM is needed. The ISO and `SHA256SUMS` are kept as the `robinos-iso` artifact for 7 days. If the build fails, the mkarchiso log is uploaded as `robinos-build-log`.
+
+## Boot-test RobinOS ISO
+
+Workflow:
+
+```text
+.github/workflows/boot-test.yml
+```
+
+Runs on:
+
+- Every successful `Build RobinOS ISO` run
+- Manual dispatch, optionally with the build run ID to test
+
+`scripts/boot-test.sh` boots the ISO in QEMU (KVM when available) with a plain VGA display, like Hyper-V, so the desktop starts in software rendering. `scripts/boot-test-qmp.py` then opens the launcher, quick settings, a terminal with a Windows command, and the lock screen, and takes a screenshot at each step.
+
+Results:
+
+- Screenshots and `serial.log` as the `robinos-boot-test` artifact
+- The same screenshots on the `boot-test` pre-release, shown in the job summary
+- Key serial log lines (`robinos-session`, SDDM, failed units) in the job summary
+
+The test boots with `robinos.debug`, which makes `robinos-session` copy Hyprland and shell output into the journal so it shows up in `serial.log`.
+
+Run it locally on Linux after a build:
+
+```bash
+scripts/boot-test.sh out/robinos-*.iso
+```
+
 ## Arch Package Check
 
 Workflow:
