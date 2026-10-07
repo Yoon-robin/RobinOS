@@ -10,7 +10,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 작업 | 시작 | 대상 | 결과 위치 | 상태 |
 |---|---|---|---|---|
-| (없음) | | | | |
+| ISO 빌드 → 부팅 테스트 → 설치 테스트 archinstall (WHPX) | 2026-10-08 04:24 | `1295721` | `build\boot-test`, `build\install-test`, 로그 `build\loop-*.log`, 순서 결과 `build\loop-chain.log` | 실행 중 |
 
 ## 정기 점검
 
@@ -20,8 +20,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 |---|---|---|---|
 | 2026-10-08 | `7a000b9` | ISO 빌드(처음부터, 9분), 부팅 테스트(WHPX, 207초) | 통과. 스크린샷 18장 모두 정상 |
 | 2026-10-07 | `16d652f` | ISO 빌드, 부팅 테스트 | 빌드 성공. 부팅 테스트에서 마법사 키 반복 문제(고침), 런처 검색 미확인 (T-001) |
-
-설치 테스트는 아직 한 번도 돌리지 않았어요 (T-003).
 
 ## 품질 점검 기록
 
@@ -53,14 +51,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 ## 진행 중
 
-### T-002 VM 테스트를 WHPX로 빠르게
-- 상태: 진행 중 (부팅 테스트 부분 완료: 2026-10-08 WHPX로 207초에 18장 모두 정상. 설치 테스트 부분 실행 중)
-- 목표: 부팅 테스트와 설치 테스트를 Windows용 QEMU(`-accel whpx`)로 돌려서 TCG보다 몇 배 빠르게
-- 2026-10-08 한 것: QEMU 11.1을 `C:\Users\Blitz\RobinOS-tools\qemu`에 풂(7-Zip, 설치 파일은 실행 안 함). 시험 부팅에서 60초 만에 환영 마법사까지 뜸. `wsl-build.ps1 boot-test -Accel auto|whpx|tcg`, `scripts/vm-prepare.sh`, `boot-test-qmp.py`의 TCP QMP (`3f110df`)
-- 2026-10-08 설치 테스트 쪽: WHPX에서 OVMF(UEFI) 부팅과 `fat:C:/...` 공유 디스크가 되는 것 확인(시험 부팅에서 GRUB을 지나 세션 시작까지). `install-test.py`가 `ROBINOS_SERIAL`/`ROBINOS_QMP`로 TCP 주소를 받고, `wsl-build.ps1 install-test`에 `Invoke-WhpxInstallTest`를 넣음. 아직 실제로 돌려 보지 않음
-- 남은 일: 설치 테스트를 WHPX로 실제로 돌리기 (T-003과 같이)
-- 완료 기준: 부팅 테스트가 WHPX로 스크린샷 18장을 찍고, 설치 테스트도 WHPX로 첫 단계(라이브 부팅과 archinstall 시작)까지 감
-- 메모: WHPX와 OVMF(pflash)가 안 맞으면 설치 테스트만 TCG로 남기고 이유를 적어요.
+(없음)
 
 ## 할 일 (위에서부터)
 
@@ -111,6 +102,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 최근 것이 위에 있어요.
 
+- 2026-10-08 T-002 VM 테스트를 WHPX로: 부팅 테스트 207초(TCG의 몇 분의 일), 설치 테스트는 모든 단계 통과. WHPX가 게스트의 재부팅을 처리하지 못해서(`Unexpected VP exit code 4`) 설치 테스트는 부팅마다 QEMU를 새로 띄워요(`8c3293d`). QEMU 11.1은 `C:\Users\Blitz\RobinOS-tools\qemu`, OVMF는 QEMU에 들어 있는 edk2 파일을 써요
 - 2026-10-08 T-003 설치 테스트(archinstall 방식) 통과: archinstall 설치 → post-install → 스냅샷 설정(`@snapshots` fstab, 커널 백업 훅, grub-btrfs 항목) → GRUB 스냅샷 하위 메뉴 → cowsay 설치로 snap-pac 전후 스냅샷 → `robinctl snapshot rollback` → 다음 부팅에서 cowsay가 사라짐. 그 과정에서 테스트 쪽 문제 일곱 개를 고침(archinstall 무인 실행의 멈춤 두 가지, 한글 프롬프트와 UTF-8 조각, 캡처의 프롬프트, WHPX가 재부팅을 못 하는 문제 등, `90035c1`~`8c3293d`). 제품 쪽에서 찾은 것: 설치본 첫 로그인에서 SDDM이 사용자를 고르지 않고 세션이 Hyprland로 잡힘, 스냅샷 한글 설명이 GRUB에서 깨짐 → 고침(다음 설치 테스트에서 확인, T-012)
 - 2026-10-08 T-001 데스크톱 변경 부팅 테스트 확인: 마법사 5단계와 미션 터미널, `notepad` 검색, 미션 화면, 잠금 화면 모두 정상(WHPX 부팅 테스트, ISO `7a000b9`). 마법사 키 반복 무시(`12e6b2a`), ISO 빌드가 이전 빌드를 다시 포장하던 문제(`7a000b9`), WSL 동기화 CRLF 문제(`3f110df`)를 같이 고침
 - 2026-10-07 GitHub Actions를 수동 실행 전용으로, 문서 체계와 루프 절차 정리 (이번 커밋)
