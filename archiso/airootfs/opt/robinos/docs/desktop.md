@@ -67,6 +67,8 @@ QEMU에서 GPU 가속으로 테스트하려면 `scripts/run-vm.sh --gl`을 실�
 | `Super+T` | 창을 자유 배치와 타일 배치 사이에서 전환 |
 | `Super+F`, `Super+M` | 전체 화면, 최대화 |
 | `Super+1`...`Super+9` | 작업 공간 전환 (`Shift`를 같이 누르면 창을 옮겨요) |
+| `Super+방향키` | 그쪽 창으로 포커스 이동 (`Shift`를 같이 누르면 창을 옮겨요) |
+| `Super+마우스 휠` | 이웃 작업 공간으로 |
 | `Super+drag` | 창 이동(왼쪽 버튼), 크기 조절(오른쪽 버튼) |
 | `Print`, `Shift+Print` | 영역 또는 전체 화면을 찍어 `~/Pictures/Screenshots`와 클립보드에 저장 |
 | `Right Alt` | 한/영 전환 (`Right Ctrl`은 한자) |

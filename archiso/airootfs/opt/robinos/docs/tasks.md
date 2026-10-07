@@ -10,7 +10,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 작업 | 시작 | 대상 | 결과 위치 | 상태 |
 |---|---|---|---|---|
-| ISO 빌드 → 부팅 테스트 → 설치 테스트 windows → 설치 테스트 archinstall -Lab (WHPX) | 2026-10-08 START | `HEAD` | `build\boot-test`, `build\install-test`, 로그 `build\loop-*.log`, 순서 결과 `build\loop-chain.log` | 실행 중 |
+| ISO 빌드 → 부팅 테스트 → 설치 테스트 windows → 설치 테스트 archinstall -Lab (WHPX) | 2026-10-08 06:10 | `4fbb2c6` | `build\boot-test`, `build\install-test`, 로그 `build\loop-*.log`, 순서 결과 `build\loop-chain.log` | 실행 중 |
 
 ## 정기 점검
 
@@ -28,7 +28,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 | 영역 | 마지막으로 본 날 | 메모 |
 |---|---|---|
 | 코드 검토 | 2026-10-08 | `robin-install`(fstab의 `subvolid=`), `robinctl`(스냅샷 부팅 상태의 되돌리기, 랩 권한), `post-install.sh`(영어 출력), `Installer.qml`, `ShellState.qml`, `Launcher.qml`(열 때 hover 선택). 셸 QML의 나머지(QuickSettings, Welcome, Dock, Bar)는 아직 |
-| 문서와 코드 맞추기 | 2026-10-07 | 문서 체계 정리 때 전체를 읽음. 명령과 경로까지 하나하나 대조하지는 않음 |
+| 문서와 코드 맞추기 | 2026-10-08 | 문서에 나오는 `robinctl` 명령, `scripts/` 경로, `wsl-build.ps1` 작업·옵션이 모두 실제와 같음. 단축키 표는 `robinos.lua`와 같고, 빠진 `Super+방향키`·`Super+휠`을 더함 |
 | 보안과 윤리 | 2026-10-08 | 웹 랩: docker 그룹 대신 sudo, 재부팅 때 자동 시작 끔, 기준을 ethics.md에 적음. 이미지 버전 고정과 DVWA 이미지 교체는 T-014 |
 | 접근성 | 2026-10-08 | 버튼과 선택지가 마우스 전용이던 것(T-015), 보조 글자 대비(subtle 3.9:1·2.6:1 → muted). 화면 읽기 프로그램(Orca)은 아직 |
 | 성능 | 아직 | 메모: `ShellState.qml`이 한/영 상태를 보려고 `fcitx5-remote`를 1초마다 새로 실행해요 |
