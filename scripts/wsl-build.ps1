@@ -61,6 +61,9 @@ function Invoke-WhpxBootTest {
     $base, $label, $isoName = (($prepared | Select-Object -Last 1) -split " ")
     Write-Host "ISO: $isoName (WHPX)"
 
+    # A blank disk, so the installer's disk step has something to show
+    & (Join-Path (Split-Path -Parent $Qemu) "qemu-img.exe") create -q -f qcow2 "$out\disk.qcow2" 64G
+
     $port = 47011
     $kernelArgs = "archisobasedir=$base archisolabel=$label console=tty0 console=ttyS0,115200 systemd.journald.forward_to_console=1 robinos.debug"
     # Start-Process joins the arguments with spaces, so quote the ones that have them
@@ -70,6 +73,7 @@ function Invoke-WhpxBootTest {
         "-initrd", "`"$vm\$base\boot\x86_64\initramfs-linux.img`"",
         "-append", "`"$kernelArgs`"",
         "-cdrom", "`"$vm\robinos.iso`"",
+        "-drive", "`"file=$out\disk.qcow2,format=qcow2,if=virtio`"",
         "-vga", "none", "-device", "VGA,edid=on,xres=1600,yres=900", "-display", "none",
         "-netdev", "user,id=net0", "-device", "virtio-net-pci,netdev=net0",
         "-qmp", "tcp:127.0.0.1:$port,server,nowait",

@@ -102,6 +102,14 @@ Enter는 다음, Esc는 건너뛰기예요. 끝내거나 건너뛰면 `~/.local/
 qs ipc -p /usr/share/robinos/shell call shell welcome
 ```
 
+## 설치기 (라이브 세션)
+
+라이브 ISO에서는 런처 추천 맨 위에 "RobinOS 설치"가 나와요(`desktop/shell/Installer.qml`). 일반 창이라 설치하는 동안 다른 앱을 써도 돼요. 단계는 준비 확인, 설치 위치(디스크와 "윈도우 옆에 설치"/"디스크 전체 사용"), 사용자, 최종 확인, 진행 순서예요. 실제 설치는 `installer/robin-install`이 하고, 화면은 그 출력의 `@@ <퍼센트> <메시지>` 줄로 진행률을 보여 줘요. 설치된 시스템에서는 나오지 않아요.
+
+```bash
+qs ipc -p /usr/share/robinos/shell call shell installer
+```
+
 ## 윈도우 이름으로 앱 찾기
 
 런처에서 윈도우 앱 이름으로 검색해도 같은 일을 하는 앱이 나와요. 결과는 "윈도우에서 쓰던 이름" 아래에 "윈도우의 메모장에 해당해요"처럼 설명과 함께 보여요.

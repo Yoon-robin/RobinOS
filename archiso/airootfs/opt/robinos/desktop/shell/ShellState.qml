@@ -116,6 +116,24 @@ Singleton {
         quickSettingsOpen = true;
     }
 
+    // ---- Installer (Installer.qml), only offered in the live session ----
+
+    property bool installerOpen: false
+    // archiso mounts the boot medium under /run/archiso
+    property bool isLive: false
+
+    Process {
+        command: ["test", "-d", "/run/archiso"]
+        running: true
+        onExited: (exitCode, exitStatus) => root.isLive = exitCode === 0
+    }
+
+    function openInstaller() {
+        launcherOpen = false;
+        quickSettingsOpen = false;
+        installerOpen = true;
+    }
+
     // ---- First-login welcome wizard (Welcome.qml) ----
 
     property bool welcomeOpen: false

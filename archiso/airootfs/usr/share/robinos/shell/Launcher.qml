@@ -69,6 +69,7 @@ PanelWindow {
         { key: "doctor", group: "system", icon: "activity", title: "시스템 점검", subtitle: "robinctl doctor", mono: true, words: "doctor check 점검 진단" },
         { key: "wifi", group: "system", icon: "wifi", title: "Wi-Fi 연결", subtitle: "nmtui", mono: true, words: "wifi network 네트워크 인터넷" },
         { key: "settings", group: "system", icon: "sliders", title: "빠른 설정", subtitle: "Super + S", words: "settings quick 설정 빠른 설정 테마 다크 모드" },
+        { key: "install", group: "live", icon: "download", title: "RobinOS 설치", subtitle: "이 컴퓨터에 설치해요", words: "install installer setup 설치 설치기 하드 디스크 윈도우 옆" },
         { key: "welcome", group: "system", icon: "sparkles", title: "환영 마법사", subtitle: "테마, 한/영 키, 단축키 안내", words: "welcome tour setup 환영 마법사 처음 시작 안내 투어 한영" },
         { key: "lock", group: "power", icon: "lock", title: "화면 잠금", subtitle: "Super + L", words: "lock 잠금" },
         { key: "logout", group: "power", icon: "log-out", title: "로그아웃", subtitle: "", words: "logout exit 로그아웃" },
@@ -135,6 +136,8 @@ PanelWindow {
 
         if (q === "") {
             out.push({ kind: "header", title: "추천" });
+            if (ShellState.isLive)
+                out.push(commandItem(command("install")));
             for (const id of pinnedApps) {
                 const entry = lookup(id);
                 if (entry)
@@ -205,7 +208,8 @@ PanelWindow {
                     out.push(appItem(entry));
             }
 
-            const cmds = commands.filter(c => !shownCmds[c.key] && (matches(c.title, q) || matches(c.subtitle, q) || matches(c.words, q)));
+            const cmds = commands.filter(c => !shownCmds[c.key] && (c.group !== "live" || ShellState.isLive)
+                                         && (matches(c.title, q) || matches(c.subtitle, q) || matches(c.words, q)));
             if (cmds.length > 0) {
                 out.push({ kind: "header", title: "명령" });
                 for (const cmd of cmds)
@@ -261,6 +265,9 @@ PanelWindow {
             break;
         case "welcome":
             ShellState.openWelcome();
+            break;
+        case "install":
+            ShellState.openInstaller();
             break;
         case "lab-start":
             ShellState.runInTerminal("robinctl lab start web && printf '\\nJuice Shop  http://localhost:3000\\nDVWA        http://localhost:8080\\n'");

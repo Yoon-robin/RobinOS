@@ -37,6 +37,8 @@ ShellRoot {
 
     Welcome {}
 
+    Installer {}
+
     // Bound in robinos.lua with hl.dsp.global("robinos:<name>")
     GlobalShortcut {
         appid: "robinos"
@@ -77,6 +79,10 @@ ShellRoot {
 
         function welcome(): void {
             ShellState.openWelcome();
+        }
+
+        function installer(): void {
+            ShellState.openInstaller();
         }
     }
 }

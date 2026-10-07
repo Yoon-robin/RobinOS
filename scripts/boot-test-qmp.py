@@ -5,7 +5,7 @@ Usage: boot-test-qmp.py <qmp-socket | tcp:host:port> <output-dir> [speed]
 
 speed multiplies every wait (1 with KVM, about 4 with TCG). The scenario:
 boot -> welcome wizard (every step, then its missions terminal) -> desktop ->
-launcher (search, Windows app name) -> quick settings ->
+launcher (search, Windows app name) -> installer (first two steps) -> quick settings ->
 terminal with a Windows command and the first learning mission -> lock
 screen -> unlock with the live password.
 """
@@ -132,6 +132,19 @@ def main():
     wait(2)
     shot(qmp, "launcher-windows-name")
     keys(qmp, "esc")
+    wait(2)
+
+    # Installer: first in the launcher's list in the live session. The VM has a
+    # blank disk, so the disk step shows one disk card. Nothing gets installed.
+    keys(qmp, "meta_l", "spc")
+    wait(3)
+    keys(qmp, "ret")
+    wait(4)
+    shot(qmp, "installer")
+    keys(qmp, "ret")
+    wait(4)
+    shot(qmp, "installer-disk")
+    keys(qmp, "alt", "f4")
     wait(2)
 
     keys(qmp, "meta_l", "s")

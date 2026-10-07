@@ -54,12 +54,16 @@ if [[ -w /dev/kvm ]]; then
 fi
 printf 'Acceleration: %s\n' "${accel[1]}"
 
+# A blank disk, so the installer's disk step has something to show
+qemu-img create -q -f qcow2 "${OUT_DIR}/disk.qcow2" 64G
+
 qemu-system-x86_64 \
   -machine q35 "${accel[@]}" -m 6144 -smp 4 \
   -kernel "${OUT_DIR}/${base_dir}/boot/x86_64/vmlinuz-linux" \
   -initrd "${OUT_DIR}/${base_dir}/boot/x86_64/initramfs-linux.img" \
   -append "archisobasedir=${base_dir} archisolabel=${label} console=tty0 console=ttyS0,115200 systemd.journald.forward_to_console=1 robinos.debug" \
   -cdrom "${ISO}" \
+  -drive "file=${OUT_DIR}/disk.qcow2,format=qcow2,if=virtio" \
   -vga none -device VGA,edid=on,xres=1600,yres=900 \
   -display none \
   -netdev user,id=net0 -device virtio-net-pci,netdev=net0 \

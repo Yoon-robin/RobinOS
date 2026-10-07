@@ -79,6 +79,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 메모: 설치기는 post-install.sh를 chroot에서 돌려요. chroot에서 `systemd-detect-virt --chroot`, `localectl` 대체, `mountpoint /.snapshots`가 맞게 동작하는지 봐요.
 
 ### T-005 설치기 화면
+- 상태: 진행 중. 2026-10-08 첫 구현(`desktop/shell/Installer.qml`, `InputField.qml`, 런처 "RobinOS 설치", `qs ipc call shell installer`), qmllint 통과. 부팅 테스트에 설치기 1·2단계 스크린샷을 넣었고(테스트 VM에 빈 64GB 디스크), 다음 ISO 빌드에서 확인해요. 독에 넣는 건 아직
 - 목표: 라이브 세션에서 마우스로 설치할 수 있는 그래픽 설치기
 - 설계: `desktop/shell/Installer.qml` (Quickshell `FloatingWindow`, 일반 창). 단계: 환영(인터넷, 전원, 백업 안내) → 설치 위치(`robin-install disks` JSON, 디스크 카드, "디스크 전체 사용"/"윈도우 옆에 설치", 빈 공간이 없으면 윈도우의 "볼륨 축소" 안내) → 사용자(이름, 비밀번호 두 번, 컴퓨터 이름) → 확인(지워지는 디스크 경고) → 진행(`sudo -n robin-install run -`에 계획 JSON을 표준 입력으로, `@@` 줄로 진행률, 로그 보기) → 완료(다시 시작)
 - 진입점: 라이브 세션(`/run/archiso`가 있을 때)에서만 런처 추천 맨 위와 독에 "RobinOS 설치"
