@@ -12,6 +12,7 @@
 *.colorscheme text eol=lf
 *.qml text eol=lf
 *.js text eol=lf
+*.py text eol=lf
 *.lua text eol=lf
 *.ini text eol=lf
 *.txt text eol=lf

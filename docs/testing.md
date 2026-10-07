@@ -78,6 +78,32 @@ ls /usr/share/sddm/themes/robinos
 ls /usr/share/grub/themes/robinos
 ```
 
+## 자동 부팅 테스트
+
+`scripts/boot-test.sh`가 QEMU에서 ISO를 부팅하고 환영 마법사, 런처, 빠른 설정, 터미널, 잠금 화면을 차례로 열면서 스크린샷을 찍어요. 윈도우 PC에서는 WSL 2로 돌려요([build-environment.md](build-environment.md)).
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 boot-test
+```
+
+스크린샷과 `serial.log`는 `build\boot-test`에 생겨요.
+
+## 설치 테스트
+
+`scripts/install-test.sh`는 [install.md](install.md)의 설치 과정을 VM에서 처음부터 끝까지 돌려요.
+
+1. 라이브 ISO에서 archinstall로 빈 40GB 디스크에 설치해요(기본 Btrfs 구성, GRUB, EFI는 `/boot`).
+2. 설치한 시스템에서 `scripts/post-install.sh --yes`를 실행해요. 이때 쓰는 RobinOS 파일은 ISO 안의 사본이 아니라 지금 저장소예요.
+3. 다시 부팅해서 GRUB 메뉴와 스냅샷 하위 메뉴를 찍고, `pacman -S cowsay`로 snap-pac 스냅샷이 생기는지 봐요.
+4. 설치 전 스냅샷으로 `robinctl snapshot rollback` 하고 재부팅해서 cowsay가 사라졌는지 확인해요.
+5. SDDM에서 로그인해 데스크톱을 찍어요.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test
+```
+
+패키지를 내려받아 설치하니까 인터넷이 필요하고, 소프트웨어 에뮬레이션에서는 한 시간 넘게 걸릴 수 있어요. 결과는 `build\install-test`에 생겨요.
+
 ## 화면 확인
 
 확인할 것:
