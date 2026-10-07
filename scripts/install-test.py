@@ -36,6 +36,7 @@ OUT = sys.argv[2]
 SPEED = float(sys.argv[3]) if len(sys.argv) > 3 else 1.0
 # "archinstall" (docs/install.md, option A) or "robinos" (installer/robin-install)
 INSTALLER = os.environ.get("ROBINOS_INSTALLER", "archinstall")
+TEST_LAB = os.environ.get("ROBINOS_TEST_LAB") == "1"
 # robin-install next to Windows puts RobinOS on the fourth partition
 ROOT_PART = "/dev/vda4" if INSTALLER == "windows" else "/dev/vda2"
 PASSWORD = "robin"  # root and the robin user, like the live ISO
@@ -656,8 +657,39 @@ def phase_rollback(con, qmp):
     shot(qmp, "desktop-after-wizard")
     con.run("journalctl -b --no-pager -o cat -t robinos-session | tail -n 20", check=False)
 
+    if TEST_LAB:
+        check_web_lab(con)
+
     con.send("poweroff\n")
     con.wait_closed(180)
+
+
+# ---- The web lab for real (opt-in: ROBINOS_TEST_LAB=1, wsl-build.ps1 install-test -Lab) ----
+
+def check_web_lab(con):
+    """robinctl lab start web on the installed system (T-014): the web profile
+    brings Docker, the pinned images start, both apps answer on 127.0.0.1 only
+    and the shell's lab status check (docker-proxy) sees them."""
+    log("web lab")
+    wait_network(con)
+    status = con.run_long("ROBINOS_ASSUME_YES=true robinctl profile web", "profile-web", timeout=1800)
+    if status != 0:
+        raise RuntimeError(f"robinctl profile web failed with {status}")
+    status = con.run_long("robinctl lab start web", "lab-start", timeout=2400)
+    if status != 0:
+        raise RuntimeError(f"robinctl lab start web failed with {status}")
+    # Juice Shop answers 200; DVWA answers before its database is set up too
+    con.run("for i in $(seq 90); do curl -sf -o /dev/null http://127.0.0.1:3000/"
+            " && curl -s -o /dev/null http://127.0.0.1:8080/ && break; sleep 5; done;"
+            " curl -sf -o /dev/null http://127.0.0.1:3000/ && curl -s -o /dev/null http://127.0.0.1:8080/", timeout=600)
+    con.run("curl -s -o /dev/null -w 'DVWA %{http_code} %{redirect_url}\\n' http://127.0.0.1:8080/", check=False)
+    con.run("ss -tln | grep -E ':(3000|8080) '")
+    con.run("! ss -tln | grep -E ':(3000|8080) ' | grep -v '127\\.0\\.0\\.1:'")
+    # desktop/shell/ShellState.qml shows the lab as running with this check
+    con.run("pgrep -f 'docker-proxy .*-host-port (3000|8080)( |$)' > /dev/null")
+    con.run("robinctl lab stop web", timeout=300)
+    con.run("! pgrep -f 'docker-proxy .*-host-port (3000|8080)( |$)' > /dev/null")
+    log("web lab ok: Juice Shop and DVWA answered on 127.0.0.1 and stopped")
 
 
 def main():

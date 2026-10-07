@@ -33,6 +33,8 @@ param(
     [string]$Qemu = "$env:USERPROFILE\RobinOS-tools\qemu\qemu-system-x86_64.exe",
     # install-test (WHPX): reuse the installed disk a failed run left behind
     [switch]$ReuseDisk,
+    # install-test: also start the web lab on the installed system (downloads its images)
+    [switch]$Lab,
     [string]$Distro = "archlinux"
 )
 
@@ -134,6 +136,7 @@ function Invoke-WhpxInstallTest {
     }
 
     $env:ROBINOS_INSTALLER = $Installer
+    if ($Lab) { $env:ROBINOS_TEST_LAB = "1" }
     $env:ROBINOS_SERIAL = "tcp:127.0.0.1:47021"
     $env:ROBINOS_QMP = "tcp:127.0.0.1:47022"
     $shareFat = (Join-Path $out "share") -replace "\\", "/"
@@ -174,7 +177,7 @@ function Invoke-WhpxInstallTest {
         if (-not $proc.WaitForExit(60000)) { $proc.Kill() }
         if ($status -ne 0) { $failed = $true; break }
     }
-    Remove-Item Env:ROBINOS_SERIAL, Env:ROBINOS_QMP, Env:ROBINOS_INSTALLER -ErrorAction SilentlyContinue
+    Remove-Item Env:ROBINOS_SERIAL, Env:ROBINOS_QMP, Env:ROBINOS_INSTALLER, Env:ROBINOS_TEST_LAB -ErrorAction SilentlyContinue
     Write-Host "`n스크린샷:"
     Get-ChildItem "$out\*.png" | ForEach-Object { "  $($_.Name)" }
     if ($failed) {
