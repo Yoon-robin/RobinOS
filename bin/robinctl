@@ -994,7 +994,8 @@ learn_check_3() {
   fi
 
   if [[ -f "${backup}" && -f "${memo}" ]]; then
-    if cmp -s "${backup}" "${memo}"; then
+    # Not cmp: it comes with diffutils, which Arch's base doesn't include
+    if [[ "$(<"${backup}")" == "$(<"${memo}")" ]]; then
       learn_ok "복사본과 memo.txt 내용이 같아요"
     else
       learn_bad "복사본과 memo.txt 내용이 달라요" "hello.txt를 복사한 뒤에 이름을 바꿨는지 확인해 보세요"

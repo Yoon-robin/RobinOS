@@ -50,6 +50,8 @@ evince
 file-roller
 gnome-calculator
 mission-center
+# The terminal hint for systeminfo (desktop/bash/robinos-hints.sh)
+fastfetch
 pavucontrol
 flatpak
 ntfs-3g
