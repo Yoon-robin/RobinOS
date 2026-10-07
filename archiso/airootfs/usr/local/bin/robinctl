@@ -478,6 +478,9 @@ snapshot_setup() {
       setup_step sed -i -E "s|^#?GRUB_BTRFS_GRUB_DIRNAME=.*|GRUB_BTRFS_GRUB_DIRNAME=\"${grub}\"|" \
         /etc/default/grub-btrfs/config
     fi
+    # Without this grub-btrfs names the submenu after os-release ("Arch Linux snapshots")
+    setup_step sed -i -E 's|^#?GRUB_BTRFS_SUBMENUNAME=.*|GRUB_BTRFS_SUBMENUNAME="RobinOS snapshots"|' \
+      /etc/default/grub-btrfs/config
     setup_enable grub-btrfsd.service
 
     # Snapshots boot read-only; this initramfs hook gives them a writable
