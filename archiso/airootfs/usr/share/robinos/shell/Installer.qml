@@ -401,6 +401,7 @@ FloatingWindow {
                                     spacing: 2
 
                                     Text {
+                                        Layout.fillWidth: true
                                         text: root.diskLabel(diskCard.modelData)
                                         color: Theme.fg
                                         font.family: Theme.font
@@ -409,6 +410,7 @@ FloatingWindow {
                                     }
 
                                     Text {
+                                        Layout.fillWidth: true
                                         text: diskCard.modelData.path
                                               + (diskCard.modelData.windows ? " · 윈도우 있음" : "")
                                               + (diskCard.modelData.free > 0 ? " · 빈 공간 " + root.gb(diskCard.modelData.free) : "")

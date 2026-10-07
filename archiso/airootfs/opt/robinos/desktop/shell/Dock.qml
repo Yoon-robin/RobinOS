@@ -24,12 +24,18 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.namespace: "robinos-dock"
 
-    readonly property var pinned: [
+    // Windows the shell itself opens (the installer) carry Quickshell's app id
+    readonly property var shellAppIds: ["org.quickshell", "quickshell"]
+
+    // In the live session the installer comes first; it opens through the shell
+    readonly property var pinned: (ShellState.isLive ? [
+        { key: "installer", icon: "download", label: "RobinOS 설치", appIds: shellAppIds, command: null }
+    ] : []).concat([
         { icon: "terminal", label: "터미널", appIds: ["foot", "footclient", "robinos-float"], command: ["foot"] },
         { icon: "folder", label: "파일", appIds: ["org.gnome.Nautilus"], command: ["nautilus", "--new-window"] },
         { icon: "globe", label: "브라우저", appIds: ["firefox"], command: ["firefox"] },
         { icon: "network", label: "Wireshark", appIds: ["org.wireshark.Wireshark", "wireshark"], command: ["wireshark"] }
-    ]
+    ])
 
     readonly property var toplevels: ToplevelManager.toplevels.values
 
@@ -179,7 +185,12 @@ PanelWindow {
                     label: modelData.label
                     running: dock.windowsFor(modelData.appIds).length > 0
                     focused: dock.isFocused(modelData.appIds)
-                    onClicked: dock.activateOrLaunch(modelData.appIds, modelData.command)
+                    onClicked: {
+                        if (modelData.key === "installer" && dock.windowsFor(modelData.appIds).length === 0)
+                            ShellState.openInstaller();
+                        else
+                            dock.activateOrLaunch(modelData.appIds, modelData.command);
+                    }
                     onHoveredChanged: dock.showTip(pinnedItem, hovered ? label : "")
                 }
             }

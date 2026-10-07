@@ -45,7 +45,8 @@ PanelWindow {
         const top = ToplevelManager.activeToplevel;
         if (!top || !top.activated)
             return "";
-        if (top.appId === "")
+        // The shell's own windows (the installer) would read "Quickshell"
+        if (top.appId === "" || top.appId === "org.quickshell")
             return top.title;
         DesktopEntries.applications.values; // re-evaluate after the background scan
         const entry = DesktopEntries.heuristicLookup(top.appId);
