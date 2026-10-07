@@ -45,6 +45,8 @@ powershell -ExecutionPolicy Bypass -File scripts/sync-archiso-files.ps1         
 ## 이 환경에서 자주 걸리는 것
 
 - **WSL 작업은 한 번에 하나**: `build`, `boot-test`, `install-test`는 WSL 클론(`/root/RobinOS`)을 HEAD로 리셋해요. 다른 작업이 돌고 있으면 스크립트가 거부해요. 먼저 커밋해야 변경이 넘어가요.
+- **긴 작업은 `&`로 띄우지 않아요**: 명령이 끝난 것처럼 보여도 PowerShell과 QEMU가 살아남아서, 다음 실행과 같은 폴더·포트를 쓰다 서로 망가뜨려요(2026-10-08). 도구의 백그라운드 실행을 쓰고, 이상하면 `Get-CimInstance Win32_Process`로 `wsl-build`·`qemu-system` 프로세스부터 확인해요.
+- **설치 테스트는 VM 디스크 파일을 공유해요**: `install-test`가 도는 동안에는 `build\install-test`를 지우거나 다른 `install-test`를 시작하지 않아요. 같은 이유로 `install-test.py`, `bin/`, `scripts/` 등 공유 폴더로 복사되는 파일은 복사가 끝난 뒤에 고쳐요(그 전에는 작업 트리를 따로 만들어요).
 - **wsl.exe는 `-e`로**: `wsl.exe -- 명령`은 셸을 한 번 더 거쳐 `$?`나 따옴표가 깨져요. `wsl.exe -d archlinux -u root -e bash -lc '...'`처럼 쓰고, 긴 명령은 스크립트 파일로 만들어 실행해요.
 - **PowerShell 5.1과 한글**: BOM 없는 UTF-8 `.ps1`의 한글은 깨져요. 한글이 들어간 `.ps1`은 UTF-8 BOM으로 저장해요.
 - **CRLF**: 윈도우 체크아웃의 `.ps1`은 CRLF예요. 그 안의 here-string을 bash에 넘기면 `\r`이 붙어요. `Invoke-Wsl`처럼 넘기기 전에 `\r`을 지워요.
