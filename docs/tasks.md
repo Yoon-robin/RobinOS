@@ -10,7 +10,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 작업 | 시작 | 대상 | 결과 위치 | 상태 |
 |---|---|---|---|---|
-| ISO 빌드 → 부팅 테스트 → 설치 테스트 robinos (WHPX) | 2026-10-08 05:23 | `f98c691` | `build\boot-test`, `build\install-test`, 로그 `build\loop-*.log`, 순서 결과 `build\loop-chain.log` | 실행 중 |
+| ISO 빌드 → 부팅 테스트 → 설치 테스트 windows (WHPX) | 2026-10-08 START | `HEAD` | `build\boot-test`, `build\install-test`, 로그 `build\loop-*.log`, 순서 결과 `build\loop-chain.log` | 실행 중 |
 
 ## 정기 점검
 
@@ -40,9 +40,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| `d4a4a60` 이후 | 키보드 접근성, 라이브 독의 설치기, GRUB 테마와 배경화면 색, 설치기 initramfs | ISO 빌드 + 부팅 테스트(`quick-settings-keyboard`, 독, `01-boot.png`) + 설치 테스트 robinos(T-016) |
+| `84ed95b` 이후 | 설치 문서, 윈도우 옆 설치 테스트(T-006), 보안 프로필(T-010), 런처 hover 3px, 런처의 foot 항목, 부팅 메뉴의 BootNext 항목 | ISO 빌드 + 부팅 테스트 + 설치 테스트 windows (실행 중) |
 
-`c5e9794`까지는 2026-10-08 검증(부팅 테스트, 설치 테스트 archinstall·robinos)을 마치고 푸시했어요.
+`f98c691`까지는 2026-10-08 검증(부팅 테스트, 설치 테스트 archinstall·robinos)을 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -54,22 +54,13 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 ## 할 일 (위에서부터)
 
-### T-016 설치기로 설치한 시스템도 스냅샷을 쓰기 가능하게 부팅
-- 상태: 검증 대기
-- 2026-10-08 T-004에서 찾음: `robin-install`로 설치하면 Arch 기본값인 systemd initramfs라 grub-btrfs-overlayfs 훅이 안 들어가고, GRUB에서 스냅샷으로 부팅하면 루트가 읽기 전용이에요. 터미널 로그인과 되돌리기는 되지만 데스크톱이 안 뜰 수 있어요. archinstall처럼 udev 방식 HOOKS를 쓰게 고침(`robinctl snapshot setup`이 overlay 훅을 넣고 이미지를 다시 만들어요)
-- 완료 기준: robinos 설치 테스트의 `snapshot-boot` 단계에서 루트가 overlay
-
-### T-015 셸 키보드 접근성
-- 상태: 검증 대기. 2026-10-08 `d4a4a60`(브랜치 `a11y`, 작업 트리 `..\RobinOS-a11y`): 버튼·타일·선택 카드에 Tab 이동, Enter·Space, 포커스 테두리(`FocusRing.qml`), 슬라이더 화살표 키, 보조 글자 색을 muted로. qmllint 통과
-- 2026-10-08 main에 합침. 남은 일: 다음 부팅 테스트의 `quick-settings-keyboard` 스크린샷에서 포커스 테두리 확인
-
 ### T-014 웹 랩 이미지 정리
 - 목표: 랩 이미지 버전을 고정하고(`bkimminich/juice-shop:<버전>`), 2018년 이후 갱신이 없는 `vulnerables/web-dvwa`를 공식 `ghcr.io/digininja/dvwa`로 바꾸기
 - 확인: 이미지 태그와 포트(공식 DVWA 이미지의 포트, 첫 설정 화면), `robinctl lab info web` 안내, `labs/web/README.md`
 - 검증: WSL에 Docker를 깔 수 없으면 설치 테스트 VM에서 `robinctl lab start web` 후 `curl -s 127.0.0.1:3000`, `:8080`
 
 ### T-005 설치기 화면
-- 상태: 진행 중. 2026-10-08 부팅 테스트에서 설치기 1·2단계 화면 확인. 라이브 독에 "RobinOS 설치"를 넣고 바·독이 설치기 창을 "Quickshell"로 보이던 걸 고침(`d30cc0a`, 다음 부팅 테스트에서 확인). 남은 것: 설치기로 끝까지 설치하는 경로를 설치 테스트에 넣을지 결정. 첫 구현(`desktop/shell/Installer.qml`, `InputField.qml`, 런처 "RobinOS 설치", `qs ipc call shell installer`), qmllint 통과. 부팅 테스트에 설치기 1·2단계 스크린샷을 넣었고(테스트 VM에 빈 64GB 디스크), 다음 ISO 빌드에서 확인해요. 독에 넣는 건 아직
+- 상태: 진행 중. 2026-10-08 부팅 테스트에서 설치기 1·2단계 화면과 라이브 독의 설치 아이콘 확인(`d30cc0a`). 05:23 부팅 테스트에서는 런처를 열자마자 누른 Enter가 다시 마우스 아래 항목을 열어서(카드가 커지는 동안 포인터 위치가 소수점 아래로 흔들림) 3px 기준으로 고침(`89b2a7a`, 다음 부팅 테스트에서 확인). 남은 것: 설치기로 끝까지 설치하는 경로를 설치 테스트에 넣을지 결정. 첫 구현(`desktop/shell/Installer.qml`, `InputField.qml`, 런처 "RobinOS 설치", `qs ipc call shell installer`), qmllint 통과. 부팅 테스트에 설치기 1·2단계 스크린샷을 넣었고(테스트 VM에 빈 64GB 디스크), 다음 ISO 빌드에서 확인해요. 독에 넣는 건 아직
 - 목표: 라이브 세션에서 마우스로 설치할 수 있는 그래픽 설치기
 - 설계: `desktop/shell/Installer.qml` (Quickshell `FloatingWindow`, 일반 창). 단계: 환영(인터넷, 전원, 백업 안내) → 설치 위치(`robin-install disks` JSON, 디스크 카드, "디스크 전체 사용"/"윈도우 옆에 설치", 빈 공간이 없으면 윈도우의 "볼륨 축소" 안내) → 사용자(이름, 비밀번호 두 번, 컴퓨터 이름) → 확인(지워지는 디스크 경고) → 진행(`sudo -n robin-install run -`에 계획 JSON을 표준 입력으로, `@@` 줄로 진행률, 로그 보기) → 완료(다시 시작)
 - 진입점: 라이브 세션(`/run/archiso`가 있을 때)에서만 런처 추천 맨 위와 독에 "RobinOS 설치"
@@ -77,16 +68,13 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 메모: Quickshell `FloatingWindow` 속성은 `title`, `minimumSize`, `maximumSize` 등이 있어요(0.3.1 타입 정보 확인).
 
 ### T-006 "윈도우 옆에 설치" 검증
+- 상태: 검증 대기. 2026-10-08 설치 테스트에 `windows` 방식을 넣음(`c00d0cf`). 아직 돌려 보지 않음
 - 목표: 윈도우가 있는 디스크에서 기존 파티션을 건드리지 않고 빈 공간에만 설치하는지
 - 할 일: 설치 테스트에 윈도우 흉내 디스크 시나리오 추가(GPT, 100MB ESP, NTFS 파티션, 빈 공간 40GB 이상). 설치 뒤 NTFS 파티션이 그대로인지, ESP에 `EFI/RobinOS`가 생겼는지, 시계가 localtime인지 확인
 - 완료 기준: 시나리오 통과
 
-### T-009 로고 SVG 색 정리
-- 상태: 검증 대기. 2026-10-08 로고 색을 바꿈(옛 청록 → zinc, 위쪽 날개만 Robin red, `2fca31f`). 설치 테스트에서 GRUB 테마도 옛 청록인 걸 보고 GRUB 테마, 배경화면 SVG, SDDM 배경 사본까지 바꿈. rsvg-convert로 렌더링해서 확인. 남은 것: 다음 부팅 테스트의 `01-boot.png`(GRUB)
-- 목표: [brand.md](brand.md)에 적힌 대로 `assets/brand/*.svg`의 옛 청록색을 zinc와 Robin red로 바꾸기
-- 검증: 정적 검증(SVG 유효성), 부팅 테스트의 SDDM·GRUB 화면
-
 ### T-010 보안 학습 프로필 나누기 (로드맵 3단계)
+- 상태: 검증 대기. 2026-10-08 프로필 7개와 전부(security)로 나눔(`3021eda`), WSL에서 목록·미리 보기 확인. 남은 것: 설치한 시스템에서 `robinctl profile list`, `--dry-run` 확인(설치 테스트에 넣기)
 - 목표: `robinctl profile`을 학습 단계별 묶음으로(web, network, reversing, forensics). 패키지 목록과 [design.md](design.md) 학습 설계에 맞추기
 - 검증: 패키지 검사, `robinctl profile ... --dry-run`
 
@@ -97,6 +85,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 최근 것이 위에 있어요.
 
+- 2026-10-08 T-016 설치기로 설치한 시스템의 스냅샷 부팅: initramfs를 udev 방식으로 바꾼 뒤(`6264844`) robinos 설치 테스트에서 스냅샷으로 부팅한 루트가 overlay(쓰기 가능)로 뜸, 모든 단계 통과(10분)
+- 2026-10-08 T-009 브랜드 색: 로고, GRUB 테마, 배경화면을 zinc와 Robin red로. 설치 테스트의 GRUB 화면에서 확인(`2fca31f`, `a5a21aa`)
+- 2026-10-08 T-015 셸 키보드 접근성: 부팅 테스트에서 빠른 설정에 Tab을 세 번 누르니 "네트워크" 타일에 포커스 테두리가 보임(`d4a4a60`). 보조 글자 대비도 함께 고침
 - 2026-10-08 T-007 설치기 결정과 설치 문서: design.md에 자체 설치기 결정(Calamares를 쓰지 않는 이유)을 옮기고, install.md를 설치기 기준으로 다시 씀(준비, 설치기 단계, 윈도우 옆 설치 준비와 BitLocker·빠른 시작 안내, 명령 설치, archinstall 방법). README에 설치 절 추가
 - 2026-10-08 T-004 설치기 백엔드 검증: `robin-install`로 디스크 전체에 설치하는 설치 테스트가 다섯 단계 모두 통과(8분). EFI는 `/efi`, fstab에 `subvolid=` 없음(`6a472db`), 스냅샷으로 부팅할 때 그 스냅샷 안의 커널로 부팅됨(`/boot`가 `@` 안), chroot에서 돈 post-install과 스냅샷 설정도 정상. 첫 실행부터 통과했어요
 - 2026-10-08 검증 묶음(`c5e9794`): ISO 빌드 8분, 부팅 테스트 215초, 설치 테스트 archinstall 11분, robinos 8분
