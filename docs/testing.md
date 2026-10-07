@@ -83,7 +83,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 boot-test
 
 스크린샷과 `serial.log`는 `build\boot-test`에 생겨요. 테스트는 `robinos.debug`를 붙여 부팅해서 `robinos-session`이 Hyprland와 셸 출력을 저널로 보내고, 그 내용이 `serial.log`에 남아요. 셸이 안 뜨면 여기서 QML 오류를 찾으세요.
 
-KVM이 없는 환경(윈도우 10의 WSL 2)에서는 기다리는 시간을 4배로 늘려서 돌아요. 그래도 끝까지 20~30분쯤 걸려요.
+Windows용 QEMU가 준비돼 있으면 WHPX 가속으로 돌아요([build-environment.md](build-environment.md)). 없으면 WSL 안에서 소프트웨어 에뮬레이션(TCG)으로 돌고, 기다리는 시간을 4배로 늘려요. TCG에서는 VM이 느려서 키 입력이 반복될 수 있으니, 이상한 결과가 나오면 테스트 탓인지 먼저 가려요.
 
 ## 설치 테스트
 

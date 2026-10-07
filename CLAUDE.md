@@ -47,6 +47,8 @@ powershell -ExecutionPolicy Bypass -File scripts/sync-archiso-files.ps1         
 - **WSL 작업은 한 번에 하나**: `build`, `boot-test`, `install-test`는 WSL 클론(`/root/RobinOS`)을 HEAD로 리셋해요. 다른 작업이 돌고 있으면 스크립트가 거부해요. 먼저 커밋해야 변경이 넘어가요.
 - **wsl.exe는 `-e`로**: `wsl.exe -- 명령`은 셸을 한 번 더 거쳐 `$?`나 따옴표가 깨져요. `wsl.exe -d archlinux -u root -e bash -lc '...'`처럼 쓰고, 긴 명령은 스크립트 파일로 만들어 실행해요.
 - **PowerShell 5.1과 한글**: BOM 없는 UTF-8 `.ps1`의 한글은 깨져요. 한글이 들어간 `.ps1`은 UTF-8 BOM으로 저장해요.
+- **CRLF**: 윈도우 체크아웃의 `.ps1`은 CRLF예요. 그 안의 here-string을 bash에 넘기면 `\r`이 붙어요. `Invoke-Wsl`처럼 넘기기 전에 `\r`을 지워요.
+- **VM 테스트는 WHPX로**: Windows용 QEMU(`%USERPROFILE%\RobinOS-tools\qemu`)가 있으면 `boot-test`가 WHPX로 돌아요. WSL의 QEMU는 KVM이 없어 TCG로만 돌아요.
 - **Bash 도구의 heredoc**: `\n` 같은 이스케이프가 바뀌어 들어가요. 이스케이프가 있는 수정은 Edit 도구로 해요.
 - **ISO 오버레이 동기화**: `sync-archiso-files.ps1`이 `archiso/airootfs/etc/sddm.conf.d/10-robinos-theme.conf`를 CRLF로 다시 써요. 실제로 바뀐 게 없으면 `git checkout`으로 되돌려요.
 - **실행 권한**: 윈도우는 실행 비트를 기록하지 않아요. 새 스크립트는 `git update-index --chmod=+x <파일>`로 남겨요. `validate-project.ps1`이 확인해요.

@@ -64,6 +64,11 @@ fi
 "${ROOT_DIR}/scripts/prepare-archiso.sh"
 
 printf 'Building RobinOS ISO...\n'
+# mkarchiso skips every stage that has a marker in its work directory, so a
+# leftover build/work makes it repackage the previous build. Start clean, and
+# drop old ISOs (2.5 GB each) so out/ holds just this build.
+sudo rm -rf "${WORK_DIR}"
+rm -f "${OUT_DIR}"/robinos-*.iso
 sudo mkarchiso -v -w "${WORK_DIR}" -o "${OUT_DIR}" "${ROOT_DIR}/build/archiso-profile" 2>&1 | tee "${LOG_FILE}"
 
 mapfile -t iso_files < <(find "${OUT_DIR}" -maxdepth 1 -type f -name 'robinos-*.iso' -print | sort)

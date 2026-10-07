@@ -11,7 +11,8 @@ set -euo pipefail
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 DEST="${1:?usage: scripts/vm-prepare.sh <dest-dir> [iso]}"
 # Builds land in this checkout's out/, or in the WSL clone's when this copy is on /mnt/c
-ISO="${2:-$(ls -t "${ROOT_DIR}"/out/robinos-*.iso /root/RobinOS/out/robinos-*.iso 2>/dev/null | head -n1)}"
+# (ls fails on whichever pattern matches nothing; that must not stop the script)
+ISO="${2:-$({ ls -t "${ROOT_DIR}"/out/robinos-*.iso /root/RobinOS/out/robinos-*.iso 2>/dev/null || true; } | head -n1)}"
 
 [[ -n "${ISO}" && -f "${ISO}" ]] || { printf 'error: no ISO in %s/out (build one first)\n' "${ROOT_DIR}" >&2; exit 1; }
 mkdir -p "${DEST}"

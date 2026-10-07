@@ -10,7 +10,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 작업 | 시작 | 대상 | 결과 위치 | 상태 |
 |---|---|---|---|---|
-| (없음) | | | | |
+| ISO 빌드 → 부팅 테스트 (WHPX) | 2026-10-08 00:34 | `3f110df` | `build\boot-test`, 로그 `build\loop-build.log`, `build\loop-boot-test.log` | 실행 중 |
 
 ## 정기 점검
 
@@ -65,11 +65,12 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ## 할 일 (위에서부터)
 
 ### T-002 VM 테스트를 WHPX로 빠르게
+- 상태: 진행 중 (부팅 테스트 부분 결과 대기, 설치 테스트 부분 남음)
 - 목표: 부팅 테스트와 설치 테스트를 Windows용 QEMU(`-accel whpx`)로 돌려서 TCG보다 몇 배 빠르게
-- 준비된 것: `C:\Users\Blitz\RobinOS-tools\qemu-w64-setup-20260811.exe` (SHA-512 확인함). 윈도우 하이퍼바이저 플랫폼은 켜져 있어요.
-- 할 일: 설치 파일을 실행하지 말고 7-Zip/Bandizip으로 `C:\Users\Blitz\RobinOS-tools\qemu`에 풀기. `boot-test.sh`/`install-test.sh`의 QEMU 부분을 Windows에서도 돌게(QMP와 시리얼은 unix 소켓 대신 `tcp:127.0.0.1:포트`, ISO는 WSL에서 Windows 쪽으로 복사). `wsl-build.ps1`에 선택지 추가.
-- 완료 기준: 부팅 테스트가 10분 안에 끝나고 결과가 TCG와 같음
-- 메모: WHPX와 OVMF 조합이 안 되면 BIOS 부팅으로라도 부팅 테스트만 빠르게. 안 되면 TCG 유지하고 이유를 여기에 적어요.
+- 2026-10-08 한 것: QEMU 11.1을 `C:\Users\Blitz\RobinOS-tools\qemu`에 풂(7-Zip, 설치 파일은 실행 안 함). 시험 부팅에서 60초 만에 환영 마법사까지 뜸. `wsl-build.ps1 boot-test -Accel auto|whpx|tcg`, `scripts/vm-prepare.sh`, `boot-test-qmp.py`의 TCP QMP (`3f110df`)
+- 남은 일: 설치 테스트도 WHPX로. `install-test.py`의 시리얼과 QMP를 TCP로(`-chardev socket,host=127.0.0.1,port=...`), OVMF는 QEMU for Windows의 `share\edk2-x86_64-code.fd`와 `edk2-i386-vars.fd`, 공유 폴더 vvfat에 Windows 경로가 되는지(`fat:C:/...`) 확인, `wsl-build.ps1 install-test`에 연결
+- 완료 기준: 부팅 테스트가 WHPX로 스크린샷 18장을 찍고, 설치 테스트도 WHPX로 첫 단계(라이브 부팅과 archinstall 시작)까지 감
+- 메모: WHPX와 OVMF(pflash)가 안 맞으면 설치 테스트만 TCG로 남기고 이유를 적어요.
 
 ### T-003 설치 테스트 (archinstall 방식) 통과
 - 목표: [install.md](install.md) 방법 A와 스냅샷/복구 기능(`robinctl snapshot setup/rollback`, `/.bootbackup` 훅)을 실제 설치본에서 검증
