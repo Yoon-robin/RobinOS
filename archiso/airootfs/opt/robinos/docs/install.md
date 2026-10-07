@@ -84,6 +84,8 @@ archinstall로 Arch를 설치한다면 이렇게 골라야 스냅샷과 부팅 �
 - 부트로더: GRUB
 - 디스크 구성: 기본 구성("best-effort default partition layout") 그대로
 
+윈도우와 같은 디스크에 직접 나눠 설치했다면, 부팅 메뉴에 윈도우가 나오도록 설치한 시스템에서 `/etc/default/grub.d/20-dual-boot.cfg`에 `GRUB_DISABLE_OS_PROBER=false`를 적고 `sudo grub-mkconfig -o /boot/grub/grub.cfg`를 실행하세요. RobinOS 설치기는 이걸 알아서 해요.
+
 설치한 Arch에서 RobinOS 파일을 받아 설치 후 설정을 실행해요. 라이브 ISO로 설치했다면 `/opt/robinos`를 설치한 시스템에 복사해서 써도 돼요. 루트가 Btrfs면 스냅샷 설정(`robinctl snapshot setup`)까지 해요.
 
 ```bash

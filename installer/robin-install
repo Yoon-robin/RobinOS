@@ -343,6 +343,27 @@ def install_robinos(plan):
     progress(85, "RobinOS 데스크톱과 스냅샷")
     chroot("env", f"SUDO_USER={plan['user']}", f"{ROBINOS}/scripts/post-install.sh", "--yes")
 
+    if plan["mode"] == "alongside":
+        progress(95, "부팅 메뉴에 윈도우 넣기")
+        grub_mkconfig_with_udev()
+
+
+def grub_mkconfig_with_udev():
+    """Writes grub.cfg once more from a chroot that sees the live system's /run.
+    os-prober asks udev which partition is the EFI system partition, and
+    arch-chroot gives the target an empty /run, so every grub-mkconfig above
+    (and post-install.sh's) left Windows out of the menu."""
+    mounted = []
+    try:
+        for name in ("proc", "sys", "dev", "run"):
+            run("mount", "--rbind", f"/{name}", f"{TARGET}/{name}")
+            mounted.append(name)
+            run("mount", "--make-rslave", f"{TARGET}/{name}")
+        run("chroot", TARGET, "grub-mkconfig", "-o", "/boot/grub/grub.cfg")
+    finally:
+        for name in reversed(mounted):
+            subprocess.run(["umount", "-R", f"{TARGET}/{name}"], capture_output=True)
+
 
 def install(plan_path):
     if os.geteuid() != 0:
