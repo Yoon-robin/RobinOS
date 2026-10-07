@@ -1,26 +1,14 @@
 # RobinOS 릴리스 체크리스트
 
-RobinOS 프리뷰 ISO를 낼 때 쓰는 초기 릴리스 체크리스트예요.
+프리뷰 ISO를 낼 때 쓰는 체크리스트예요. 각 검사의 방법은 [testing.md](testing.md)에 있어요.
 
 ## 빌드
 
-Arch Linux에서:
-
-```bash
-sudo pacman -S --needed archiso git
-scripts/doctor-build.sh
-scripts/build-iso.sh
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 ```
 
-패키지 이름을 이미 확인했다면 이렇게 더 빨리 다시 빌드할 수 있어요.
-
-```bash
-scripts/build-iso.sh --skip-package-check
-```
-
-## 빌드 결과물
-
-나와야 하는 파일:
+나와야 하는 파일 (WSL의 `/root/RobinOS/` 아래):
 
 ```text
 out/robinos-*.iso
@@ -28,37 +16,19 @@ out/SHA256SUMS
 build/logs/mkarchiso-*.log
 ```
 
-## 스모크 테스트
+## 배포 전에 모두 통과해야 하는 것
 
-VM에서 ISO를 부팅하고 확인해요.
-
-```bash
-scripts/run-vm.sh
-```
-
-```bash
-robinctl doctor
-robinctl lab info web
-ls /opt/robinos
-ls /usr/share/sddm/themes/robinos
-ls /usr/share/grub/themes/robinos
-```
-
-## 직접 화면 확인
-
-- 라이브 부팅 메뉴에 RobinOS Security Learning Live가 보여요
-- SDDM에 RobinOS 테마가 나와요
-- RobinOS 데스크톱이 떠요: 상단 바, 독, 점 격자 배경화면
-- `Super+Space`로 런처가, `Super+S`로 빠른 설정이 열려요
-- foot이 RobinOS 색상을 쓰고, 오른쪽 Alt로 한/영이 바뀌어요
+- 정적 검증 (`scripts/validate-project.ps1`)
+- 데스크톱 설정 검사와 `qmllint` (`scripts/wsl-build.ps1 check`)
+- 패키지 검사 (빌드할 때 자동)
+- ISO 빌드 성공과 `SHA256SUMS`
+- 자동 부팅 테스트: 스크린샷을 한 장씩 보고 이상이 없는지
+- 설치 테스트: `archinstall`과 `robinos` 두 방식 모두
+- VM에서 직접 써 보기의 "눈으로 확인할 것" 목록
+- 실기기 한 대 이상에서 라이브 부팅
+- 문서와 `/etc/motd`에 윤리 안내가 보임
 
 ## 배포
 
-아래 조건을 모두 채우기 전에는 배포하지 마세요.
-
-- 정적 검증 통과
-- Arch 패키지 검증 통과
-- ISO 빌드 성공
-- VM 부팅 성공
-- SHA256SUMS 생성
-- 문서와 MOTD에 윤리 안내가 보임
+- `SHA256SUMS`와 함께 GitHub 릴리스에 올려요.
+- 릴리스 노트에는 v0.1 범위([design.md](design.md))에서 바뀐 점과 알려진 한계를 적어요.

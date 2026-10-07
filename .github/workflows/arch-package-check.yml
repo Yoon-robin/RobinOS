@@ -1,9 +1,8 @@
 name: Arch Package Check
 
+# Manual only: RobinOS is built and tested on the owner's PC (docs/testing.md).
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 3 * * 0"
 
 jobs:
   arch-package-check:

@@ -1,0 +1,102 @@
+# RobinOS 작업 목록
+
+루프가 회차마다 읽고 갱신하는 작업 목록이에요. 절차는 [loop.md](loop.md), 제품 범위와 상태는 [design.md](design.md)에 있어요.
+
+상태: `할 일` → `진행 중` → `검증 대기` → `완료`. 사용자가 해야 하는 일 때문에 멈추면 `막힘`.
+
+## 백그라운드 작업
+
+WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려요(`scripts/wsl-build.ps1 status`로 확인).
+
+| 작업 | 시작 | 대상 | 결과 위치 | 상태 |
+|---|---|---|---|---|
+| (없음) | | | | |
+
+## 푸시 대기 커밋
+
+`git log origin/main..HEAD`에 있는 커밋과, 푸시하기 전에 통과해야 하는 검증이에요. 검증이 끝나면 지우고 푸시해요.
+
+| 커밋 | 내용 | 필요한 검증 |
+|---|---|---|
+| `16d652f` | 업데이트 전 자동 스냅샷, 되돌리기 | T-003 설치 테스트 (archinstall) |
+| `d1b4577` | WSL 빌드 도우미, 설치 테스트 | T-003 (부팅 테스트 쪽은 2026-10-07 통과) |
+| 이후 커밋 | 설치기 백엔드, 마법사 키 반복, 문서 체계와 루프 | 설치기는 T-004, 마법사는 T-001 재확인 |
+
+## 사용자 확인 필요
+
+- **실기기 라이브 부팅**: USB로 실제 PC에서 ISO를 부팅해 봐야 해요. 사용자만 할 수 있어요. (`막힘`)
+
+## 진행 중
+
+### T-001 데스크톱 변경을 부팅 테스트로 확인
+- 상태: 검증 대기 (고친 뒤 다시 돌려야 해요)
+- 목표: 정적 검사만 통과한 데스크톱 변경을 실제 화면으로 확인해요. 환영 마법사 5단계, 마법사가 끝나면 열리는 미션 터미널, 런처 추천의 "리눅스 기초 미션", `notepad` 검색 결과, 터미널 한글 간격, foot 100×30 창, `robinctl learn show 1`.
+- 완료 기준: `build\boot-test` 스크린샷 18장을 한 장씩 보고 문제가 없음
+- 2026-10-07 첫 실행(ISO `16d652f`, TCG, 약 6분): 셸, 마법사 1~4단계, 미션 터미널, 런처 추천, 빠른 설정, `ipconfig` 힌트, 미션 화면, 잠금과 해제는 정상.
+  - 마법사 4단계에서 Enter 한 번에 5단계를 건너뛰고 끝났어요. 느린 VM에서 키 반복이 생긴 탓이에요. 마법사가 키 반복을 무시하게 고쳤어요.
+  - 런처 검색어가 `tnnotepad`가 돼서 윈도우 이름 검색을 확인하지 못했어요. 테스트가 키 사이를 `0.15초 × speed`로 쉬고, 검색어는 Ctrl+A로 바꾸게 고쳤어요.
+  - 터미널 한글 간격: 글자 폭 13~14px, 2칸 18px(여백 25%, 라틴 문자 22%). 더 키우면 줄 간격 20px에 닿아요. 더 좁히려면 한국어 고정폭 글꼴(D2Coding, Noto Sans Mono CJK KR)을 기본 글꼴로 해야 해서 보류해요.
+  - fastfetch의 `Disk (/run/archiso/bootmnt)` 한 줄이 100칸에서 넘쳐요. 문제는 아니에요.
+- 다음: ISO를 다시 빌드하고 부팅 테스트를 돌려서 5단계 스크린샷과 `notepad` 검색 결과를 확인해요.
+
+## 할 일 (위에서부터)
+
+### T-002 VM 테스트를 WHPX로 빠르게
+- 목표: 부팅 테스트와 설치 테스트를 Windows용 QEMU(`-accel whpx`)로 돌려서 TCG보다 몇 배 빠르게
+- 준비된 것: `C:\Users\Blitz\RobinOS-tools\qemu-w64-setup-20260811.exe` (SHA-512 확인함). 윈도우 하이퍼바이저 플랫폼은 켜져 있어요.
+- 할 일: 설치 파일을 실행하지 말고 7-Zip/Bandizip으로 `C:\Users\Blitz\RobinOS-tools\qemu`에 풀기. `boot-test.sh`/`install-test.sh`의 QEMU 부분을 Windows에서도 돌게(QMP와 시리얼은 unix 소켓 대신 `tcp:127.0.0.1:포트`, ISO는 WSL에서 Windows 쪽으로 복사). `wsl-build.ps1`에 선택지 추가.
+- 완료 기준: 부팅 테스트가 10분 안에 끝나고 결과가 TCG와 같음
+- 메모: WHPX와 OVMF 조합이 안 되면 BIOS 부팅으로라도 부팅 테스트만 빠르게. 안 되면 TCG 유지하고 이유를 여기에 적어요.
+
+### T-003 설치 테스트 (archinstall 방식) 통과
+- 목표: [install.md](install.md) 방법 A와 스냅샷/복구 기능(`robinctl snapshot setup/rollback`, `/.bootbackup` 훅)을 실제 설치본에서 검증
+- 명령: `scripts/wsl-build.ps1 install-test`
+- 완료 기준: `install-test.py`의 모든 단계 통과(스냅샷 생성, cowsay 설치 후 롤백하면 사라짐, 데스크톱 로그인). 통과하면 [design.md](design.md) v0.1 3번 상태를 "검증 완료"로, [roadmap.md](roadmap.md) 5단계도 갱신
+- 메모: archinstall 4.5 설정 형식은 소스(4.5 태그)를 보고 맞췄지만 실행해 본 적은 없어요. 처음 실패는 설정 형식 문제일 가능성이 커요(`/var/log/archinstall/install.log`).
+
+### T-004 설치기 백엔드 검증
+- 목표: `installer/robin-install`이 디스크 전체 설치를 끝까지 해내는지
+- 명령: `scripts/wsl-build.ps1 install-test -Installer robinos`
+- 완료 기준: 설치 테스트 모든 단계 통과. EFI는 `/efi`, `/.bootbackup` 없이 커널이 스냅샷에 들어가는지(`ls /.snapshots/*/snapshot/boot`)
+- 메모: 설치기는 post-install.sh를 chroot에서 돌려요. chroot에서 `systemd-detect-virt --chroot`, `localectl` 대체, `mountpoint /.snapshots`가 맞게 동작하는지 봐요.
+
+### T-005 설치기 화면
+- 목표: 라이브 세션에서 마우스로 설치할 수 있는 그래픽 설치기
+- 설계: `desktop/shell/Installer.qml` (Quickshell `FloatingWindow`, 일반 창). 단계: 환영(인터넷, 전원, 백업 안내) → 설치 위치(`robin-install disks` JSON, 디스크 카드, "디스크 전체 사용"/"윈도우 옆에 설치", 빈 공간이 없으면 윈도우의 "볼륨 축소" 안내) → 사용자(이름, 비밀번호 두 번, 컴퓨터 이름) → 확인(지워지는 디스크 경고) → 진행(`sudo -n robin-install run -`에 계획 JSON을 표준 입력으로, `@@` 줄로 진행률, 로그 보기) → 완료(다시 시작)
+- 진입점: 라이브 세션(`/run/archiso`가 있을 때)에서만 런처 추천 맨 위와 독에 "RobinOS 설치"
+- 완료 기준: `qmllint` 통과, 부팅 테스트에 설치기 화면 스크린샷 추가, 설치기로 끝까지 설치하는 경로를 설치 테스트에 추가할지 결정
+- 메모: Quickshell `FloatingWindow` 속성은 `title`, `minimumSize`, `maximumSize` 등이 있어요(0.3.1 타입 정보 확인).
+
+### T-006 "윈도우 옆에 설치" 검증
+- 목표: 윈도우가 있는 디스크에서 기존 파티션을 건드리지 않고 빈 공간에만 설치하는지
+- 할 일: 설치 테스트에 윈도우 흉내 디스크 시나리오 추가(GPT, 100MB ESP, NTFS 파티션, 빈 공간 40GB 이상). 설치 뒤 NTFS 파티션이 그대로인지, ESP에 `EFI/RobinOS`가 생겼는지, 시계가 localtime인지 확인
+- 완료 기준: 시나리오 통과
+
+### T-007 설치기 결정과 설치 문서 갱신
+- 목표: [design.md](design.md) 미결정 사항의 "그래픽 설치기"를 결정으로 옮기고(자체 설치기, `pacstrap`, Quickshell 화면, Calamares를 쓰지 않는 이유), [install.md](install.md)를 설치기 기준으로 다시 쓰기
+- 조건: T-004, T-005 끝난 뒤
+
+### T-008 부팅 메뉴 이름을 RobinOS로
+- 목표: 설치된 시스템의 GRUB 메뉴가 "Arch Linux" 대신 "RobinOS"로 보이게(`GRUB_DISTRIBUTOR`, grub-btrfs 하위 메뉴 이름)
+- 같이 고칠 것: `install-test.py`의 `boot_from_grub()`가 찾는 글자, `recovery.md`의 메뉴 이름
+
+### T-009 로고 SVG 색 정리
+- 목표: [brand.md](brand.md)에 적힌 대로 `assets/brand/*.svg`의 옛 청록색을 zinc와 Robin red로 바꾸기
+- 검증: 정적 검증(SVG 유효성), 부팅 테스트의 SDDM·GRUB 화면
+
+### T-010 보안 학습 프로필 나누기 (로드맵 3단계)
+- 목표: `robinctl profile`을 학습 단계별 묶음으로(web, network, reversing, forensics). 패키지 목록과 [design.md](design.md) 학습 설계에 맞추기
+- 검증: 패키지 검사, `robinctl profile ... --dry-run`
+
+### T-011 v0.2 후보 (지금은 하지 않아요)
+- Qt 앱 제목 표시줄(hyprbars), 작업 표시줄 클릭으로 최소화, `Win+D`, 학습 센터 앱, 네트워크·CTF 랩
+
+## 완료
+
+최근 것이 위에 있어요.
+
+- 2026-10-07 GitHub Actions를 수동 실행 전용으로, 문서 체계와 루프 절차 정리 (이번 커밋)
+- 2026-10-07 WSL 2 빌드 도우미 `scripts/wsl-build.ps1`, 설치 테스트 `scripts/install-test.*` (`d1b4577`). 로컬 ISO 빌드 9분 성공
+- 2026-10-07 업데이트 전 자동 스냅샷과 되돌리기 (`16d652f`, VM 검증 전)
+- 2026-10-07 환영 마법사 (`99db372`), 터미널 한글 간격 (`200c07d`)
+- 2026-10-07 문서 한국어화 (`521181c`), 런처 윈도우 이름 검색 (`7b4011b`), 리눅스 기초 미션 `robinctl learn` (`7f0ed7f`)

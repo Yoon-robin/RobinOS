@@ -1,6 +1,6 @@
 # RobinOS용 Hyper-V Arch VM
 
-윈도우에서 RobinOS를 빌드할 때 쓰는 방법이에요.
+윈도우에서 RobinOS를 빌드하는 다른 방법이에요. 보통은 WSL 2가 더 간단해요([build-environment.md](build-environment.md)).
 
 ## 요구사항
 
@@ -22,13 +22,13 @@ powershell -ExecutionPolicy Bypass -File scripts/setup-hyperv-arch-vm.ps1
 
 스크립트가 만드는 VM은 다음과 같아요.
 
-```text
-VM name: RobinOS-Builder
-Memory: 8 GB
-CPUs: 4
-Disk: 60 GB
-ISO: %USERPROFILE%\Downloads\RobinOS-Builder\archlinux-x86_64.iso
-```
+| 항목 | 값 |
+|---|---|
+| VM 이름 | `RobinOS-Builder` |
+| 메모리 | 8GB |
+| CPU | 4개 |
+| 디스크 | 60GB |
+| 설치 ISO | `%USERPROFILE%\Downloads\RobinOS-Builder\archlinux-x86_64.iso` |
 
 ## VM 시작하기
 

@@ -1,21 +1,7 @@
 name: Build RobinOS ISO
 
+# Manual only: RobinOS is built and tested on the owner's PC (docs/testing.md).
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "archiso/**"
-      - "assets/**"
-      - "bin/**"
-      - "config/**"
-      - "desktop/**"
-      - "installer/**"
-      - "labs/**"
-      - "packages/**"
-      - "scripts/**"
-      - "themes/**"
-      - ".github/workflows/build-iso.yml"
   workflow_dispatch:
 
 concurrency:

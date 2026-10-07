@@ -52,7 +52,9 @@ RobinOS에는 자체 명령과, 시스템을 하나로 엮어 주는 연결 코�
 robinctl doctor
 robinctl update
 robinctl snapshot create
+robinctl snapshot rollback 12
 robinctl profile security
+robinctl learn
 robinctl lab start web
 robinctl lab stop web
 ```

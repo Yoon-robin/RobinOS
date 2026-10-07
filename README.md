@@ -112,41 +112,22 @@ sudo scripts/post-install.sh --dry-run
 sudo scripts/post-install.sh
 ```
 
-## 검증
+## 빌드와 검증
 
-윈도우에서:
+빌드와 테스트는 개발 PC에서 해요. GitHub Actions는 수동 실행으로만 남겨 뒀어요([docs/ci.md](docs/ci.md)). 윈도우 PC에서는 WSL 2의 Arch Linux를 써요([docs/build-environment.md](docs/build-environment.md)).
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/validate-project.ps1
+powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 check
+powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
+powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 boot-test
+powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test
 ```
 
-Arch Linux에서:
+무엇을 바꿨을 때 어떤 검사를 돌릴지는 [docs/testing.md](docs/testing.md)에 있어요.
 
-```bash
-scripts/check-arch-packages.sh
-scripts/check-desktop.sh
-scripts/build-iso.sh
-```
+## 문서와 작업 관리
 
-ISO를 빌드하려면 Arch Linux나, Arch를 다룰 수 있는 리눅스 빌드 환경이 필요해요. `docs/build-environment.md`를 참고하세요.
-
-윈도우에서 Hyper-V로 Arch VM을 만들려면 `docs/hyperv-vm.md`를 보세요.
-
-GitHub Actions 워크플로:
-
-- `Validate`: Arch 컨테이너에서 프로젝트 정적 검사, Bash 문법 검사, 데스크톱 설정 검사(Lua, Hyprland, QML)를 해요
-- `Arch Package Check`: 패키지 이름이 Arch 저장소에 있는지 확인해요. 수동으로 돌리거나 매주 자동으로 돌아요
-- `Build RobinOS ISO`: `main`에 푸시하면 Arch 컨테이너에서 ISO를 빌드해요
-- `Boot-test RobinOS ISO`: 새 ISO가 나올 때마다 QEMU에서 부팅해 보고 데스크톱 스크린샷을 올려요 ([docs/ci.md](docs/ci.md) 참고)
-
-GitHub Actions 대신 로컬에서 CI를 돌리려면:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/ci-local.ps1
-```
-
-GitHub Actions에 기대지 않고 푸시 전에 로컬에서 검사하게 하려면 훅을 설치해요.
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/install-git-hooks.ps1
-```
+- [docs/README.md](docs/README.md): 문서 지도. 어떤 문서가 무엇의 원본인지 정리돼 있어요.
+- [docs/design.md](docs/design.md): 제품 설계와 v0.1 범위의 진행 상황
+- [docs/tasks.md](docs/tasks.md): 지금 할 일과 진행 중인 작업

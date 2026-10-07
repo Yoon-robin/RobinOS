@@ -2,12 +2,8 @@ name: Boot-test RobinOS ISO
 
 # Boots the ISO from a "Build RobinOS ISO" run in QEMU, drives the desktop
 # (launcher, quick settings, terminal, lock screen) and keeps screenshots.
+# Manual only: RobinOS is built and tested on the owner's PC (docs/testing.md).
 on:
-  workflow_run:
-    workflows:
-      - Build RobinOS ISO
-    types:
-      - completed
   workflow_dispatch:
     inputs:
       run_id:

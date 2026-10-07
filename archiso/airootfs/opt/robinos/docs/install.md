@@ -39,7 +39,7 @@ robinctl lab list
 robin-install
 ```
 
-지금의 `robin-install` 명령은 안내만 해 주고, 파티션을 나누는 설치기는 아니에요.
+RobinOS 설치기는 만드는 중이에요. 백엔드(`robin-install disks`, `sudo robin-install run 계획.json`)는 있지만 아직 VM에서 검증하지 않았고 그래픽 화면도 없어요. 진행 상황은 [tasks.md](tasks.md)에 있어요. 그때까지는 방법 A를 쓰세요.
 
 라이브 ISO는 RobinOS 파일을 여기에 준비해 둬요.
 

@@ -2,7 +2,7 @@
 
 Arch Linux나 Arch 기반 VM에서 빌드해요.
 
-윈도우를 쓰고 있다면 `docs/build-environment.md`부터 보세요.
+윈도우 PC에서는 `scripts/wsl-build.ps1 build` 하나로 아래 과정을 WSL 2의 Arch Linux에서 해요. 환경 준비는 [build-environment.md](build-environment.md)에 있어요.
 
 ## 요구사항
 

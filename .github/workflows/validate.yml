@@ -1,10 +1,7 @@
 name: Validate
 
+# Manual only: RobinOS is built and tested on the owner's PC (docs/testing.md).
 on:
-  push:
-    branches:
-      - main
-  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -34,7 +31,9 @@ jobs:
           set -euo pipefail
           while IFS= read -r -d '' script; do
             bash -n "$script"
-          done < <(find scripts bin installer archiso/airootfs/root archiso/airootfs/usr/local/bin -type f \( -name '*.sh' -o -name 'robinctl' -o -name 'robin-install' \) -print0)
+          done < <(find scripts bin installer archiso/airootfs/root archiso/airootfs/usr/local/bin -type f \( -name '*.sh' -o -name 'robinctl' \) -print0)
+          # The installer backend and test drivers are Python
+          python3 -m py_compile installer/robin-install scripts/*.py
 
   desktop-check:
     name: Desktop config check (Lua, Hyprland, QML)
