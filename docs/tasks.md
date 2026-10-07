@@ -10,7 +10,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 작업 | 시작 | 대상 | 결과 위치 | 상태 |
 |---|---|---|---|---|
-| ISO 빌드 → 부팅 테스트 → 설치 테스트 archinstall → 설치 테스트 robinos (WHPX) | 2026-10-08 04:50 | `c5e9794` | `build\boot-test`, `build\install-test`(archinstall 결과는 `build\install-test-archinstall`로 옮겨 둠), 로그 `build\loop-*.log`, 순서 결과 `build\loop-chain.log` | 실행 중 |
+| ISO 빌드 → 부팅 테스트 → 설치 테스트 robinos (WHPX) | 2026-10-08 START | `HEAD` | `build\boot-test`, `build\install-test`, 로그 `build\loop-*.log`, 순서 결과 `build\loop-chain.log` | 실행 중 |
 
 ## 정기 점검
 
@@ -40,10 +40,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| `6a472db` | 설치기 fstab의 `subvolid=` | 설치 테스트 robinos (T-004, 실행 중) |
-| `d4a4a60` 이후 | 키보드 접근성, 라이브 독의 설치기, GRUB 테마와 배경화면 색 | 다음 ISO 빌드 + 부팅 테스트 (`quick-settings-keyboard`, 독, `01-boot.png`) |
+| `d4a4a60` 이후 | 키보드 접근성, 라이브 독의 설치기, GRUB 테마와 배경화면 색, 설치기 initramfs | ISO 빌드 + 부팅 테스트(`quick-settings-keyboard`, 독, `01-boot.png`) + 설치 테스트 robinos(T-016) |
 
-2026-10-08 04:50에 시작한 검증(`c5e9794`)에서 부팅 테스트(설치기 1·2단계 포함)와 설치 테스트 archinstall(다섯 단계)이 통과했어요. `6a472db`만 robinos 설치 테스트를 기다려요. `f772062`까지는 푸시했어요.
+`c5e9794`까지는 2026-10-08 검증(부팅 테스트, 설치 테스트 archinstall·robinos)을 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -55,21 +54,19 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 ## 할 일 (위에서부터)
 
+### T-016 설치기로 설치한 시스템도 스냅샷을 쓰기 가능하게 부팅
+- 상태: 검증 대기
+- 2026-10-08 T-004에서 찾음: `robin-install`로 설치하면 Arch 기본값인 systemd initramfs라 grub-btrfs-overlayfs 훅이 안 들어가고, GRUB에서 스냅샷으로 부팅하면 루트가 읽기 전용이에요. 터미널 로그인과 되돌리기는 되지만 데스크톱이 안 뜰 수 있어요. archinstall처럼 udev 방식 HOOKS를 쓰게 고침(`robinctl snapshot setup`이 overlay 훅을 넣고 이미지를 다시 만들어요)
+- 완료 기준: robinos 설치 테스트의 `snapshot-boot` 단계에서 루트가 overlay
+
 ### T-015 셸 키보드 접근성
 - 상태: 검증 대기. 2026-10-08 `d4a4a60`(브랜치 `a11y`, 작업 트리 `..\RobinOS-a11y`): 버튼·타일·선택 카드에 Tab 이동, Enter·Space, 포커스 테두리(`FocusRing.qml`), 슬라이더 화살표 키, 보조 글자 색을 muted로. qmllint 통과
-- 남은 일: 실행 중인 설치 테스트가 파일을 복사해 간 뒤 main에 합치고, 다음 부팅 테스트의 `quick-settings-keyboard` 스크린샷에서 포커스 테두리 확인
+- 2026-10-08 main에 합침. 남은 일: 다음 부팅 테스트의 `quick-settings-keyboard` 스크린샷에서 포커스 테두리 확인
 
 ### T-014 웹 랩 이미지 정리
 - 목표: 랩 이미지 버전을 고정하고(`bkimminich/juice-shop:<버전>`), 2018년 이후 갱신이 없는 `vulnerables/web-dvwa`를 공식 `ghcr.io/digininja/dvwa`로 바꾸기
 - 확인: 이미지 태그와 포트(공식 DVWA 이미지의 포트, 첫 설정 화면), `robinctl lab info web` 안내, `labs/web/README.md`
 - 검증: WSL에 Docker를 깔 수 없으면 설치 테스트 VM에서 `robinctl lab start web` 후 `curl -s 127.0.0.1:3000`, `:8080`
-
-### T-004 설치기 백엔드 검증
-- 상태: 검증 대기. 2026-10-08 처음으로 실행 중
-- 목표: `installer/robin-install`이 디스크 전체 설치를 끝까지 해내는지
-- 명령: `scripts/wsl-build.ps1 install-test -Installer robinos`
-- 완료 기준: 설치 테스트 모든 단계 통과. EFI는 `/efi`, `/.bootbackup` 없이 커널이 스냅샷에 들어가는지(`ls /.snapshots/*/snapshot/boot`), `/etc/fstab`의 Btrfs 줄에 `subvolid=`가 없는지
-- 메모: 설치기는 post-install.sh를 chroot에서 돌려요. chroot에서 `systemd-detect-virt --chroot`, `localectl` 대체, `mountpoint /.snapshots`가 맞게 동작하는지 봐요.
 
 ### T-005 설치기 화면
 - 상태: 진행 중. 2026-10-08 부팅 테스트에서 설치기 1·2단계 화면 확인. 라이브 독에 "RobinOS 설치"를 넣고 바·독이 설치기 창을 "Quickshell"로 보이던 걸 고침(`d30cc0a`, 다음 부팅 테스트에서 확인). 남은 것: 설치기로 끝까지 설치하는 경로를 설치 테스트에 넣을지 결정. 첫 구현(`desktop/shell/Installer.qml`, `InputField.qml`, 런처 "RobinOS 설치", `qs ipc call shell installer`), qmllint 통과. 부팅 테스트에 설치기 1·2단계 스크린샷을 넣었고(테스트 VM에 빈 64GB 디스크), 다음 ISO 빌드에서 확인해요. 독에 넣는 건 아직
@@ -104,6 +101,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 최근 것이 위에 있어요.
 
+- 2026-10-08 T-004 설치기 백엔드 검증: `robin-install`로 디스크 전체에 설치하는 설치 테스트가 다섯 단계 모두 통과(8분). EFI는 `/efi`, fstab에 `subvolid=` 없음(`6a472db`), 스냅샷으로 부팅할 때 그 스냅샷 안의 커널로 부팅됨(`/boot`가 `@` 안), chroot에서 돈 post-install과 스냅샷 설정도 정상. 첫 실행부터 통과했어요
+- 2026-10-08 검증 묶음(`c5e9794`): ISO 빌드 8분, 부팅 테스트 215초, 설치 테스트 archinstall 11분, robinos 8분
 - 2026-10-08 T-013 스냅샷으로 부팅한 상태에서 되돌리기: 설치 테스트에 `snapshot-boot` 단계를 넣고 통과. GRUB 스냅샷 메뉴에서 cowsay 설치 전 스냅샷을 골라 부팅하니 루트가 overlay였고, 그 안에서 `robinctl snapshot rollback` → 다음 부팅에서 cowsay가 사라짐(`5f22e5e`, `a82252a`)
 - 2026-10-08 T-008 부팅 메뉴 이름: GRUB 메뉴가 "RobinOS Linux", 스냅샷 하위 메뉴가 "RobinOS snapshots"로 보임(설치 테스트 스크린샷, `grub.cfg` 확인, `1f40c18`)
 - 2026-10-08 런처를 열자마자 Enter를 누르면 마우스 아래 항목이 열리던 문제: 고친 뒤 부팅 테스트에서 설치기 1·2단계가 제대로 찍힘(`d5e4e47`)
