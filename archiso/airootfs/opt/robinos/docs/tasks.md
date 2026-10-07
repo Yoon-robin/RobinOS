@@ -40,12 +40,10 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| `6d13712` | 설치기 화면 | 부팅 테스트(설치기 1·2단계 스크린샷). 2026-10-08 실행에서 런처 hover 문제로 설치기가 안 열림 → `d5e4e47`로 고치고 다음 부팅 테스트에서 확인 |
-| `6a472db` 이후 | 설치기 fstab, 런처 hover, 스냅샷 부팅 상태에서 되돌리기, 웹 랩 sudo, 설치 스크립트 한국어, 로고 색, 부팅 메뉴 이름 | 실행 중인 빌드·부팅 테스트·설치 테스트 두 가지 (T-004, T-008, T-013) |
+| `6a472db` | 설치기 fstab의 `subvolid=` | 설치 테스트 robinos (T-004, 실행 중) |
+| `d4a4a60` 이후 | 키보드 접근성, 라이브 독의 설치기, GRUB 테마와 배경화면 색 | 다음 ISO 빌드 + 부팅 테스트 (`quick-settings-keyboard`, 독, `01-boot.png`) |
 
-`1295721`(SDDM 첫 로그인, 스냅샷 설명)은 2026-10-08 설치 테스트를 통과했어요. 앞의 `6d13712`을 기다려요.
-
-`f772062`까지는 2026-10-08에 검증을 마치고 푸시했어요.
+2026-10-08 04:50에 시작한 검증(`c5e9794`)에서 부팅 테스트(설치기 1·2단계 포함)와 설치 테스트 archinstall(다섯 단계)이 통과했어요. `6a472db`만 robinos 설치 테스트를 기다려요. `f772062`까지는 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -56,12 +54,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 (없음)
 
 ## 할 일 (위에서부터)
-
-### T-013 스냅샷으로 부팅한 상태에서 되돌리기 테스트
-- 목표: 복구 문서의 비상 경로(부팅 메뉴에서 스냅샷으로 부팅 → `robinctl snapshot rollback`)를 설치 테스트로 확인
-- 상태: 검증 대기. 2026-10-08 루트가 overlay일 때 `robinctl`이 멈추던 걸 고침(`5f22e5e`), 설치 테스트에 `snapshot-boot` 단계를 넣음
-- 할 일: `install-test.py`의 snapshots 단계는 cowsay 설치까지 하고 끄기. 새 `snapshot-boot` 단계에서 GRUB의 스냅샷 하위 메뉴로 cowsay 설치 전(pre) 스냅샷을 골라 부팅하고(위치는 snapshots 단계가 `grub-btrfs.cfg`에서 찾아 `OUT`에 적어 둠), `findmnt -no FSTYPE /`가 overlay인지, cowsay가 없는지 본 뒤 거기서 `robinctl snapshot rollback`. `wsl-build.ps1`, `install-test.sh`의 단계 목록도 같이
-- 완료 기준: 설치 테스트 모든 단계 통과, `snapshot-boot` 단계의 GRUB 스냅샷 메뉴 스크린샷
 
 ### T-015 셸 키보드 접근성
 - 상태: 검증 대기. 2026-10-08 `d4a4a60`(브랜치 `a11y`, 작업 트리 `..\RobinOS-a11y`): 버튼·타일·선택 카드에 Tab 이동, Enter·Space, 포커스 테두리(`FocusRing.qml`), 슬라이더 화살표 키, 보조 글자 색을 muted로. qmllint 통과
@@ -80,7 +72,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 메모: 설치기는 post-install.sh를 chroot에서 돌려요. chroot에서 `systemd-detect-virt --chroot`, `localectl` 대체, `mountpoint /.snapshots`가 맞게 동작하는지 봐요.
 
 ### T-005 설치기 화면
-- 상태: 진행 중. 2026-10-08 부팅 테스트에서 런처 hover 문제로 설치기가 안 열려 고침(`d5e4e47`), 다음 부팅 테스트에서 확인. 첫 구현(`desktop/shell/Installer.qml`, `InputField.qml`, 런처 "RobinOS 설치", `qs ipc call shell installer`), qmllint 통과. 부팅 테스트에 설치기 1·2단계 스크린샷을 넣었고(테스트 VM에 빈 64GB 디스크), 다음 ISO 빌드에서 확인해요. 독에 넣는 건 아직
+- 상태: 진행 중. 2026-10-08 부팅 테스트에서 설치기 1·2단계 화면 확인. 라이브 독에 "RobinOS 설치"를 넣고 바·독이 설치기 창을 "Quickshell"로 보이던 걸 고침(`d30cc0a`, 다음 부팅 테스트에서 확인). 남은 것: 설치기로 끝까지 설치하는 경로를 설치 테스트에 넣을지 결정. 첫 구현(`desktop/shell/Installer.qml`, `InputField.qml`, 런처 "RobinOS 설치", `qs ipc call shell installer`), qmllint 통과. 부팅 테스트에 설치기 1·2단계 스크린샷을 넣었고(테스트 VM에 빈 64GB 디스크), 다음 ISO 빌드에서 확인해요. 독에 넣는 건 아직
 - 목표: 라이브 세션에서 마우스로 설치할 수 있는 그래픽 설치기
 - 설계: `desktop/shell/Installer.qml` (Quickshell `FloatingWindow`, 일반 창). 단계: 환영(인터넷, 전원, 백업 안내) → 설치 위치(`robin-install disks` JSON, 디스크 카드, "디스크 전체 사용"/"윈도우 옆에 설치", 빈 공간이 없으면 윈도우의 "볼륨 축소" 안내) → 사용자(이름, 비밀번호 두 번, 컴퓨터 이름) → 확인(지워지는 디스크 경고) → 진행(`sudo -n robin-install run -`에 계획 JSON을 표준 입력으로, `@@` 줄로 진행률, 로그 보기) → 완료(다시 시작)
 - 진입점: 라이브 세션(`/run/archiso`가 있을 때)에서만 런처 추천 맨 위와 독에 "RobinOS 설치"
@@ -95,11 +87,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ### T-007 설치기 결정과 설치 문서 갱신
 - 목표: [design.md](design.md) 미결정 사항의 "그래픽 설치기"를 결정으로 옮기고(자체 설치기, `pacstrap`, Quickshell 화면, Calamares를 쓰지 않는 이유), [install.md](install.md)를 설치기 기준으로 다시 쓰기
 - 조건: T-004, T-005 끝난 뒤
-
-### T-008 부팅 메뉴 이름을 RobinOS로
-- 상태: 검증 대기. 2026-10-08 `GRUB_DISTRIBUTOR="RobinOS"`(메뉴는 "RobinOS Linux"), grub-btrfs 하위 메뉴는 "RobinOS snapshots". 설치 테스트가 `grub.cfg`에서 두 이름을 확인해요
-- 목표: 설치된 시스템의 GRUB 메뉴가 "Arch Linux" 대신 "RobinOS"로 보이게(`GRUB_DISTRIBUTOR`, grub-btrfs 하위 메뉴 이름)
-- 같이 고칠 것: `install-test.py`의 `boot_from_grub()`가 찾는 글자, `recovery.md`의 메뉴 이름
 
 ### T-009 로고 SVG 색 정리
 - 상태: 검증 대기. 2026-10-08 로고 색을 바꿈(옛 청록 → zinc, 위쪽 날개만 Robin red, `2fca31f`). 설치 테스트에서 GRUB 테마도 옛 청록인 걸 보고 GRUB 테마, 배경화면 SVG, SDDM 배경 사본까지 바꿈. rsvg-convert로 렌더링해서 확인. 남은 것: 다음 부팅 테스트의 `01-boot.png`(GRUB)
@@ -117,6 +104,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 최근 것이 위에 있어요.
 
+- 2026-10-08 T-013 스냅샷으로 부팅한 상태에서 되돌리기: 설치 테스트에 `snapshot-boot` 단계를 넣고 통과. GRUB 스냅샷 메뉴에서 cowsay 설치 전 스냅샷을 골라 부팅하니 루트가 overlay였고, 그 안에서 `robinctl snapshot rollback` → 다음 부팅에서 cowsay가 사라짐(`5f22e5e`, `a82252a`)
+- 2026-10-08 T-008 부팅 메뉴 이름: GRUB 메뉴가 "RobinOS Linux", 스냅샷 하위 메뉴가 "RobinOS snapshots"로 보임(설치 테스트 스크린샷, `grub.cfg` 확인, `1f40c18`)
+- 2026-10-08 런처를 열자마자 Enter를 누르면 마우스 아래 항목이 열리던 문제: 고친 뒤 부팅 테스트에서 설치기 1·2단계가 제대로 찍힘(`d5e4e47`)
 - 2026-10-08 T-012 설치본 첫 로그인 확인: 설치 테스트(`1295721`, 모든 단계 약 10분)에서 SDDM이 사용자 robin과 RobinOS 세션을 스스로 고르고, 로그인하면 환영 마법사가 뜨고, GRUB 스냅샷 메뉴의 설명이 영어로 제대로 보임
 - 2026-10-08 T-002 VM 테스트를 WHPX로: 부팅 테스트 207초(TCG의 몇 분의 일), 설치 테스트는 모든 단계 통과. WHPX가 게스트의 재부팅을 처리하지 못해서(`Unexpected VP exit code 4`) 설치 테스트는 부팅마다 QEMU를 새로 띄워요(`8c3293d`). QEMU 11.1은 `C:\Users\Blitz\RobinOS-tools\qemu`, OVMF는 QEMU에 들어 있는 edk2 파일을 써요
 - 2026-10-08 T-003 설치 테스트(archinstall 방식) 통과: archinstall 설치 → post-install → 스냅샷 설정(`@snapshots` fstab, 커널 백업 훅, grub-btrfs 항목) → GRUB 스냅샷 하위 메뉴 → cowsay 설치로 snap-pac 전후 스냅샷 → `robinctl snapshot rollback` → 다음 부팅에서 cowsay가 사라짐. 그 과정에서 테스트 쪽 문제 일곱 개를 고침(archinstall 무인 실행의 멈춤 두 가지, 한글 프롬프트와 UTF-8 조각, 캡처의 프롬프트, WHPX가 재부팅을 못 하는 문제 등, `90035c1`~`8c3293d`). 제품 쪽에서 찾은 것: 설치본 첫 로그인에서 SDDM이 사용자를 고르지 않고 세션이 Hyprland로 잡힘, 스냅샷 한글 설명이 GRUB에서 깨짐 → 고침(다음 설치 테스트에서 확인, T-012)
