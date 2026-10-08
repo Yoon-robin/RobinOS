@@ -135,7 +135,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 status
    - 접근성: 키보드만으로 셸을 다 쓸 수 있는지, 글자 대비, 스크린 리더 이름(`Accessible.name`)
    - 성능: 소프트웨어 렌더링(VM)에서 셸 효과와 애니메이션, 부팅 시간
    - 업스트림 변화: Arch 패키지 이름, Hyprland·Quickshell 새 버전에서 설정과 QML 검사
-7. **v0.2 후보**: tasks.md T-011(학습 센터 앱, 네트워크·CTF 랩 등). 1~6에서 쓸 만한 일이 없을 때 꺼내요.
+7. **v0.2 후보**: tasks.md T-011(foot 제목 표시줄 등). 1~6에서 쓸 만한 일이 없을 때 꺼내요.
 
 새 작업을 만들 때 지킬 것:
 

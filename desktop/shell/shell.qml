@@ -41,6 +41,8 @@ ShellRoot {
 
     Installer {}
 
+    LearnCenter {}
+
     // Bound in robinos.lua with hl.dsp.global("robinos:<name>")
     GlobalShortcut {
         appid: "robinos"
@@ -106,6 +108,10 @@ ShellRoot {
 
         function installer(): void {
             ShellState.openInstaller();
+        }
+
+        function learnCenter(): void {
+            ShellState.openLearnCenter();
         }
 
         // The dock's click on an app: open, bring to front, minimize or restore

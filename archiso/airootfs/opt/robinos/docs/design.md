@@ -59,7 +59,7 @@
 
 ### 기반: Arch Linux
 
-- Hyprland와 Quickshell 최신판이 공식 저장소에 있어요(2026-10 기준 Hyprland 0.56.2, Quickshell 0.3.1). Hyprland는 버전마다 설정 문법이 바뀔 만큼 빠르게 변해서 최신 패키지가 중요해요.
+- Hyprland와 Quickshell 최신판이 공식 저장소에 있어요(2026-10 기준 Hyprland 0.56.2, Quickshell 0.3.2). Hyprland는 버전마다 설정 문법이 바뀔 만큼 빠르게 변해서 최신 패키지가 중요해요.
 - 공식 ISO 도구(`archiso`)가 있어요.
 - 보안 도구가 최신이고, 필요하면 BlackArch 저장소를 붙일 수 있어요.
 - Debian 기반인 Kali의 변형으로 보이지 않아요.
@@ -98,11 +98,13 @@
 
 | 영역 | 일치 수준 | 방법 |
 |---|---|---|
-| RobinOS가 만드는 앱 (설정, 학습 센터) | 동일 | 진짜 shadcn/ui 코드(React + Tailwind)를 Tauri로 감싸요 |
-| 데스크톱 셸 (환영 마법사 포함) | 수치 일치 | QML로 같은 색, 간격, 모서리, 글꼴(Geist), 아이콘(Lucide) 재현 |
+| RobinOS가 만드는 독립 앱 (아직 없음) | 동일 | 진짜 shadcn/ui 코드(React + Tailwind)를 Tauri로 감싸요 |
+| 데스크톱 셸 (환영 마법사, 설치기, 학습 센터 포함) | 수치 일치 | QML로 같은 색, 간격, 모서리, 글꼴(Geist), 아이콘(Lucide) 재현 |
+| 외부 앱 (Firefox, Nautilus, Qt 앱) | 색과 글꼴 | GTK(adw-gtk3, libadwaita), qt6ct 팔레트, 글꼴 설정 |
 
 환영 마법사는 셸 안에 QML로 만들었어요(`desktop/shell/Welcome.qml`, 2026-10 결정). 테마와 한/영 키를 셸의 `Theme`, `ShellState`로 바로 적용할 수 있고, 첫 로그인 직후 셸과 함께 떠야 하며, Tauri 빌드 도구(Rust, Node)를 ISO 빌드에 들이지 않아도 되기 때문이에요.
-| 외부 앱 (Firefox, Nautilus, Qt 앱) | 색과 글꼴 | GTK(adw-gtk3, libadwaita), qt6ct 팔레트, 글꼴 설정 |
+
+학습 센터도 처음 계획(Tauri 앱)과 달리 셸 안의 QML 창으로 만들었어요(`desktop/shell/LearnCenter.qml`, 2026-10-09 결정). 환영 마법사와 같은 이유에 더해, 미션을 푸는 터미널 옆에서 진행도가 바로 바뀌어야 해서예요. 셸은 이미 `robinctl`의 진행도 파일을 지켜보고 있고, 미션 목록은 `robinctl learn tsv`에서 읽어서 미션 제목이 `robinctl` 한곳에만 있어요.
 
 다크/라이트와 강조 색상을 바꾸면 셸이 GTK, libadwaita, foot, qt6ct, Hyprland 창 테두리에 한꺼번에 적용해요.
 
@@ -123,6 +125,8 @@ Calamares를 쓰지 않은 이유예요.
 1. 3D 가속이 없는 그래픽 드라이버(Hyper-V, QEMU 기본 그래픽 등)는 처음부터 소프트웨어 렌더링으로 시작해요.
 2. 그 밖에는 GPU 가속으로 먼저 시작하고, Hyprland가 곧바로 종료되면 소프트웨어 렌더링으로 다시 시작해요.
 3. 소프트웨어 모드(`ROBINOS_RENDER=software`)에서는 Hyprland의 블러와 그림자, 셸의 그림자 효과를 꺼서 VM에서도 버벅이지 않게 해요.
+
+Hyprland 0.56은 `start-hyprland`(감시 프로세스)로 띄우라고 하고, 그냥 띄우면 시작할 때 경고를 남겨요. RobinOS는 `robinos-session`이 `Hyprland`를 직접 띄워요(2026-10-09 결정). `start-hyprland`는 Hyprland가 비정상 종료하면 `--safe-mode`로 다시 띄우는데(실행 파일에서 확인), 그러면 위 2번의 "곧바로 종료되면 소프트웨어 렌더링으로" 대처가 동작하지 않아요. 경고는 무시해도 돼요.
 
 ## v0.1 범위
 

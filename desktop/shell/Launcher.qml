@@ -127,10 +127,14 @@ PanelWindow {
     // foot also installs a client and a server entry; the client fails without a
     // running server, and both read as "Terminal" next to the real one
     readonly property var hiddenApps: ["footclient", "foot-server"]
+    // Apps whose desktop entry has no Korean description ("Foot · Terminal")
+    readonly property var koreanSubtitles: ({
+            "foot": "터미널"
+        })
     readonly property var labApps: ["org.wireshark.Wireshark", "ghidra", "virt-manager"]
 
     readonly property var commands: [
-        { key: "learn", group: "learn", icon: "graduation-cap", title: "학습 미션", subtitle: "리눅스·네트워크·포렌식·리버싱·웹 기초, 터미널에서 풀면 robinctl이 확인해요", words: "learn mission tutorial linux network forensics reversing web http 학습 미션 공부 튜토리얼 리눅스 기초 네트워크 포렌식 리버싱 웹" },
+        { key: "learn", group: "learn", icon: "graduation-cap", title: "학습 미션", subtitle: "학습 센터: 리눅스·네트워크·포렌식·리버싱·웹 기초, 터미널에서 풀면 robinctl이 확인해요", words: "learn mission tutorial linux network forensics reversing web http 학습 센터 미션 공부 튜토리얼 리눅스 기초 네트워크 포렌식 리버싱 웹" },
         { key: "ctf", group: "lab", icon: "flag", title: "입문 CTF", subtitle: "미션에서 배운 걸로 플래그 5개 찾기", badge: "로컬 전용", words: "ctf flag capture the flag 플래그 문제 해킹 대회" },
         { key: "lab-start", group: "lab", icon: "flask", title: "웹 보안 랩 시작", subtitle: "Juice Shop · DVWA", badge: "로컬 전용", words: "lab web juice dvwa 랩 실습 docker" },
         { key: "lab-open", group: "lab", icon: "external", title: "Juice Shop 열기", subtitle: "http://localhost:3000", words: "lab juice shop browser 랩" },
@@ -181,7 +185,7 @@ PanelWindow {
             kind: "app",
             entry: entry,
             title: entry.name,
-            subtitle: entry.genericName !== "" && entry.genericName !== entry.name ? entry.genericName : entry.comment,
+            subtitle: koreanSubtitles[entry.id] ?? (entry.genericName !== "" && entry.genericName !== entry.name ? entry.genericName : entry.comment),
             appIcon: Quickshell.iconPath(entry.icon, "application-x-executable")
         };
     }
@@ -362,7 +366,7 @@ PanelWindow {
 
         switch (item.key) {
         case "learn":
-            ShellState.openTerminal("robinctl learn");
+            ShellState.openLearnCenter();
             break;
         case "screenshot":
             // Wait for the launcher to fade out, or it would be in the picture

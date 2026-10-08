@@ -903,6 +903,20 @@ learn_list() {
   fi
 }
 
+# For the shell's learning center (desktop/shell/LearnCenter.qml), one line each:
+# "mission<TAB>number<TAB>group<TAB>title<TAB>tools<TAB>done" (the group only on the
+# first mission of each), then "ctf<TAB>solved<TAB>count"
+learn_tsv() {
+  local i done
+  for ((i = 1; i <= LEARN_COUNT; i++)); do
+    done=0
+    learn_is_done "${i}" && done=1
+    printf 'mission\t%s\t%s\t%s\t%s\t%s\n' "${i}" "$(learn_group "${i}")" "$(learn_title "${i}")" \
+      "$(learn_tools "${i}")" "${done}"
+  done
+  printf 'ctf\t%s\t%s\n' "$(ctf_solved_count)" "${CTF_COUNT}"
+}
+
 learn_heading() {
   printf '%s미션 %s · %s%s\n\n' "${C_BOLD}" "$1" "$(learn_title "$1")" "${C_RESET}"
 }
@@ -2047,6 +2061,9 @@ learn() {
       ;;
     reset)
       learn_reset
+      ;;
+    tsv)
+      learn_tsv
       ;;
     *)
       die "사용법: robinctl learn [list|show|check|reset] [번호]"

@@ -99,6 +99,14 @@ check "list after the first five" 0 learn
 said "list counts 5 of 25" "5/25"
 said "list shows the network group" "네트워크 기초"
 said "list points to mission 6" "robinctl learn show 6"
+# The shell's learning center (LearnCenter.qml) reads this
+check "tsv for the learning center" 0 learn tsv
+if [[ "$(grep -c '^mission	' "${WORK}/out")" == "25" && "$(awk -F'\t' '$1 == "mission" && $6 == 1' "${WORK}/out" | wc -l)" == "5" ]] \
+    && grep -qx 'mission	6	네트워크 기초	내 IP 주소 보기	ip a	0' "${WORK}/out" && grep -qx 'ctf	0	5' "${WORK}/out"; then
+  ok "tsv: 25 missions, 5 done, groups, then the CTF"
+else
+  bad "tsv: $(head -n 7 "${WORK}/out" | tr '\t' '|')"
+fi
 
 # Network basics: answers written the way the missions ask
 in_home "mkdir -p practice/net"
@@ -449,7 +457,7 @@ printf '%s\n' "Windows command hints (robinos-hints.sh)"
 # would start the Windows programs through WSL's interop
 hint() { bash -c ". '${HINTS}'; command_not_found_handle '$1'" 2>&1; }
 for pair in "ipconfig:ip a" "IPCONFIG.EXE:ip a" "dir:ls -l" "tasklist:ps aux" "notepad:gnome-text-editor" \
-    "calc:gnome-calculator" "eventvwr:journalctl -b" "services.msc:systemctl" "diskmgmt.msc:gnome-disks" "nslookup:getent hosts"; do
+    "calc:gnome-calculator" "taskmgr:missioncenter" "eventvwr:journalctl -b" "services.msc:systemctl" "diskmgmt.msc:gnome-disks" "nslookup:getent hosts"; do
   out="$(hint "${pair%%:*}")"
   if [[ "${out}" == *"${pair#*:}"* ]]; then ok "hint for ${pair%%:*}"; else bad "hint for ${pair%%:*}: ${out}"; fi
 done

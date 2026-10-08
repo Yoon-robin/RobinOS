@@ -170,6 +170,20 @@ Singleton {
         installerOpen = true;
     }
 
+    // ---- Learning center (LearnCenter.qml) ----
+
+    property bool learnCenterOpen: false
+
+    function openLearnCenter() {
+        launcherOpen = false;
+        quickSettingsOpen = false;
+        calendarOpen = false;
+        // Already open (maybe behind other windows): map it again to bring it forward
+        if (learnCenterOpen)
+            learnCenterOpen = false;
+        learnCenterOpen = true;
+    }
+
     // ---- First-login welcome wizard (Welcome.qml) ----
 
     property bool welcomeOpen: false
@@ -209,7 +223,8 @@ Singleton {
         welcomeOpen = true;
     }
 
-    // goal: "basics" or "web" opens that in a terminal; "" or "explore" just closes.
+    // goal: "basics" opens the learning center, "web" the web lab guide in a terminal;
+    // "" or "explore" just closes.
     function finishWelcome(goal) {
         welcomeSettings.done = true;
         if (goal !== "")
@@ -218,7 +233,7 @@ Singleton {
         welcomeOpen = false;
 
         if (goal === "basics")
-            openTerminal("robinctl learn");
+            openLearnCenter();
         else if (goal === "web")
             openTerminal("robinctl lab info web");
     }

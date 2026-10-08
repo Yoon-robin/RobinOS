@@ -77,12 +77,14 @@ VM 창 크기를 바꾸면 VMware(`vmtoolsd`)나 QEMU(`virtio-gpu`)가 새 크�
 | 단축키 | 동작 |
 |---|---|
 | `Super+Space` 또는 `Super+A` | 런처 (앱, 학습 미션, 랩, 시스템 명령) |
-| `Super+S` | 빠른 설정 |
+| `Super+S` 또는 `Super+I` | 빠른 설정 (윈도우의 설정 `Win+I`) |
+| `Super+R` | 런처 (윈도우의 실행 `Win+R`) |
 | `Super+N` | 알림 지우기 |
 | `Super+Return` | 터미널 |
 | `Super+E` | 파일 |
 | `Super+B` | 브라우저 |
 | `Super+L` | 화면 잠금 |
+| `Ctrl+Shift+Escape` | 작업 관리자 (Mission Center) |
 | `Alt+Tab`, `Alt+Shift+Tab` | 다음 창 / 이전 창 |
 | `Alt+F4` 또는 `Super+Q` | 창 닫기 |
 | `Super+D` | 바탕 화면 보기 (지금 작업 공간의 창을 모두 숨기고, 다시 누르면 돌아와요) |
@@ -118,7 +120,7 @@ robin@robinos ~/practice >
 - 흐린 글자는 사용자 이름과 컴퓨터 이름, 굵은 글자는 지금 있는 폴더예요(`~`는 내 홈 폴더). 경로가 길면 마지막 세 단계만 보여요
 - `>`는 RobinOS의 빨간 강조색이에요. 관리자(root) 셸에서는 리눅스의 관례대로 `#`가 돼요
 - 바로 앞 명령이 실패하면 `>` 앞에 종료 코드가 빨갛게 나와요. `robin@robinos ~ 127 >`는 명령을 찾지 못했다는 뜻이에요. 0이 아닌 종료 코드는 실패예요
-- 창 제목이 `robin@robinos: ~/practice`로 바뀌어서 셸의 바에서도 터미널이 어디에 있는지 보여요
+- 창 제목도 `robin@robinos: ~/practice`처럼 지금 있는 곳으로 바뀌어요(셸의 바는 창 제목 대신 앱 이름 "Foot"을 보여 줘요)
 
 프롬프트, 윈도우 명령 힌트, 첫 인사(fastfetch)는 `desktop/bash/robinos-bashrc.sh`(설치 위치 `/usr/share/robinos/bash/robinos-bashrc.sh`)에 모여 있고, `~/.bashrc`는 이 파일을 불러오기만 해요. 그래서 RobinOS가 업데이트되면 이미 있는 사용자에게도 바뀐 것이 들어가요. 내 설정은 `~/.bashrc`의 그 줄 아래에 적어요. 새로 만드는 사용자는 `/etc/skel/.bashrc`로 바로 쓸 수 있고, 설치하는 사용자의 `~/.bashrc`에는 `scripts/post-install.sh`가 그 줄을 넣어 줘요.
 
@@ -142,7 +144,7 @@ ipconfig 명령은 윈도우용이에요. 리눅스에서는
 2. 다크/라이트와 강조 색상. 고르는 즉시 화면에 적용돼요.
 3. 한/영 전환 단축키. 한/영 키와 오른쪽 Alt는 항상 되고, Ctrl+Space(기본), Shift+Space, 없음 중에서 하나를 더 골라요. `~/.config/fcitx5/config`를 다시 쓰고 `fcitx5-remote -r`로 바로 적용해요. 입력 칸에서 직접 바꿔 볼 수 있어요.
 4. 학습 목표: 리눅스 기초, 웹 보안, 먼저 둘러보기
-5. 단축키 안내(런처, 빠른 설정, 창 전환·닫기, 파일, 터미널, 바탕 화면 보기, 화면 캡처, 한/영, 잠금). "미션 시작하기"를 누르면 고른 목표가 터미널에서 열려요.
+5. 단축키 안내(런처, 빠른 설정, 창 전환·닫기, 파일, 터미널, 바탕 화면 보기, 화면 캡처, 한/영, 잠금, 작업 관리자, 클립보드 기록). 마지막 단추를 누르면 고른 목표가 열려요. 리눅스 기초는 학습 센터, 웹 보안은 터미널의 웹 랩 안내예요.
 
 Enter는 다음, Esc는 건너뛰기예요. 끝내거나 건너뛰면 `~/.local/state/quickshell/` 아래 `welcome.json`에 기록돼서 다시 뜨지 않아요. 라이브 ISO는 부팅할 때마다 새로 시작하니 매번 떠요. 다시 보려면 런처에서 "환영 마법사"를 고르거나 이렇게 실행하세요.
 
@@ -185,7 +187,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 ## 학습 미션
 
-런처의 "학습 미션"을 고르면 터미널이 열리고 `robinctl learn`이 미션 목록과 진행도를 보여 줘요. 미션은 그 터미널에서 직접 풀고, `robinctl learn check`로 확인해요. 리눅스, 네트워크, 포렌식, 리버싱, 웹 기초가 5개씩 있고(연습 파일은 `~/practice/forensics`, 연습 프로그램은 `~/practice/reversing`, 웹 연습 서버는 `~/practice/web`에 만들어요), 자세한 내용은 [README](../README.md#학습-미션)에 있어요. 미션을 하나라도 끝내면 런처의 "학습 미션"에 "3/25 완료"처럼 진행도가 보여요(`~/.local/state/robinos/learn/done`을 셸이 읽어요).
+런처의 "학습 미션"을 고르면 학습 센터가 열려요(`desktop/shell/LearnCenter.qml`). 맨 위에 진행도 막대와 다음 미션이 있고, 그 아래에 다섯 묶음의 미션 25개가 끝낸 것은 초록 체크, 다음 것은 강조색 동그라미로 보여요. 미션을 고르면(마우스나 `Tab`과 `Enter`) 터미널이 열리고 `robinctl learn show <번호>`가 설명을 보여 줘요. 미션은 그 터미널에서 직접 풀고, `robinctl learn check`로 확인해요. 통과하면 학습 센터의 체크가 바로 바뀌어요. 맨 아래에는 입문 CTF의 진행도와 "CTF 열기"가 있어요. 환영 마법사에서 "리눅스 기초"를 고르고 끝내도 학습 센터가 열려요. 미션 목록은 `robinctl learn tsv`에서 읽어요. 리눅스, 네트워크, 포렌식, 리버싱, 웹 기초가 5개씩 있고(연습 파일은 `~/practice/forensics`, 연습 프로그램은 `~/practice/reversing`, 웹 연습 서버는 `~/practice/web`에 만들어요), 자세한 내용은 [README](../README.md#학습-미션)에 있어요. 미션을 하나라도 끝내면 런처의 "학습 미션"에 "3/25 완료"처럼 진행도가 보여요(`~/.local/state/robinos/learn/done`을 셸이 읽어요).
 
 셸이 작업용으로 여는 터미널은 `ROBINOS_NO_GREETING=1`로 시작해서 `~/.bashrc`가 fastfetch를 띄우지 않아요. fastfetch는 한국어 라벨로 짧게 줄인 설정(`desktop/fastfetch/config.jsonc` → `/etc/xdg/fastfetch/config.jsonc`)을 쓰고, 왼쪽에 Arch 로고 대신 RobinOS 울새 그림(`/usr/share/robinos/fastfetch/robinos-logo.ansi`, [brand.md](brand.md))을 보여 줘요.
 
