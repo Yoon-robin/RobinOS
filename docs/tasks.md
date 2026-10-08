@@ -65,7 +65,13 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 한 것: `robinos-shell`(EGL 실패를 보면 셸만 소프트웨어로 다시 띄움, 죽으면 다시 띄움), VM 화면(`Virtual-*`)은 배율 1, `robinos-vm-display`(창 크기를 따라감), 설치기가 VMware에서는 `open-vm-tools`와 `vmtoolsd`를, QEMU/KVM에서는 `qemu-guest-agent`를 설치. 라이브 VM에서 셋 다 직접 확인(셸 강제 종료 후 다시 뜸, 1718×920·배율 1로 맞춤, udev change 신호로 다시 맞춤)
 - `426e32d` ISO를 VMware에서 띄우니 셸이 GPU 실패 뒤 아무것도 안 그리는 대신 Wayland 오류(`wl_surface.attach` invalid arguments)로 바로 죽었어요. `robinos-shell`은 살아 있는 셸에서만 GPU 실패를 확인해서 이걸 그냥 "죽음"으로 세고 GPU 모드로 다섯 번 다시 띄운 뒤 포기했어요. 셸이 죽은 뒤에도 로그를 보고 소프트웨어로 바꾸게 고쳤고, 라이브 VM에서 확인했어요
 - 같이 한 것: 화면에 보이는 단축키를 `Super` 대신 `Win`으로 적어요(사용자 질문 "Super 키가 뭐야?"). 환영 마법사 마지막 단계에 "Win 키는 리눅스에서 Super 키라고 불러요"를 넣었어요
-- 남은 것: ISO 빌드, 부팅 테스트, VMware VM에 설치하고 설치본에서 확인
+- 지금까지(2026-10-08, robin PC): `426e32d` ISO를 VMware VM에 설치함. 설치기가 마지막 `umount`에서 멈췄고(gpg-agent, `933ca31`에서 고침) 손으로 분리한 뒤 고친 `robinos-shell`을 넣어 부팅. 설치본에서 `open-vm-tools` 설치, `vmtoolsd` 켜짐, SDDM 로그인 화면까지 확인. 로그인 뒤 데스크톱은 아직 못 봄(VMware에는 키 입력을 보낼 방법이 없어 사람이 로그인해야 해요)
+- 남은 것 (어느 PC든):
+  1. `2973b62` 이상으로 ISO 빌드, 부팅 테스트. 새 장면 `shell-restarted`에서 셸이 다시 떴는지, 터미널에 `the shell exited` 다음 `starting the shell` 줄이 보이는지 확인
+  2. 설치 테스트 robinos(설치기 마무리의 gpg-agent 정리가 QEMU에서도 문제없는지)
+  3. 통과하면 푸시 대기 표를 비우고 main 푸시
+- 남은 것 (robin PC만, VMware가 거기 있어요): 최종 ISO로 VMware VM에 다시 설치(`build\vmware\guest-*.sh`, `vmrun` 게스트 명령, 계획은 디스크 `/dev/nvme0n1` 전체), 로그인 뒤 셸·해상도 확인
+- 다른 PC로 옮겨 갈 때: 검증 전 커밋은 `origin/work/t025-vmware` 브랜치에 있어요. main에서 `git fetch origin` 후 `git merge --ff-only origin/work/t025-vmware`로 받아요. main에 푸시하고 나면 이 브랜치는 지워도 돼요(사용자 확인)
 
 ## 할 일 (위에서부터)
 
