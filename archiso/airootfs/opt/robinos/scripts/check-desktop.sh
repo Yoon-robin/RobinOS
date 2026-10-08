@@ -8,6 +8,7 @@ set -euo pipefail
 #   - QML syntax of the shell and SDDM theme (qmlformat)
 #   - Bash syntax of desktop scripts         (bash -n)
 #   - JSON syntax of the Firefox policies    (python3 -m json.tool)
+#   - fastfetch logo size matches its config (python3)
 #
 # Missing tools are reported and skipped. Install them with:
 #   sudo pacman -S --needed lua qt6-declarative hyprland
@@ -88,6 +89,25 @@ if command -v python3 >/dev/null 2>&1; then
   for file in "${ROOT_DIR}"/desktop/firefox/*.json; do
     if python3 -m json.tool "${file}" >/dev/null; then ok "${file#"${ROOT_DIR}/"}"; else fail "${file#"${ROOT_DIR}/"}"; fi
   done
+else
+  skip "python3 not found"
+fi
+
+# fastfetch draws nothing for a raw logo without its size, and a stale size
+# misplaces the system info next to it
+printf 'fastfetch logo\n'
+if command -v python3 >/dev/null 2>&1; then
+  if python3 - "${ROOT_DIR}/desktop/fastfetch" <<'PY'
+import json, re, sys
+folder = sys.argv[1]
+text = open(folder + "/config.jsonc", encoding="utf-8").read()
+logo = json.loads(re.sub(r"^\s*//.*$", "", text, flags=re.M))["logo"]
+lines = open(folder + "/robinos-logo.ansi", encoding="utf-8").read().splitlines()
+width = max(len(re.sub(r"\x1b\[[0-9;]*m", "", line)) for line in lines)
+if (logo["width"], logo["height"]) != (width, len(lines)):
+    sys.exit(f"config says {logo['width']}x{logo['height']}, robinos-logo.ansi is {width}x{len(lines)}")
+PY
+  then ok "desktop/fastfetch/robinos-logo.ansi"; else fail "desktop/fastfetch/robinos-logo.ansi"; fi
 else
   skip "python3 not found"
 fi

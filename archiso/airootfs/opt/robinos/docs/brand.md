@@ -9,6 +9,7 @@ RobinOS의 정체성은 차분한 보안 워크스테이션이에요. 기술적�
 - `assets/brand/robinos-logo-horizontal.svg`: 헤더에 쓰기 좋은 가로형 로고 (README 맨 위)
 - `assets/brand/robinos-glyph.svg`: 아주 작은 곳(셸의 바, 런처, 설치기, 로그인 화면)에 쓰는 하얀 울새 실루엣. 강조색 네모 위에 올려요
 - `assets/brand/build-logo.py`: 위 네 파일을 만드는 스크립트. 이름과 한 줄 소개는 Geist·Pretendard를 윤곽선으로 바꿔 넣어서 글꼴이 없는 곳에서도 똑같이 보여요
+- `desktop/fastfetch/robinos-logo.ansi`: 터미널을 열면 fastfetch 옆에 나오는 울새 그림(31×15칸). 반 칸 블록 문자 하나에 점 두 개를 그려요. 하얀 부분은 터미널 글자색을 써서 라이트 모드에서는 검은 울새가 돼요. 마크를 고치면 `python3 assets/brand/build-terminal-logo.py desktop/fastfetch/robinos-logo.ansi`로 다시 만들고, 알려 주는 크기를 `desktop/fastfetch/config.jsonc`에 적어요(`check-desktop.sh`가 맞는지 봐요)
 
 ## 콘셉트
 

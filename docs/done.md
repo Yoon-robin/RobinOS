@@ -4,6 +4,26 @@
 
 ## 완료
 
+- 2026-10-08 묶음 2 검증(`c4e62d5`, ISO 빌드 → 부팅 테스트 33장 → 설치 테스트 robinos 다섯 단계 통과)
+  - T-041 doctor가 NVIDIA 드라이버 상태와 인쇄 서비스를 알려 줌(`9dcad3a`, robinctl 테스트 8개)
+  - T-042 Firefox 정책으로 원격 측정·실험·기본 브라우저 묻기 끔(`9dcad3a`, 설치본에서 파일 확인)
+  - T-043 런처 학습 진행도(`76dbc84`): 라이트 모드 런처에 "1/20 완료 · 이어서 풀어요"
+  - T-044 환영 마법사 단축키 안내에 Win+D, Win+Shift+S(`ade8743`, `welcome-tour` 장면)
+  - T-045 클립보드 기록 Win+V(`4586424`): `clipboard` 장면에 복사한 글, 로그아웃하면 사라지는 곳에 50개, 민감한 복사는 남기지 않음
+- 2026-10-08 묶음 1 검증(`865b09d`, ISO 빌드 → 부팅 테스트 31장 → 설치 테스트 robinos 다섯 단계 통과)
+  - T-035 설치본 런처 장면(`22dde2a`): `word` → 텍스트 편집기(워드패드)와 LibreOffice Writer, `store` → 소프트웨어, `printer` → 인쇄 설정이 "윈도우의 …에 해당해요"로 나옴
+  - T-037 윈도우 이름 넓히기(`22dde2a`): 명령 힌트 8개, 런처 계산기·디스크 관리, `gnome-disk-utility`
+  - T-038 기본 설치의 네트워크(`e9bab85`): 설치본 `ss -Htuln`이 5353/udp(Avahi)와 127.0.0.1·::1의 631(CUPS)뿐, sshd 꺼짐. ethics.md에 적은 그대로
+  - T-039 캡처 도구(`e9bab85`): `snipping` 장면에 slurp의 어두운 덮개, Esc 뒤 정상
+  - T-040 화면 읽기 조사(`865b09d`): 막힘으로 남김
+- 2026-10-08 T-034 리버싱 기초 미션 5개(`9707f73`): 직접 만든 무해한 C 연습 프로그램(`practice/reversing`, 압축해서 robinctl에 14KB)으로 `readelf`(NEEDED), `strings`(비밀번호), `ltrace`(strcmp 비교값), `strace`(찾는 파일 경로), `objdump`(`cmp $0x539` → 1337)를 연습해요. 정답 코드는 XOR로 숨겨 strings에 안 보임. robinctl 테스트에 미션 흐름과 실제 도구 결과(WSL에 gcc·ltrace·strace 설치), 부팅 테스트에서 미션 목록 20개(네 묶음)와 런처 설명 확인. 같이: 문서와 코드 맞추기(`630f101`), 루프 절차에 느린 검증 모아 하기(`e83c5d8`, 사용자 요청)
+- 2026-10-08 매일 쓰는 앱 세 가지(design.md 요구사항 표에서 빠져 있던 것): 라이브 ISO에 넣지 않는 설치본 전용 목록 `packages/apps.txt`를 새로 만듦(ISO가 2GiB 한도에 48MB 남음). 설치 테스트 robinos 다섯 단계 통과, 걸린 시간 6.3분 → 6.4분
+  - T-031 프린터(`e1a537b`): `cups`, `nss-mdns`, `system-config-printer`. `cups.socket`, `avahi-daemon.service`, nsswitch에 `mdns_minimal`. 설치본에서 `lpstat -r` → "scheduler is running". cups-browsed는 넣지 않음. 런처 "장치 및 프린터"
+  - T-032 오피스(`c5db7ca`): `libreoffice-still`(26.2)과 `-ko`. 런처 Word, Excel, PowerPoint. hwp는 97 형식만 열린다고 desktop.md에 적음
+  - T-033 앱 스토어(`fff598a`): `gnome-software`(51), PackageKit 없음 확인, `flatpak remotes --system`에 flathub. 런처 "Microsoft Store". `robinctl update`가 시스템 Flatpak 앱도 올림(robinctl 테스트 5개)
+  - 첫 설치 테스트는 실패로 나왔는데, 테스트가 도는 중에 `install-test.py`를 고쳐서 단계마다 다시 읽힌 탓이었어요(CLAUDE.md의 주의 그대로). 제품 문제는 아니었어요
+- 2026-10-08 T-030 NVIDIA 그래픽 카드 드라이버(`844712d`): 설치기가 `/sys/bus/pci/devices`에서 NVIDIA 화면 장치(VGA, 노트북의 3D 컨트롤러)를 찾고, 장치 번호 `0x1e00` 이상(Turing, GTX 16·RTX 20 이후)이면 `nvidia-open`을 설치하고 initramfs에서 `kms` 훅을 빼요. 오래된 카드는 nouveau 그대로(Arch 공식 저장소에 드라이버 없음). nvidia-utils 615가 nouveau 차단과 절전(커널 suspend notifier)을 스스로 해서 켤 서비스는 없음(패키지를 받아 확인). 설치기 테스트 `scripts/test-robin-install.py`(11개)를 `check`에 넣음. 설치 테스트 robinos 다섯 단계 통과. 실제 NVIDIA PC는 "사용자 확인 필요"
+- 2026-10-08 코드 검토로 고친 것 두 가지: 라이브 ISO와 새 설치본의 독에 설치 안 된 Wireshark가 고정돼 눌러도 반응 없던 것(`6faf853`, 부팅·설치 테스트에서 확인), Docker 없이 랩을 켜면 설치 방법을 알려 주지 않던 것(`dfcb5fd`, robinctl 테스트에 Docker 없는 경우를 더함)
 - 2026-10-08 T-029 Qt 앱 제목 표시줄(`cc63716`): Hyprland 0.56.2는 xdg-decoration 요청에 언제나 "서버가 그린다"고 답하면서 제목 표시줄은 그리지 않아요(`XDGDecoration.cpp`). Qt가 그 프로토콜을 보지 않게 하고(`QT_WAYLAND_DISABLED_INTERFACES=zxdg_decoration_manager_v1`) qt6-wayland의 Adwaita 장식을 씀. 앱의 최소화 요청(`xdg_toplevel.set_minimized`)은 0.56.2가 받기만 하고 처리하지 않아서(Lua 이벤트 `window.minimize`는 위키에만 있고 `hl.on: unknown event`), dconf `button-layout='appmenu:maximize,close'`로 GTK, Firefox, Qt의 최소화 단추를 뺌. 부팅 테스트(30장)에서 설치기에 어두운 제목 표시줄(최대화, 닫기), 포털 값 `appmenu:maximize,close` 확인. foot은 이 방법이 안 통해서 그대로예요. Hyprland에 `window.minimize`가 들어오면 최소화 단추를 다시 켜요
 - 2026-10-08 T-028 포렌식 기초 미션 5개(`ce6a092`): 파일 종류(`file`), 해시(`sha256sum`), 사진 메타데이터(`exiftool`), 숨은 압축 파일(`binwalk`·`bsdtar`), 로그 분석(`grep | sort | uniq -c`). 채점 테스트 통과, 부팅 테스트에서 미션 목록 15개(세 묶음) 확인. forensics 프로필과 라이브 ISO에 `7zip`(binwalk가 ZIP을 꺼낼 때 씀). ISO 2,099,478,528바이트
 - 2026-10-08 T-027 v0.1 프리뷰 공개: https://github.com/Yoon-robin/RobinOS/releases/tag/v0.1.0 (프리릴리스, 태그 `v0.1.0` = `87f3e9a`). 첨부: `robinos-2026.10.08-x86_64.iso`(2,097,446,912바이트), `SHA256SUMS`(`5b36e9f8...`). 깃허브 파일 한도(2GiB) 때문에 라이브 ISO에서 무거운 보안 묶음, hydra·gdb·Nerd 글꼴, 다른 언어 번역과 문서를 뺌. 이 ISO로 부팅 테스트 29장, 설치 테스트 robinos 통과. 서명은 아직 없음
