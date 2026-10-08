@@ -127,6 +127,10 @@ PanelWindow {
     // foot also installs a client and a server entry; the client fails without a
     // running server, and both read as "Terminal" next to the real one
     readonly property var hiddenApps: ["footclient", "foot-server"]
+    // Apps whose desktop entry has no Korean description ("Foot · Terminal")
+    readonly property var koreanSubtitles: ({
+            "foot": "터미널"
+        })
     readonly property var labApps: ["org.wireshark.Wireshark", "ghidra", "virt-manager"]
 
     readonly property var commands: [
@@ -181,7 +185,7 @@ PanelWindow {
             kind: "app",
             entry: entry,
             title: entry.name,
-            subtitle: entry.genericName !== "" && entry.genericName !== entry.name ? entry.genericName : entry.comment,
+            subtitle: koreanSubtitles[entry.id] ?? (entry.genericName !== "" && entry.genericName !== entry.name ? entry.genericName : entry.comment),
             appIcon: Quickshell.iconPath(entry.icon, "application-x-executable")
         };
     }
