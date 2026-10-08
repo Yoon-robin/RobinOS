@@ -2,7 +2,7 @@
 set -euo pipefail
 
 readonly ROBINOS_NAME="RobinOS"
-readonly ROBINOS_VERSION="0.1.0-dev"
+readonly ROBINOS_VERSION="0.2.0-dev"
 readonly CONFIG_FILE="/etc/robinos/config.toml"
 readonly SHELL_DIR="/usr/share/robinos/shell"
 readonly SESSION_FILE="/usr/share/wayland-sessions/robinos.desktop"
@@ -148,6 +148,10 @@ doctor() {
     # shellcheck disable=SC1091
     . /etc/os-release
     os_name="${PRETTY_NAME:-${NAME:-알 수 없음}}"
+    # Arch's wiki and forums answer most questions, so say what RobinOS is built on
+    if [[ "${ID:-}" != "arch" && " ${ID_LIKE:-} " == *" arch "* ]]; then
+      os_name="${os_name} (Arch Linux 기반)"
+    fi
   fi
   printf '  OS: %s\n' "${os_name}"
 

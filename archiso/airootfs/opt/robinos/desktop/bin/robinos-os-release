@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Names the system RobinOS in /usr/lib/os-release (/etc/os-release links to it),
+# which fastfetch, hostnamectl and other distros' os-prober read. ID_LIKE=arch
+# keeps tools that look for Arch working. The filesystem package owns the file,
+# so a pacman hook (/etc/pacman.d/hooks/robinos-os-release.hook) runs this again
+# after every filesystem upgrade. ROBINOS_OS_RELEASE overrides the path for tests.
+
+target="${ROBINOS_OS_RELEASE:-/usr/lib/os-release}"
+tmp="$(mktemp "${target}.XXXXXX")"
+cat >"${tmp}" <<'EOF'
+NAME="RobinOS"
+PRETTY_NAME="RobinOS"
+ID=robinos
+ID_LIKE=arch
+BUILD_ID=rolling
+ANSI_COLOR="38;2;229;72;77"
+HOME_URL="https://github.com/Yoon-robin/RobinOS"
+DOCUMENTATION_URL="https://github.com/Yoon-robin/RobinOS/tree/main/docs"
+SUPPORT_URL="https://github.com/Yoon-robin/RobinOS/issues"
+BUG_REPORT_URL="https://github.com/Yoon-robin/RobinOS/issues"
+LOGO=robinos
+EOF
+chmod 644 "${tmp}"
+mv -f "${tmp}" "${target}"

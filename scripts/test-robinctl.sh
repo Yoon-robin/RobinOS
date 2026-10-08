@@ -464,6 +464,27 @@ for app in gnome-text-editor nautilus mission-center fastfetch traceroute gnome-
   fi
 done
 
+printf '%s\n' "Prompt and greeting (robinos-bashrc.sh), os-release, version"
+BASHRC="${ROOT_DIR}/desktop/bash/robinos-bashrc.sh"
+# PS1 after a command; an interactive bash without a terminal grumbles on stderr
+prompt_after() { ROBINOS_NO_GREETING=1 bash --norc -ic ". '${BASHRC}'; $1; __robinos_prompt; printf '%s' \"\$PS1\"" 2>/dev/null; }
+mark='>'
+((EUID == 0)) && mark='#'
+out="$(prompt_after true)"
+if [[ "${out}" == *'\w'*"m\\]${mark}\\["* && "${out}" != *'m\]1\['* ]]; then ok "prompt ends in ${mark} without an exit code"; else bad "prompt after true: ${out}"; fi
+out="$(prompt_after false)"
+if [[ "${out}" == *'m\]1\['*"m\\]${mark}\\["* ]]; then ok "a failed command's exit code shows before ${mark}"; else bad "prompt after false: ${out}"; fi
+out="$(ROBINOS_NO_GREETING=1 bash --norc -ic ". '${BASHRC}'; . '${BASHRC}'; printf '%s' \"\${PROMPT_COMMAND}\"" 2>/dev/null)"
+if [[ "${out}" == "__robinos_prompt" ]]; then ok "sourcing twice keeps one prompt hook, no greeting"; else bad "PROMPT_COMMAND / greeting: ${out}"; fi
+if grep -qF "robinos-bashrc.sh" "${ROOT_DIR}/desktop/bash/bashrc" "${ROOT_DIR}/scripts/post-install.sh"; then ok "/etc/skel/.bashrc and post-install.sh source it"; else bad "robinos-bashrc.sh is sourced nowhere"; fi
+ROBINOS_OS_RELEASE="${WORK}/os-release" "${ROOT_DIR}/desktop/bin/robinos-os-release"
+if (. "${WORK}/os-release" && [[ "${NAME}" == "RobinOS" && "${ID}" == "robinos" && "${ID_LIKE}" == "arch" ]]); then ok "os-release names RobinOS, like arch"; else bad "os-release: $(cat "${WORK}/os-release")"; fi
+for config in config/robinos.toml archiso/airootfs/etc/robinos/config.toml; do
+  [[ -f "${ROOT_DIR}/${config}" ]] || continue
+  config_version="$(sed -n 's/^version = "\(.*\)"$/\1/p' "${ROOT_DIR}/${config}")"
+  if [[ "$("${ROBINCTL}" version)" == "RobinOS ${config_version}" ]]; then ok "robinctl version matches ${config} (${config_version})"; else bad "robinctl version $("${ROBINCTL}" version) vs ${config} ${config_version}"; fi
+done
+
 if [[ "${failures}" -gt 0 ]]; then
   printf 'robinctl tests: %d failed\n' "${failures}"
   exit 1

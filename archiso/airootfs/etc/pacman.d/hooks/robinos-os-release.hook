@@ -1,0 +1,12 @@
+# The filesystem package brings Arch's os-release back on every upgrade;
+# name the system RobinOS again (desktop/bin/robinos-os-release)
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = filesystem
+
+[Action]
+Description = RobinOS 이름을 os-release에 다시 적어요
+When = PostTransaction
+Exec = /usr/share/robinos/bin/robinos-os-release

@@ -22,6 +22,9 @@ install -m440 /dev/stdin /etc/sudoers.d/10-robinos-live <<'EOF'
 robin ALL=(ALL:ALL) NOPASSWD: ALL
 EOF
 
+# fastfetch and hostnamectl say RobinOS (a pacman hook keeps it after upgrades)
+/usr/share/robinos/bin/robinos-os-release
+
 # GTK/libadwaita defaults and the fonts fetched by scripts/fetch-fonts.sh
 dconf update
 fc-cache -f

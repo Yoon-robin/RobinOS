@@ -67,6 +67,8 @@
 
 검토한 대안: Debian 안정판은 Hyprland와 Quickshell이 한 단계씩 뒤처져요. Ubuntu LTS와 Fedora는 둘 중 하나가 없거나 구버전이에요. NixOS는 파일 구조가 일반 리눅스와 달라 학습용으로 맞지 않아요. openSUSE Tumbleweed가 차선이지만 Quickshell을 직접 패키징해야 해요.
 
+시스템 이름(2026-10-09 결정): `/usr/lib/os-release`를 `NAME="RobinOS"`, `ID=robinos`, `ID_LIKE=arch`로 적어요(`desktop/bin/robinos-os-release`). fastfetch, `hostnamectl`, 다른 배포판의 부팅 메뉴(os-prober)에 RobinOS로 나오고, Arch를 찾는 도구는 `ID_LIKE`로 알아봐요. EndeavourOS 같은 Arch 기반 배포판과 같은 방식이에요. archinstall 4.5는 os-release를 읽지 않는 것을 패키지에서 확인했어요. 이 파일은 `filesystem` 패키지 것이라 업그레이드 때마다 Arch 것으로 돌아가서, pacman 훅이 다시 적어요. `robinctl doctor`는 "RobinOS (Arch Linux 기반)"으로 보여 줘요. 문제를 검색할 때는 Arch 위키가 가장 잘 맞기 때문이에요.
+
 ### 데스크톱: Hyprland + Quickshell
 
 - **Hyprland**: 창 관리(컴포지터). 설정은 Lua(`desktop/hypr/robinos.lua`).

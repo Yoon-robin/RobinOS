@@ -14,7 +14,7 @@ v0.1 범위와 진행 상황은 `docs/design.md`에서 관리해요.
 - 패키지 목록 만들기
 - 설치 후 설정 스크립트 만들기
 - 한글 글꼴, 한글 입력, 로캘, 시간대 설정
-- 터미널 프롬프트 브랜딩 추가
+- 터미널 프롬프트 브랜딩 추가 - 완료 (`robin@robinos ~ >`, 실패한 명령의 종료 코드, fastfetch의 울새 그림, os-release의 RobinOS 이름)
 - 임시 배경화면과 로그인 테마 추가 - 완료 (셸이 직접 그리는 배경화면, 새 SDDM 테마)
 
 ## 2단계: `robinctl`
@@ -24,7 +24,7 @@ v0.1 범위와 진행 상황은 `docs/design.md`에서 관리해요.
 - `robinctl update` 구현 - 첫 프로토타입 완료
 - `robinctl snapshot create` 구현 - 첫 프로토타입 완료
 - `robinctl learn` 구현 - 리눅스·네트워크·포렌식·리버싱·웹 기초 미션 5개씩, 모두 25개 완료
-- `/etc/robinos/config.toml`에 간단한 설정 파일 추가
+- `/etc/robinos/config.toml`에 간단한 설정 파일 추가 - 완료 (버전, 데스크톱, 프로필 목록. `robinctl doctor`가 있는지 확인)
 
 ## 3단계: 보안 프로필
 
