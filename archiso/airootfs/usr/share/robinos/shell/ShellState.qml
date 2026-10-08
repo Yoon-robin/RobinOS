@@ -274,8 +274,18 @@ Singleton {
     // Hyprland's windows (HyprlandToplevel): they know their workspace, unlike Wayland's
     readonly property var windows: Hyprland.toplevels.values
 
+    // The shell's own windows all carry Quickshell's app id; their titles tell them
+    // apart, so the dock shows the installer and the learning center as two apps
+    readonly property var shellWindowIds: ({
+            "RobinOS 설치": "robinos-installer",
+            "학습 센터": "robinos-learn"
+        })
+
     function appIdOf(win) {
-        return win?.wayland?.appId ?? win?.lastIpcObject?.class ?? "";
+        const appId = win?.wayland?.appId ?? win?.lastIpcObject?.class ?? "";
+        if (appId === "org.quickshell" || appId === "quickshell")
+            return shellWindowIds[win?.title ?? ""] ?? appId;
+        return appId;
     }
 
     function isMinimized(win) {

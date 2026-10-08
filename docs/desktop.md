@@ -181,6 +181,8 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 | 워드, 엑셀, 파워포인트, 오피스 | LibreOffice Writer, Calc, Impress (설치본에만 있어요) |
 | Microsoft Store, 스토어, 앱 설치 | GNOME 소프트웨어 (설치본에만 있어요) |
 | 장치 및 프린터, 프린터, `printer` | 프린터 설정 (설치본에만 있어요) |
+| 미디어 플레이어, 영화 및 TV, 동영상 | 동영상 재생 앱 (Showtime, 설치본에만 있어요) |
+| 그루브 음악, 음악 | 오디오 재생기 (Decibels, 설치본에만 있어요) |
 | 제어판, `control panel` | 빠른 설정 |
 
 목록은 `desktop/shell/Launcher.qml`의 `windowsNames`에 있어요.
@@ -203,9 +205,17 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 설치한 시스템에서 런처의 "소프트웨어"(검색어 "스토어", "앱 설치")를 열면 Flathub의 앱을 찾아 설치할 수 있어요. 윈도우의 Microsoft Store 자리예요. 앱은 Flatpak으로 설치돼서 시스템과 떨어져 돌아가요. 시스템 패키지(pacman)는 건드리지 않고(PackageKit을 넣지 않았어요), 설치할 때 비밀번호를 물어요. 업데이트는 `sudo robinctl update`가 시스템 다음에 함께 해요.
 
+게임은 Steam으로 해요. 런처에서 "steam"이나 "게임"을 찾으면 "Steam 설치하기"가 나오고, 고르면 앱 스토어의 Steam(Flathub) 페이지가 열려요. Flathub판은 32비트 저장소(multilib)를 켜지 않아도 되고, 그래픽 드라이버(NVIDIA 포함)도 Flatpak이 알아서 맞춰 받아요. 설치하고 나면 "Steam 설치하기" 대신 Steam 앱이 나와요.
+
 ## 오피스
 
 설치한 시스템에는 LibreOffice 안정판(`libreoffice-still`)이 한국어로 들어 있어요. Writer는 Word, Calc는 Excel, Impress는 PowerPoint 자리예요. `.docx`, `.xlsx`, `.pptx`를 열고 저장할 수 있지만, 복잡한 서식은 조금 달라 보일 수 있어요. 한글 문서(`.hwp`)는 오래된 형식(한글 97)만 열려요. 요즘 `.hwp`·`.hwpx` 파일은 보내는 사람에게 PDF나 `.docx`로 받는 게 가장 확실해요.
+
+## 동영상과 음악, 기본 앱
+
+설치한 시스템에는 GNOME의 동영상 재생 앱(Showtime)과 오디오 재생기(Decibels)가 있고, MP4(H.264/AAC)도 재생돼요(`gst-libav`). 파일에서 동영상이나 음악을 두 번 누르면 바로 재생돼요.
+
+파일을 어떤 앱으로 여는지는 `desktop/mime/mimeapps.list`(설치 위치 `/etc/xdg/mimeapps.list`)가 정해요. 폴더는 파일, 글 파일은 텍스트 편집기, PDF는 문서 보기, 사진은 이미지 보기, 동영상과 음악은 위 두 앱, 웹 주소는 Firefox예요. 파일 앱에서 "다른 앱으로 열기"로 바꾸면 내 설정(`~/.config/mimeapps.list`)이 먼저예요.
 
 ## 전원 모드
 

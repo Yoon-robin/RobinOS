@@ -39,7 +39,7 @@
 |---|---|---|
 | 설치 | 윈도우를 지우지 않고 나란히 설치, 부팅할 때 선택 | 자체 설치기(아래 "설치기"), GRUB + os-prober |
 | 업데이트 | 업데이트로 망가져도 복구 가능 | `snapper` + `snap-pac`(pacman 전후 자동 스냅샷) + `grub-btrfs`(부팅 메뉴에서 스냅샷 부팅) |
-| 앱 | 앱 스토어, 브라우저, 오피스, 게임 | Flatpak + Flathub, Firefox, LibreOffice, Steam |
+| 앱 | 앱 스토어, 브라우저, 오피스, 동영상·음악, 게임 | Flatpak + Flathub(GNOME 소프트웨어), Firefox, LibreOffice, Showtime·Decibels(동영상·음악), Steam(Flathub판, 런처의 "Steam 설치하기") |
 | 하드웨어 | Wi-Fi, 블루투스, 프린터, 노트북 전원, NVIDIA | NetworkManager, BlueZ, CUPS, UPower, `nvidia-open` |
 | 파일 | 윈도우 파티션과 USB 읽기/쓰기 | `ntfs-3g`, `exfatprogs` |
 | 한국어 | 한국어 화면, 한글 입력, 한글 글꼴 | `ko_KR.UTF-8`, fcitx5-hangul(오른쪽 Alt = 한/영), Pretendard |

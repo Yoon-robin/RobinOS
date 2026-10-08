@@ -19,3 +19,11 @@ gnome-disk-utility
 # App store for Flathub apps (flatpak ships the Flathub remote). Without
 # PackageKit it never touches pacman; robinctl update updates its apps too.
 gnome-software
+
+# Video and music: GNOME's players ("동영상 재생 앱", "오디오 재생기"; "미디어
+# 플레이어", "그루브 음악" in the launcher). gst-libav plays H.264/AAC (MP4) through
+# ffmpeg, which the system already has. desktop/mime/mimeapps.list makes them the
+# default for video and audio files.
+showtime
+decibels
+gst-libav

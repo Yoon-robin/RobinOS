@@ -24,8 +24,10 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.namespace: "robinos-dock"
 
-    // Windows the shell itself opens (the installer) carry Quickshell's app id
-    readonly property var shellAppIds: ["org.quickshell", "quickshell"]
+    // Windows the shell itself opens, by the ids ShellState.appIdOf gives them
+    readonly property var shellApps: ({
+            "robinos-learn": { icon: "graduation-cap", label: "학습 센터" }
+        })
 
     // In the live session the installer comes first; it opens through the shell.
     // An app with a desktopId is pinned only once it is installed: Wireshark comes
@@ -33,7 +35,7 @@ PanelWindow {
     readonly property var pinned: {
         DesktopEntries.applications.values; // re-evaluate after the background scan
         return (ShellState.isLive ? [
-            { key: "installer", icon: "download", label: "RobinOS 설치", appIds: shellAppIds, command: null }
+            { key: "installer", icon: "download", label: "RobinOS 설치", appIds: ["robinos-installer"], command: null }
         ] : []).concat([
             { icon: "terminal", label: "터미널", appIds: ["foot", "footclient", "robinos-float"], command: ["foot"] },
             { icon: "folder", label: "파일", appIds: ["org.gnome.Nautilus"], command: ["nautilus", "--new-window"] },
@@ -65,10 +67,16 @@ PanelWindow {
             if (appId === "" || isPinned(appId) || seen[appId])
                 continue;
             seen[appId] = true;
+            const shellApp = shellApps[appId];
+            if (shellApp) {
+                out.push({ appId: appId, label: shellApp.label, glyph: shellApp.icon, icon: "" });
+                continue;
+            }
             const entry = DesktopEntries.heuristicLookup(appId);
             out.push({
                 appId: appId,
                 label: entry?.name ?? appId,
+                glyph: "",
                 icon: Quickshell.iconPath(entry?.icon ?? appId, "application-x-executable")
             });
         }
@@ -192,6 +200,7 @@ PanelWindow {
 
                     required property var modelData
 
+                    icon: modelData.glyph
                     appIcon: modelData.icon
                     label: modelData.label
                     running: true
