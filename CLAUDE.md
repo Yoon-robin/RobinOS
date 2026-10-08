@@ -21,6 +21,7 @@ RobinOS는 Arch Linux 기반의 한국어 우선 보안 학습 OS예요. Hyprlan
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/validate-project.ps1            # 정적 검증 (커밋 전 필수)
+powershell -ExecutionPolicy Bypass -File scripts/ready.ps1 [-Check]              # 커밋 준비: 동기화 + sddm 되돌리기 + 정적 검증 (+ check)
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 check             # Hyprland, QML 파싱, qmllint
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 status            # WSL에서 도는 빌드/VM, 최근 결과
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build             # ISO 빌드 (WSL, HEAD 기준)

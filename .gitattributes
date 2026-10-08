@@ -39,3 +39,12 @@ archiso/profiledef.sh text eol=lf
 *.ico binary
 *.iso binary
 
+
+# Scripts without an extension run in bash on Linux; a CRLF checkout would break them
+bin/* text eol=lf
+installer/* text eol=lf
+desktop/bin/* text eol=lf
+archiso/airootfs/usr/local/bin/* text eol=lf
+archiso/airootfs/opt/robinos/bin/* text eol=lf
+archiso/airootfs/opt/robinos/installer/* text eol=lf
+archiso/airootfs/usr/share/robinos/bin/* text eol=lf
