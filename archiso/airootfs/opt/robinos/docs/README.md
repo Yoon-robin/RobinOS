@@ -58,6 +58,8 @@
 |---|---|
 | `robinctl` 명령 | `README.md`의 초기 명령, 해당 기능 문서(`recovery.md`, `desktop.md` 등) |
 | 셸 기능, 단축키 | `desktop.md` |
+| 학습 미션 (`robinctl learn`) | `README.md`의 학습 미션 표, `desktop.md`, 런처의 학습 미션 설명(`Launcher.qml`), `robinctl help` |
+| 패키지 목록 (`packages/*.txt`) | `install.md`(설치본에 들어가는 것), `desktop.md`(라이브 세션에 없는 것) |
 | 설치 과정 (`post-install.sh`, `robin-install`) | `install.md`, `testing.md` |
 | 테스트 스크립트 | `testing.md` |
 | 빌드 스크립트, 빌드 환경 | `build-iso.md`, `build-environment.md` |

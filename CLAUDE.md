@@ -38,7 +38,8 @@ powershell -ExecutionPolicy Bypass -File scripts/sync-archiso-files.ps1         
 | `desktop/shell/` | Quickshell 셸 (QML). `Theme.qml`이 디자인 토큰 원본, `ShellState.qml`이 공유 상태 |
 | `desktop/hypr/`, `desktop/foot/`, ... | 데스크톱 설정. 설치 위치는 `desktop/install-map.txt` |
 | `scripts/` | 빌드, 설치, 테스트 스크립트 |
-| `packages/*.txt` | 패키지 목록. ISO 목록은 `archiso/packages.x86_64` |
+| `packages/*.txt` | 패키지 목록. ISO 목록은 `archiso/packages.x86_64`. `apps.txt`는 설치본에만 들어가요(ISO는 2GiB 한도) |
+| `practice/` | 학습 미션 연습 프로그램의 소스. `build.sh`가 만든 압축본이 `bin/robinctl` 안에 있어요 |
 | `archiso/` | ISO 프로필 오버레이. `archiso/airootfs/opt/robinos`와 `usr/share/robinos`는 동기화 스크립트가 만드는 사본 |
 | `docs/` | 문서 (한국어) |
 

@@ -32,7 +32,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 | 영역 | 마지막으로 본 날 | 메모 |
 |---|---|---|
 | 코드 검토 | 2026-10-08 | `robin-install`(fstab의 `subvolid=`), `robinctl`(스냅샷 부팅 상태의 되돌리기, 랩 권한), `post-install.sh`(영어 출력), `Installer.qml`, `ShellState.qml`, `Launcher.qml`(열 때 hover 선택), `Dock.qml`(설치 안 된 Wireshark가 고정돼 눌러도 반응 없음 → `6faf853`), `Bar.qml`(좁은 화면에서 앱 이름이 가운데 시계와 겹칠 수 있음, 1024px 이하라 그대로 둠), `QuickSettings.qml`(Docker 없이 "랩 시작"을 누르면 설치 방법 없이 "docker가 필요해요"만 나옴 → `dfcb5fd`), `Welcome.qml`(문제 없음). 셸 QML은 한 바퀴 다 봄 |
-| 문서와 코드 맞추기 | 2026-10-08 | 문서에 나오는 `robinctl` 명령, `scripts/` 경로, `wsl-build.ps1` 작업·옵션이 모두 실제와 같음. 단축키 표는 `robinos.lua`와 같고, 빠진 `Super+방향키`·`Super+휠`을 더함 |
+| 문서와 코드 맞추기 | 2026-10-08 (두 번째) | 오늘 바뀐 것 기준으로 다시 봄: `robinctl help`의 learn·update 설명, testing.md의 부팅 테스트 장면(최소화, Super+D, 셸 다시 띄우기, 단추 배치)과 설치 테스트 확인 항목, "설치 방식은 두 가지" → 세 가지, roadmap의 미션 수, CLAUDE.md 저장소 지도(`apps.txt`, `practice/`), docs/README.md의 같이 고칠 문서 표(학습 미션, 패키지 목록)를 고침 |
 | 보안과 윤리 | 2026-10-08 | 웹 랩: docker 그룹 대신 sudo, 재부팅 때 자동 시작 끔, 기준을 ethics.md에 적음, 이미지 고정(T-014). 라이브 ISO: sshd는 이미 꺼져 있음, releng의 cloud-init 유닛을 뺌. 설치본: root 잠금(robin-install), wheel은 비밀번호 sudo |
 | 접근성 | 2026-10-08 | 버튼과 선택지가 마우스 전용이던 것(T-015), 보조 글자 대비(subtle 3.9:1·2.6:1 → muted). 화면 읽기 프로그램(Orca)은 아직 |
 | 성능 | 2026-10-08 | 부팅 테스트 시리얼 로그: 라이브에서 데스크톱까지 35초 중 ldconfig 14초(`/etc/.updated` 없음), Docker 5초 → 고침(`37de032`, 다음 부팅 테스트에서 확인). `fcitx5-remote` 1초 폴링은 작은 프로세스 하나라 그대로 둬요 |
@@ -82,14 +82,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 출처: 백로그 채우기 2(검증이 빠진 기능). Word, Excel, PowerPoint, Microsoft Store, 장치 및 프린터는 설치본에만 있는 앱이라 부팅 테스트에서는 보이지 않아요
 - 목표: 설치 테스트의 설치본 데스크톱 단계에서 런처를 열고 "워드", "스토어"를 검색한 화면을 찍어요
 - 완료 기준: 설치 테스트 스크린샷에 "윈도우에서 쓰던 이름" 아래 LibreOffice Writer와 소프트웨어가 "윈도우의 Word에 해당해요"처럼 나옴
-
-### T-036 품질 점검: 문서와 코드 맞추기
-- 상태: 할 일
-- 출처: 백로그 채우기 6. 오늘 바뀐 것이 많아요(제목 표시줄, 독, 앱 세 가지, NVIDIA, 리버싱 미션)
-- 목표: README, docs/desktop.md, install.md, testing.md, release.md의 명령·경로·목록이 실제와 같은지 훑어요. `robinctl` 도움말(`robinctl help`)에 새 미션과 update의 Flatpak이 맞게 나오는지도 봐요
-- 완료 기준: 찾은 차이를 고치고 "품질 점검 기록"에 날짜를 남김
-
-
 
 ### T-026 RobinOS 자체 파일 업데이트
 - 상태: 할 일 (배포 방식은 사용자 결정, "사용자 확인 필요" 참고)

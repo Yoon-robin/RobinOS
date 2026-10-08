@@ -37,7 +37,7 @@ robinctl - RobinOS 관리 도구
 사용법:
   robinctl version                      버전 보기
   robinctl doctor                       시스템 점검
-  robinctl update [--dry-run]           스냅샷을 만든 뒤 시스템 업데이트
+  robinctl update [--dry-run]           스냅샷을 만든 뒤 시스템 업데이트 (앱 스토어 앱도)
   robinctl snapshot create [이름]       스냅샷 만들기
   robinctl snapshot list                스냅샷 목록
   robinctl snapshot setup [--dry-run]   스냅샷 설정 (Btrfs 루트, 처음 한 번)
@@ -47,7 +47,7 @@ robinctl - RobinOS 관리 도구
   robinctl packages core                기본 패키지 목록
   robinctl packages <프로필>            보안 실습 프로필의 패키지 목록
   robinctl packages optional            선택 패키지 목록
-  robinctl learn                        학습 미션(리눅스·네트워크·포렌식 기초)과 진행도
+  robinctl learn                        학습 미션(리눅스·네트워크·포렌식·리버싱)과 진행도
   robinctl learn show [번호]            미션 설명 보기
   robinctl learn check [번호]           미션 결과 확인
   robinctl learn reset                  미션 진행도 초기화

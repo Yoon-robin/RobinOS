@@ -77,9 +77,11 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 4. 런처: 추천 목록, `term` 검색, 윈도우 이름 `notepad` 검색
 5. 설치기 첫 두 단계(테스트 VM에는 빈 64GB 디스크가 있어요)
 6. 빠른 설정, Tab으로 옮긴 키보드 포커스
-7. 터미널: `ipconfig` 힌트, `robinctl learn show 1`
-8. 라이트 모드(셸 IPC `setDark false`): 터미널, 런처, 빠른 설정. 찍은 뒤 다크로 돌려요
-9. 잠금 화면과 잠금 해제
+7. 터미널: `ipconfig` 힌트, `robinctl learn show 1`, 포털이 알려 주는 제목 표시줄 단추 배치(`button-layout`)
+8. 독처럼 최소화하고 되돌리기, `Super+D` 두 번(바탕 화면 보기와 되돌리기)
+9. 셸을 끄면 `robinos-shell`이 다시 띄우는지
+10. 라이트 모드(셸 IPC `setDark false`): 터미널(`robinctl learn` 목록), 런처, 빠른 설정. 찍은 뒤 다크로 돌려요
+11. 잠금 화면과 잠금 해제
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 boot-test
@@ -93,7 +95,7 @@ Windows용 QEMU가 준비돼 있으면 WHPX 가속으로 돌아요([build-enviro
 
 `scripts/install-test.sh`는 빈 40GB 디스크에 RobinOS를 설치하고, 설치한 시스템을 시리얼 콘솔로 조작하면서 확인해요. RobinOS 파일은 ISO 안의 사본이 아니라 지금 저장소 것을 써요(읽기 전용 FAT 디스크로 넘겨요).
 
-설치 방식은 두 가지예요.
+설치 방식은 세 가지예요.
 
 - `archinstall` (기본): [install.md](install.md)의 방법 A예요. archinstall로 Arch를 설치하고(기본 Btrfs 구성, GRUB, EFI는 `/boot`) `scripts/post-install.sh --yes`를 실행해요.
 - `robinos`: RobinOS 설치기 백엔드(`installer/robin-install`)로 디스크 전체에 설치해요(EFI는 `/efi`).
@@ -101,7 +103,7 @@ Windows용 QEMU가 준비돼 있으면 WHPX 가속으로 돌아요([build-enviro
 
 설치한 뒤 확인하는 것:
 
-1. `robinctl doctor`, 스냅샷 설정, `/etc/fstab`의 `@snapshots`, grub-btrfs 항목
+1. `robinctl doctor`, 스냅샷 설정, `/etc/fstab`의 `@snapshots`, grub-btrfs 항목, 부팅 메뉴 이름, 보안 프로필 목록, 설치본 전용 앱(`packages/apps.txt`: 인쇄 서비스가 응답하는지, LibreOffice 한국어판, 앱 스토어와 Flathub 저장소)
 2. 재부팅해서 GRUB 메뉴와 스냅샷 하위 메뉴 스크린샷
 3. `pacman -S cowsay`로 snap-pac의 전후 스냅샷이 생기는지
 4. 다시 켜서 GRUB의 스냅샷 하위 메뉴로 cowsay 설치 전 스냅샷을 골라 부팅하고([recovery.md](recovery.md)의 비상 경로), 그 안에서 `robinctl snapshot rollback`
@@ -116,6 +118,8 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test -Lab
 ```
 
 패키지를 내려받으니 인터넷이 필요해요. Windows용 QEMU가 있으면 부팅 테스트처럼 WHPX로 돌아요(UEFI 펌웨어는 QEMU에 들어 있는 `edk2-x86_64-code.fd`, 공유 폴더는 `fat:` 디스크). 없으면 WSL 안에서 TCG로 돌아서 한 시간 넘게 걸릴 수 있어요. 결과(스크린샷, 단계별 시리얼 로그)는 `build\install-test`에 생겨요.
+
+설치 테스트는 VM을 켤 때마다 `scripts/install-test.py`를 새로 읽어요. 테스트가 도는 동안 이 파일을 고치면 남은 단계가 바뀐 확인으로 돌아서, 아직 설치하지 않은 것을 찾다가 실패할 수 있어요. 고칠 게 있으면 테스트가 끝난 뒤에 고쳐요.
 
 ## VM에서 직접 써 보기
 
