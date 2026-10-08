@@ -54,6 +54,7 @@ robinctl - RobinOS 관리 도구
   robinctl ctf                          입문 CTF 문제 5개와 푼 것
   robinctl ctf show <번호>              CTF 문제 보기
   robinctl ctf submit <번호> <플래그>   플래그 확인
+  robinctl ctf reset                    CTF 기록 지우기 (문제 파일은 그대로)
   robinctl lab list                     실습 랩 목록
   robinctl lab info <web|net>           랩 안내 (web: 웹 보안, net: 네트워크 스캔)
   robinctl lab status <web|net>         랩 상태
