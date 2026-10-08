@@ -32,7 +32,6 @@ upower
 
 # Screenshots, clipboard, notifications
 grim
-pacman-contrib
 slurp
 wl-clipboard
 cliphist
