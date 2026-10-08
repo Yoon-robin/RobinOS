@@ -123,6 +123,16 @@ bin/robinctl lab status web
 
 실습 파일은 모두 `~/practice`에 만들고, 진행도는 `~/.local/state/robinos/learn`에 저장해요. 처음부터 다시 하려면 `robinctl learn reset`을 실행하세요.
 
+## 입문 CTF
+
+미션을 끝냈다면 `robinctl ctf`로 입문 CTF 문제 5개를 풀어요. 미션처럼 할 일을 하나하나 알려 주지 않고, 미션에서 배운 기술(숨은 파일, 인코딩, 로그 분석, 반복 대입, 쿠키)을 스스로 골라 써서 `ROBIN{...}` 모양의 플래그를 찾아요. 문제 파일은 `~/practice/ctf`에 생기고, 5번은 웹 연습 서버를 써요. 모두 내 컴퓨터 안에서만 풀어요.
+
+```bash
+robinctl ctf                               # 문제 목록과 푼 것
+robinctl ctf show 1                        # 문제와 힌트
+robinctl ctf submit 1 'ROBIN{...}'         # 플래그 확인
+```
+
 ## 설치
 
 라이브 USB로 부팅해서 독 맨 앞의 **RobinOS 설치**를 눌러요. 윈도우 옆에 설치하거나 디스크 전체를 쓸 수 있고, 디스크 나누기, 한국어 설정, 업데이트 전 자동 스냅샷까지 설치기가 알아서 해요. 이미 Arch를 쓰고 있다면 `sudo scripts/post-install.sh`로 RobinOS를 입힐 수 있어요. 자세한 방법은 [docs/install.md](docs/install.md)에 있어요.

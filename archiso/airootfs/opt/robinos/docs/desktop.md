@@ -174,6 +174,8 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 셸이 작업용으로 여는 터미널은 `ROBINOS_NO_GREETING=1`로 시작해서 `~/.bashrc`가 fastfetch를 띄우지 않아요. fastfetch는 한국어 라벨로 짧게 줄인 설정(`desktop/fastfetch/config.jsonc` → `/etc/xdg/fastfetch/config.jsonc`)을 써요.
 
+런처의 "입문 CTF"(보안 랩 아래)는 터미널에서 `robinctl ctf`를 열어요. 미션 25개 다음 단계로, 배운 기술을 섞어 플래그 5개를 찾아요([README](../README.md#입문-ctf)).
+
 ## 라이브 세션
 
 라이브 ISO는 `robin` 계정(비밀번호 `robin`)으로 RobinOS 세션에 자동 로그인해요. 비밀번호 없는 sudo는 라이브 ISO에만 설정돼 있어요(`/etc/sudoers.d/10-robinos-live`).

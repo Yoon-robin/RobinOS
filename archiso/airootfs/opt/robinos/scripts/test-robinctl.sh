@@ -281,9 +281,42 @@ if ss -Htln 2>/dev/null | grep -q ":${WEB_PORT} "; then bad "the practice server
 
 check "list after all twenty-five" 0 learn
 said "list says all twenty-five are done" "25/25"
-said "list points to the web lab" "robinctl lab info web"
+said "list points to the CTF" "robinctl ctf"
 check "show 25" 0 learn show 25
 check "mission 26 doesn't exist" fail learn show 26
+
+printf '%s\n' "Local CTF (robinctl ctf): each challenge solved the way its hints say"
+CTF="practice/ctf"
+ctf_submit() { learner bash "${ROBINCTL}" ctf submit "$1" "$2"; }
+check "ctf list makes the challenge files" 0 learner bash "${ROBINCTL}" ctf
+said "ctf list counts 0 of 5" "0/5"
+check "ctf show 4" 0 learner bash "${ROBINCTL}" ctf show 4
+check "challenge 6 doesn't exist" fail learner bash "${ROBINCTL}" ctf show 6
+check "a wrong flag fails" fail ctf_submit 1 'ROBIN{nope}'
+check "a flag without ROBIN{} fails" fail ctf_submit 1 'hello'
+said "the shape of a flag is explained" "ROBIN{...}"
+in_home "ls ${CTF}/1" | grep -q flag && bad "challenge 1 shows its flag to plain ls" || ok "challenge 1 hides its flag from plain ls"
+check "1: the flag in the hidden folders" 0 ctf_submit 1 "$(in_home "find ${CTF}/1 -name '.flag' -exec cat {} +")"
+check "2: base64 twice" 0 ctf_submit 2 "$(in_home "base64 -d ${CTF}/2/note.txt | base64 -d")"
+odd="$(in_home "grep -v ' 200 ' ${CTF}/3/access.log | grep -oE 'q=[0-9a-f]{20,}' | cut -d= -f2")"
+check "3: the hex in the odd log line" 0 ctf_submit 3 "$(python3 -c 'import sys; print(bytes.fromhex(sys.argv[1]).decode())' "${odd}")"
+cat >"${WORK}/brute.py" <<'PY'
+import hashlib, re, sys
+wanted = re.search(r'PIN_SHA256 = "([0-9a-f]+)"', open(sys.argv[1]).read()).group(1)
+print(next(f"{i:04d}" for i in range(10000) if hashlib.sha256(f"{i:04d}".encode()).hexdigest() == wanted))
+PY
+chmod 644 "${WORK}/brute.py"
+pin="$(in_home "python3 ${WORK}/brute.py ${CTF}/4/lock.py")"
+in_home "python3 ${CTF}/4/lock.py 0000; true" | grep -q "틀렸어요" && ok "4: a wrong PIN stays locked" || bad "4: a wrong PIN opened the lock"
+check "4: the PIN found from its hash" 0 ctf_submit 4 "$(in_home "python3 ${CTF}/4/lock.py ${pin}" | grep -o 'ROBIN{[^}]*}')"
+in_home "true; cd ~ && { ROBIN_WEB_PORT=${WEB_PORT} python3 ${WEB}/server.py >/dev/null 2>&1 & echo \$! > ${WEB}/.test-server; }; sleep 1"
+[[ "$(in_home "curl -s -o /dev/null -w '%{http_code}' ${URL}/ctf/admin")" == "403" ]] && ok "5: /ctf/admin is 403 for a guest" || bad "5: /ctf/admin isn't 403 for a guest"
+in_home "curl -si ${URL}/ctf" | grep -q "Set-Cookie: role=guest" && ok "5: /ctf hands out role=guest" || bad "5: /ctf gives no role cookie"
+check "5: role=admin in the cookie" 0 ctf_submit 5 "$(in_home "curl -s -b 'role=admin' ${URL}/ctf/admin" | grep -o 'ROBIN{[^}]*}')"
+in_home "kill \$(cat ${WEB}/.test-server)"
+check "ctf list after all five" 0 learner bash "${ROBINCTL}" ctf
+said "ctf list says 5 of 5" "5/5"
+check "ctf reset" 0 learner bash "${ROBINCTL}" ctf reset
 qml_total="$(grep -oE 'learnTotal: [0-9]+' "${ROOT_DIR}/desktop/shell/ShellState.qml" | grep -oE '[0-9]+$')"
 if [[ "${qml_total}" == "$(grep -oE '^readonly LEARN_COUNT=[0-9]+' "${ROBINCTL}" | grep -oE '[0-9]+$')" ]]; then
   ok "the shell's mission count (learnTotal) matches LEARN_COUNT"
