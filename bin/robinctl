@@ -2155,7 +2155,9 @@ EOF
 }
 
 ctf_prepare() {
-  if [[ -f "${CTF_STATE}/prepared" && -d "${CTF_DIR}" ]]; then
+  # Made again when any challenge file was deleted (solved ones stay solved)
+  if [[ -f "${CTF_STATE}/prepared" && -f "${CTF_DIR}/1/.archive/.old/.flag" && -f "${CTF_DIR}/2/note.txt" \
+    && -f "${CTF_DIR}/3/access.log" && -f "${CTF_DIR}/4/lock.py" ]]; then
     return
   fi
   mkdir -p "${CTF_DIR}/1/.archive/.old" "${CTF_DIR}/2" "${CTF_DIR}/3" "${CTF_DIR}/4" "${CTF_STATE}"

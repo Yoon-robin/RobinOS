@@ -317,6 +317,9 @@ in_home "kill \$(cat ${WEB}/.test-server)"
 check "ctf list after all five" 0 learner bash "${ROBINCTL}" ctf
 said "ctf list says 5 of 5" "5/5"
 check "ctf reset" 0 learner bash "${ROBINCTL}" ctf reset
+in_home "rm ${CTF}/2/note.txt"
+check "ctf show after a deleted file" 0 learner bash "${ROBINCTL}" ctf show 2
+in_home "test -s ${CTF}/2/note.txt" && ok "a deleted challenge file is made again" || bad "a deleted challenge file stays gone"
 qml_total="$(grep -oE 'learnTotal: [0-9]+' "${ROOT_DIR}/desktop/shell/ShellState.qml" | grep -oE '[0-9]+$')"
 if [[ "${qml_total}" == "$(grep -oE '^readonly LEARN_COUNT=[0-9]+' "${ROBINCTL}" | grep -oE '[0-9]+$')" ]]; then
   ok "the shell's mission count (learnTotal) matches LEARN_COUNT"
