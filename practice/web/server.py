@@ -18,6 +18,8 @@ CODES = {
     "robots": "0815181314770d1f1877081518150e09",
     "cookie": "0815181314770d1f187719151511131f",
     "redirect": "0815181314770d1f1877081f1e13081f190e",
+    # robinctl ctf 5: the flag behind a cookie the server trusts too much
+    "ctf": "081518131421343f2c3f28052e282f292e052e323f053936333f342e27",
 }
 
 
@@ -71,6 +73,16 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.reply(301, page("옮겼어요", "<p>새 주소로 옮겼어요.</p>"), {"Location": "/new-page"})
         elif path == "/new-page":
             self.reply(200, page("새 페이지", f"<p>리다이렉트를 따라왔어요. 코드: {code('redirect')}</p>"))
+        elif path == "/ctf":
+            # CTF 5: the role sits in a cookie the visitor can change
+            self.reply(200, page("RobinOS CTF 게시판", "<p>손님으로 들어왔어요. 관리자 페이지는 /ctf/admin 이에요.</p>"),
+                       {"Set-Cookie": "role=guest; Path=/"})
+        elif path == "/ctf/admin":
+            cookies = [c.strip() for c in self.headers.get("Cookie", "").split(";")]
+            if "role=admin" in cookies:
+                self.reply(200, page("관리자 페이지", f"<p>어서 오세요, 관리자님. 플래그: {code('ctf')}</p>"))
+            else:
+                self.reply(403, page("관리자만 볼 수 있어요", "<p>당신의 역할(role)은 관리자가 아니에요.</p>"))
         else:
             self.reply(404, page("없는 페이지예요", "<p>404 Not Found</p>"))
 

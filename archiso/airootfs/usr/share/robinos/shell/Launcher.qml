@@ -131,6 +131,7 @@ PanelWindow {
 
     readonly property var commands: [
         { key: "learn", group: "learn", icon: "graduation-cap", title: "학습 미션", subtitle: "리눅스·네트워크·포렌식·리버싱·웹 기초, 터미널에서 풀면 robinctl이 확인해요", words: "learn mission tutorial linux network forensics reversing web http 학습 미션 공부 튜토리얼 리눅스 기초 네트워크 포렌식 리버싱 웹" },
+        { key: "ctf", group: "lab", icon: "flag", title: "입문 CTF", subtitle: "미션에서 배운 걸로 플래그 5개 찾기", badge: "로컬 전용", words: "ctf flag capture the flag 플래그 문제 해킹 대회" },
         { key: "lab-start", group: "lab", icon: "flask", title: "웹 보안 랩 시작", subtitle: "Juice Shop · DVWA", badge: "로컬 전용", words: "lab web juice dvwa 랩 실습 docker" },
         { key: "lab-open", group: "lab", icon: "external", title: "Juice Shop 열기", subtitle: "http://localhost:3000", words: "lab juice shop browser 랩" },
         { key: "lab-stop", group: "lab", icon: "circle-stop", title: "웹 보안 랩 중지", subtitle: "robinctl lab stop web", mono: true, words: "lab stop 랩 중지" },
@@ -243,6 +244,7 @@ PanelWindow {
             out.push(commandItem(command("learn")));
 
             out.push({ kind: "header", title: "보안 랩" });
+            out.push(commandItem(command("ctf")));
             out.push(commandItem(command("lab-start")));
             for (const id of labApps) {
                 const entry = lookup(id);
@@ -374,6 +376,9 @@ PanelWindow {
             break;
         case "install":
             ShellState.openInstaller();
+            break;
+        case "ctf":
+            ShellState.openTerminal("robinctl ctf");
             break;
         case "lab-start":
             ShellState.runInTerminal("robinctl lab start web && printf '\\nJuice Shop  http://localhost:3000\\nDVWA        http://localhost:8080\\n'");

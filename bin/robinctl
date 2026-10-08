@@ -51,6 +51,9 @@ robinctl - RobinOS 관리 도구
   robinctl learn show [번호]            미션 설명 보기
   robinctl learn check [번호]           미션 결과 확인
   robinctl learn reset                  미션 진행도 초기화
+  robinctl ctf                          입문 CTF 문제 5개와 푼 것
+  robinctl ctf show <번호>              CTF 문제 보기
+  robinctl ctf submit <번호> <플래그>   플래그 확인
   robinctl lab list                     실습 랩 목록
   robinctl lab info web                 웹 보안 랩 안내
   robinctl lab status web               웹 보안 랩 상태
@@ -891,7 +894,7 @@ learn_list() {
   if [[ -n "${next}" ]]; then
     printf '미션 보기: %srobinctl learn show %s%s\n' "${C_BOLD}" "${next}" "${C_RESET}"
   else
-    printf '학습 미션을 모두 끝냈어요. 다음은 웹 보안 랩이에요: %srobinctl lab info web%s\n' \
+    printf '학습 미션을 모두 끝냈어요. 이제 입문 CTF에 도전해요: %srobinctl ctf%s\n' \
       "${C_BOLD}" "${C_RESET}"
   fi
 }
@@ -1477,7 +1480,7 @@ EOF
 
 # The practice web server for missions 21-25 (practice/web/server.py), kept here
 # as gzip + base64 by practice/web/build.sh
-LEARN_WEB_SERVER_B64="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"
+LEARN_WEB_SERVER_B64="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"
 
 learn_prepare_web() {
   if [[ -f "${LEARN_STATE}/prepared-web" && -f "${LEARN_WEB}/server.py" ]]; then
@@ -2013,7 +2016,7 @@ learn_check() {
   if [[ -n "${next}" ]]; then
     printf '다음 미션: %srobinctl learn show %s%s\n' "${C_BOLD}" "${next}" "${C_RESET}"
   else
-    printf '학습 미션을 모두 끝냈어요. 다음은 웹 보안 랩이에요: %srobinctl lab info web%s\n' \
+    printf '학습 미션을 모두 끝냈어요. 이제 입문 CTF에 도전해요: %srobinctl ctf%s\n' \
       "${C_BOLD}" "${C_RESET}"
   fi
 }
@@ -2043,6 +2046,230 @@ learn() {
       ;;
     *)
       die "사용법: robinctl learn [list|show|check|reset] [번호]"
+      ;;
+  esac
+}
+
+# ---- Local CTF (robinctl ctf): five beginner challenges that mix the missions' skills ----
+#
+# The files go to ~/practice/ctf. Flags look like ROBIN{...}; robinctl keeps only
+# their SHA-256, so the answers aren't sitting in this script. Challenge 5 uses
+# the web practice server (practice/web/server.py, /ctf and /ctf/admin).
+
+readonly CTF_COUNT=5
+CTF_DIR="${HOME:-/root}/practice/ctf"
+CTF_STATE="${XDG_STATE_HOME:-${HOME:-/root}/.local/state}/robinos/ctf"
+
+ctf_title() {
+  case "$1" in
+    1) printf '숨은 파일' ;;
+    2) printf '두 번 감싼 쪽지' ;;
+    3) printf '로그 속 이상한 요청' ;;
+    4) printf '네 자리 자물쇠' ;;
+    5) printf '관리자 쿠키' ;;
+  esac
+}
+
+ctf_skill() {
+  case "$1" in
+    1) printf '리눅스' ;;
+    2) printf '인코딩' ;;
+    3) printf '포렌식' ;;
+    4) printf '스크립트' ;;
+    5) printf '웹' ;;
+  esac
+}
+
+ctf_flag_sha256() {
+  case "$1" in
+    1) printf '85778925b269d04dec30a117d5ae71afbc32de1ee2efd8ac83fa87f88cf3d056' ;;
+    2) printf '2d6a047f7c9fe0a0569e6d58c314a0828cde16161f03b050621a898f2cc94c2c' ;;
+    3) printf 'ce88290753a6557a0b8cb0e828e60ef2274dbc21169a4d8c1cafb3201f0f27d7' ;;
+    4) printf '189d042558322f318e8321cda50e25abf721bd241091f077cea30226801904de' ;;
+    5) printf 'fd1f7ca1df6a1102abeebc4787af77f199062f8260eebd1867f89077bb898bfd' ;;
+  esac
+}
+
+ctf_is_solved() {
+  [[ -f "${CTF_STATE}/solved" ]] && grep -qx "$1" "${CTF_STATE}/solved"
+}
+
+ctf_solved_count() {
+  local count=0 i
+  for ((i = 1; i <= CTF_COUNT; i++)); do
+    if ctf_is_solved "${i}"; then
+      count=$((count + 1))
+    fi
+  done
+  printf '%s' "${count}"
+}
+
+# Text from hex bytes XOR-ed with 0x5a, so the flag isn't plain in this file
+ctf_unxor() {
+  local hex="$1" out="" i
+  for ((i = 0; i < ${#hex}; i += 2)); do
+    printf -v out '%s\\x%02x' "${out}" "$((0x${hex:i:2} ^ 0x5a))"
+  done
+  printf '%b' "${out}"
+}
+
+# Challenge 3: a made-up web server log; one request carries the flag in hex.
+# Addresses are documentation ranges only (RFC 5737).
+ctf_access_log() {
+  local i path
+  for i in $(seq 1 18); do
+    case $((i % 6)) in
+      0) path="/" ;;
+      1) path="/about" ;;
+      2) path="/images/logo.png" ;;
+      3) path="/search?q=robinos" ;;
+      4) path="/login" ;;
+      5) path="/favicon.ico" ;;
+    esac
+    printf '198.51.100.%s - - [08/Oct/2026:14:%02d:%02d +0900] "GET %s HTTP/1.1" 200 %s "-" "Mozilla/5.0"\n' \
+      "$((10 + i % 4))" "$((i / 2))" "$((i * 3 % 60))" "${path}" "$((512 + i * 37))"
+    if ((i == 11)); then
+      printf '203.0.113.77 - - [08/Oct/2026:14:05:42 +0900] "GET /search?q=524f42494e7b6865785f696e5f7468655f6c6f67737d HTTP/1.1" 404 153 "-" "curl/8.0"\n'
+    fi
+  done
+}
+
+# Challenge 4: a 4-digit lock; the PIN's SHA-256 is inside, which is the weakness
+ctf_lock_py() {
+  cat <<'EOF'
+#!/usr/bin/env python3
+"""RobinOS CTF 4: 네 자리 비밀번호(0000~9999)로 잠긴 상자예요."""
+import hashlib
+import sys
+
+PIN_SHA256 = "a388f562e286fdf28986f9253579f4d096446e01dd0c771996a51ff11b390fa2"
+LOCKED = bytes.fromhex("a2d44ec8b8cbb9d7e2ab39353146a7ebdd1ce1a170b6ad608f1377")
+
+pin = sys.argv[1] if len(sys.argv) > 1 else input("비밀번호 네 자리: ").strip()
+if hashlib.sha256(pin.encode()).hexdigest() != PIN_SHA256:
+    print("틀렸어요.")
+    sys.exit(1)
+key = hashlib.sha256(("robinos-lock-" + pin).encode()).digest()
+print("열렸어요! " + bytes(b ^ key[i % len(key)] for i, b in enumerate(LOCKED)).decode())
+EOF
+}
+
+ctf_prepare() {
+  if [[ -f "${CTF_STATE}/prepared" && -d "${CTF_DIR}" ]]; then
+    return
+  fi
+  mkdir -p "${CTF_DIR}/1/.archive/.old" "${CTF_DIR}/2" "${CTF_DIR}/3" "${CTF_DIR}/4" "${CTF_STATE}"
+  printf '여기에는 아무것도 없어 보여요. 정말 그럴까요?\n' >"${CTF_DIR}/1/readme.txt"
+  ctf_unxor '08151813142132333e3e3f34053334052a363b33340529333d322e27' >"${CTF_DIR}/1/.archive/.old/.flag"
+  printf '%s\n' 'VWs5Q1NVNTdZbUZ6WlRZMFgzUjNhV05sZlE9PQ==' >"${CTF_DIR}/2/note.txt"
+  ctf_access_log >"${CTF_DIR}/3/access.log"
+  ctf_lock_py >"${CTF_DIR}/4/lock.py"
+  chmod 755 "${CTF_DIR}/4/lock.py"
+  : >"${CTF_STATE}/prepared"
+  printf '%s문제 파일을 ~/practice/ctf에 만들어 뒀어요.%s\n\n' "${C_DIM}" "${C_RESET}"
+}
+
+ctf_list() {
+  local i mark
+  ctf_prepare
+  printf '%sRobinOS 입문 CTF%s  %s%s/%s 풀었어요%s\n\n' \
+    "${C_BOLD}" "${C_RESET}" "${C_DIM}" "$(ctf_solved_count)" "${CTF_COUNT}" "${C_RESET}"
+  for ((i = 1; i <= CTF_COUNT; i++)); do
+    if ctf_is_solved "${i}"; then mark="${C_GREEN}✓${C_RESET}"; else mark=" "; fi
+    printf '  %s %s. %s  %s%s%s\n' "${mark}" "${i}" "$(ctf_title "${i}")" "${C_DIM}" "$(ctf_skill "${i}")" "${C_RESET}"
+  done
+  printf '\n문제 보기: %srobinctl ctf show 번호%s\n' "${C_BOLD}" "${C_RESET}"
+  printf "플래그 내기: %srobinctl ctf submit 번호 'ROBIN{...}'%s\n" "${C_BOLD}" "${C_RESET}"
+  printf '%s학습 미션과 달리 정해진 길이 없어요. 막히면 관련 미션을 다시 보세요(robinctl learn).%s\n' "${C_DIM}" "${C_RESET}"
+}
+
+ctf_show() {
+  local n="${1:-}"
+  [[ "${n}" =~ ^[1-5]$ ]] || die "문제 번호는 1부터 ${CTF_COUNT}까지예요"
+  ctf_prepare
+  printf '%sCTF %s · %s%s  %s%s%s\n\n' "${C_BOLD}" "${n}" "$(ctf_title "${n}")" "${C_RESET}" "${C_DIM}" "$(ctf_skill "${n}")" "${C_RESET}"
+  case "${n}" in
+    1)
+      cat <<'EOF'
+~/practice/ctf/1 에 플래그가 숨어 있어요. ls 로는 아무것도 안 보여요.
+힌트: 리눅스에서 이름이 점(.)으로 시작하면 숨은 파일이에요. ls -a, find 를 떠올려요 (미션 1, 5).
+EOF
+      ;;
+    2)
+      cat <<'EOF'
+~/practice/ctf/2/note.txt 는 알아볼 수 없는 글자예요. 누가 같은 방법으로 두 번 감쌌대요.
+힌트: 끝의 == 는 어떤 인코딩의 흔적이에요. base64 -d 를 두 번 (파이프로 이어서).
+EOF
+      ;;
+    3)
+      cat <<'EOF'
+~/practice/ctf/3/access.log 는 웹 서버 기록이에요. 다른 요청과 다른 하나를 찾고, 그 안에 숨긴 것을 읽어요.
+힌트: 주소와 상태 코드, User-Agent가 다른 줄을 grep 으로 찾아요(미션 15). 숫자와 a~f 만 있으면 16진수예요: xxd -r -p
+EOF
+      ;;
+    4)
+      cat <<'EOF'
+~/practice/ctf/4/lock.py 는 네 자리 비밀번호(0000~9999)로 잠긴 상자예요. 비밀번호는 몰라요.
+힌트: 코드를 읽어요(cat lock.py). 비밀번호의 해시가 들어 있어요. 네 자리면 경우가 만 개뿐이라
+      하나씩 해시를 만들어 비교하면 금방 찾아요. 파이썬 반복문이나 bash의 for 와 seq -w 0 9999.
+교훈: 해시로 감춰도 짧은 비밀번호는 쉽게 찾아요. 그래서 비밀번호는 길어야 해요.
+EOF
+      ;;
+    5)
+      cat <<'EOF'
+웹 연습 서버(python3 ~/practice/web/server.py)의 /ctf/admin 은 관리자만 볼 수 있대요.
+힌트: /ctf 에 들어가면 서버가 쿠키로 역할(role)을 정해 줘요(미션 24). 쿠키는 내 컴퓨터에 있으니
+      내가 바꿀 수 있어요: curl -b 'role=...' http://127.0.0.1:8000/ctf/admin
+교훈: 브라우저가 보내는 값은 믿으면 안 돼요. 권한은 서버가 직접 확인해야 해요.
+EOF
+      ;;
+  esac
+  printf "\n찾으면: %srobinctl ctf submit %s 'ROBIN{...}'%s\n" "${C_BOLD}" "${n}" "${C_RESET}"
+}
+
+ctf_submit() {
+  local n="${1:-}" flag="${2:-}" given
+  [[ "${n}" =~ ^[1-5]$ ]] || die "사용법: robinctl ctf submit 번호 'ROBIN{...}'"
+  [[ -n "${flag}" ]] || die "플래그를 함께 적어요: robinctl ctf submit ${n} 'ROBIN{...}'"
+  flag="$(printf '%s' "${flag}" | tr -d '\r\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
+  given="$(printf '%s' "${flag}" | sha256sum | cut -d' ' -f1)"
+  if [[ "${given}" == "$(ctf_flag_sha256 "${n}")" ]]; then
+    mkdir -p "${CTF_STATE}"
+    if ! ctf_is_solved "${n}"; then
+      printf '%s\n' "${n}" >>"${CTF_STATE}/solved"
+    fi
+    printf '%s%s맞았어요!%s CTF %s · %s  %s/%s 풀었어요\n' "${C_GREEN}" "${C_BOLD}" "${C_RESET}" \
+      "${n}" "$(ctf_title "${n}")" "$(ctf_solved_count)" "${CTF_COUNT}"
+    if [[ "$(ctf_solved_count)" == "${CTF_COUNT}" ]]; then
+      printf '입문 CTF를 다 풀었어요. 다음은 진짜 취약한 앱이에요: %srobinctl lab info web%s\n' "${C_BOLD}" "${C_RESET}"
+    fi
+  else
+    if [[ "${flag}" != ROBIN\{*\} ]]; then
+      printf '%s✗%s 플래그는 ROBIN{...} 모양이에요. 따옴표로 감싸서 내요.\n' "${C_RED}" "${C_RESET}"
+    else
+      printf '%s✗%s 아니에요. 다시 찾아봐요: robinctl ctf show %s\n' "${C_RED}" "${C_RESET}" "${n}"
+    fi
+    return 1
+  fi
+}
+
+ctf() {
+  case "${1:-}" in
+    ""|list)
+      ctf_list
+      ;;
+    show)
+      ctf_show "${2:-}"
+      ;;
+    submit)
+      ctf_submit "${2:-}" "${3:-}"
+      ;;
+    reset)
+      rm -f "${CTF_STATE}/solved"
+      printf 'CTF 기록을 지웠어요. 문제 파일(~/practice/ctf)은 그대로예요.\n'
+      ;;
+    *)
+      die "사용법: robinctl ctf [list|show 번호|submit 번호 플래그|reset]"
       ;;
   esac
 }
@@ -2192,6 +2419,10 @@ main() {
     learn)
       shift
       learn "$@"
+      ;;
+    ctf)
+      shift
+      ctf "$@"
       ;;
     lab)
       shift
