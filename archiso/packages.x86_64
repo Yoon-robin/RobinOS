@@ -53,6 +53,7 @@ brightnessctl
 bluez
 bluez-utils
 upower
+power-profiles-daemon
 grim
 slurp
 wl-clipboard

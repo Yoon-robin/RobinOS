@@ -188,6 +188,10 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 설치한 시스템에는 LibreOffice 안정판(`libreoffice-still`)이 한국어로 들어 있어요. Writer는 Word, Calc는 Excel, Impress는 PowerPoint 자리예요. `.docx`, `.xlsx`, `.pptx`를 열고 저장할 수 있지만, 복잡한 서식은 조금 달라 보일 수 있어요. 한글 문서(`.hwp`)는 오래된 형식(한글 97)만 열려요. 요즘 `.hwp`·`.hwpx` 파일은 보내는 사람에게 PDF나 `.docx`로 받는 게 가장 확실해요.
 
+## 전원 모드
+
+빠른 설정의 "전원 모드"에서 절전, 균형, 최고 성능을 골라요(윈도우의 전원 모드와 같아요). `power-profiles-daemon`이 CPU와 화면 설정을 바꿔요. 최고 성능은 지원하는 CPU에서만 보여요(VM에는 보통 없어요).
+
 ## 업데이트 알림
 
 설치한 시스템은 로그인하고 3분 뒤, 그다음엔 3시간마다 업데이트가 있는지 봐요(`checkupdates`, 패키지 DB의 사본으로 확인해서 pacman을 막지 않아요). 있으면 바의 빠른 설정 단추에 강조 색 새로 고침 아이콘이 생기고, 빠른 설정 맨 위에 "업데이트 N개가 있어요" 단추가 나와요. 누르면 터미널에서 `sudo robinctl update`가 돌아서 업데이트 전후 스냅샷과 함께 설치해요. 빠른 설정을 열 때도 10분이 지났으면 다시 봐요. 라이브 세션에서는 보지 않아요.
