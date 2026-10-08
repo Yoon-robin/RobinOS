@@ -17,7 +17,7 @@ export EDITOR=vim
 
 # Prompt: "robin@robinos ~/practice >" with the RobinOS red ">" ("#" as root, like
 # every Linux), the last command's exit code in red when it failed, and the window
-# title saying where the terminal is (the shell's bar shows it)
+# title saying where the terminal is
 PROMPT_DIRTRIM=3
 __robinos_prompt() {
   local status=$? code=""
