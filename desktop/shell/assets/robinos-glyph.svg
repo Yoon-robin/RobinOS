@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="RobinOS">
+  <defs>
+    <mask id="robinos-glyph-eye">
+      <rect width="256" height="256" fill="#FFFFFF"/>
+      <circle cx="178" cy="88" r="10" fill="#000000"/>
+    </mask>
+  </defs>
+  <g fill="#FFFFFF" mask="url(#robinos-glyph-eye)">
+    <circle cx="122" cy="138" r="64"/>
+    <circle cx="168" cy="92" r="38"/>
+    <path d="M200 76 L238 92 L200 106 Z"/>
+    <path d="M78 164 L26 190 C20 193 22 202 29 201 L96 186 Z"/>
+  </g>
+</svg>

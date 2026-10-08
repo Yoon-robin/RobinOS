@@ -11,7 +11,6 @@ Item {
     property real stroke: 2
 
     readonly property var paths: ({
-        "mark": "M6 17l6-5-6-5 M13 18h6",
         "arrow-right": "M5 12h14 M12 5l7 7-7 7",
         "power": "M12 2v10 M18.4 6.6a9 9 0 1 1-12.77.04",
         "rotate-ccw": "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8 M3 3v5h5",

@@ -1,6 +1,7 @@
 import QtQuick
 
-// RobinOS logo mark: a terminal prompt on the accent color.
+// RobinOS mark for small places (bar, launcher, installer): the white robin glyph
+// (assets/robinos-glyph.svg, from assets/brand) on the accent color.
 Rectangle {
     id: root
 
@@ -15,11 +16,12 @@ Rectangle {
         ColorAnimation { duration: Theme.dur }
     }
 
-    Icon {
+    Image {
         anchors.centerIn: parent
-        name: "mark"
-        size: root.size * 0.68
-        stroke: 3
-        color: "#ffffff"
+        width: root.size * 0.78
+        height: width
+        source: Qt.resolvedUrl("assets/robinos-glyph.svg")
+        sourceSize: Qt.size(Math.ceil(width * 2), Math.ceil(height * 2))
+        smooth: true
     }
 }

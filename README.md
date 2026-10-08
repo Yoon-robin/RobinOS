@@ -1,6 +1,6 @@
 # RobinOS
 
-![RobinOS 로고](assets/brand/robinos-logo-horizontal.svg)
+![RobinOS 로고: 프롬프트 커서 위에 앉은 하얀 울새](assets/brand/robinos-logo-horizontal.svg)
 
 RobinOS는 Arch 기반 보안 학습용 운영체제예요. 윤리적 해킹, CTF 연습, 악성코드를 안전하게 분석하는 랩, 네트워크 기초, 개발자에게 편한 워크플로에 집중해요.
 

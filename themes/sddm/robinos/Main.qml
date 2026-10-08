@@ -460,12 +460,14 @@ Rectangle {
             radius: 7
             color: root.accent
 
-            Glyph {
+            // The white robin glyph (assets/brand/robinos-glyph.svg)
+            Image {
                 anchors.centerIn: parent
-                name: "mark"
-                size: 16
-                stroke: 3
-                color: "#ffffff"
+                width: 19
+                height: 19
+                source: "robinos-glyph.svg"
+                sourceSize: Qt.size(40, 40)
+                smooth: true
             }
         }
 
