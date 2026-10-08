@@ -45,6 +45,10 @@ PanelWindow {
         const top = ToplevelManager.activeToplevel;
         if (!top || !top.activated)
             return "";
+        // A minimized window stays "activated" when nothing else takes the focus
+        const win = ShellState.findIn(ShellState.windows, w => w.wayland === top);
+        if (win && ShellState.isMinimized(win))
+            return "";
         // The shell's own windows (the installer) would read "Quickshell"
         if (top.appId === "" || top.appId === "org.quickshell")
             return top.title;
