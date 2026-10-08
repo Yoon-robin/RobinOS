@@ -1,0 +1,36 @@
+# RobinOS default apps for opening files (/etc/xdg/mimeapps.list). A user's own
+# choice ("다른 앱으로 열기" in Files) goes to ~/.config/mimeapps.list and wins.
+# Apps that aren't installed (the players on the live ISO) are skipped.
+[Default Applications]
+inode/directory=org.gnome.Nautilus.desktop
+text/plain=org.gnome.TextEditor.desktop
+text/html=firefox.desktop
+x-scheme-handler/http=firefox.desktop
+x-scheme-handler/https=firefox.desktop
+application/pdf=org.gnome.Evince.desktop
+image/png=org.gnome.Loupe.desktop
+image/jpeg=org.gnome.Loupe.desktop
+image/gif=org.gnome.Loupe.desktop
+image/webp=org.gnome.Loupe.desktop
+image/bmp=org.gnome.Loupe.desktop
+image/tiff=org.gnome.Loupe.desktop
+image/heif=org.gnome.Loupe.desktop
+image/avif=org.gnome.Loupe.desktop
+video/mp4=org.gnome.Showtime.desktop
+video/x-matroska=org.gnome.Showtime.desktop
+video/webm=org.gnome.Showtime.desktop
+video/quicktime=org.gnome.Showtime.desktop
+video/x-msvideo=org.gnome.Showtime.desktop
+video/mpeg=org.gnome.Showtime.desktop
+video/ogg=org.gnome.Showtime.desktop
+audio/mpeg=org.gnome.Decibels.desktop
+audio/flac=org.gnome.Decibels.desktop
+audio/x-flac=org.gnome.Decibels.desktop
+audio/ogg=org.gnome.Decibels.desktop
+audio/x-vorbis+ogg=org.gnome.Decibels.desktop
+audio/x-opus+ogg=org.gnome.Decibels.desktop
+audio/wav=org.gnome.Decibels.desktop
+audio/x-wav=org.gnome.Decibels.desktop
+audio/mp4=org.gnome.Decibels.desktop
+audio/x-m4a=org.gnome.Decibels.desktop
+audio/aac=org.gnome.Decibels.desktop

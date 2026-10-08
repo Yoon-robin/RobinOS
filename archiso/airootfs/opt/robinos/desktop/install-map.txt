@@ -29,3 +29,4 @@ desktop/dconf/00-robinos                  /etc/dconf/db/local.d/00-robinos      
 desktop/fastfetch/config.jsonc            /etc/xdg/fastfetch/config.jsonc                  644
 desktop/fastfetch/robinos-logo.ansi       /usr/share/robinos/fastfetch/robinos-logo.ansi   644
 desktop/firefox/policies.json             /etc/firefox/policies/policies.json              644
+desktop/mime/mimeapps.list                /etc/xdg/mimeapps.list                           644

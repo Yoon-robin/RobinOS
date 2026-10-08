@@ -559,6 +559,13 @@ def phase_installed(con, qmp):
     # Office (packages/apps.txt): the launcher's Word, Excel and PowerPoint names
     con.run("ls /usr/share/applications/libreoffice-writer.desktop /usr/share/applications/libreoffice-calc.desktop"
             " /usr/share/applications/libreoffice-impress.desktop && pacman -Q libreoffice-still-ko")
+    # Video and music (packages/apps.txt), and the default apps that open them
+    # (desktop/mime/mimeapps.list): double-clicking an MP4 or MP3 in Files plays it
+    # (gio's first line names the default; the registered apps below are indented)
+    con.run("pacman -Q showtime decibels gst-libav"
+            " && gio mime video/mp4 | grep -q '^[^[:space:]].*org.gnome.Showtime.desktop'"
+            " && gio mime audio/mpeg | grep -q '^[^[:space:]].*org.gnome.Decibels.desktop'"
+            " && gio mime application/pdf | grep -q '^[^[:space:]].*org.gnome.Evince.desktop'")
     # App store (packages/apps.txt): GNOME Software with Flathub, without PackageKit
     con.run("test -f /usr/share/applications/org.gnome.Software.desktop && ! pacman -Q packagekit && command -v gnome-disks"
             " && grep -q DisableTelemetry /etc/firefox/policies/policies.json")
@@ -691,8 +698,8 @@ def phase_rollback(con, qmp):
     shot(qmp, "desktop-after-wizard")
     # Windows names for apps only the installed system has (packages/apps.txt):
     # "word" finds LibreOffice Writer, "store" GNOME Software, "printer" the printer
-    # settings, "steam" offers Steam from the app store (Flathub)
-    for query in ("word", "store", "printer", "steam"):
+    # settings, "steam" offers Steam from the app store (Flathub), "video" the video player
+    for query in ("word", "store", "printer", "steam", "video"):
         qmp.keys("meta_l", "spc")
         sleep(3)
         qmp.type_text(query)
