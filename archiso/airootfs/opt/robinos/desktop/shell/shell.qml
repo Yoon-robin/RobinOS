@@ -31,6 +31,8 @@ ShellRoot {
 
     QuickSettings {}
 
+    Calendar {}
+
     Toasts {}
 
     Osd {}
@@ -45,6 +47,13 @@ ShellRoot {
         name: "launcher"
         description: "앱 런처 열기/닫기"
         onPressed: ShellState.toggleLauncher()
+    }
+
+    GlobalShortcut {
+        appid: "robinos"
+        name: "calendar"
+        description: "달력 열기/닫기"
+        onPressed: ShellState.toggleCalendar(null)
     }
 
     GlobalShortcut {

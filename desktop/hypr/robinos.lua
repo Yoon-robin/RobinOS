@@ -239,6 +239,7 @@ hl.bind(mainMod .. " + S",     hl.dsp.global("robinos:quicksettings"), { descrip
 hl.bind(mainMod .. " + N",     hl.dsp.global("robinos:notifications"), { description = "알림 모두 지우기" })
 hl.bind(mainMod .. " + D",     hl.dsp.global("robinos:desktop"),       { description = "바탕 화면 보기" })
 hl.bind(mainMod .. " + V",     hl.dsp.global("robinos:clipboard"),     { description = "클립보드 기록" })
+hl.bind(mainMod .. " + ALT + D", hl.dsp.global("robinos:calendar"),   { description = "달력" })
 -- Apps
 hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(terminal),    { description = "터미널" })
 hl.bind(mainMod .. " + E",      hl.dsp.exec_cmd(fileManager), { description = "파일" })

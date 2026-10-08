@@ -61,6 +61,7 @@ var icons = {
     "rotate-ccw": ["M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", "M3 3v5h5"],
     "search": [circle(11, 11, 8), "M21 21l-4.3-4.3"],
     "chevron-right": ["M9 18l6-6-6-6"],
+    "chevron-left": ["M15 18l-6-6 6-6"],
     "chevron-down": ["M6 9l6 6 6-6"],
     "x": ["M18 6L6 18", "M6 6l12 12"],
     "check": ["M20 6L9 17l-5-5"],

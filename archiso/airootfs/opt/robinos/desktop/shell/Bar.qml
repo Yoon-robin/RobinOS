@@ -163,13 +163,20 @@ PanelWindow {
         }
     }
 
-    Text {
+    // The clock opens the month calendar, like the Windows taskbar clock
+    BarButton {
         anchors.centerIn: parent
-        text: ShellState.clockText
-        color: Theme.fg
-        font.family: Theme.font
-        font.pixelSize: 13
-        font.weight: Font.Medium
+        label: "달력"
+        active: ShellState.calendarOpen && ShellState.overlayScreen === bar.screen
+        onClicked: ShellState.toggleCalendar(bar.screen)
+
+        Text {
+            text: ShellState.clockText
+            color: Theme.fg
+            font.family: Theme.font
+            font.pixelSize: 13
+            font.weight: Font.Medium
+        }
     }
 
     RowLayout {
