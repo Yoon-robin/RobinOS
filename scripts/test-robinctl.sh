@@ -96,7 +96,7 @@ check "5 fails with a made-up line" fail learn check 5
 in_home "grep bash /etc/passwd > practice/bash-users.txt"
 check "5 passes with grep's output" 0 learn check 5
 check "list after the first five" 0 learn
-said "list counts 5 of 20" "5/20"
+said "list counts 5 of 25" "5/25"
 said "list shows the network group" "네트워크 기초"
 said "list points to mission 6" "robinctl learn show 6"
 
@@ -144,7 +144,7 @@ in_home "printf '# Nmap 7.95 scan\nNmap scan report for localhost (127.0.0.1)\nP
 check "10 passes with 9000 open on 127.0.0.1" 0 learn check 10
 
 check "list after the first ten" 0 learn
-said "list counts 10 of 20" "10/20"
+said "list counts 10 of 25" "10/25"
 said "list shows the forensics group" "포렌식 기초"
 said "list points to mission 11" "robinctl learn show 11"
 
@@ -188,7 +188,7 @@ check "15 passes with the pipeline from the mission" 0 learn check 15
 in_home "bsdtar -xOf practice/forensics/logo.png secret.txt > practice/forensics/found.txt"
 check "14 passes again" 0 learn check 14
 check "list after the first fifteen" 0 learn
-said "list counts 15 of 20" "15/20"
+said "list counts 15 of 25" "15/25"
 said "list shows the reversing group" "리버싱 기초"
 said "list points to mission 16" "robinctl learn show 16"
 
@@ -240,11 +240,50 @@ said "20 explains hexadecimal" "16진수"
 in_home "cd ${REV} && ./count 1337 | grep -q ROBIN-COUNT-1337 && echo \$((0x539)) > number.txt"
 check "20 passes with 1337" 0 learn check 20
 
-check "list after all twenty" 0 learn
-said "list says all twenty are done" "20/20"
+check "list after the first twenty" 0 learn
+said "list counts 20 of 25" "20/25"
+said "list shows the web group" "웹 기초"
+said "list points to mission 21" "robinctl learn show 21"
+
+# Web basics: show 21 writes the practice server; curl against it solves 21-25
+WEB="practice/web"
+WEB_PORT=18$((RANDOM % 900 + 100))
+check "21 fails before the server exists" fail learn check 21
+check "show 21 writes the practice server" 0 learn show 21
+said "show 21 says how to start it" "python3 ~/practice/web/server.py"
+embedded="$(sed -n 's/^LEARN_WEB_SERVER_B64="\(.*\)"$/\1/p' "${ROBINCTL}" | base64 -d | gzip -dc | sha256sum)"
+if [[ "${embedded}" == "$(sha256sum <"${ROOT_DIR}/practice/web/server.py")" ]]; then
+  ok "the server in robinctl is practice/web/server.py (run practice/web/build.sh after changing it)"
+else
+  bad "the server in robinctl differs from practice/web/server.py (run practice/web/build.sh)"
+fi
+# in_home runs "cd ~ && ...", so the server line gets its own cd: with "&" the whole
+# "cd ~ && python3 ..." list would go to the background and $! would land elsewhere
+in_home "true; cd ~ && { ROBIN_WEB_PORT=${WEB_PORT} python3 ${WEB}/server.py >/dev/null 2>&1 & echo \$! > ${WEB}/.test-server; }; sleep 1"
+URL="http://127.0.0.1:${WEB_PORT}"
+in_home "curl -s ${URL}/ | grep -o 'ROBIN-[A-Z-]*' > ${WEB}/hello.txt"
+check "21 passes with the code on the first page" 0 learn check 21
+in_home "curl -sI ${URL}/ | grep -i '^x-robin-code' | grep -o 'ROBIN-[A-Z-]*' > ${WEB}/header.txt"
+check "22 passes with the X-Robin-Code header" 0 learn check 22
+in_home "curl -s ${URL}/robots.txt" | grep -q "Disallow: /secret-notes/" && ok "robots.txt names the hidden page" || bad "robots.txt doesn't name /secret-notes/"
+in_home "curl -s ${URL}/secret-notes/ | grep -o 'ROBIN-[A-Z-]*' > ${WEB}/notes.txt"
+check "23 passes with the code from /secret-notes/" 0 learn check 23
+[[ "$(in_home "curl -s -o /dev/null -w '%{http_code}' ${URL}/me")" == "401" ]] && ok "/me without a cookie is 401" || bad "/me without a cookie isn't 401"
+in_home "echo robin-practice > ${WEB}/cookie.txt"
+check "24 fails with the cookie value" fail learn check 24
+in_home "cd ${WEB} && curl -s -c jar.txt ${URL}/login >/dev/null && curl -s -b jar.txt ${URL}/me | grep -o 'ROBIN-[A-Z-]*' > cookie.txt"
+check "24 passes with the code /me shows for the cookie" 0 learn check 24
+in_home "curl -si ${URL}/old-page" | grep -q "^Location: /new-page" && ok "/old-page points to /new-page" || bad "/old-page has no Location"
+in_home "curl -sL ${URL}/old-page | grep -o 'ROBIN-[A-Z-]*' > ${WEB}/redirect.txt"
+check "25 passes after following the redirect" 0 learn check 25
+in_home "kill \$(cat ${WEB}/.test-server)"
+if ss -Htln 2>/dev/null | grep -q ":${WEB_PORT} "; then bad "the practice server is still listening"; fi
+
+check "list after all twenty-five" 0 learn
+said "list says all twenty-five are done" "25/25"
 said "list points to the web lab" "robinctl lab info web"
-check "show 20" 0 learn show 20
-check "mission 21 doesn't exist" fail learn show 21
+check "show 25" 0 learn show 25
+check "mission 26 doesn't exist" fail learn show 26
 qml_total="$(grep -oE 'learnTotal: [0-9]+' "${ROOT_DIR}/desktop/shell/ShellState.qml" | grep -oE '[0-9]+$')"
 if [[ "${qml_total}" == "$(grep -oE '^readonly LEARN_COUNT=[0-9]+' "${ROBINCTL}" | grep -oE '[0-9]+$')" ]]; then
   ok "the shell's mission count (learnTotal) matches LEARN_COUNT"

@@ -89,7 +89,7 @@ bin/robinctl lab status web
 
 ## 학습 미션
 
-`robinctl learn`은 터미널에서 직접 풀어 보는 미션 20개예요. 리눅스 기초, 네트워크 기초, 포렌식 기초, 리버싱 기초가 5개씩 차례로 이어져요. 미션마다 윈도우에서는 어떻게 하는지와 비교해 설명하고, `robinctl learn check`가 결과를 확인해 진행도를 저장해요. 런처에서 "학습 미션"을 골라도 열려요.
+`robinctl learn`은 터미널에서 직접 풀어 보는 미션 25개예요. 리눅스, 네트워크, 포렌식, 리버싱, 웹 기초가 5개씩 차례로 이어져요. 미션마다 윈도우에서는 어떻게 하는지와 비교해 설명하고, `robinctl learn check`가 결과를 확인해 진행도를 저장해요. 런처에서 "학습 미션"을 골라도 열려요.
 
 | # | 미션 | 배우는 명령 |
 |---|---|---|
@@ -113,8 +113,13 @@ bin/robinctl lab status web
 | 18 | 라이브러리 호출 엿보기 | `ltrace` |
 | 19 | 시스템 호출 엿보기 | `strace` |
 | 20 | 기계어 읽어 보기 | `objdump` |
+| 21 | 웹 서버 켜고 접속하기 | `python3`, `curl` |
+| 22 | 응답 헤더 읽기 | `curl -I` |
+| 23 | robots.txt 읽기 | `curl`, `robots.txt` |
+| 24 | 쿠키 주고받기 | `curl -c`, `curl -b` |
+| 25 | 상태 코드와 리다이렉트 | `curl -i`, `curl -L` |
 
-리버싱 미션의 연습 프로그램은 직접 만든 작은 C 프로그램이에요. 소스는 [practice/reversing](practice/reversing)에 있고, 요령을 쓰면 코드를 보여 주는 것 말고는 아무 일도 하지 않아요.
+리버싱 미션의 연습 프로그램은 직접 만든 작은 C 프로그램이에요. 소스는 [practice/reversing](practice/reversing)에 있고, 요령을 쓰면 코드를 보여 주는 것 말고는 아무 일도 하지 않아요. 웹 기초 미션의 연습 서버([practice/web/server.py](practice/web/server.py))는 파이썬 표준 라이브러리만 쓰고 `127.0.0.1:8000`에서만 열려요.
 
 실습 파일은 모두 `~/practice`에 만들고, 진행도는 `~/.local/state/robinos/learn`에 저장해요. 처음부터 다시 하려면 `robinctl learn reset`을 실행하세요.
 

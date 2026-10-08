@@ -130,7 +130,7 @@ PanelWindow {
     readonly property var labApps: ["org.wireshark.Wireshark", "ghidra", "virt-manager"]
 
     readonly property var commands: [
-        { key: "learn", group: "learn", icon: "graduation-cap", title: "학습 미션", subtitle: "리눅스·네트워크·포렌식·리버싱 기초, 터미널에서 풀면 robinctl이 확인해요", words: "learn mission tutorial linux network forensics reversing 학습 미션 공부 튜토리얼 리눅스 기초 네트워크 포렌식 리버싱" },
+        { key: "learn", group: "learn", icon: "graduation-cap", title: "학습 미션", subtitle: "리눅스·네트워크·포렌식·리버싱·웹 기초, 터미널에서 풀면 robinctl이 확인해요", words: "learn mission tutorial linux network forensics reversing web http 학습 미션 공부 튜토리얼 리눅스 기초 네트워크 포렌식 리버싱 웹" },
         { key: "lab-start", group: "lab", icon: "flask", title: "웹 보안 랩 시작", subtitle: "Juice Shop · DVWA", badge: "로컬 전용", words: "lab web juice dvwa 랩 실습 docker" },
         { key: "lab-open", group: "lab", icon: "external", title: "Juice Shop 열기", subtitle: "http://localhost:3000", words: "lab juice shop browser 랩" },
         { key: "lab-stop", group: "lab", icon: "circle-stop", title: "웹 보안 랩 중지", subtitle: "robinctl lab stop web", mono: true, words: "lab stop 랩 중지" },

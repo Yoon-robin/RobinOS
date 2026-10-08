@@ -8,6 +8,7 @@ git
 vim
 nano
 curl
+python
 wget
 reflector
 pacman-contrib
