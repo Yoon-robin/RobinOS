@@ -12,3 +12,7 @@ system-config-printer
 # ("워드", "엑셀", "파워포인트" in the launcher). About 150 MiB to download.
 libreoffice-still
 libreoffice-still-ko
+
+# App store for Flathub apps (flatpak ships the Flathub remote). Without
+# PackageKit it never touches pacman; robinctl update updates its apps too.
+gnome-software

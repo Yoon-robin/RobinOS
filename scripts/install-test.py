@@ -559,6 +559,9 @@ def phase_installed(con, qmp):
     # Office (packages/apps.txt): the launcher's Word, Excel and PowerPoint names
     con.run("ls /usr/share/applications/libreoffice-writer.desktop /usr/share/applications/libreoffice-calc.desktop"
             " /usr/share/applications/libreoffice-impress.desktop && pacman -Q libreoffice-still-ko")
+    # App store (packages/apps.txt): GNOME Software with Flathub, without PackageKit
+    con.run("test -f /usr/share/applications/org.gnome.Software.desktop && ! pacman -Q packagekit")
+    con.run("flatpak remotes --system", check=False)
 
     # QEMU's WHPX can't reset a VM that reboots itself ("Unexpected VP exit code 4"),
     # so every boot is its own QEMU run: power off here, the next phase boots again.

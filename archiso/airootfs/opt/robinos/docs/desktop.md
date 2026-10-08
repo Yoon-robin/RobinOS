@@ -156,6 +156,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 | 볼륨 믹서 | 음량 조절 (pavucontrol) |
 | Acrobat, `pdf` | 문서 뷰어 (Evince) |
 | 워드, 엑셀, 파워포인트, 오피스 | LibreOffice Writer, Calc, Impress (설치본에만 있어요) |
+| Microsoft Store, 스토어, 앱 설치 | GNOME 소프트웨어 (설치본에만 있어요) |
 | 장치 및 프린터, 프린터, `printer` | 프린터 설정 (설치본에만 있어요) |
 | 제어판, `control panel` | 빠른 설정 |
 
@@ -171,7 +172,11 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 라이브 ISO는 `robin` 계정(비밀번호 `robin`)으로 RobinOS 세션에 자동 로그인해요. 비밀번호 없는 sudo는 라이브 ISO에만 설정돼 있어요(`/etc/sudoers.d/10-robinos-live`).
 
-라이브 ISO에는 가벼운 보안 도구(nmap, tcpdump, netcat, dig, sqlmap, binwalk 같은 것)만 들어 있어요. Wireshark 화면 앱, john, hashcat, hydra, gdb, Docker(웹 랩), 가상 머신 도구는 크기가 커서 빠져 있고, 설치한 시스템에서 `sudo robinctl profile <이름>`으로 넣어요. 라이브 세션은 메모리 위에서 돌아서 큰 묶음이나 랩 이미지를 받을 자리가 거의 없어요. 프린터(CUPS와 프린터 설정 앱)와 오피스(LibreOffice)도 설치본에만 들어가요(`packages/apps.txt`).
+라이브 ISO에는 가벼운 보안 도구(nmap, tcpdump, netcat, dig, sqlmap, binwalk 같은 것)만 들어 있어요. Wireshark 화면 앱, john, hashcat, hydra, gdb, Docker(웹 랩), 가상 머신 도구는 크기가 커서 빠져 있고, 설치한 시스템에서 `sudo robinctl profile <이름>`으로 넣어요. 라이브 세션은 메모리 위에서 돌아서 큰 묶음이나 랩 이미지를 받을 자리가 거의 없어요. 프린터(CUPS와 프린터 설정 앱), 오피스(LibreOffice), 앱 스토어(GNOME 소프트웨어)도 설치본에만 들어가요(`packages/apps.txt`).
+
+## 앱 스토어
+
+설치한 시스템에서 런처의 "소프트웨어"(검색어 "스토어", "앱 설치")를 열면 Flathub의 앱을 찾아 설치할 수 있어요. 윈도우의 Microsoft Store 자리예요. 앱은 Flatpak으로 설치돼서 시스템과 떨어져 돌아가요. 시스템 패키지(pacman)는 건드리지 않고(PackageKit을 넣지 않았어요), 설치할 때 비밀번호를 물어요. 업데이트는 `sudo robinctl update`가 시스템 다음에 함께 해요.
 
 ## 오피스
 

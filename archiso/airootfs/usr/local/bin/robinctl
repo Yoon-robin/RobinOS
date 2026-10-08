@@ -198,6 +198,9 @@ update_system() {
       none) printf '스냅샷이 설정되지 않아서 업데이트 전 스냅샷을 만들지 않아요 (설정: sudo robinctl snapshot setup).\n' ;;
     esac
     printf '실행할 명령: pacman -Syu\n'
+    if have_cmd flatpak; then
+      printf '앱 스토어(Flatpak) 앱이 있으면 이어서: flatpak update --system\n'
+    fi
     return
   fi
 
@@ -212,6 +215,12 @@ update_system() {
       ;;
   esac
   pacman -Syu
+
+  # Apps from the app store (Flathub) live outside pacman and its snapshots
+  if have_cmd flatpak && [[ -n "$(flatpak list --system --app --columns=application 2>/dev/null)" ]]; then
+    printf '\n앱 스토어(Flatpak) 앱을 업데이트해요.\n'
+    flatpak update --system
+  fi
 }
 
 # ---- Snapshots: snapper + snap-pac + grub-btrfs on a Btrfs root ----

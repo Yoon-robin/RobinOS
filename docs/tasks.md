@@ -45,7 +45,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
 | `e1a537b` | 프린터, 설치본 전용 앱 목록 | 설치 테스트 robinos (돌아가는 중) |
-| (T-032 커밋) | LibreOffice | 설치 테스트 robinos |
+| `c5db7ca` | LibreOffice | 설치 테스트 robinos |
+| (T-033 커밋) | 앱 스토어, Flatpak 업데이트 | 설치 테스트 robinos |
 
 `844712d`까지 2026-10-08 검증(설치 테스트 robinos, 설치기·robinctl 테스트)을 마치고 푸시했어요.
 
@@ -71,6 +72,12 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 출처: 백로그 채우기 1(design.md 요구사항 표 "앱: 오피스, LibreOffice"가 구현되지 않음)
 - 한 것: `packages/apps.txt`에 `libreoffice-still`(안정판, 26.2)과 `libreoffice-still-ko`를 넣음(내려받기 약 150MB, 설치 약 460MB). fresh(26.8) 대신 매일 쓰는 컴퓨터라 안정판을 골랐어요. 런처 윈도우 이름 Word, Excel, PowerPoint(검색어 워드, 엑셀, 파워포인트, 오피스). "한글"은 hwp 97만 열려서 연결하지 않고 desktop.md에 한계를 적음. 설치 테스트 installed 단계에 데스크톱 항목 세 개와 한국어 팩 확인을 넣음
 - 완료 기준: 설치 테스트 robinos 통과(새 확인 포함), 설치 시간이 크게 늘지 않음(T-031 테스트와 비교)
+
+### T-033 앱 스토어 (GNOME 소프트웨어, Flathub)
+- 상태: 검증 대기
+- 출처: 백로그 채우기 1(design.md 요구사항 표 "앱: 앱 스토어, Flatpak + Flathub"에 화면이 없음)
+- 한 것: `packages/apps.txt`에 `gnome-software`(51, PackageKit 없이 Flatpak만 다뤄요, 내려받기 2.7MB). Arch의 flatpak 패키지가 Flathub 저장소 설정을 가지고 있음(패키지를 받아 `remotes.d/flathub.flatpakrepo` 확인). Bazaar(extra)는 webkitgtk가 따라와서 고르지 않음. 런처 윈도우 이름 "Microsoft Store". `robinctl update`가 pacman 다음에 시스템 Flatpak 앱이 있으면 `flatpak update --system`(robinctl 테스트 5개 추가). 설치 테스트에 데스크톱 항목, PackageKit 없음, `flatpak remotes --system` 출력
+- 완료 기준: 설치 테스트 robinos 통과, `flatpak remotes --system`에 flathub가 보이는지 확인(안 보이면 post-install에서 추가)
 
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중

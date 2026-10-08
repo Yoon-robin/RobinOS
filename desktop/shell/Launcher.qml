@@ -101,6 +101,7 @@ PanelWindow {
         { win: "Word", words: "워드 word 문서 작성 docx 오피스 office", app: "libreoffice-writer" },
         { win: "Excel", words: "엑셀 excel 스프레드시트 spreadsheet xlsx 오피스 office", app: "libreoffice-calc" },
         { win: "PowerPoint", words: "파워포인트 powerpoint ppt pptx 프레젠테이션 발표 오피스 office", app: "libreoffice-impress" },
+        { win: "Microsoft Store", words: "microsoft store 마이크로소프트 스토어 앱 스토어 app store 프로그램 설치 앱 설치 flathub", app: "org.gnome.Software" },
         { win: "장치 및 프린터", words: "장치 및 프린터 devices and printers 프린터 printer 인쇄 print", app: "system-config-printer" },
         { win: "제어판", words: "제어판 control panel 윈도우 설정 windows settings", cmd: "settings" }
     ]

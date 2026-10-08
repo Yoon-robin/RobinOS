@@ -217,6 +217,21 @@ else
   bad "security is not every package"
 fi
 
+printf '%s\n' "Update (dry run) with stand-in pacman and flatpak"
+UPDATE_BIN="${WORK}/update-bin"
+mkdir -p "${UPDATE_BIN}"
+printf '#!/bin/sh\nexit 1\n' >"${UPDATE_BIN}/pacman"
+chmod 755 "${UPDATE_BIN}" "${UPDATE_BIN}/pacman"
+if [[ ! -e /usr/bin/flatpak ]]; then
+  check "update dry run without flatpak" 0 env PATH="${UPDATE_BIN}:/usr/bin" bash "${ROBINCTL}" update --dry-run
+  said "update runs pacman -Syu" "pacman -Syu"
+  if grep -q flatpak "${WORK}/out"; then bad "update mentions flatpak without it"; else ok "no flatpak, no flatpak step"; fi
+fi
+printf '#!/bin/sh\nexit 0\n' >"${UPDATE_BIN}/flatpak"
+chmod 755 "${UPDATE_BIN}/flatpak"
+check "update dry run with flatpak" 0 env PATH="${UPDATE_BIN}:/usr/bin" bash "${ROBINCTL}" update --dry-run
+said "update also updates app store apps" "flatpak update --system"
+
 printf '%s\n' "Web lab (robinctl lab) with stand-in docker, sudo and systemctl"
 FAKE="${WORK}/fake"
 mkdir -p "${FAKE}"
