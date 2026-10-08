@@ -12,6 +12,8 @@ python
 wget
 reflector
 pacman-contrib
+# checkupdates (the shell's update dot) needs fakeroot to sync its own database copy
+fakeroot
 btrfs-progs
 snapper
 snap-pac

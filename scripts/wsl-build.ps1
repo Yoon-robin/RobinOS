@@ -304,6 +304,8 @@ switch ($Task) {
         $bootArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`" boot-test -Inner -Accel whpx -Qemu `"$Qemu`" -Distro $Distro"
         $boot = Start-Process powershell.exe -ArgumentList $bootArgs -PassThru -WindowStyle Hidden `
             -RedirectStandardOutput $bootLog -RedirectStandardError "$bootLog.err"
+        # Without holding the handle now, ExitCode comes back empty once the process is gone
+        $null = $boot.Handle
         $installError = $null
         try { Invoke-WhpxInstallTest } catch { $installError = $_ }
         $boot.WaitForExit()

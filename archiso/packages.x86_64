@@ -11,6 +11,7 @@ curl
 wget
 reflector
 pacman-contrib
+fakeroot
 fastfetch
 btrfs-progs
 snapper
