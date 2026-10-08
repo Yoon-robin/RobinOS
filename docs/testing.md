@@ -122,7 +122,7 @@ WHPX가 필요해요. TCG에서는 `build`, `boot-test`, `install-test`를 차�
 3. `pacman -S cowsay`로 snap-pac의 전후 스냅샷이 생기는지
 4. 다시 켜서 GRUB의 스냅샷 하위 메뉴로 cowsay 설치 전 스냅샷을 골라 부팅하고([recovery.md](recovery.md)의 비상 경로), 그 안에서 `robinctl snapshot rollback`
 5. 다시 켜서 cowsay가 사라졌는지 확인하고, SDDM에서 로그인한 데스크톱 스크린샷
-6. `-Lab`을 붙이면 마지막에 웹 랩을 실제로 띄워요: `robinctl profile web`으로 Docker를 설치하고 `robinctl lab start web`으로 고정한 이미지를 받아 켠 뒤, Juice Shop과 DVWA가 `127.0.0.1`에서만 응답하는지, 셸의 랩 상태 확인(docker-proxy)이 보는지 확인하고 꺼요. 이미지를 내려받아서 몇 분 더 걸려요
+6. `-Lab`을 붙이면 마지막에 웹 랩을 실제로 띄워요: `robinctl profile web`으로 Docker를 설치하고 `robinctl lab start web`으로 고정한 이미지를 받아 켠 뒤, Juice Shop과 DVWA가 `127.0.0.1`에서만 응답하는지, 셸의 랩 상태 확인(docker-proxy)이 보는지 확인하고 꺼요. 이어서 네트워크 스캔 랩(`robinctl lab start net`)을 켜고, 172.30.66.0/24의 네 대(웹 페이지, Redis 포트, 31337 배너, 포트 없는 컴퓨터의 ping)가 응답하는지, 호스트 포트에는 아무것도 열리지 않는지 확인하고 꺼요. 이미지를 내려받아서 몇 분 더 걸려요
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test

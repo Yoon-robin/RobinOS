@@ -82,6 +82,7 @@ bin/robinctl learn show 1
 bin/robinctl learn check 1
 bin/robinctl lab list
 bin/robinctl lab info web
+bin/robinctl lab info net
 bin/robinctl lab status web
 ```
 

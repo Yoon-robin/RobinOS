@@ -427,6 +427,23 @@ else
   ok "lab ports are on 127.0.0.1 only"
 fi
 
+# Network scan lab: same sudo path, nothing published on the host, nothing restarts
+NET_COMPOSE="${ROOT_DIR}/labs/net/docker-compose.yml"
+check "net lab start as a user" 0 learner env PATH="${FAKE}:/usr/bin" bash "${ROBINCTL}" lab start net
+said "net lab runs its own compose file" "sudo docker compose -f ${NET_COMPOSE} up -d"
+said "net lab names its network" "172.30.66.0/24"
+said "net lab reminds to stop it" "robinctl lab stop net"
+check "net lab info" 0 bash "${ROBINCTL}" lab info net
+said "net lab info teaches host discovery" "nmap -sn 172.30.66.0/24"
+said "net lab info points to the ethics rules" "docs/ethics.md"
+check "an unknown lab fails" fail learner env PATH="${FAKE}:/usr/bin" bash "${ROBINCTL}" lab start nope
+if grep -qE '^\s*ports:' "${NET_COMPOSE}"; then bad "the net lab publishes host ports"; else ok "the net lab publishes no host ports"; fi
+if [[ "$(grep -cE '^\s+restart: "no"' "${NET_COMPOSE}")" == "4" ]] && ! grep -q 'unless-stopped\|always' "${NET_COMPOSE}"; then
+  ok "net lab containers don't restart on boot"
+else
+  bad "net lab containers may restart on boot"
+fi
+
 printf '%s\n' "Windows command hints (robinos-hints.sh)"
 # Calls the not-found handler directly: running "ipconfig" or "notepad" for real
 # would start the Windows programs through WSL's interop

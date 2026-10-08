@@ -696,6 +696,7 @@ def phase_rollback(con, qmp):
 
     if TEST_LAB:
         check_web_lab(con)
+        check_net_lab(con)
 
     con.send("poweroff\n")
     con.wait_closed(180)
@@ -727,6 +728,26 @@ def check_web_lab(con):
     con.run("robinctl lab stop web", timeout=300)
     con.run("! pgrep -f 'docker-proxy .*-host-port (3000|8080)( |$)' > /dev/null")
     log("web lab ok: Juice Shop and DVWA answered on 127.0.0.1 and stopped")
+
+
+def check_net_lab(con):
+    """robinctl lab start net (T-057): the four lab hosts answer from this computer
+    on 172.30.66.0/24, none of them listens on the host's own ports, and the lab
+    stops cleanly. Docker is there from check_web_lab (web profile)."""
+    log("net lab")
+    status = con.run_long("robinctl lab start net", "lab-net-start", timeout=1800)
+    if status != 0:
+        raise RuntimeError(f"robinctl lab start net failed with {status}")
+    # nmap and nc come with the network profile; plain bash and curl check the same here
+    con.run("for i in $(seq 30); do curl -sf http://172.30.66.10/ | grep -q ROBIN-NET-WEB && break; sleep 2; done;"
+            " curl -sf http://172.30.66.10/ | grep -q ROBIN-NET-WEB", timeout=120)
+    con.run("timeout 5 bash -c 'exec 3<>/dev/tcp/172.30.66.30/31337; head -n 1 <&3' | grep -q ROBIN-NET-BANNER")
+    con.run("timeout 5 bash -c 'exec 3<>/dev/tcp/172.30.66.20/6379'")
+    con.run("ping -c 1 -W 2 172.30.66.40 > /dev/null")
+    con.run("! ss -tln | grep -E ':(80|6379|31337) '")
+    con.run("robinctl lab stop net", timeout=300)
+    con.run("! docker network inspect robinos-scan > /dev/null 2>&1")
+    log("net lab ok: four hosts on 172.30.66.0/24, nothing on the host's ports, stopped")
 
 
 def main():

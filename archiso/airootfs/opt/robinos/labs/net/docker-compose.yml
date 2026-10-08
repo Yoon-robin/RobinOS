@@ -1,0 +1,55 @@
+# RobinOS network scan lab: a small made-up network inside this computer
+# (robinctl lab start net), to practise finding hosts, ports and services with
+# nmap. Nothing is published on the host's ports, so only this computer can
+# reach 172.30.66.0/24. Nothing restarts on boot (restart: "no"); images are
+# pinned so the guide (robinctl lab info net) matches what starts.
+services:
+  # A web server with a page to find
+  web:
+    image: docker.io/library/nginx:1.27-alpine
+    container_name: robinos-net-web
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+    networks:
+      scan:
+        ipv4_address: 172.30.66.10
+    restart: "no"
+
+  # A cache server; nmap -sV names it. Redis keeps its default protected
+  # mode, so it answers but refuses commands from outside the container.
+  cache:
+    image: docker.io/library/redis:7.4-alpine
+    container_name: robinos-net-cache
+    networks:
+      scan:
+        ipv4_address: 172.30.66.20
+    restart: "no"
+
+  # A service on a port nmap's default top 1000 doesn't look at; it greets
+  # with a banner (nc 172.30.66.30 31337)
+  door:
+    image: docker.io/library/alpine:3.20
+    container_name: robinos-net-door
+    command: ["sh", "-c", "while true; do printf 'RobinOS 연습 서버예요. 배너를 읽었어요. 코드: ROBIN-NET-BANNER\\n' | nc -l -p 31337; done"]
+    networks:
+      scan:
+        ipv4_address: 172.30.66.30
+    restart: "no"
+
+  # A host that is up but has no open ports: nmap -sn finds it, a port scan doesn't
+  quiet:
+    image: docker.io/library/alpine:3.20
+    container_name: robinos-net-quiet
+    command: ["sleep", "infinity"]
+    networks:
+      scan:
+        ipv4_address: 172.30.66.40
+    restart: "no"
+
+networks:
+  scan:
+    name: robinos-scan
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.66.0/24
