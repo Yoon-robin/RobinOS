@@ -7,6 +7,8 @@ desktop/hypr/hyprlock.conf                /usr/share/robinos/hypr/hyprlock.conf 
 desktop/hypr/hypridle.conf                /usr/share/robinos/hypr/hypridle.conf            644
 desktop/hypr/hyprland.lua                 /etc/xdg/hypr/hyprland.lua                       644
 desktop/bin/robinos-session               /usr/share/robinos/bin/robinos-session           755
+desktop/bin/robinos-shell                 /usr/share/robinos/bin/robinos-shell             755
+desktop/bin/robinos-vm-display            /usr/share/robinos/bin/robinos-vm-display        755
 desktop/bin/robinos-screenshot            /usr/share/robinos/bin/robinos-screenshot        755
 desktop/bash/robinos-hints.sh             /usr/share/robinos/bash/robinos-hints.sh         644
 desktop/session/robinos.desktop           /usr/share/wayland-sessions/robinos.desktop      644

@@ -7,7 +7,6 @@
 --   require("/usr/share/robinos/hypr/robinos")
 --   hl.config({ general = { gaps_out = 16 } })
 
-local shell_dir = "/usr/share/robinos/shell"
 local hypr_dir  = "/usr/share/robinos/hypr"
 local bin_dir   = "/usr/share/robinos/bin"
 
@@ -33,6 +32,18 @@ hl.monitor({
     position = "auto",
     scale    = "auto",
 })
+
+-- Virtual machine screens (VMware, QEMU) report no physical size, so "auto"
+-- guesses 2x and a 1280x800 VM window becomes a 640x400 desktop.
+-- robinos-vm-display then keeps them the size of the VM window.
+for i = 1, 8 do
+    hl.monitor({
+        output   = "Virtual-" .. i,
+        mode     = "preferred",
+        position = "auto",
+        scale    = 1,
+    })
+end
 
 
 -------------------------------
@@ -61,7 +72,9 @@ hl.env("QT_IM_MODULES", "wayland;fcitx")
 -------------------
 
 hl.on("hyprland.start", function()
-    hl.exec_cmd("qs -p " .. shell_dir)
+    -- Keeps the shell running and falls back to software drawing when Qt can't use the GPU
+    hl.exec_cmd(bin_dir .. "/robinos-shell")
+    hl.exec_cmd(bin_dir .. "/robinos-vm-display")
     hl.exec_cmd("fcitx5 -d --replace")
     hl.exec_cmd("hypridle -c " .. hypr_dir .. "/hypridle.conf")
     hl.exec_cmd("systemctl --user start hyprpolkitagent.service")

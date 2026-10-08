@@ -9,6 +9,8 @@ RobinOS는 Hyprland 위에 직접 만든 Quickshell 셸을 얹어 써요. 디자
 | 컴포지터 | Hyprland 0.56+ (Lua 설정) | `desktop/hypr/robinos.lua` |
 | 셸: 상단 바, 독, 런처, 빠른 설정, 알림, 볼륨 표시, 배경화면, 환영 마법사 | Quickshell 0.3 | `desktop/shell/` |
 | 세션 시작, 렌더링 자동 전환 | `robinos-session` | `desktop/bin/robinos-session` |
+| 셸 다시 띄우기, 셸 렌더링 전환 | `robinos-shell` | `desktop/bin/robinos-shell` |
+| VM 화면을 창 크기에 맞추기 | `robinos-vm-display` | `desktop/bin/robinos-vm-display` |
 | 로그인 화면 | SDDM (Qt 6 테마) | `themes/sddm/robinos/` |
 | 잠금 화면과 대기 | hyprlock, hypridle | `desktop/hypr/hyprlock.conf`, `hypridle.conf` |
 | 터미널 | foot | `desktop/foot/foot.ini` |
@@ -35,6 +37,8 @@ RobinOS는 Hyprland 위에 직접 만든 Quickshell 셸을 얹어 써요. 디자
 /etc/xdg/hypr/hyprland.lua               System entry point, used when ~/.config/hypr/hyprland.lua is missing
 /usr/share/wayland-sessions/robinos.desktop
 /usr/share/robinos/bin/robinos-session
+/usr/share/robinos/bin/robinos-shell
+/usr/share/robinos/bin/robinos-vm-display
 ```
 
 Geist와 Pretendard는 Arch 저장소에 없어요. `scripts/fetch-fonts.sh`가 버전을 고정해 둔 릴리스를 내려받아 SHA-256 체크섬을 확인하고 `/usr/share/fonts/robinos`에 설치해요. ISO를 만들 때는 `scripts/prepare-archiso.sh`가, 설치된 시스템에서는 `scripts/post-install.sh`가 이 스크립트를 실행해요.
@@ -49,7 +53,22 @@ Geist와 Pretendard는 Arch 저장소에 없어요. `scripts/fetch-fonts.sh`가 
 
 로그는 `~/.local/state/robinos/session.log`에 남아요. 렌더링 방식을 직접 정하고 싶으면 `~/.bash_profile`에서 `ROBINOS_RENDER=software`나 `ROBINOS_RENDER=hardware`를 export하면 돼요.
 
+셸은 Hyprland가 바로 띄우지 않고 `robinos-shell`을 거쳐 떠요.
+
+- Hyprland는 GPU로 잘 그리는데 셸(Qt)만 GPU 화면을 못 얻는 드라이버가 있어요. VMware의 `vmwgfx`가 그래요. 이때 셸은 떠 있어도 화면에 아무것도 안 보여요. `robinos-shell`은 셸 로그에서 `Could not create EGL surface`를 보면 셸만 소프트웨어 렌더링(`LIBGL_ALWAYS_SOFTWARE=1`)으로 다시 띄워요. Hyprland는 계속 GPU를 써요.
+- 셸이 죽으면 1초 뒤에 다시 띄워요. 2분 안에 5번 죽으면 멈추고, 화면에 복구 방법을 띄워요.
+- 로그는 `~/.local/state/robinos/shell.log`에 있어요. 셸을 처음부터 소프트웨어로 그리려면 `~/.bash_profile`에서 `ROBINOS_SHELL_RENDER=software`를 export하세요.
+
 QEMU에서 GPU 가속으로 테스트하려면 `scripts/run-vm.sh --gl`을 실행하세요.
+
+## VM 화면 크기
+
+VM 화면은 물리 크기를 알려 주지 않아서, Hyprland의 자동 배율이 2배를 고르곤 해요. 그러면 1280×800 창이 640×400짜리 바탕 화면이 돼요. 그래서 VM 화면(`Virtual-1` 같은 이름)은 배율 1로 시작해요.
+
+VM 창 크기를 바꾸면 VMware(`vmtoolsd`)나 QEMU(`virtio-gpu`)가 새 크기를 커널에 알려 줘요. Hyprland는 처음 고른 해상도를 그대로 쓰기 때문에, `robinos-vm-display`가 이 신호를 보고 화면을 창 크기에 맞춰요. 가로 3200픽셀 이상이면 배율 2를 써요. 실제 PC에서는 바로 끝나요.
+
+- VMware에서는 보기 메뉴의 "Autofit Guest"가 켜져 있어야 해요. 끄면 마지막 크기가 유지돼요.
+- 설치기는 VMware에서 설치하면 `open-vm-tools`를 같이 설치하고 `vmtoolsd`를 켜요. QEMU/KVM에서는 `qemu-guest-agent`를 설치해요.
 
 ## 단축키
 

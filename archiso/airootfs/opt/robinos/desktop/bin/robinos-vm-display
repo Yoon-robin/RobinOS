@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# Keeps a virtual machine's screen the size of its window.
+# Started by Hyprland (desktop/hypr/robinos.lua); exits right away on real hardware.
+#
+# When the VM window is resized, VM graphics drivers (VMware's vmwgfx with
+# vmtoolsd, QEMU's virtio-gpu) report the new size as the screen's preferred
+# mode. Hyprland keeps the mode it started with, so this applies the new size
+# whenever the kernel says the screen changed. Turning off "Autofit Guest" in
+# VMware stops the size updates, and the screen keeps its last size.
+# Screens 3200 pixels wide or more get 2x scale, the rest 1x.
+
+set -uo pipefail
+
+# Connected VM screens as /sys/class/drm/card0-Virtual-1 ...
+screens() {
+  local c
+  for c in /sys/class/drm/card*-Virtual-*; do
+    [[ -r "${c}/status" && "$(<"${c}/status")" == "connected" ]] && printf '%s\n' "${c}"
+  done
+}
+
+compositor_alive() {
+  [[ -S "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hypr/${HYPRLAND_INSTANCE_SIGNATURE:-}/.socket.sock" ]]
+}
+
+# "1280x800@1" for a monitor in `hyprctl monitors`
+current_mode() {
+  hyprctl monitors | awk -v name="$1" '
+    $1 == "Monitor" { on = ($2 == name) }
+    on && /^\t[0-9]+x[0-9]+@/ { split($1, size, "@"); mode = size[1] }
+    on && /^\tscale:/ { print mode "@" $2; exit }'
+}
+
+fit() {
+  local c name mode scale
+  while read -r c; do
+    name="${c##*/}"
+    name="${name#card*-}"
+    mode="$(head -n 1 "${c}/modes" 2>/dev/null)"
+    [[ "${mode}" =~ ^([0-9]+)x[0-9]+$ ]] || continue
+    scale=1
+    (( BASH_REMATCH[1] >= 3200 )) && scale=2
+    [[ "$(current_mode "${name}")" == "${mode}@${scale}" ]] && continue
+    hyprctl eval "hl.monitor({ output = \"${name}\", mode = \"${mode}\", position = \"auto\", scale = ${scale} })" >/dev/null
+  done < <(screens)
+}
+
+[[ -n "$(screens)" ]] || exit 0
+compositor_alive || exit 0
+fit
+
+exec {events}< <(exec udevadm monitor --udev --subsystem-match=drm 2>/dev/null)
+monitor_pid=$!
+trap 'kill "${monitor_pid}" 2>/dev/null' EXIT
+
+while true; do
+  if read -r -t 30 line <&"${events}"; then
+    [[ "${line}" == *" change "* ]] || continue
+    # Dragging the window edge sends a burst of sizes; apply the last one
+    while read -r -t 1 _ <&"${events}"; do :; done
+    compositor_alive || break
+    fit
+  else
+    (( $? > 128 )) || break  # udevadm stopped
+    compositor_alive || break
+  fi
+done

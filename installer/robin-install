@@ -53,6 +53,15 @@ SUBVOLUMES = [("@", ""), ("@home", "home"), ("@log", "var/log"),
               ("@pkg", "var/cache/pacman/pkg"), ("@snapshots", ".snapshots")]
 MOUNT_OPTIONS = "noatime,compress=zstd:1"
 UDEV_HOOKS = "base udev autodetect microcode modconf kms keyboard keymap consolefont block filesystems fsck"
+# Guest tools for the VM the installer runs in (systemd-detect-virt names):
+# packages and the services to enable. VMware's vmtoolsd also tells the guest
+# when its window is resized (desktop/bin/robinos-vm-display follows it).
+# qemu-guest-agent starts by itself when QEMU offers its channel.
+GUEST_TOOLS = {
+    "vmware": (["open-vm-tools"], ["vmtoolsd.service"]),
+    "kvm": (["qemu-guest-agent"], []),
+    "qemu": (["qemu-guest-agent"], []),
+}
 
 log_file = None
 
@@ -254,9 +263,19 @@ def mount_target(esp, root):
     run("mount", esp, f"{TARGET}/efi")
 
 
+def guest_tools():
+    """([packages], [services]) for the VM we run in; nothing on real hardware."""
+    try:
+        virt = output("systemd-detect-virt", "--vm").strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return [], []
+    return GUEST_TOOLS.get(virt, ([], []))
+
+
 def install_packages():
     progress(12, "패키지 설치")
-    packages = package_list("core") + package_list("desktop") + ["amd-ucode", "intel-ucode"]
+    guest_packages, guest_services = guest_tools()
+    packages = package_list("core") + package_list("desktop") + ["amd-ucode", "intel-ucode"] + guest_packages
     counter = re.compile(r"\(\s*(\d+)/(\d+)\) installing")
 
     def on_line(line):
@@ -267,6 +286,8 @@ def install_packages():
                 progress(12 + 58 * done // total, f"패키지 설치 ({done}/{total})")
 
     run("pacstrap", "-K", TARGET, *packages, on_line=on_line)
+    for service in guest_services:
+        chroot("systemctl", "enable", service)
     fstab = without_subvolid(output("genfstab", "-U", TARGET))
     with open(f"{TARGET}/etc/fstab", "a") as f:
         f.write(fstab)
