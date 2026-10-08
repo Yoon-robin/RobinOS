@@ -56,7 +56,12 @@ hl.env("HYPRCURSOR_SIZE", "24")
 
 hl.env("QT_QPA_PLATFORM", "wayland;xcb")
 hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
-hl.env("QT_WAYLAND_DISABLE_WINDOWDECORATION", "1")
+-- Qt apps (Wireshark, qt6ct, the installer, ...) draw their own Adwaita-style
+-- title bar, like GTK apps and Firefox already do. Hyprland answers every
+-- xdg-decoration request with "server side" but draws no title bar, so Qt must
+-- not see that protocol. The buttons follow button-layout in desktop/dconf.
+hl.env("QT_WAYLAND_DECORATION", "adwaita")
+hl.env("QT_WAYLAND_DISABLED_INTERFACES", "zxdg_decoration_manager_v1")
 hl.env("GDK_BACKEND", "wayland,x11,*")
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
 
@@ -226,7 +231,6 @@ hl.bind(mainMod .. " + A",     hl.dsp.global("robinos:launcher"),      { descrip
 hl.bind(mainMod .. " + S",     hl.dsp.global("robinos:quicksettings"), { description = "빠른 설정" })
 hl.bind(mainMod .. " + N",     hl.dsp.global("robinos:notifications"), { description = "알림 모두 지우기" })
 hl.bind(mainMod .. " + D",     hl.dsp.global("robinos:desktop"),       { description = "바탕 화면 보기" })
-
 -- Apps
 hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(terminal),    { description = "터미널" })
 hl.bind(mainMod .. " + E",      hl.dsp.exec_cmd(fileManager), { description = "파일" })

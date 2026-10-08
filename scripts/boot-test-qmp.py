@@ -173,6 +173,12 @@ def main():
     type_text(qmp, "robinctl learn show 1\n")
     wait(2)
     shot(qmp, "terminal-learn")
+    # Title bar buttons (desktop/dconf) as GTK, Firefox and Qt apps read them
+    type_text(qmp, "clear; gdbus call --session --dest org.freedesktop.portal.Desktop"
+              " --object-path /org/freedesktop/portal/desktop --method org.freedesktop.portal.Settings.ReadOne"
+              " org.gnome.desktop.wm.preferences button-layout\n")
+    wait(3)
+    shot(qmp, "button-layout")
 
     # Minimize like the Windows taskbar: the dock's click on an app goes through the
     # same shell function as this IPC call. The focused terminal minimizes itself, and

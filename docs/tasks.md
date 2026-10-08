@@ -57,6 +57,14 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 ## 진행 중
 
+### T-029 Qt 앱 제목 표시줄
+- 상태: 검증 대기
+- 출처: T-011 v0.2 후보, v0.1 알려진 제약("Qt 앱에는 창 제목 표시줄이 없어요")
+- 찾은 것: Hyprland 0.56.2는 xdg-decoration 요청에 언제나 "서버가 그린다"고 답하고 제목 표시줄은 그리지 않아요(`XDGDecoration.cpp`). 그래서 Qt와 foot은 자체 제목 표시줄을 그리지 않아요. 앱의 자체 최소화 단추(`xdg_toplevel.set_minimized`)는 받기만 하고 아무 일도 안 해요. Lua 이벤트 `window.minimize`는 위키에는 있지만 0.56.2에는 없어요(`hl.on: unknown event`)
+- 한 것: Qt가 그 프로토콜을 보지 않게 하고(`QT_WAYLAND_DISABLED_INTERFACES=zxdg_decoration_manager_v1`) qt6-wayland의 Adwaita 장식을 써요(`QT_WAYLAND_DECORATION=adwaita`). 제목 표시줄 단추는 dconf `button-layout='appmenu:maximize,close'`로 최소화를 빼요(GTK, Firefox, Qt가 함께 따라요). 최소화는 독으로 해요. 부팅 테스트에 포털이 알려 주는 단추 배치를 찍는 장면(`button-layout`)을 넣음
+- 완료 기준: 부팅 테스트의 설치기 화면(`installer`)에 어두운 Adwaita 제목 표시줄(최대화, 닫기)이 보이고, `button-layout` 장면에 `appmenu:maximize,close`가 나옴
+- 남은 것: foot은 이 방법이 안 통해요(Wayland 클라이언트가 직접 장식을 고르지 못함). Hyprland에 `window.minimize`가 들어오면 최소화 단추를 다시 켜요
+
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
 - 출처: 사용자 요청("vmware로 깔아줘"). VMware Workstation Pro 26H1, VM은 `문서\Virtual Machines\RobinOS\RobinOS.vmx`(EFI, 8GB, NVMe 64GB, 3D 가속 켬)
@@ -84,7 +92,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: 채점 테스트(가짜 API 응답으로), 설치 테스트 -Lab에서 한 문제를 실제로 풀고 채점
 
 ### T-011 v0.2 후보 (지금은 하지 않아요)
-- foot과 Qt 앱 제목 표시줄(hyprbars), 학습 센터 앱, 네트워크·CTF 랩 (최소화와 `Win+D`는 T-024에서 끝남)
+- foot 제목 표시줄(hyprbars), 학습 센터 앱, 네트워크·CTF 랩 (최소화와 `Win+D`는 T-024, Qt 앱 제목 표시줄은 T-029)
 
 ## 완료
 

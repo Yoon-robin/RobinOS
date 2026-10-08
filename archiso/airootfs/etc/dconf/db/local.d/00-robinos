@@ -14,3 +14,9 @@ document-font-name='Geist 11'
 monospace-font-name='Geist Mono 11'
 accent-color='red'
 enable-hot-corners=false
+
+# Title bar buttons of GTK, Firefox and Qt apps. Hyprland 0.56 ignores an app's
+# own minimize request (xdg_toplevel.set_minimized), so that button would do
+# nothing; the dock minimizes instead (desktop/shell/ShellState.qml).
+[org/gnome/desktop/wm/preferences]
+button-layout='appmenu:maximize,close'
