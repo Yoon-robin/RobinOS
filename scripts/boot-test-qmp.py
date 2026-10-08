@@ -7,7 +7,8 @@ speed multiplies every wait (1 with KVM, about 4 with TCG). The scenario:
 boot -> welcome wizard (every step, then its missions terminal) -> desktop ->
 launcher (search, Windows app name) -> installer (first two steps) -> quick settings
 (also with Tab) -> terminal with a Windows command and the first learning mission
--> minimize and restore the terminal -> Super+D twice -> light mode (terminal,
+-> minimize and restore the terminal -> Super+D twice -> kill the shell and see
+it come back -> light mode (terminal,
 launcher, quick settings) -> lock screen -> unlock with the live password.
 """
 
@@ -189,6 +190,11 @@ def main():
     keys(qmp, "meta_l", "d")
     wait(2)
     shot(qmp, "desktop-back")
+
+    # robinos-shell starts the shell again when it dies
+    type_text(qmp, "clear; pkill -x qs; sleep 4; tail -n 3 .local/state/robinos/shell.log\n")
+    wait(7)
+    shot(qmp, "shell-restarted")
 
     # Light mode, through the shell's IPC (the same as the quick settings tile)
     type_text(qmp, "clear; qs ipc -p /usr/share/robinos/shell call shell setDark false\n")
