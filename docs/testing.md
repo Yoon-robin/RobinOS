@@ -78,7 +78,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 5. 설치기 첫 두 단계(테스트 VM에는 빈 64GB 디스크가 있어요)
 6. 빠른 설정, Tab으로 옮긴 키보드 포커스
 7. 터미널: `ipconfig` 힌트, `robinctl learn show 1`과 미션 1 풀기(라이트 모드 런처에 "1/20 완료"), 포털이 알려 주는 제목 표시줄 단추 배치(`button-layout`)
-8. 독처럼 최소화하고 되돌리기, `Super+D` 두 번(바탕 화면 보기와 되돌리기), `Super+Shift+S`(영역 고르기 화면, Esc로 취소)
+8. 독처럼 최소화하고 되돌리기, `Super+D` 두 번(바탕 화면 보기와 되돌리기), `Super+Shift+S`(영역 고르기 화면, Esc로 취소), `Super+V`(복사한 글이 클립보드 기록에)
 9. 셸을 끄면 `robinos-shell`이 다시 띄우는지
 10. 라이트 모드(셸 IPC `setDark false`): 터미널(`robinctl learn` 목록), 런처, 빠른 설정. 찍은 뒤 다크로 돌려요
 11. 잠금 화면과 잠금 해제

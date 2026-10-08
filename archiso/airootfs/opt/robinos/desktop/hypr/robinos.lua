@@ -84,6 +84,13 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("hypridle -c " .. hypr_dir .. "/hypridle.conf")
     hl.exec_cmd("systemctl --user start hyprpolkitagent.service")
     hl.exec_cmd("xdg-user-dirs-update")
+    -- Clipboard history for Win+V (desktop/shell/Launcher.qml). It lives in
+    -- $XDG_RUNTIME_DIR, so it is gone after logging out; cliphist skips copies that
+    -- password managers mark sensitive (CLIPBOARD_STATE).
+    for _, kind in ipairs({ "text", "image" }) do
+        hl.exec_cmd("sh -c 'exec wl-paste --type " .. kind .. " --watch cliphist"
+            .. " -db-path \"$XDG_RUNTIME_DIR/robinos-cliphist.db\" -max-items 50 store'")
+    end
 end)
 
 
@@ -231,6 +238,7 @@ hl.bind(mainMod .. " + A",     hl.dsp.global("robinos:launcher"),      { descrip
 hl.bind(mainMod .. " + S",     hl.dsp.global("robinos:quicksettings"), { description = "빠른 설정" })
 hl.bind(mainMod .. " + N",     hl.dsp.global("robinos:notifications"), { description = "알림 모두 지우기" })
 hl.bind(mainMod .. " + D",     hl.dsp.global("robinos:desktop"),       { description = "바탕 화면 보기" })
+hl.bind(mainMod .. " + V",     hl.dsp.global("robinos:clipboard"),     { description = "클립보드 기록" })
 -- Apps
 hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(terminal),    { description = "터미널" })
 hl.bind(mainMod .. " + E",      hl.dsp.exec_cmd(fileManager), { description = "파일" })

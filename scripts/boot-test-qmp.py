@@ -205,6 +205,14 @@ def main():
     shot(qmp, "snipping")
     keys(qmp, "esc")
     wait(1)
+    # Win+V like Windows' clipboard history: copy something, then open the list
+    type_text(qmp, "clear; wl-copy clipboard-test-robinos\n")
+    wait(2)
+    keys(qmp, "meta_l", "v")
+    wait(3)
+    shot(qmp, "clipboard")
+    keys(qmp, "esc")
+    wait(1)
 
     # robinos-shell starts the shell again when it dies
     type_text(qmp, "clear; pkill -x qs; sleep 4; grep -a robinos-shell .local/state/robinos/shell.log\n")

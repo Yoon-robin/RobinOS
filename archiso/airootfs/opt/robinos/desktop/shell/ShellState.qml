@@ -92,6 +92,9 @@ Singleton {
         return findIn(Quickshell.screens, s => s.name === name) ?? Quickshell.screens[0];
     }
 
+    // The launcher also shows the clipboard history (Win+V, Launcher.qml)
+    property bool launcherClipboard: false
+
     function toggleLauncher() {
         if (welcomeOpen)
             return;
@@ -101,6 +104,20 @@ Singleton {
         }
         quickSettingsOpen = false;
         overlayScreen = focusedScreen;
+        launcherClipboard = false;
+        launcherOpen = true;
+    }
+
+    function toggleClipboard() {
+        if (welcomeOpen)
+            return;
+        if (launcherOpen) {
+            launcherOpen = false;
+            return;
+        }
+        quickSettingsOpen = false;
+        overlayScreen = focusedScreen;
+        launcherClipboard = true;
         launcherOpen = true;
     }
 

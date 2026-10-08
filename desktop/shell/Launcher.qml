@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Widgets
 
@@ -39,6 +40,10 @@ PanelWindow {
             search.text = "";
             pointer = Qt.point(-1, -1);
             pointerMoved = false;
+            if (clipboardMode) {
+                clips = [];
+                clipList.running = true;
+            }
             ShellState.refreshLearn();
             refresh();
             mapped = true;
@@ -50,6 +55,51 @@ PanelWindow {
             revealed = false;
             hideTimer.restart();
         }
+    }
+
+    // ---- Clipboard history (Win+V) ----
+    // robinos.lua keeps what is copied with cliphist in $XDG_RUNTIME_DIR, so it is
+    // gone after logging out; cliphist skips what password managers mark sensitive.
+
+    readonly property bool clipboardMode: ShellState.launcherClipboard
+    readonly property string cliphist: "cliphist -db-path \"${XDG_RUNTIME_DIR:-/tmp}/robinos-cliphist.db\""
+    property var clips: []
+
+    Process {
+        id: clipList
+
+        command: ["sh", "-c", root.cliphist + " list 2>/dev/null | head -n 50"]
+        stdout: StdioCollector {
+            id: clipOut
+
+            onStreamFinished: {
+                const clips = [];
+                for (const line of clipOut.text.split("\n")) {
+                    const tab = line.indexOf("\t");
+                    if (tab > 0 && /^[0-9]+$/.test(line.slice(0, tab)))
+                        clips.push({ id: line.slice(0, tab), text: line.slice(tab + 1) });
+                }
+                root.clips = clips;
+                if (root.open)
+                    root.refresh();
+            }
+        }
+    }
+
+    function clipItems(q) {
+        const out = [];
+        const shown = root.clips.filter(clip => q === "" || matches(clip.text, q));
+        let title = "클립보드 기록 · Enter로 다시 복사해요";
+        if (clipList.running)
+            title = "클립보드 기록을 불러오는 중이에요";
+        else if (root.clips.length === 0)
+            title = "아직 복사한 것이 없어요. 복사하면 여기에 쌓여요";
+        else if (shown.length === 0)
+            title = "찾는 기록이 없어요";
+        out.push({ kind: "header", title: title });
+        for (const clip of shown)
+            out.push({ kind: "clip", id: clip.id, icon: "clipboard", title: clip.text, subtitle: "" });
+        return out;
     }
 
     // The progress file loads after the list is built when the launcher opens
@@ -174,6 +224,13 @@ PanelWindow {
         const q = search.text.trim().toLowerCase();
         const out = [];
 
+        if (clipboardMode) {
+            results = clipItems(q);
+            current = nextSelectable(-1, 1);
+            list.positionViewAtBeginning();
+            return;
+        }
+
         if (q === "") {
             out.push({ kind: "header", title: "추천" });
             if (ShellState.isLive)
@@ -287,6 +344,11 @@ PanelWindow {
         if (!item || item.kind === "header")
             return;
         close();
+
+        if (item.kind === "clip") {
+            Quickshell.execDetached(["sh", "-c", root.cliphist + " decode " + item.id + " | wl-copy"]);
+            return;
+        }
 
         if (item.kind === "app") {
             if (item.entry.runInTerminal)
@@ -463,7 +525,7 @@ PanelWindow {
                         anchors.fill: parent
                         verticalAlignment: Text.AlignVCenter
                         visible: search.text === "" && search.preeditText === ""
-                        text: "앱, 명령, 랩 검색…"
+                        text: root.clipboardMode ? "클립보드 기록 검색…" : "앱, 명령, 랩 검색…"
                         color: Theme.muted
                         font: search.font
                     }
@@ -548,7 +610,7 @@ PanelWindow {
                                 border.color: Theme.border
 
                                 Icon {
-                                    visible: row.modelData.kind === "cmd"
+                                    visible: row.modelData.kind === "cmd" || row.modelData.kind === "clip"
                                     anchors.centerIn: parent
                                     name: row.modelData.icon ?? ""
                                     size: 15
@@ -564,11 +626,15 @@ PanelWindow {
                             }
 
                             Text {
+                                // A copied paragraph is one long line; keep it inside the row
+                                Layout.maximumWidth: row.width - 70
                                 text: row.modelData.title ?? ""
                                 color: Theme.fg
                                 font.family: Theme.font
                                 font.pixelSize: 14
                                 font.weight: Font.Medium
+                                elide: Text.ElideRight
+                                maximumLineCount: 1
                             }
 
                             Text {
