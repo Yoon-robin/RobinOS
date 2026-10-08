@@ -44,7 +44,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (없음) | | |
+| `eac182f`~ | 묶음 3 (T-046~T-049) | verify -Installer robinos |
 
 `c4e62d5`까지 2026-10-08 묶음 2 검증(ISO 빌드, 부팅 테스트 33장, 설치 테스트 robinos 다섯 단계)을 마치고 푸시했어요.
 
@@ -57,6 +57,13 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - **RobinOS 파일 업데이트 배포 방식(T-026)**: 2026-10-08 사용자가 중앙 서버가 필요한지 묻고 추천을 원함. 추천: 따로 서버 없이 깃허브 릴리스를 pacman 저장소로 쓰고, RobinOS 파일을 pacman 패키지로 만들어 서명해요. `robinctl update` 한 번에 함께 올라가고 snap-pac 스냅샷도 그대로 생겨요. 서명 열쇠(GPG)를 이 PC에 만들어야 해서 사용자 답을 기다려요
 
 ## 진행 중
+
+### 묶음 3 (검증 대기, `eac182f`~`48ca7aa`)
+- T-046 웹 기초 미션 5개(21~25): 127.0.0.1:8000에서만 열리는 파이썬 연습 서버(`practice/web/server.py`)로 curl, 응답 헤더, robots.txt, 쿠키, 리다이렉트. robinctl 테스트가 실제 서버를 띄워 다섯 미션을 풀고, robinctl 안의 사본이 소스와 같은지 확인. `python`을 core에
+- T-047 바의 시계를 누르거나 Super+Alt+D로 달력(`Calendar.qml`). 부팅 테스트 `calendar` 장면
+- T-048 업데이트 알림: 설치본에서 checkupdates로 확인해 바에 표시, 빠른 설정의 "업데이트 N개" 단추로 `sudo robinctl update`. 설치 테스트에 checkupdates 확인
+- T-049 검증 빠르게: `wsl-build.ps1 verify`(zstd 테스트 ISO, 부팅·설치 테스트 동시 실행)
+- 완료 기준: `verify -Installer robinos` 통과(이번 검증이 verify의 첫 실행), 부팅 테스트 `calendar` 장면, 미션 목록 25개, 걸린 시간을 묶음 2(약 20분)와 비교
 
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
