@@ -1598,7 +1598,8 @@ EOF
 lab_compose_file() {
   local compose_file="${PROJECT_ROOT}/labs/web/docker-compose.yml"
   [[ -f "${compose_file}" ]] || die "랩 파일이 없어요: ${compose_file}"
-  have_cmd docker || die "docker가 필요해요"
+  # Docker comes with the web profile (not in the live ISO or a fresh install)
+  have_cmd docker || die "랩은 Docker로 돌아가요. web 프로필을 먼저 설치하세요: sudo robinctl profile web"
   printf '%s' "${compose_file}"
 }
 

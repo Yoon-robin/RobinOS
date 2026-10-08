@@ -224,6 +224,19 @@ printf '#!/bin/sh\necho "docker $*"\n' >"${FAKE}/docker"
 printf '#!/bin/sh\necho "sudo $*"\n' >"${FAKE}/sudo"
 printf '#!/bin/sh\n[ "$1" = is-active ] && exit 3\necho "systemctl $*"\n' >"${FAKE}/systemctl"
 chmod 755 "${FAKE}" "${FAKE}"/*
+# Without the web profile there is no docker: point to it before asking for a password
+NODOCKER="${WORK}/nodocker"
+mkdir -p "${NODOCKER}"
+cp "${FAKE}/sudo" "${FAKE}/systemctl" "${NODOCKER}/"
+if [[ ! -e /usr/bin/docker ]]; then
+  check "lab start without docker" fail learner env PATH="${NODOCKER}:/usr/bin" bash "${ROBINCTL}" lab start web
+  said "points to the web profile" "sudo robinctl profile web"
+  if grep -q '^sudo ' "${WORK}/out"; then
+    bad "lab start without docker still asks for sudo"
+  else
+    ok "lab start without docker doesn't ask for sudo"
+  fi
+fi
 check "lab start as a user" 0 learner env PATH="${FAKE}:/usr/bin" bash "${ROBINCTL}" lab start web
 said "starts Docker through sudo" "sudo systemctl start docker.service"
 said "runs compose through sudo" "sudo docker compose -f ${ROOT_DIR}/labs/web/docker-compose.yml up -d"
