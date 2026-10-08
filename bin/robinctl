@@ -974,7 +974,7 @@ EOF
 learn_show_8() {
   cat <<'EOF'
 윈도우에서는 설치 파일을 내려받아 설치하지만, 리눅스에서는 패키지 관리자(pacman)로 설치해요.
-RobinOS는 보안 실습 도구를 배우는 단계별 묶음(프로필)으로 설치해요.
+RobinOS의 보안 실습 도구는 배우는 단계에 맞춰 묶음(프로필)으로 나뉘어 있어요.
 이번에는 network 프로필을 설치해요. 인터넷 연결이 필요해요.
 EOF
   learn_section "할 일"
@@ -1092,7 +1092,7 @@ learn_check_2() {
   if [[ "${first,,}" == "hello linux" ]]; then
     learn_ok "첫 줄이 hello linux예요"
   else
-    learn_bad "첫 줄이 '${first}'예요" '> 를 쓰면 새로 써요: echo "hello linux" > hello.txt'
+    learn_bad "첫 줄이 hello linux가 아니에요 (지금: '${first}')" '> 를 쓰면 새로 써요: echo "hello linux" > hello.txt'
   fi
 
   lines="$(grep -c '[^[:space:]]' "${file}" || true)"
@@ -1163,7 +1163,7 @@ learn_check_4() {
   local output
   output="$(cd "${LEARN_DIR}" && timeout 5 ./hello.sh 2>&1 </dev/null || true)"
   if [[ "${output,,}" == *hello* ]]; then
-    learn_ok "실행하면 '${output%%$'\n'*}'가 나와요"
+    learn_ok "실행하면 '${output%%$'\n'*}'라고 나와요"
   else
     learn_bad "실행 결과에 hello가 없어요" 'echo "hello robinos" 줄이 있는지 확인해 보세요'
   fi
@@ -1212,11 +1212,11 @@ learn_check_6() {
     return
   fi
   if ! learn_my_addresses | grep -qxF "${written}"; then
-    learn_bad "${written}은(는) 이 컴퓨터의 주소가 아니에요" "ip -4 addr로 다시 확인해 보세요"
+    learn_bad "이 컴퓨터의 주소가 아니에요: ${written}" "ip -4 addr로 다시 확인해 보세요"
   elif [[ "${written}" == 127.* ]] && learn_my_addresses | grep -qv '^127\.'; then
-    learn_bad "${written}은(는) 컴퓨터 자기 자신을 가리키는 주소예요" "ip a에서 lo가 아닌 장치의 inet을 찾아보세요"
+    learn_bad "컴퓨터 자기 자신을 가리키는 주소예요: ${written}" "ip a에서 lo가 아닌 장치의 inet을 찾아보세요"
   else
-    learn_ok "${written}은(는) 이 컴퓨터의 주소예요"
+    learn_ok "이 컴퓨터의 주소예요: ${written}"
   fi
 }
 
@@ -1241,9 +1241,9 @@ learn_check_8() {
   local cmd
   for cmd in nmap dig nc; do
     if have_cmd "${cmd}"; then
-      learn_ok "${cmd}이(가) 있어요"
+      learn_ok "${cmd} 명령이 있어요"
     else
-      learn_bad "${cmd}이(가) 없어요" "sudo robinctl profile network"
+      learn_bad "${cmd} 명령이 없어요" "sudo robinctl profile network"
     fi
   done
 }

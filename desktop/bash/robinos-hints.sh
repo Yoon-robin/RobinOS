@@ -47,7 +47,7 @@ command_not_found_handle() {
   hint="$(__robinos_windows_hint "${name}")"
 
   if [[ -n "${hint}" ]]; then
-    printf '\033[1m%s\033[0m은(는) 윈도우 명령이에요. 리눅스에서는\n  \033[1;32m%s\033[0m  \033[2m%s\033[0m\n' \
+    printf '\033[1m%s\033[0m 명령은 윈도우용이에요. 리눅스에서는\n  \033[1;32m%s\033[0m  \033[2m%s\033[0m\n' \
       "$1" "${hint%%|*}" "${hint#*|}" >&2
   else
     printf 'bash: %s: 명령을 찾을 수 없어요\n' "$1" >&2
