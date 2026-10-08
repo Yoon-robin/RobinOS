@@ -13,7 +13,7 @@ import "keys.js" as Keyboard
 FloatingWindow {
     id: root
 
-    // { number, group, title, tools, done } from `robinctl learn tsv`
+    // { number, group, groupStart, title, tools, done } from `robinctl learn tsv`
     property var missions: []
     property int ctfSolved: 0
     property int ctfCount: 5
@@ -22,11 +22,11 @@ FloatingWindow {
 
     readonly property int doneCount: missions.filter(m => m.done).length
     readonly property var nextMission: missions.find(m => !m.done) ?? null
-    // [{ name, missions }]: robinctl names the group on its first mission only
+    // [{ name, missions }]
     readonly property var groups: {
         const out = [];
         for (const m of missions) {
-            if (m.group !== "" || out.length === 0)
+            if (m.groupStart || out.length === 0)
                 out.push({ name: m.group, missions: [] });
             out[out.length - 1].missions.push(m);
         }
@@ -89,10 +89,14 @@ FloatingWindow {
 
             onStreamFinished: {
                 const missions = [];
+                let group = "";
                 for (const line of listOut.text.split("\n")) {
                     const f = line.split("\t");
                     if (f[0] === "mission" && f.length >= 6) {
-                        missions.push({ number: parseInt(f[1]), group: f[2], title: f[3], tools: f[4], done: f[5] === "1" });
+                        // robinctl names the group on its first mission only
+                        if (f[2] !== "")
+                            group = f[2];
+                        missions.push({ number: parseInt(f[1]), group: group, groupStart: f[2] !== "", title: f[3], tools: f[4], done: f[5] === "1" });
                     } else if (f[0] === "ctf" && f.length >= 3) {
                         root.ctfSolved = parseInt(f[1]);
                         root.ctfCount = parseInt(f[2]);
