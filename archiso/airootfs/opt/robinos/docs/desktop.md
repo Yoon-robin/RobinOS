@@ -14,7 +14,7 @@ RobinOS는 Hyprland 위에 직접 만든 Quickshell 셸을 얹어 써요. 디자
 | 로그인 화면 | SDDM (Qt 6 테마) | `themes/sddm/robinos/` |
 | 잠금 화면과 대기 | hyprlock, hypridle | `desktop/hypr/hyprlock.conf`, `hypridle.conf` |
 | 터미널 | foot | `desktop/foot/foot.ini` |
-| 파일, 브라우저 | Nautilus, Firefox | - |
+| 파일, 브라우저 | Nautilus, Firefox (원격 측정과 실험 기능은 꺼 둬요: `/etc/firefox/policies/policies.json`) | - |
 | GTK, libadwaita 앱 | adw-gtk3, dconf 기본값 | `desktop/dconf/` |
 | Qt 앱 | qt6ct 팔레트 | `desktop/qt6ct/` |
 | 한글 입력 | fcitx5-hangul | `desktop/fcitx5/` |
@@ -94,6 +94,7 @@ VM 창 크기를 바꾸면 VMware(`vmtoolsd`)나 QEMU(`virtio-gpu`)가 새 크�
 | `Super+drag` | 창 이동(왼쪽 버튼), 크기 조절(오른쪽 버튼) |
 | `Print`, `Shift+Print` | 영역 또는 전체 화면을 찍어 `~/Pictures/Screenshots`와 클립보드에 저장 |
 | `Super+Shift+S` | 영역 스크린샷 (윈도우의 캡처 도구 `Win+Shift+S`와 같아요) |
+| `Super+V` | 클립보드 기록 (윈도우의 `Win+V`처럼 복사한 것 50개, 로그아웃하면 지워져요) |
 | `Right Alt` | 한/영 전환 (`Right Ctrl`은 한자) |
 | `Super+Shift+Escape` | 로그아웃 |
 
@@ -125,7 +126,7 @@ ipconfig 명령은 윈도우용이에요. 리눅스에서는
 2. 다크/라이트와 강조 색상. 고르는 즉시 화면에 적용돼요.
 3. 한/영 전환 단축키. 한/영 키와 오른쪽 Alt는 항상 되고, Ctrl+Space(기본), Shift+Space, 없음 중에서 하나를 더 골라요. `~/.config/fcitx5/config`를 다시 쓰고 `fcitx5-remote -r`로 바로 적용해요. 입력 칸에서 직접 바꿔 볼 수 있어요.
 4. 학습 목표: 리눅스 기초, 웹 보안, 먼저 둘러보기
-5. 단축키 안내. "미션 시작하기"를 누르면 고른 목표가 터미널에서 열려요.
+5. 단축키 안내(런처, 빠른 설정, 창 전환·닫기, 파일, 터미널, 바탕 화면 보기, 화면 캡처, 한/영, 잠금). "미션 시작하기"를 누르면 고른 목표가 터미널에서 열려요.
 
 Enter는 다음, Esc는 건너뛰기예요. 끝내거나 건너뛰면 `~/.local/state/quickshell/` 아래 `welcome.json`에 기록돼서 다시 뜨지 않아요. 라이브 ISO는 부팅할 때마다 새로 시작하니 매번 떠요. 다시 보려면 런처에서 "환영 마법사"를 고르거나 이렇게 실행하세요.
 
@@ -168,7 +169,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 ## 학습 미션
 
-런처의 "학습 미션"을 고르면 터미널이 열리고 `robinctl learn`이 미션 목록과 진행도를 보여 줘요. 미션은 그 터미널에서 직접 풀고, `robinctl learn check`로 확인해요. 리눅스 기초, 네트워크 기초, 포렌식 기초, 리버싱 기초가 5개씩 있고(연습 파일은 `~/practice/forensics`, 연습 프로그램은 `~/practice/reversing`에 만들어요), 자세한 내용은 [README](../README.md#학습-미션)에 있어요.
+런처의 "학습 미션"을 고르면 터미널이 열리고 `robinctl learn`이 미션 목록과 진행도를 보여 줘요. 미션은 그 터미널에서 직접 풀고, `robinctl learn check`로 확인해요. 리눅스 기초, 네트워크 기초, 포렌식 기초, 리버싱 기초가 5개씩 있고(연습 파일은 `~/practice/forensics`, 연습 프로그램은 `~/practice/reversing`에 만들어요), 자세한 내용은 [README](../README.md#학습-미션)에 있어요. 미션을 하나라도 끝내면 런처의 "학습 미션"에 "3/20 완료"처럼 진행도가 보여요(`~/.local/state/robinos/learn/done`을 셸이 읽어요).
 
 셸이 작업용으로 여는 터미널은 `ROBINOS_NO_GREETING=1`로 시작해서 `~/.bashrc`가 fastfetch를 띄우지 않아요. fastfetch는 한국어 라벨로 짧게 줄인 설정(`desktop/fastfetch/config.jsonc` → `/etc/xdg/fastfetch/config.jsonc`)을 써요.
 

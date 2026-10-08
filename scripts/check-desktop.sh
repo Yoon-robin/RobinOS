@@ -7,6 +7,7 @@ set -euo pipefail
 #   - Hyprland config validation             (Hyprland --verify-config)
 #   - QML syntax of the shell and SDDM theme (qmlformat)
 #   - Bash syntax of desktop scripts         (bash -n)
+#   - JSON syntax of the Firefox policies    (python3 -m json.tool)
 #
 # Missing tools are reported and skipped. Install them with:
 #   sudo pacman -S --needed lua qt6-declarative hyprland
@@ -80,6 +81,16 @@ printf 'Bash syntax\n'
 for file in "${ROOT_DIR}"/desktop/bin/*; do
   if bash -n "${file}"; then ok "${file#"${ROOT_DIR}/"}"; else fail "${file#"${ROOT_DIR}/"}"; fi
 done
+
+# Firefox ignores a policies.json it can't parse, without telling anyone
+printf 'JSON syntax\n'
+if command -v python3 >/dev/null 2>&1; then
+  for file in "${ROOT_DIR}"/desktop/firefox/*.json; do
+    if python3 -m json.tool "${file}" >/dev/null; then ok "${file#"${ROOT_DIR}/"}"; else fail "${file#"${ROOT_DIR}/"}"; fi
+  done
+else
+  skip "python3 not found"
+fi
 
 if [[ "${failed}" == "true" ]]; then
   printf 'Desktop check failed.\n' >&2

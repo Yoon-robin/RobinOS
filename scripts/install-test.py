@@ -560,7 +560,8 @@ def phase_installed(con, qmp):
     con.run("ls /usr/share/applications/libreoffice-writer.desktop /usr/share/applications/libreoffice-calc.desktop"
             " /usr/share/applications/libreoffice-impress.desktop && pacman -Q libreoffice-still-ko")
     # App store (packages/apps.txt): GNOME Software with Flathub, without PackageKit
-    con.run("test -f /usr/share/applications/org.gnome.Software.desktop && ! pacman -Q packagekit && command -v gnome-disks")
+    con.run("test -f /usr/share/applications/org.gnome.Software.desktop && ! pacman -Q packagekit && command -v gnome-disks"
+            " && grep -q DisableTelemetry /etc/firefox/policies/policies.json")
     con.run("flatpak remotes --system", check=False)
     # What the default install opens to the network (docs/ethics.md): CUPS only on
     # localhost, no sshd; Avahi's 5353/udp is the one service the LAN can reach

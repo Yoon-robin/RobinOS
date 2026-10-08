@@ -85,6 +85,7 @@
 | `Alt+Tab`, `Alt+F4` | 그대로 동작 |
 | `Win+E`, `Win+L` | 파일, 화면 잠금 |
 | `PrtSc`, `Win+Shift+S` (캡처 도구) | 영역 스크린샷(클립보드 + 사진 폴더) |
+| `Win+V` (클립보드 기록) | `Super+V`, 런처에 최근 복사한 것이 보여요(로그아웃하면 지워져요) |
 
 화면에 단축키를 보여 줄 때는 윈도우 키를 `Win`이라고 적어요(`Win+S`, `Win+Enter`). 리눅스 이름인 `Super`는 환영 마법사에서 한 번 알려 주고, 기술 문서와 설정 파일에서만 써요.
 
@@ -133,3 +134,4 @@ Calamares를 쓰지 않은 이유예요.
 ## 미결정 사항
 
 - **창 제목 표시줄**: Hyprland에는 기본 제목 표시줄이 없고, xdg-decoration 요청에는 언제나 "서버가 그린다"고 답해요. GTK 앱과 Firefox는 자체 단추가 있어요. Qt 앱은 그 프로토콜을 보지 않게 해서 Adwaita 제목 표시줄을 그려요(T-029). foot은 `[csd] preferred=client`로 설정했지만 Hyprland의 답을 따라서 제목 표시줄이 없어요. foot의 제목 표시줄(hyprbars 플러그인 등)은 v0.2에서 다뤄요. 제목 표시줄에는 최소화 단추를 두지 않아요(Hyprland 0.56은 앱의 최소화 요청을 처리하지 않아요). 최소화와 `Win+D`는 독과 `Super+D`로 해요(T-024).
+- **화면 읽기(Orca)**: 2026-10-08 조사(T-040). Orca 51은 키 입력을 libatspi의 장치로 받는데, Wayland에서는 `org.freedesktop.a11y.Manager`의 `KeyboardMonitor`(GNOME의 Mutter가 제공)를 써요. Hyprland 0.56.2 소스에는 이 인터페이스가 없어서 Orca의 읽기 명령(Orca 키 조합, 화면 훑기)이 동작하지 않고, 앱이 보내는 포커스 변화만 읽을 수 있어요. 반쪽짜리 내레이터를 기본으로 넣지 않고, Hyprland나 별도 도구가 이 인터페이스를 제공하면 다시 봐요. 셸의 버튼에는 `Accessible.name`을 계속 붙여 둬요.

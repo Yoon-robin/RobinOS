@@ -245,6 +245,12 @@ said "list says all twenty are done" "20/20"
 said "list points to the web lab" "robinctl lab info web"
 check "show 20" 0 learn show 20
 check "mission 21 doesn't exist" fail learn show 21
+qml_total="$(grep -oE 'learnTotal: [0-9]+' "${ROOT_DIR}/desktop/shell/ShellState.qml" | grep -oE '[0-9]+$')"
+if [[ "${qml_total}" == "$(grep -oE '^readonly LEARN_COUNT=[0-9]+' "${ROBINCTL}" | grep -oE '[0-9]+$')" ]]; then
+  ok "the shell's mission count (learnTotal) matches LEARN_COUNT"
+else
+  bad "ShellState.qml learnTotal (${qml_total}) differs from LEARN_COUNT in robinctl"
+fi
 check "reset" 0 learn reset
 check "check 1 still passes after reset (files stay)" 0 learn check 1
 
@@ -269,6 +275,30 @@ if [[ "$(bash "${ROBINCTL}" packages security | sort)" == "${all}" ]]; then
 else
   bad "security is not every package"
 fi
+
+printf '%s\n' "doctor: NVIDIA cards on a stand-in /sys/bus/pci/devices"
+pci_dev() {
+  mkdir -p "$1"
+  printf '%s\n' "$2" >"$1/vendor"
+  printf '%s\n' "$3" >"$1/device"
+  printf '%s\n' "$4" >"$1/class"
+}
+PCI="${WORK}/pci"
+pci_dev "${PCI}/none/0000:00:02.0" 0x8086 0x9bc4 0x030000
+check "doctor without an NVIDIA card" 0 env ROBINOS_PCI_DEVICES="${PCI}/none" bash "${ROBINCTL}" doctor
+if grep -q "NVIDIA" "${WORK}/out"; then bad "doctor talks about NVIDIA without a card"; else ok "no NVIDIA line without a card"; fi
+pci_dev "${PCI}/rtx/0000:01:00.0" 0x10de 0x2504 0x030000
+pci_dev "${PCI}/rtx/0000:01:00.1" 0x10de 0x228e 0x040300
+if ! pacman -Q nvidia-open >/dev/null 2>&1; then
+  check "doctor with an RTX card and no driver" 0 env ROBINOS_PCI_DEVICES="${PCI}/rtx" ROBINOS_NVIDIA_MODULE="${WORK}/no-module" bash "${ROBINCTL}" doctor
+  said "doctor says how to install nvidia-open" "sudo pacman -S nvidia-open"
+fi
+mkdir -p "${WORK}/module"
+check "doctor with the driver loaded" 0 env ROBINOS_PCI_DEVICES="${PCI}/rtx" ROBINOS_NVIDIA_MODULE="${WORK}/module" bash "${ROBINCTL}" doctor
+said "doctor says the driver is in use" "드라이버(nvidia-open)를 쓰고 있어요"
+pci_dev "${PCI}/old/0000:01:00.0" 0x10de 0x1c03 0x030000
+check "doctor with a GTX 10 card" 0 env ROBINOS_PCI_DEVICES="${PCI}/old" bash "${ROBINCTL}" doctor
+said "doctor says old cards keep nouveau" "nouveau"
 
 printf '%s\n' "Update (dry run) with stand-in pacman and flatpak"
 UPDATE_BIN="${WORK}/update-bin"

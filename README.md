@@ -85,7 +85,7 @@ bin/robinctl lab info web
 bin/robinctl lab status web
 ```
 
-`robinctl doctor`는 데스크톱(Hyprland, Quickshell, RobinOS 셸)과 브랜딩 요소(SDDM 테마, 설치된 시스템의 GRUB 테마)도 확인해요.
+`robinctl doctor`는 데스크톱(Hyprland, Quickshell, RobinOS 셸)과 브랜딩 요소(SDDM 테마, 설치된 시스템의 GRUB 테마)도 확인해요. NVIDIA 그래픽 카드가 있으면 드라이버가 떠 있는지, 설치본에서는 인쇄 서비스가 켜져 있는지도 알려 줘요.
 
 ## 학습 미션
 

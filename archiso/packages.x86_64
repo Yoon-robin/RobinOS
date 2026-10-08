@@ -55,6 +55,7 @@ upower
 grim
 slurp
 wl-clipboard
+cliphist
 libnotify
 xdg-user-dirs
 xdg-utils

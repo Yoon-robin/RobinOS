@@ -49,6 +49,13 @@ ShellRoot {
 
     GlobalShortcut {
         appid: "robinos"
+        name: "clipboard"
+        description: "클립보드 기록 열기/닫기"
+        onPressed: ShellState.toggleClipboard()
+    }
+
+    GlobalShortcut {
+        appid: "robinos"
         name: "quicksettings"
         description: "빠른 설정 열기/닫기"
         onPressed: ShellState.toggleQuickSettings(null)

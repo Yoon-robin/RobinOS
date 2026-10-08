@@ -110,6 +110,32 @@ path_found() {
   if [[ -e "$1" ]]; then printf 'true'; else printf 'false'; fi
 }
 
+# NVIDIA display controllers (vendor 0x10de, class 0x03xxxx), the way
+# installer/robin-install finds them. Prints how the driver is doing, or
+# nothing without such a card. ROBINOS_PCI_DEVICES and ROBINOS_NVIDIA_MODULE
+# point elsewhere in tests.
+nvidia_gpu_state() {
+  local dir="${ROBINOS_PCI_DEVICES:-/sys/bus/pci/devices}" dev newest=-1
+  for dev in "${dir}"/*; do
+    [[ -r "${dev}/vendor" && -r "${dev}/class" && -r "${dev}/device" ]] || continue
+    [[ "$(<"${dev}/vendor")" == "0x10de" && "$(<"${dev}/class")" == 0x03* ]] || continue
+    if (($(<"${dev}/device") > newest)); then
+      newest=$(($(<"${dev}/device")))
+    fi
+  done
+  if ((newest < 0)); then
+    return 0
+  elif ((newest < 0x1e00)); then
+    printf '오래된 카드라 기본 드라이버(nouveau)를 써요'
+  elif [[ -d "${ROBINOS_NVIDIA_MODULE:-/sys/module/nvidia}" ]]; then
+    printf 'NVIDIA 드라이버(nvidia-open)를 쓰고 있어요'
+  elif pkg_installed nvidia-open; then
+    printf '드라이버가 설치됐지만 떠 있지 않아요 (재부팅해 보고, 그래도 안 되면 journalctl -b | grep -i nvidia)'
+  else
+    printf '드라이버가 없어요 (sudo pacman -S nvidia-open 뒤 재부팅)'
+  fi
+}
+
 doctor() {
   print_version
   printf '\n시스템 점검:\n'
@@ -153,6 +179,19 @@ doctor() {
 
   if [[ -n "${ROBINOS_RENDER:-}" ]]; then
     printf '  렌더링: %s\n' "${ROBINOS_RENDER}"
+  fi
+
+  local gpu
+  gpu="$(nvidia_gpu_state)"
+  if [[ -n "${gpu}" ]]; then
+    printf '  NVIDIA 그래픽 카드: %s\n' "${gpu}"
+  fi
+
+  # Printing comes with the installed system (packages/apps.txt)
+  if have_cmd lpstat; then
+    local cups="false"
+    if systemctl is-enabled --quiet cups.socket 2>/dev/null; then cups="true"; fi
+    check_line "인쇄 서비스 (CUPS)" "${cups}" "sudo systemctl enable --now cups.socket"
   fi
 
   check_line "로그인 화면 테마 (SDDM)" "$(path_found "${SDDM_THEME_DIR}")"

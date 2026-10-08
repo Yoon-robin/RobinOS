@@ -34,7 +34,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 | 코드 검토 | 2026-10-08 | `robin-install`(fstab의 `subvolid=`), `robinctl`(스냅샷 부팅 상태의 되돌리기, 랩 권한), `post-install.sh`(영어 출력), `Installer.qml`, `ShellState.qml`, `Launcher.qml`(열 때 hover 선택), `Dock.qml`(설치 안 된 Wireshark가 고정돼 눌러도 반응 없음 → `6faf853`), `Bar.qml`(좁은 화면에서 앱 이름이 가운데 시계와 겹칠 수 있음, 1024px 이하라 그대로 둠), `QuickSettings.qml`(Docker 없이 "랩 시작"을 누르면 설치 방법 없이 "docker가 필요해요"만 나옴 → `dfcb5fd`), `Welcome.qml`(문제 없음). 셸 QML은 한 바퀴 다 봄 |
 | 문서와 코드 맞추기 | 2026-10-08 (두 번째) | 오늘 바뀐 것 기준으로 다시 봄: `robinctl help`의 learn·update 설명, testing.md의 부팅 테스트 장면(최소화, Super+D, 셸 다시 띄우기, 단추 배치)과 설치 테스트 확인 항목, "설치 방식은 두 가지" → 세 가지, roadmap의 미션 수, CLAUDE.md 저장소 지도(`apps.txt`, `practice/`), docs/README.md의 같이 고칠 문서 표(학습 미션, 패키지 목록)를 고침 |
 | 보안과 윤리 | 2026-10-08 | 웹 랩: docker 그룹 대신 sudo, 재부팅 때 자동 시작 끔, 기준을 ethics.md에 적음, 이미지 고정(T-014). 라이브 ISO: sshd는 이미 꺼져 있음, releng의 cloud-init 유닛을 뺌. 설치본: root 잠금(robin-install), wheel은 비밀번호 sudo |
-| 접근성 | 2026-10-08 | 버튼과 선택지가 마우스 전용이던 것(T-015), 보조 글자 대비(subtle 3.9:1·2.6:1 → muted). 화면 읽기 프로그램(Orca)은 아직 |
+| 접근성 | 2026-10-08 | 버튼과 선택지가 마우스 전용이던 것(T-015), 보조 글자 대비(subtle 3.9:1·2.6:1 → muted). 화면 읽기(Orca)는 Hyprland에 키보드 감시 인터페이스가 없어 막힘(T-040) |
 | 성능 | 2026-10-08 | 부팅 테스트 시리얼 로그: 라이브에서 데스크톱까지 35초 중 ldconfig 14초(`/etc/.updated` 없음), Docker 5초 → 고침(`37de032`, 다음 부팅 테스트에서 확인). `fcitx5-remote` 1초 폴링은 작은 프로세스 하나라 그대로 둬요 |
 | 업스트림 변화 | 2026-10-08 | 저장소 버전이 문서와 같음: Hyprland 0.56.2, Quickshell 0.3.1, SDDM 0.21.0, GRUB 2.16, grub-btrfs 4.14, snapper 0.13.2, archinstall 4.5, linux 7.2.9. 오늘 빌드와 테스트가 이 버전으로 통과. **지켜볼 것**: Qt 6.12.0이 extra로 들어왔는데 Arch가 quickshell만 다시 빌드하지 않았어요(`0.3.1-1`, 8월 21일, Qt 6.11.2로 빌드). quickshell이 실행할 때 "다시 빌드해야 한다, 충돌할 수 있다"고 경고해요. 부팅 테스트(`5de4149`)에서 셸은 정상이었어요. 같은 묶음의 hyprland, fcitx5-qt, qt6ct는 9월 30일에 다시 빌드됨. quickshell 새 빌드(`0.3.1-2` 이상)가 나오면 다시 확인해요 |
 
@@ -96,11 +96,10 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 ## 할 일 (위에서부터)
 
-### T-040 화면 읽기 (Orca) 조사
-- 상태: 할 일
+### T-040 화면 읽기 (Orca)
+- 상태: 막힘 (Hyprland가 `org.freedesktop.a11y.KeyboardMonitor`를 제공할 때까지)
 - 출처: 품질 점검(접근성) "화면 읽기 프로그램(Orca)은 아직"
-- 목표: 윈도우의 내레이터(`Win+Ctrl+Enter`)처럼 켜고 끌 수 있게 할지 조사해요. Orca 51은 `speech-dispatcher`, `espeak-ng`(한국어 음성 있음)와 함께 37MB예요. Hyprland(wlroots)에서 Orca의 전체 단축키(키 가로채기)가 되는지, Quickshell 셸의 `Accessible.name`이 AT-SPI로 읽히는지 VM에서 확인한 뒤 넣어요. 소리를 테스트로 들을 수 없으니 `accerciser`나 `busctl --user`로 AT-SPI 트리를 보는 방법을 찾아요
-- 완료 기준: 조사 결과를 design.md에 적고, 된다면 `apps.txt`와 단축키로 넣어요
+- 조사(2026-10-08): Orca 51 패키지와 libatspi 2.62를 받아 확인. Orca는 `Atspi.Device.new_full`로 키를 받고, Wayland에서는 `org.freedesktop.a11y.Manager`(Mutter 제공)를 써요. Hyprland 0.56.2 소스에 없어서 Orca 키 명령은 안 되고 포커스 읽기만 돼요. 결론과 이유를 design.md 미결정 사항에 적음. 업스트림 변화 점검 때 Hyprland가 이 인터페이스를 넣었는지 봐요
 
 ### T-026 RobinOS 자체 파일 업데이트
 - 상태: 할 일 (배포 방식은 사용자 결정, "사용자 확인 필요" 참고)

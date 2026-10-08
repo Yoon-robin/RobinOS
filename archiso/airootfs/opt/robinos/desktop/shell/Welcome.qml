@@ -714,6 +714,8 @@ PanelWindow {
                                 { keys: ["Alt", "F4"], title: "창 닫기" },
                                 { keys: ["Win", "E"], title: "파일" },
                                 { keys: ["Win", "Enter"], title: "터미널" },
+                                { keys: ["Win", "D"], title: "바탕 화면 보기" },
+                                { keys: ["Win", "Shift", "S"], title: "화면 캡처" },
                                 { keys: ["오른쪽 Alt"], title: "한/영 전환" },
                                 { keys: ["Win", "L"], title: "화면 잠금" }
                             ]
