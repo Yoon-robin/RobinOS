@@ -132,4 +132,4 @@ Calamares를 쓰지 않은 이유예요.
 
 ## 미결정 사항
 
-- **창 제목 표시줄**: Hyprland에는 기본 제목 표시줄이 없어요. GTK 앱과 Firefox는 자체 버튼이 있어요. foot은 `[csd] preferred=client`로 설정했지만 부팅 테스트 화면에는 제목 표시줄이 보이지 않아요(Hyprland가 서버 쪽 장식을 고르는 것으로 보여요). foot과 Qt 앱의 제목 표시줄(hyprbars 플러그인 등)은 v0.2에서 다뤄요. 최소화와 `Win+D`는 독과 `Super+D`로 해결했어요(T-024).
+- **창 제목 표시줄**: Hyprland에는 기본 제목 표시줄이 없고, xdg-decoration 요청에는 언제나 "서버가 그린다"고 답해요. GTK 앱과 Firefox는 자체 단추가 있어요. Qt 앱은 그 프로토콜을 보지 않게 해서 Adwaita 제목 표시줄을 그려요(T-029). foot은 `[csd] preferred=client`로 설정했지만 Hyprland의 답을 따라서 제목 표시줄이 없어요. foot의 제목 표시줄(hyprbars 플러그인 등)은 v0.2에서 다뤄요. 제목 표시줄에는 최소화 단추를 두지 않아요(Hyprland 0.56은 앱의 최소화 요청을 처리하지 않아요). 최소화와 `Win+D`는 독과 `Super+D`로 해요(T-024).

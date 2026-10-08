@@ -27,15 +27,20 @@ PanelWindow {
     // Windows the shell itself opens (the installer) carry Quickshell's app id
     readonly property var shellAppIds: ["org.quickshell", "quickshell"]
 
-    // In the live session the installer comes first; it opens through the shell
-    readonly property var pinned: (ShellState.isLive ? [
-        { key: "installer", icon: "download", label: "RobinOS 설치", appIds: shellAppIds, command: null }
-    ] : []).concat([
-        { icon: "terminal", label: "터미널", appIds: ["foot", "footclient", "robinos-float"], command: ["foot"] },
-        { icon: "folder", label: "파일", appIds: ["org.gnome.Nautilus"], command: ["nautilus", "--new-window"] },
-        { icon: "globe", label: "브라우저", appIds: ["firefox"], command: ["firefox"] },
-        { icon: "network", label: "Wireshark", appIds: ["org.wireshark.Wireshark", "wireshark"], command: ["wireshark"] }
-    ])
+    // In the live session the installer comes first; it opens through the shell.
+    // An app with a desktopId is pinned only once it is installed: Wireshark comes
+    // with the network profile (robinctl profile network), like the launcher's lab list.
+    readonly property var pinned: {
+        DesktopEntries.applications.values; // re-evaluate after the background scan
+        return (ShellState.isLive ? [
+            { key: "installer", icon: "download", label: "RobinOS 설치", appIds: shellAppIds, command: null }
+        ] : []).concat([
+            { icon: "terminal", label: "터미널", appIds: ["foot", "footclient", "robinos-float"], command: ["foot"] },
+            { icon: "folder", label: "파일", appIds: ["org.gnome.Nautilus"], command: ["nautilus", "--new-window"] },
+            { icon: "globe", label: "브라우저", appIds: ["firefox"], command: ["firefox"] },
+            { icon: "network", label: "Wireshark", appIds: ["org.wireshark.Wireshark", "wireshark"], command: ["wireshark"], desktopId: "org.wireshark.Wireshark" }
+        ]).filter(app => !app.desktopId || !!DesktopEntries.byId(app.desktopId));
+    }
 
     // Minimized windows are still in this list, so they keep their "running" dot
     function windowsFor(appIds) {
