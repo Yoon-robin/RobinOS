@@ -18,8 +18,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-10-09 | `ba358cb` 테스트 ISO | 설치 테스트 windows(6.7분), archinstall(10.1분) | 둘 다 다섯 단계 통과. 오늘 고친 설치 코드(`apps.txt`, 서비스, nsswitch, NVIDIA 감지, 전원 모드)가 윈도우 옆 설치와 archinstall+post-install 경로에서도 문제없음 |
 | 2026-10-08 | `968795d` ISO | 집 PC(Blitz)에서 ISO 빌드, 부팅 테스트(WHPX, 30장, 새 장면 `button-layout`), 설치 테스트 robinos(다섯 단계) | 통과. 설치기에 Qt 제목 표시줄(최대화, 닫기), 라이브 독에 Wireshark 없음, 설치본 독은 터미널·파일·브라우저 |
-| 2026-10-08 | `933ca31` ISO, `e038f2a` 테스트 | ISO 빌드, 부팅 테스트(WHPX, 29장, 새 장면 `shell-restarted`), 설치 테스트 robinos(다섯 단계) | 통과. 셸을 끄면 1초 뒤 다시 뜸(`exited with 143` → `starting the shell`). 환영 마법사 단축키가 `Win`으로, 윈도우 명령 힌트가 새 문구로 나옴. 설치기 마무리가 "설치가 끝났어요"까지 감. 테스트 도중 WSL에 `cmp`가 없어 ISO를 매번 복사하던 것을 고침(`e038f2a`) |
 
 ## 품질 점검 기록
 
@@ -27,7 +27,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 영역 | 마지막으로 본 날 | 메모 |
 |---|---|---|
-| 코드 검토 | 2026-10-08 | `robin-install`(fstab의 `subvolid=`), `robinctl`(스냅샷 부팅 상태의 되돌리기, 랩 권한), `post-install.sh`(영어 출력), `Installer.qml`, `ShellState.qml`, `Launcher.qml`(열 때 hover 선택), `Dock.qml`(설치 안 된 Wireshark가 고정돼 눌러도 반응 없음 → `6faf853`), `Bar.qml`(좁은 화면에서 앱 이름이 가운데 시계와 겹칠 수 있음, 1024px 이하라 그대로 둠), `QuickSettings.qml`(Docker 없이 "랩 시작"을 누르면 설치 방법 없이 "docker가 필요해요"만 나옴 → `dfcb5fd`), `Welcome.qml`(문제 없음). 셸 QML은 한 바퀴 다 봄 |
+| 코드 검토 | 2026-10-09 | 오늘 들어간 코드를 다시 봄: 클립보드(명령에 넘기는 id는 숫자만), 업데이트 알림, 전원 모드, 달력, 웹 연습 서버(127.0.0.1만), CTF. `ctf_prepare`가 지운 문제 파일을 다시 만들지 않던 것을 고침(`a4e3beb`). 이전: robin-install, robinctl 스냅샷·랩, post-install, 셸 QML 전체(2026-10-08) |
 | 문서와 코드 맞추기 | 2026-10-08 (두 번째) | 오늘 바뀐 것 기준으로 다시 봄: `robinctl help`의 learn·update 설명, testing.md의 부팅 테스트 장면(최소화, Super+D, 셸 다시 띄우기, 단추 배치)과 설치 테스트 확인 항목, "설치 방식은 두 가지" → 세 가지, roadmap의 미션 수, CLAUDE.md 저장소 지도(`apps.txt`, `practice/`), docs/README.md의 같이 고칠 문서 표(학습 미션, 패키지 목록)를 고침 |
 | 보안과 윤리 | 2026-10-08 | 웹 랩: docker 그룹 대신 sudo, 재부팅 때 자동 시작 끔, 기준을 ethics.md에 적음, 이미지 고정(T-014). 라이브 ISO: sshd는 이미 꺼져 있음, releng의 cloud-init 유닛을 뺌. 설치본: root 잠금(robin-install), wheel은 비밀번호 sudo |
 | 접근성 | 2026-10-08 | 버튼과 선택지가 마우스 전용이던 것(T-015), 보조 글자 대비(subtle 3.9:1·2.6:1 → muted). 화면 읽기(Orca)는 Hyprland에 키보드 감시 인터페이스가 없어 막힘(T-040) |
@@ -40,7 +40,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (없음) | | |
+| `84fc527`~ | 묶음 7 (T-054~T-056) | verify -Installer robinos |
 
 `4eddf37`까지 2026-10-09 묶음 6 검증(`verify`: 빌드 3.3분 + 테스트 7.3분)을 마치고 푸시했어요.
 
@@ -51,8 +51,15 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - **집 PC의 VMware 서비스 켜기(T-025)**: 집 PC(Blitz)에서 VM을 만들어 켜려 했더니 VMware의 윈도우 서비스(Authorization, DHCP, NAT, USB Arbitration)가 모두 "사용 안 함"이라 VM이 켜지지 않아요. 관리자 권한이 필요해서 직접 하지 않아요. 쓰려면 관리자 PowerShell에서 `Set-Service VMAuthdService,VMnetDHCP,'VMware NAT Service',VMUSBArbService -StartupType Manual`, `Start-Service VMAuthdService,VMnetDHCP,'VMware NAT Service'`. VM(`문서\Virtual Machines\RobinOS`)과 스크립트(`build\vmware\vmware-test.py`)는 준비돼 있어요 (`막힘`)
 - **작업 브랜치 `work/t025-vmware` 지우기**: 내용은 모두 main에 들어갔어요. GitHub에서 지워도 되는지 알려 주세요
 - **RobinOS 파일 업데이트 배포 방식(T-026)**: 2026-10-08 사용자가 중앙 서버가 필요한지 묻고 추천을 원함. 추천: 따로 서버 없이 깃허브 릴리스를 pacman 저장소로 쓰고, RobinOS 파일을 pacman 패키지로 만들어 서명해요. `robinctl update` 한 번에 함께 올라가고 snap-pac 스냅샷도 그대로 생겨요. 서명 열쇠(GPG)를 이 PC에 만들어야 해서 사용자 답을 기다려요
+- **v0.2 프리뷰 공개**: v0.1 뒤로 오피스·앱 스토어·프린터·NVIDIA·업데이트 알림·Win+V 등과 미션 25개, 입문 CTF가 들어갔어요. 발표문 초안은 `docs/release-notes-v0.2.md`. 공개하기로 하면 릴리스용 xz ISO(2GiB 안)를 빌드하고 부팅 테스트한 뒤 깃허브 릴리스로 올려요(태그 `v0.2.0`, 프리릴리스)
 
 ## 진행 중
+
+### 묶음 7 (검증 대기, `84fc527`~`7181213`)
+- T-054 CTF 시작하기 문서(`docs/ctf.md`): 로드맵 6단계 "첫 CTF 랩 가이드"
+- T-055 코드 검토와 CTF 문제 파일 다시 만들기(robinctl 테스트 2개)
+- T-056 v0.2 프리뷰 발표문 초안(`docs/release-notes-v0.2.md`). 공개는 "사용자 확인 필요"
+- 완료 기준: `verify -Installer robinos` 통과
 
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
