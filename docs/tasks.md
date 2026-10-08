@@ -44,11 +44,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| `e1a537b` | 프린터, 설치본 전용 앱 목록 | 설치 테스트 robinos (돌아가는 중) |
-| `c5db7ca` | LibreOffice | 설치 테스트 robinos |
-| (T-033 커밋) | 앱 스토어, Flatpak 업데이트 | 설치 테스트 robinos |
+| (없음) | | |
 
-`844712d`까지 2026-10-08 검증(설치 테스트 robinos, 설치기·robinctl 테스트)을 마치고 푸시했어요.
+`fff598a`까지 2026-10-08 검증(설치 테스트 robinos, 설치기·robinctl 테스트)을 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -59,25 +57,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - **RobinOS 파일 업데이트 배포 방식(T-026)**: 2026-10-08 사용자가 중앙 서버가 필요한지 묻고 추천을 원함. 추천: 따로 서버 없이 깃허브 릴리스를 pacman 저장소로 쓰고, RobinOS 파일을 pacman 패키지로 만들어 서명해요. `robinctl update` 한 번에 함께 올라가고 snap-pac 스냅샷도 그대로 생겨요. 서명 열쇠(GPG)를 이 PC에 만들어야 해서 사용자 답을 기다려요
 
 ## 진행 중
-
-### T-031 프린터
-- 상태: 검증 대기
-- 출처: 백로그 채우기 1(design.md 요구사항 표 "하드웨어: 프린터, CUPS"가 구현되지 않음)
-- 한 것: 라이브 ISO에 넣지 않는 설치본 전용 목록 `packages/apps.txt`를 새로 만들고(ISO가 2GiB 한도에 48MB 남음) `cups`, `nss-mdns`, `system-config-printer`를 넣음. `robin-install`의 pacstrap과 `post-install.sh`가 함께 설치하고, `post-install.sh`가 `cups.socket`, `avahi-daemon.service`를 켜고 `/etc/nsswitch.conf`의 hosts에 `mdns_minimal [NOTFOUND=return]`을 넣어요(Arch 기본 줄에 맞춰 확인). 런처 윈도우 이름 "장치 및 프린터". 정적 검증과 패키지 검사에 `apps.txt`를 더함. 설치 테스트 installed 단계에 확인(`is-enabled`, nsswitch, `lpstat -r`)을 넣음
-- 보안 메모: Avahi는 같은 네트워크에 컴퓨터 이름을 알리고 5353/udp를 열어요(desktop.md에 적음). 원격에서 큐를 만드는 cups-browsed는 넣지 않았어요
-- 완료 기준: 설치 테스트 robinos 통과(새 확인 포함)
-
-### T-032 오피스 (LibreOffice)
-- 상태: 검증 대기
-- 출처: 백로그 채우기 1(design.md 요구사항 표 "앱: 오피스, LibreOffice"가 구현되지 않음)
-- 한 것: `packages/apps.txt`에 `libreoffice-still`(안정판, 26.2)과 `libreoffice-still-ko`를 넣음(내려받기 약 150MB, 설치 약 460MB). fresh(26.8) 대신 매일 쓰는 컴퓨터라 안정판을 골랐어요. 런처 윈도우 이름 Word, Excel, PowerPoint(검색어 워드, 엑셀, 파워포인트, 오피스). "한글"은 hwp 97만 열려서 연결하지 않고 desktop.md에 한계를 적음. 설치 테스트 installed 단계에 데스크톱 항목 세 개와 한국어 팩 확인을 넣음
-- 완료 기준: 설치 테스트 robinos 통과(새 확인 포함), 설치 시간이 크게 늘지 않음(T-031 테스트와 비교)
-
-### T-033 앱 스토어 (GNOME 소프트웨어, Flathub)
-- 상태: 검증 대기
-- 출처: 백로그 채우기 1(design.md 요구사항 표 "앱: 앱 스토어, Flatpak + Flathub"에 화면이 없음)
-- 한 것: `packages/apps.txt`에 `gnome-software`(51, PackageKit 없이 Flatpak만 다뤄요, 내려받기 2.7MB). Arch의 flatpak 패키지가 Flathub 저장소 설정을 가지고 있음(패키지를 받아 `remotes.d/flathub.flatpakrepo` 확인). Bazaar(extra)는 webkitgtk가 따라와서 고르지 않음. 런처 윈도우 이름 "Microsoft Store". `robinctl update`가 pacman 다음에 시스템 Flatpak 앱이 있으면 `flatpak update --system`(robinctl 테스트 5개 추가). 설치 테스트에 데스크톱 항목, PackageKit 없음, `flatpak remotes --system` 출력
-- 완료 기준: 설치 테스트 robinos 통과, `flatpak remotes --system`에 flathub가 보이는지 확인(안 보이면 post-install에서 추가)
 
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
@@ -113,6 +92,12 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ## 완료
 
 최근 것이 위에 있어요.
+
+- 2026-10-08 매일 쓰는 앱 세 가지(design.md 요구사항 표에서 빠져 있던 것): 라이브 ISO에 넣지 않는 설치본 전용 목록 `packages/apps.txt`를 새로 만듦(ISO가 2GiB 한도에 48MB 남음). 설치 테스트 robinos 다섯 단계 통과, 걸린 시간 6.3분 → 6.4분
+  - T-031 프린터(`e1a537b`): `cups`, `nss-mdns`, `system-config-printer`. `cups.socket`, `avahi-daemon.service`, nsswitch에 `mdns_minimal`. 설치본에서 `lpstat -r` → "scheduler is running". cups-browsed는 넣지 않음. 런처 "장치 및 프린터"
+  - T-032 오피스(`c5db7ca`): `libreoffice-still`(26.2)과 `-ko`. 런처 Word, Excel, PowerPoint. hwp는 97 형식만 열린다고 desktop.md에 적음
+  - T-033 앱 스토어(`fff598a`): `gnome-software`(51), PackageKit 없음 확인, `flatpak remotes --system`에 flathub. 런처 "Microsoft Store". `robinctl update`가 시스템 Flatpak 앱도 올림(robinctl 테스트 5개)
+  - 첫 설치 테스트는 실패로 나왔는데, 테스트가 도는 중에 `install-test.py`를 고쳐서 단계마다 다시 읽힌 탓이었어요(CLAUDE.md의 주의 그대로). 제품 문제는 아니었어요
 
 - 2026-10-08 T-030 NVIDIA 그래픽 카드 드라이버(`844712d`): 설치기가 `/sys/bus/pci/devices`에서 NVIDIA 화면 장치(VGA, 노트북의 3D 컨트롤러)를 찾고, 장치 번호 `0x1e00` 이상(Turing, GTX 16·RTX 20 이후)이면 `nvidia-open`을 설치하고 initramfs에서 `kms` 훅을 빼요. 오래된 카드는 nouveau 그대로(Arch 공식 저장소에 드라이버 없음). nvidia-utils 615가 nouveau 차단과 절전(커널 suspend notifier)을 스스로 해서 켤 서비스는 없음(패키지를 받아 확인). 설치기 테스트 `scripts/test-robin-install.py`(11개)를 `check`에 넣음. 설치 테스트 robinos 다섯 단계 통과. 실제 NVIDIA PC는 "사용자 확인 필요"
 
