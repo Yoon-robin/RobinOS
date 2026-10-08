@@ -44,10 +44,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| `22dde2a` | 설치본 런처 장면, 윈도우 이름 넓히기 (T-035, T-037) | 설치 테스트 robinos |
-| (T-038·T-039 커밋) | 기본 설치의 네트워크 확인, 캡처 도구 | ISO 빌드, 부팅 테스트, 설치 테스트 robinos |
+| `9dcad3a`~`6e11d0f` | 묶음 2 (T-041~T-045) | ISO 빌드, 부팅 테스트, 설치 테스트 robinos |
 
-`e83c5d8`까지 2026-10-08 검증(부팅 테스트 30장, robinctl 테스트)을 마치고 푸시했어요.
+`865b09d`까지 2026-10-08 묶음 검증(ISO 빌드, 부팅 테스트 31장, 설치 테스트 robinos 다섯 단계)을 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -59,29 +58,13 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 ## 진행 중
 
-### T-035 설치본 런처의 윈도우 이름 장면
-- 상태: 검증 대기
-- 출처: 백로그 채우기 2(검증이 빠진 기능). Word, Excel, PowerPoint, Microsoft Store, 장치 및 프린터는 설치본에만 있는 앱이라 부팅 테스트에서는 보이지 않아요
-- 한 것: 설치 테스트 rollback 단계의 데스크톱에서 런처를 열고 `word`, `store`, `printer`를 검색해 찍어요(`launcher-*`)
-- 완료 기준: 설치 테스트 스크린샷에 "윈도우에서 쓰던 이름" 아래 Writer, 소프트웨어, 프린터 설정이 "윈도우의 …에 해당해요"로 나옴
-
-### T-037 윈도우 이름 넓히기
-- 상태: 검증 대기
-- 출처: 백로그 채우기 4(윈도우 명령 힌트와 런처 윈도우 이름 넓히기)
-- 한 것: 명령 힌트 8개(`calc`, `eventvwr`, `services.msc`, `devmgmt.msc`, `diskmgmt.msc`, `getmac`, `winver`, `nslookup` → 새 설치본에는 없어서 `getent hosts`와 network 프로필 안내). 런처 "계산기", "디스크 관리"(USB 포맷). `gnome-disk-utility`를 `apps.txt`에. robinctl 테스트에 힌트 5개와 앱 2개, 설치 테스트에 `gnome-disks` 확인
-- 완료 기준: robinctl 테스트(완료), 설치 테스트 통과
-
-### T-038 보안 점검: 기본 설치가 여는 것
-- 상태: 검증 대기
-- 출처: 품질 점검(보안과 윤리). 오늘 인쇄(CUPS)와 Avahi를 켰어요
-- 한 것: ethics.md에 리버싱 연습 프로그램과 지어낸 로그의 기준, "기본 설치의 네트워크"(CUPS는 localhost만, sshd 꺼짐, Avahi 5353/udp와 끄는 방법)를 적음. 설치 테스트가 `ss -Htuln`을 남기고, 631이 모든 주소에 열려 있지 않은지와 sshd가 꺼져 있는지 확인
-- 완료 기준: 설치 테스트 통과(문서에 적은 대로인지 확인)
-
-### T-039 캡처 도구 (Win+Shift+S)
-- 상태: 검증 대기
-- 출처: 백로그 채우기 4(윈도우에서 쓰던 방식). 윈도우 사용자는 `Win+Shift+S`로 화면을 잘라 찍어요
-- 한 것: `Super+Shift+S` → `robinos-screenshot region`. 런처 명령 "영역 스크린샷"(Lucide `scan` 아이콘, 런처가 사라진 뒤 찍게 0.4초 기다림), 윈도우 이름 "캡처 도구". 부팅 테스트에 `snipping` 장면(영역 고르기 화면, Esc로 취소). desktop.md·design.md 단축키 표
-- 완료 기준: 부팅 테스트 `snipping` 장면에 slurp의 어두운 덮개가 보이고, 다음 장면이 정상
+### 묶음 2 (검증 대기, `9dcad3a`~`4586424`)
+- T-041 doctor 보강: robin-install과 같은 방법으로 NVIDIA 카드를 찾아 드라이버 상태(사용 중, 설치됐지만 안 뜸, 없음, 오래된 카드)를 알려 주고, 설치본에서 인쇄 서비스가 켜져 있는지 봐요. robinctl 테스트 8개(가짜 PCI 목록)
+- T-042 Firefox 정책(`/etc/firefox/policies/policies.json`): 원격 측정, 실험(Studies), 기본 브라우저 묻기를 꺼요. 데스크톱 검사에 JSON 문법 확인, 설치 테스트에 파일 확인
+- T-043 런처의 학습 진행도: 셸이 `~/.local/state/robinos/learn/done`을 읽어 "3/20 완료"처럼 보여 줘요. 셸의 미션 수가 `LEARN_COUNT`와 같은지 테스트. 부팅 테스트가 미션 1을 풀어 라이트 모드 런처에서 확인
+- T-044 환영 마법사 단축키 안내에 `Win+D`, `Win+Shift+S`
+- T-045 클립보드 기록 `Win+V`: `cliphist`(데스크톱·ISO 패키지)가 `$XDG_RUNTIME_DIR`에 50개까지, 비밀번호 관리자가 민감하다고 표시한 복사는 남기지 않음(`CLIPBOARD_STATE`). 런처가 클립보드 모드로 열리고 Enter로 다시 복사. 부팅 테스트 `clipboard` 장면
+- 완료 기준: ISO 빌드, 부팅 테스트(`welcome-tour`에 새 단축키, `light-launcher`에 1/20, `clipboard`에 복사한 글), 설치 테스트 robinos(Firefox 정책 파일)
 
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
@@ -121,6 +104,12 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 최근 것이 위에 있어요.
 
+- 2026-10-08 묶음 1 검증(`865b09d`, ISO 빌드 → 부팅 테스트 31장 → 설치 테스트 robinos 다섯 단계 통과)
+  - T-035 설치본 런처 장면(`22dde2a`): `word` → 텍스트 편집기(워드패드)와 LibreOffice Writer, `store` → 소프트웨어, `printer` → 인쇄 설정이 "윈도우의 …에 해당해요"로 나옴
+  - T-037 윈도우 이름 넓히기(`22dde2a`): 명령 힌트 8개, 런처 계산기·디스크 관리, `gnome-disk-utility`
+  - T-038 기본 설치의 네트워크(`e9bab85`): 설치본 `ss -Htuln`이 5353/udp(Avahi)와 127.0.0.1·::1의 631(CUPS)뿐, sshd 꺼짐. ethics.md에 적은 그대로
+  - T-039 캡처 도구(`e9bab85`): `snipping` 장면에 slurp의 어두운 덮개, Esc 뒤 정상
+  - T-040 화면 읽기 조사(`865b09d`): 막힘으로 남김
 - 2026-10-08 T-034 리버싱 기초 미션 5개(`9707f73`): 직접 만든 무해한 C 연습 프로그램(`practice/reversing`, 압축해서 robinctl에 14KB)으로 `readelf`(NEEDED), `strings`(비밀번호), `ltrace`(strcmp 비교값), `strace`(찾는 파일 경로), `objdump`(`cmp $0x539` → 1337)를 연습해요. 정답 코드는 XOR로 숨겨 strings에 안 보임. robinctl 테스트에 미션 흐름과 실제 도구 결과(WSL에 gcc·ltrace·strace 설치), 부팅 테스트에서 미션 목록 20개(네 묶음)와 런처 설명 확인. 같이: 문서와 코드 맞추기(`630f101`), 루프 절차에 느린 검증 모아 하기(`e83c5d8`, 사용자 요청)
 - 2026-10-08 매일 쓰는 앱 세 가지(design.md 요구사항 표에서 빠져 있던 것): 라이브 ISO에 넣지 않는 설치본 전용 목록 `packages/apps.txt`를 새로 만듦(ISO가 2GiB 한도에 48MB 남음). 설치 테스트 robinos 다섯 단계 통과, 걸린 시간 6.3분 → 6.4분
   - T-031 프린터(`e1a537b`): `cups`, `nss-mdns`, `system-config-printer`. `cups.socket`, `avahi-daemon.service`, nsswitch에 `mdns_minimal`. 설치본에서 `lpstat -r` → "scheduler is running". cups-browsed는 넣지 않음. 런처 "장치 및 프린터"

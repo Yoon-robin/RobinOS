@@ -44,7 +44,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (없음) | | |
+| `9dcad3a`~`6e11d0f` | 묶음 2 (T-041~T-045) | ISO 빌드, 부팅 테스트, 설치 테스트 robinos |
 
 `865b09d`까지 2026-10-08 묶음 검증(ISO 빌드, 부팅 테스트 31장, 설치 테스트 robinos 다섯 단계)을 마치고 푸시했어요.
 
@@ -57,6 +57,14 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - **RobinOS 파일 업데이트 배포 방식(T-026)**: 2026-10-08 사용자가 중앙 서버가 필요한지 묻고 추천을 원함. 추천: 따로 서버 없이 깃허브 릴리스를 pacman 저장소로 쓰고, RobinOS 파일을 pacman 패키지로 만들어 서명해요. `robinctl update` 한 번에 함께 올라가고 snap-pac 스냅샷도 그대로 생겨요. 서명 열쇠(GPG)를 이 PC에 만들어야 해서 사용자 답을 기다려요
 
 ## 진행 중
+
+### 묶음 2 (검증 대기, `9dcad3a`~`4586424`)
+- T-041 doctor 보강: robin-install과 같은 방법으로 NVIDIA 카드를 찾아 드라이버 상태(사용 중, 설치됐지만 안 뜸, 없음, 오래된 카드)를 알려 주고, 설치본에서 인쇄 서비스가 켜져 있는지 봐요. robinctl 테스트 8개(가짜 PCI 목록)
+- T-042 Firefox 정책(`/etc/firefox/policies/policies.json`): 원격 측정, 실험(Studies), 기본 브라우저 묻기를 꺼요. 데스크톱 검사에 JSON 문법 확인, 설치 테스트에 파일 확인
+- T-043 런처의 학습 진행도: 셸이 `~/.local/state/robinos/learn/done`을 읽어 "3/20 완료"처럼 보여 줘요. 셸의 미션 수가 `LEARN_COUNT`와 같은지 테스트. 부팅 테스트가 미션 1을 풀어 라이트 모드 런처에서 확인
+- T-044 환영 마법사 단축키 안내에 `Win+D`, `Win+Shift+S`
+- T-045 클립보드 기록 `Win+V`: `cliphist`(데스크톱·ISO 패키지)가 `$XDG_RUNTIME_DIR`에 50개까지, 비밀번호 관리자가 민감하다고 표시한 복사는 남기지 않음(`CLIPBOARD_STATE`). 런처가 클립보드 모드로 열리고 Enter로 다시 복사. 부팅 테스트 `clipboard` 장면
+- 완료 기준: ISO 빌드, 부팅 테스트(`welcome-tour`에 새 단축키, `light-launcher`에 1/20, `clipboard`에 복사한 글), 설치 테스트 robinos(Firefox 정책 파일)
 
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
