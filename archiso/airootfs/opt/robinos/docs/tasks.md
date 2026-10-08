@@ -76,6 +76,10 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 후보: ① RobinOS 파일을 pacman 패키지(`robinos-desktop` 등)로 만들고 자체 저장소에서 서명해 배포, ② `/opt/robinos`를 GitHub 릴리스 태그로 받아 서명이나 체크섬을 확인한 뒤 `install-desktop.sh`로 다시 설치. ①은 pacman과 스냅샷(snap-pac)에 자연스럽게 묶이고, ②는 빨리 만들 수 있어요
 - 완료 기준: 설치 테스트에서 옛 버전을 설치한 뒤 `robinctl update`로 새 버전 파일이 들어오고, 업데이트 전 스냅샷이 생김
 
+### T-028 포렌식 기초 미션 5개
+- 상태: 검증 대기. 2026-10-08 `robinctl learn` 11~15번: 파일의 진짜 종류(`file`), 해시로 같은 파일(`sha256sum`), 사진 메타데이터(`exiftool`), 파일 뒤에 숨은 압축 파일(`binwalk`, `bsdtar`), 로그에서 무차별 대입 흔적(`grep | sort | uniq -c`). 연습 파일은 `robinctl`에 base64로 넣어 두고 처음 볼 때 `~/practice/forensics`에 만들어요. 로그 주소는 문서용 대역(RFC 5737)만 써요. binwalk 3.1이 ZIP을 꺼내려면 7z가 있어야 해서 forensics 프로필과 라이브 ISO에 `7zip`을 넣음. 채점 테스트 통과(WSL에서 binwalk·bsdtar·exiftool로 직접 풀어 봄)
+- 남은 것: 부팅 테스트의 미션 목록 스크린샷
+
 ### T-021 웹 보안 미션 (Juice Shop)
 - 상태: 보류. 범위를 다시 잡을 때까지 다른 작업을 먼저 해요. 랩 안내(`robinctl lab info web`)와 Juice Shop 자체의 점수판으로 시작할 수 있어요
 - 출처: 백로그 채우기 4 (학습 기능 늘리기), design.md 학습 순서의 세 번째(웹 보안)

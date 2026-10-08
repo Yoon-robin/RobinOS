@@ -23,6 +23,8 @@ docker-compose
 
 # profile: forensics
 binwalk
+# binwalk -e hands ZIP and 7z archives to 7z
+7zip
 foremost
 testdisk
 perl-image-exiftool

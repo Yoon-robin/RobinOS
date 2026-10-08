@@ -101,7 +101,7 @@ robinctl doctor
 robinctl learn
 ```
 
-`robinctl doctor`로 한글 입력, 스냅샷, 부팅 메뉴 설정을 확인하고, `robinctl learn`으로 학습 미션(리눅스 기초, 네트워크 기초)을 시작해요. 보안 실습 도구는 배우는 단계에 맞춰 프로필 하나씩 설치해요.
+`robinctl doctor`로 한글 입력, 스냅샷, 부팅 메뉴 설정을 확인하고, `robinctl learn`으로 학습 미션(리눅스·네트워크·포렌식 기초)을 시작해요. 보안 실습 도구는 배우는 단계에 맞춰 프로필 하나씩 설치해요.
 
 ```bash
 robinctl profile list

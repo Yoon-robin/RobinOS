@@ -88,7 +88,7 @@ bin/robinctl lab status web
 
 ## 학습 미션
 
-`robinctl learn`은 터미널에서 직접 풀어 보는 미션 10개예요. 리눅스 기초 5개 다음에 네트워크 기초 5개가 이어져요. 미션마다 윈도우에서는 어떻게 하는지와 비교해 설명하고, `robinctl learn check`가 결과를 확인해 진행도를 저장해요. 런처에서 "학습 미션"을 골라도 열려요.
+`robinctl learn`은 터미널에서 직접 풀어 보는 미션 15개예요. 리눅스 기초 5개, 네트워크 기초 5개, 포렌식 기초 5개가 차례로 이어져요. 미션마다 윈도우에서는 어떻게 하는지와 비교해 설명하고, `robinctl learn check`가 결과를 확인해 진행도를 저장해요. 런처에서 "학습 미션"을 골라도 열려요.
 
 | # | 미션 | 배우는 명령 |
 |---|---|---|
@@ -102,6 +102,11 @@ bin/robinctl lab status web
 | 8 | 네트워크 도구 설치하기 | `robinctl profile network` (인터넷 필요) |
 | 9 | 포트 열고 확인하기 | `nc -l`, `ss -tln` |
 | 10 | 내 컴퓨터 스캔하기 | `nmap 127.0.0.1` (내 컴퓨터만) |
+| 11 | 파일의 진짜 종류 알아내기 | `file`, `xxd` |
+| 12 | 해시로 같은 파일 찾기 | `sha256sum` |
+| 13 | 사진 속 정보 읽기 | `exiftool` |
+| 14 | 파일 속에 숨은 파일 찾기 | `binwalk`, `strings`, `bsdtar` |
+| 15 | 로그에서 수상한 접속 찾기 | `grep`, `sort`, `uniq -c` |
 
 실습 파일은 모두 `~/practice`에 만들고, 진행도는 `~/.local/state/robinos/learn`에 저장해요. 처음부터 다시 하려면 `robinctl learn reset`을 실행하세요.
 

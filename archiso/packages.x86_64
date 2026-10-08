@@ -87,6 +87,7 @@ sqlmap
 nikto
 gobuster
 binwalk
+7zip
 strace
 ltrace
 testdisk

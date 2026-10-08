@@ -96,7 +96,7 @@ check "5 fails with a made-up line" fail learn check 5
 in_home "grep bash /etc/passwd > practice/bash-users.txt"
 check "5 passes with grep's output" 0 learn check 5
 check "list after the first five" 0 learn
-said "list counts 5 of 10" "5/10"
+said "list counts 5 of 15" "5/15"
 said "list shows the network group" "네트워크 기초"
 said "list points to mission 6" "robinctl learn show 6"
 
@@ -143,11 +143,55 @@ check "10 fails when 9000 isn't open" fail learn check 10
 in_home "printf '# Nmap 7.95 scan\nNmap scan report for localhost (127.0.0.1)\nPORT     STATE SERVICE\n9000/tcp open  cslistener\n' > practice/net/scan.txt"
 check "10 passes with 9000 open on 127.0.0.1" 0 learn check 10
 
-check "list after all ten" 0 learn
-said "list says all ten are done" "10/10"
+check "list after the first ten" 0 learn
+said "list counts 10 of 15" "10/15"
+said "list shows the forensics group" "포렌식 기초"
+said "list points to mission 11" "robinctl learn show 11"
+
+# Forensics basics: show 11 makes the practice files, the tools solve them
+check "11 fails before the practice files exist" fail learn check 11
+check "show 11 makes the practice files" 0 learn show 11
+said "show 11 says where the files are" "~/practice/forensics"
+in_home "test -s practice/forensics/report.txt && test -s practice/forensics/photo.jpg && test -s practice/forensics/logo.png && test -s practice/forensics/auth.log" \
+  && ok "practice files are there" || bad "practice files are missing"
+if command -v file >/dev/null; then
+  in_home "file practice/forensics/report.txt" | grep -q PNG && ok "report.txt really is a PNG" || bad "report.txt is not a PNG"
+fi
+in_home "echo text > practice/forensics/report-type.txt"
+check "11 fails with the extension's type" fail learn check 11
+in_home "echo PNG > practice/forensics/report-type.txt"
+check "11 passes with PNG" 0 learn check 11
+
+in_home "echo memo2.txt memo3.txt > practice/forensics/same.txt"
+check "12 fails with the look-alike memo3" fail learn check 12
+said "12 explains the trailing space" "빈칸"
+in_home "cd practice/forensics/hash && sha256sum memo*.txt | sort | awk '{print \$1}' | uniq -d | wc -l" | grep -qx 1 \
+  && ok "exactly one pair of memos is the same" || bad "the memos should hold exactly one identical pair"
+in_home "printf 'memo5.txt\nmemo2.txt\n' > practice/forensics/same.txt"
+check "12 passes with memo2 and memo5" 0 learn check 12
+
+in_home "echo Robin > practice/forensics/photographer.txt"
+check "13 fails with a wrong name" fail learn check 13
+in_home "echo 'kim  haneul' > practice/forensics/photographer.txt"
+check "13 passes with the Artist field" 0 learn check 13
+
+in_home "bsdtar -xOf practice/forensics/logo.png secret.txt > practice/forensics/found.txt"
+check "14 passes with what bsdtar pulls out of logo.png" 0 learn check 14
+in_home "echo nothing > practice/forensics/found.txt"
+check "14 fails with a wrong code" fail learn check 14
+
+in_home "echo 198.51.100.7 > practice/forensics/attacker.txt"
+check "15 fails with the second address" fail learn check 15
+in_home "cd practice/forensics && grep 'Failed password' auth.log | grep -oE 'from [0-9.]+' | sort | uniq -c | sort -n | tail -n 1 | awk '{print \$3}' > attacker.txt"
+check "15 passes with the pipeline from the mission" 0 learn check 15
+
+in_home "bsdtar -xOf practice/forensics/logo.png secret.txt > practice/forensics/found.txt"
+check "14 passes again" 0 learn check 14
+check "list after all fifteen" 0 learn
+said "list says all fifteen are done" "15/15"
 said "list points to the web lab" "robinctl lab info web"
-check "show 10" 0 learn show 10
-check "mission 11 doesn't exist" fail learn show 11
+check "show 15" 0 learn show 15
+check "mission 16 doesn't exist" fail learn show 16
 check "reset" 0 learn reset
 check "check 1 still passes after reset (files stay)" 0 learn check 1
 
