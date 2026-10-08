@@ -185,7 +185,6 @@ foreach ($pkg in $desktop) {
 
 $expectedSecurityInIso = @(
     "nmap",
-    "wireshark-qt",
     "tcpdump",
     "openbsd-netcat",
     "bind",
@@ -194,19 +193,13 @@ $expectedSecurityInIso = @(
     "sqlmap",
     "nikto",
     "gobuster",
-    "john",
-    "hashcat",
     "hydra",
     "binwalk",
     "gdb",
     "strace",
     "ltrace",
     "testdisk",
-    "perl-image-exiftool",
-    "docker",
-    "docker-compose",
-    "virt-manager",
-    "qemu-full"
+    "perl-image-exiftool"
 )
 
 foreach ($pkg in $expectedSecurityInIso) {

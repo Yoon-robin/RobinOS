@@ -73,8 +73,11 @@ pavucontrol
 flatpak
 ntfs-3g
 exfatprogs
+# Light security tools for the live session and the network missions. The heavy
+# bundles (wireshark-qt, john, hashcat, docker, virt-manager, qemu-full) are left
+# out to keep the ISO under GitHub's 2 GiB file limit; on an installed system
+# `robinctl profile <name>` adds them (packages/security-baseline.txt)
 nmap
-wireshark-qt
 tcpdump
 bind
 whois
@@ -83,8 +86,6 @@ openbsd-netcat
 sqlmap
 nikto
 gobuster
-john
-hashcat
 hydra
 binwalk
 gdb
@@ -92,10 +93,6 @@ strace
 ltrace
 testdisk
 perl-image-exiftool
-docker
-docker-compose
-virt-manager
-qemu-full
 
 # Live ISO boot (from the archiso releng profile)
 mkinitcpio
