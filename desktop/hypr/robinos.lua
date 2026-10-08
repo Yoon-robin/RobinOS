@@ -238,6 +238,7 @@ hl.bind(mainMod .. " + B",      hl.dsp.exec_cmd(browser),     { description = "�
 hl.bind(mainMod .. " + L",      hl.dsp.exec_cmd("loginctl lock-session"), { description = "화면 잠금" })
 hl.bind("Print",                hl.dsp.exec_cmd(bin_dir .. "/robinos-screenshot region"), { description = "영역 스크린샷" })
 hl.bind("SHIFT + Print",        hl.dsp.exec_cmd(bin_dir .. "/robinos-screenshot screen"), { description = "전체 스크린샷" })
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd(bin_dir .. "/robinos-screenshot region"), { description = "영역 스크린샷 (윈도우의 캡처 도구)" })
 
 -- Windows (Windows-style shortcuts work too)
 hl.bind(mainMod .. " + Q", hl.dsp.window.close(), { description = "창 닫기" })

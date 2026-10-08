@@ -44,7 +44,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (T-035·T-037 커밋) | 설치본 런처 장면, 윈도우 이름 넓히기 | 설치 테스트 robinos (다음 묶음 검증) |
+| `22dde2a` | 설치본 런처 장면, 윈도우 이름 넓히기 (T-035, T-037) | 설치 테스트 robinos |
+| (T-038·T-039 커밋) | 기본 설치의 네트워크 확인, 캡처 도구 | ISO 빌드, 부팅 테스트, 설치 테스트 robinos |
 
 `e83c5d8`까지 2026-10-08 검증(부팅 테스트 30장, robinctl 테스트)을 마치고 푸시했어요.
 
@@ -70,6 +71,18 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 한 것: 명령 힌트 8개(`calc`, `eventvwr`, `services.msc`, `devmgmt.msc`, `diskmgmt.msc`, `getmac`, `winver`, `nslookup` → 새 설치본에는 없어서 `getent hosts`와 network 프로필 안내). 런처 "계산기", "디스크 관리"(USB 포맷). `gnome-disk-utility`를 `apps.txt`에. robinctl 테스트에 힌트 5개와 앱 2개, 설치 테스트에 `gnome-disks` 확인
 - 완료 기준: robinctl 테스트(완료), 설치 테스트 통과
 
+### T-038 보안 점검: 기본 설치가 여는 것
+- 상태: 검증 대기
+- 출처: 품질 점검(보안과 윤리). 오늘 인쇄(CUPS)와 Avahi를 켰어요
+- 한 것: ethics.md에 리버싱 연습 프로그램과 지어낸 로그의 기준, "기본 설치의 네트워크"(CUPS는 localhost만, sshd 꺼짐, Avahi 5353/udp와 끄는 방법)를 적음. 설치 테스트가 `ss -Htuln`을 남기고, 631이 모든 주소에 열려 있지 않은지와 sshd가 꺼져 있는지 확인
+- 완료 기준: 설치 테스트 통과(문서에 적은 대로인지 확인)
+
+### T-039 캡처 도구 (Win+Shift+S)
+- 상태: 검증 대기
+- 출처: 백로그 채우기 4(윈도우에서 쓰던 방식). 윈도우 사용자는 `Win+Shift+S`로 화면을 잘라 찍어요
+- 한 것: `Super+Shift+S` → `robinos-screenshot region`. 런처 명령 "영역 스크린샷"(Lucide `scan` 아이콘, 런처가 사라진 뒤 찍게 0.4초 기다림), 윈도우 이름 "캡처 도구". 부팅 테스트에 `snipping` 장면(영역 고르기 화면, Esc로 취소). desktop.md·design.md 단축키 표
+- 완료 기준: 부팅 테스트 `snipping` 장면에 slurp의 어두운 덮개가 보이고, 다음 장면이 정상
+
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
 - 출처: 사용자 요청("vmware로 깔아줘"). VMware Workstation Pro 26H1, VM은 `문서\Virtual Machines\RobinOS\RobinOS.vmx`(EFI, 8GB, NVMe 64GB, 3D 가속 켬)
@@ -82,6 +95,12 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 남은 것 (VMware가 있는 PC: robin PC, 집 PC(Blitz, VMware Workstation 26.0)): 최종 ISO로 VMware VM에 다시 설치(`vmrun` 게스트 명령, 계획은 디스크 `/dev/nvme0n1` 전체), 로그인 뒤 셸·해상도 확인. 집 PC에는 VM이 아직 없어서 새로 만들어요(`build\vmware\guest-*.sh`는 robin PC에만 있어요). VMware가 없는 PC의 루프는 이 작업을 건너뛰어요
 
 ## 할 일 (위에서부터)
+
+### T-040 화면 읽기 (Orca) 조사
+- 상태: 할 일
+- 출처: 품질 점검(접근성) "화면 읽기 프로그램(Orca)은 아직"
+- 목표: 윈도우의 내레이터(`Win+Ctrl+Enter`)처럼 켜고 끌 수 있게 할지 조사해요. Orca 51은 `speech-dispatcher`, `espeak-ng`(한국어 음성 있음)와 함께 37MB예요. Hyprland(wlroots)에서 Orca의 전체 단축키(키 가로채기)가 되는지, Quickshell 셸의 `Accessible.name`이 AT-SPI로 읽히는지 VM에서 확인한 뒤 넣어요. 소리를 테스트로 들을 수 없으니 `accerciser`나 `busctl --user`로 AT-SPI 트리를 보는 방법을 찾아요
+- 완료 기준: 조사 결과를 design.md에 적고, 된다면 `apps.txt`와 단축키로 넣어요
 
 ### T-026 RobinOS 자체 파일 업데이트
 - 상태: 할 일 (배포 방식은 사용자 결정, "사용자 확인 필요" 참고)

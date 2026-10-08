@@ -93,6 +93,7 @@ VM 창 크기를 바꾸면 VMware(`vmtoolsd`)나 QEMU(`virtio-gpu`)가 새 크�
 | `Super+마우스 휠` | 이웃 작업 공간으로 |
 | `Super+drag` | 창 이동(왼쪽 버튼), 크기 조절(오른쪽 버튼) |
 | `Print`, `Shift+Print` | 영역 또는 전체 화면을 찍어 `~/Pictures/Screenshots`와 클립보드에 저장 |
+| `Super+Shift+S` | 영역 스크린샷 (윈도우의 캡처 도구 `Win+Shift+S`와 같아요) |
 | `Right Alt` | 한/영 전환 (`Right Ctrl`은 한자) |
 | `Super+Shift+Escape` | 로그아웃 |
 
@@ -155,6 +156,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 | 반디집, 알집, `7-zip` | 압축 관리자 |
 | 볼륨 믹서 | 음량 조절 (pavucontrol) |
 | Acrobat, `pdf` | 문서 뷰어 (Evince) |
+| 캡처 도구, `snipping tool` | 영역 스크린샷 명령 (`Super+Shift+S`) |
 | 계산기, `calc` | 계산기 |
 | 디스크 관리, USB 포맷 | 디스크 (GNOME 디스크, 설치본에만 있어요) |
 | 워드, 엑셀, 파워포인트, 오피스 | LibreOffice Writer, Calc, Impress (설치본에만 있어요) |

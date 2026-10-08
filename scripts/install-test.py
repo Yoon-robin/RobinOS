@@ -562,6 +562,11 @@ def phase_installed(con, qmp):
     # App store (packages/apps.txt): GNOME Software with Flathub, without PackageKit
     con.run("test -f /usr/share/applications/org.gnome.Software.desktop && ! pacman -Q packagekit && command -v gnome-disks")
     con.run("flatpak remotes --system", check=False)
+    # What the default install opens to the network (docs/ethics.md): CUPS only on
+    # localhost, no sshd; Avahi's 5353/udp is the one service the LAN can reach
+    con.run("ss -Htuln", check=False)
+    con.run(r"! ss -Htln | awk '{print $4}' | grep -Eq '^(0\.0\.0\.0|\*|\[::\]):631$'"
+            " && ! systemctl is-enabled --quiet sshd.service")
 
     # QEMU's WHPX can't reset a VM that reboots itself ("Unexpected VP exit code 4"),
     # so every boot is its own QEMU run: power off here, the next phase boots again.

@@ -77,6 +77,7 @@ PanelWindow {
         { key: "update", group: "system", icon: "refresh", title: "시스템 업데이트", subtitle: "업데이트 전에 스냅샷을 자동으로 만들어요", words: "update upgrade pacman 업데이트" },
         { key: "doctor", group: "system", icon: "activity", title: "시스템 점검", subtitle: "robinctl doctor", mono: true, words: "doctor check 점검 진단" },
         { key: "wifi", group: "system", icon: "wifi", title: "Wi-Fi 연결", subtitle: "nmtui", mono: true, words: "wifi network 네트워크 인터넷" },
+        { key: "screenshot", group: "system", icon: "scan", title: "영역 스크린샷", subtitle: "Win + Shift + S", words: "screenshot capture 스크린샷 캡처 화면 캡처" },
         { key: "settings", group: "system", icon: "sliders", title: "빠른 설정", subtitle: "Win + S", words: "settings quick 설정 빠른 설정 테마 다크 모드" },
         { key: "install", group: "live", icon: "download", title: "RobinOS 설치", subtitle: "이 컴퓨터에 설치해요", words: "install installer setup 설치 설치기 하드 디스크 윈도우 옆" },
         { key: "welcome", group: "system", icon: "sparkles", title: "환영 마법사", subtitle: "테마, 한/영 키, 단축키 안내", words: "welcome tour setup 환영 마법사 처음 시작 안내 투어 한영" },
@@ -98,6 +99,7 @@ PanelWindow {
         { win: "반디집", words: "반디집 bandizip 알집 7-zip 7zip winrar 압축 풀기", app: "org.gnome.FileRoller" },
         { win: "볼륨 믹서", words: "볼륨 믹서 volume mixer 소리 설정 sound settings", app: "org.pulseaudio.pavucontrol" },
         { win: "Acrobat Reader", words: "acrobat 아크로뱃 adobe reader pdf 뷰어", app: "org.gnome.Evince" },
+        { win: "캡처 도구", words: "캡처 도구 snipping tool 캡처 스크린샷 screenshot", cmd: "screenshot" },
         { win: "계산기", words: "계산기 calc calculator", app: "org.gnome.Calculator" },
         { win: "디스크 관리", words: "디스크 관리 disk management diskmgmt 포맷 format usb 파티션 partition", app: "org.gnome.DiskUtility" },
         { win: "Word", words: "워드 word 문서 작성 docx 오피스 office", app: "libreoffice-writer" },
@@ -275,6 +277,10 @@ PanelWindow {
         switch (item.key) {
         case "learn":
             ShellState.openTerminal("robinctl learn");
+            break;
+        case "screenshot":
+            // Wait for the launcher to fade out, or it would be in the picture
+            Quickshell.execDetached(["sh", "-c", "sleep 0.4; exec /usr/share/robinos/bin/robinos-screenshot region"]);
             break;
         case "settings":
             ShellState.toggleQuickSettings();

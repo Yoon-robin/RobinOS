@@ -196,6 +196,12 @@ def main():
     keys(qmp, "meta_l", "d")
     wait(2)
     shot(qmp, "desktop-back")
+    # Win+Shift+S like Windows' snipping tool: slurp waits for a region, Esc cancels
+    keys(qmp, "meta_l", "shift", "s")
+    wait(2)
+    shot(qmp, "snipping")
+    keys(qmp, "esc")
+    wait(1)
 
     # robinos-shell starts the shell again when it dies
     type_text(qmp, "clear; pkill -x qs; sleep 4; grep -a robinos-shell .local/state/robinos/shell.log\n")
