@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Services.UPower
 import Quickshell.Wayland
 import "keys.js" as Keyboard
 
@@ -404,6 +405,80 @@ PanelWindow {
                     subtitle: ShellState.keepAwake ? "켜짐" : "꺼짐"
                     checked: ShellState.keepAwake
                     onToggled: ShellState.keepAwake = !ShellState.keepAwake
+                }
+            }
+
+            // ---- Power mode (power-profiles-daemon), like Windows' power mode ----
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.leftMargin: 2
+                spacing: 6
+
+                Text {
+                    Layout.rightMargin: 4
+                    text: "전원 모드"
+                    color: Theme.muted
+                    font.family: Theme.font
+                    font.pixelSize: 12
+                    font.weight: Font.Medium
+                }
+
+                Repeater {
+                    // VMs and many desktops have no performance profile; it is hidden there
+                    model: [
+                        { profile: PowerProfile.PowerSaver, title: "절전" },
+                        { profile: PowerProfile.Balanced, title: "균형" },
+                        { profile: PowerProfile.Performance, title: "최고 성능" }
+                    ].filter(mode => mode.profile !== PowerProfile.Performance || PowerProfiles.hasPerformanceProfile)
+
+                    Rectangle {
+                        id: modeButton
+
+                        required property var modelData
+                        readonly property bool selected: PowerProfiles.profile === modelData.profile
+
+                        Layout.fillWidth: true
+                        implicitHeight: 30
+                        radius: Theme.radiusMd
+                        color: selected ? Theme.primary : (modeMouse.containsMouse ? Theme.secondaryHover : Theme.secondary)
+
+                        Accessible.role: Accessible.RadioButton
+                        Accessible.name: "전원 모드 " + modelData.title
+                        Accessible.checked: selected
+
+                        function choose() {
+                            PowerProfiles.profile = modeButton.modelData.profile;
+                        }
+
+                        activeFocusOnTab: true
+                        Keys.onPressed: event => {
+                            if (Keyboard.activates(event)) {
+                                modeButton.choose();
+                                event.accepted = true;
+                            }
+                        }
+
+                        FocusRing {
+                            baseRadius: modeButton.radius
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: modeButton.modelData.title
+                            color: modeButton.selected ? Theme.primaryFg : Theme.fg
+                            font.family: Theme.font
+                            font.pixelSize: 12
+                            font.weight: Font.Medium
+                        }
+
+                        MouseArea {
+                            id: modeMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: modeButton.choose()
+                        }
+                    }
                 }
             }
 

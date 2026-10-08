@@ -121,7 +121,7 @@ elif ! grep -q 'mdns_minimal' /etc/nsswitch.conf; then
 fi
 
 # Docker (web profile) and CUPS start on first use through their sockets, not at boot
-for unit in NetworkManager.service sddm.service bluetooth.service docker.socket cups.socket avahi-daemon.service; do
+for unit in NetworkManager.service sddm.service bluetooth.service power-profiles-daemon.service docker.socket cups.socket avahi-daemon.service; do
   if [[ "${DRY_RUN}" == "true" ]] || systemctl list-unit-files "${unit}" >/dev/null 2>&1; then
     run systemctl enable "${unit}"
   fi

@@ -29,6 +29,8 @@ fc-cache -f
 systemctl enable NetworkManager.service
 systemctl enable sddm.service
 systemctl enable bluetooth.service
+# Power mode in quick settings (desktop/shell/QuickSettings.qml)
+systemctl enable power-profiles-daemon.service
 systemctl set-default graphical.target
 
 # Docker starts on first use (robinctl lab start, or the socket), not at boot:

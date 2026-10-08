@@ -29,6 +29,7 @@ brightnessctl
 bluez
 bluez-utils
 upower
+power-profiles-daemon
 
 # Screenshots, clipboard, notifications
 grim
