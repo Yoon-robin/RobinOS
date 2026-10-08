@@ -76,10 +76,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 후보: ① RobinOS 파일을 pacman 패키지(`robinos-desktop` 등)로 만들고 자체 저장소에서 서명해 배포, ② `/opt/robinos`를 GitHub 릴리스 태그로 받아 서명이나 체크섬을 확인한 뒤 `install-desktop.sh`로 다시 설치. ①은 pacman과 스냅샷(snap-pac)에 자연스럽게 묶이고, ②는 빨리 만들 수 있어요
 - 완료 기준: 설치 테스트에서 옛 버전을 설치한 뒤 `robinctl update`로 새 버전 파일이 들어오고, 업데이트 전 스냅샷이 생김
 
-### T-028 포렌식 기초 미션 5개
-- 상태: 검증 대기. 2026-10-08 `robinctl learn` 11~15번: 파일의 진짜 종류(`file`), 해시로 같은 파일(`sha256sum`), 사진 메타데이터(`exiftool`), 파일 뒤에 숨은 압축 파일(`binwalk`, `bsdtar`), 로그에서 무차별 대입 흔적(`grep | sort | uniq -c`). 연습 파일은 `robinctl`에 base64로 넣어 두고 처음 볼 때 `~/practice/forensics`에 만들어요. 로그 주소는 문서용 대역(RFC 5737)만 써요. binwalk 3.1이 ZIP을 꺼내려면 7z가 있어야 해서 forensics 프로필과 라이브 ISO에 `7zip`을 넣음. 채점 테스트 통과(WSL에서 binwalk·bsdtar·exiftool로 직접 풀어 봄)
-- 남은 것: 부팅 테스트의 미션 목록 스크린샷
-
 ### T-021 웹 보안 미션 (Juice Shop)
 - 상태: 보류. 범위를 다시 잡을 때까지 다른 작업을 먼저 해요. 랩 안내(`robinctl lab info web`)와 Juice Shop 자체의 점수판으로 시작할 수 있어요
 - 출처: 백로그 채우기 4 (학습 기능 늘리기), design.md 학습 순서의 세 번째(웹 보안)
@@ -94,6 +90,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 최근 것이 위에 있어요.
 
+- 2026-10-08 T-028 포렌식 기초 미션 5개(`ce6a092`): 파일 종류(`file`), 해시(`sha256sum`), 사진 메타데이터(`exiftool`), 숨은 압축 파일(`binwalk`·`bsdtar`), 로그 분석(`grep | sort | uniq -c`). 채점 테스트 통과, 부팅 테스트에서 미션 목록 15개(세 묶음) 확인. forensics 프로필과 라이브 ISO에 `7zip`(binwalk가 ZIP을 꺼낼 때 씀). ISO 2,099,478,528바이트
 - 2026-10-08 T-027 v0.1 프리뷰 공개: https://github.com/Yoon-robin/RobinOS/releases/tag/v0.1.0 (프리릴리스, 태그 `v0.1.0` = `87f3e9a`). 첨부: `robinos-2026.10.08-x86_64.iso`(2,097,446,912바이트), `SHA256SUMS`(`5b36e9f8...`). 깃허브 파일 한도(2GiB) 때문에 라이브 ISO에서 무거운 보안 묶음, hydra·gdb·Nerd 글꼴, 다른 언어 번역과 문서를 뺌. 이 ISO로 부팅 테스트 29장, 설치 테스트 robinos 통과. 서명은 아직 없음
 - 2026-10-08 T-024 창 최소화와 Win+D: 독의 앱 아이콘이 윈도우 작업 표시줄처럼 열기, 앞으로 가져오기, 최소화, 되돌리기를 해요. 최소화한 창은 숨은 작업 공간(`special:minimized`)에 두고 원래 작업 공간을 기억해요. `Super+D`는 지금 작업 공간의 창을 모두 숨기고 다시 누르면 되돌려요(`8d48883`). 부팅 테스트에 최소화, 되돌리기, Super+D 두 번 장면을 넣고 확인(29장, 290초). 처음 테스트에서 숨긴 창의 이름이 바에 남는 걸 찾아 고침(`e00b911`). foot의 자체 제목 표시줄(`[csd] preferred=client`)이 실제로는 그려지지 않는 것도 확인해서 design.md 미결정 사항에 적음
 - 2026-10-08 두 번째 PC(사용자 `robin`)에 빌드 환경 준비: WSL 2 + archlinux, `wsl-build.ps1 setup`, Windows용 QEMU 11.1.0(체크섬 확인, 7-Zip은 GitHub 공식 릴리스에서 받아 설치 없이 풂). 여기서 드러난 것 세 가지를 고침. Qt 6.12의 qmllint가 잡은 `InputField`의 id 충돌과 Theme 오탐, WSL DNS 터널링 주소(`10.255.255.254`) 때문에 틀린 미션 6 테스트(`5de4149`), 저장소 경로에 한글(`바탕화면`)이 있으면 WHPX QEMU가 ISO를 못 여는 문제(QEMU를 `build\`에서 상대 경로로 실행)
