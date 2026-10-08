@@ -43,7 +43,7 @@ run() {
 }
 
 [[ -f "${MAP_FILE}" ]] || {
-  printf '오류: %s가 없어요\n' "${MAP_FILE}" >&2
+  printf '오류: 파일이 없어요: %s\n' "${MAP_FILE}" >&2
   exit 1
 }
 

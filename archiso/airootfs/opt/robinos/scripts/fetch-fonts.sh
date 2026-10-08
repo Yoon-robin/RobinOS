@@ -31,7 +31,7 @@ die() {
 [[ -n "${DEST_DIR}" ]] || die "사용법: scripts/fetch-fonts.sh <글꼴 폴더>"
 
 for cmd in curl sha256sum bsdtar; do
-  command -v "${cmd}" >/dev/null 2>&1 || die "${cmd}가 필요해요"
+  command -v "${cmd}" >/dev/null 2>&1 || die "${cmd} 명령이 필요해요"
 done
 
 fetch() {

@@ -181,7 +181,7 @@ FloatingWindow {
         onExited: (exitCode, exitStatus) => {
             root.succeeded = exitCode === 0 && root.errorText === "";
             if (!root.succeeded && root.errorText === "")
-                root.errorText = "설치기가 종료 코드 " + exitCode + "로 끝났어요";
+                root.errorText = "설치기가 오류로 끝났어요 (종료 코드 " + exitCode + ")";
             passwordField.text = "";
             password2Field.text = "";
             installProc.stdinEnabled = true;

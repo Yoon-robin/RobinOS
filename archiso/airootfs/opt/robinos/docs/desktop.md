@@ -106,7 +106,7 @@ VM 창 크기를 바꾸면 VMware(`vmtoolsd`)나 QEMU(`virtio-gpu`)가 새 크�
 
 ```text
 $ ipconfig
-ipconfig은(는) 윈도우 명령이에요. 리눅스에서는
+ipconfig 명령은 윈도우용이에요. 리눅스에서는
   ip a  IP 주소와 네트워크 장치를 보여 줘요
 ```
 
