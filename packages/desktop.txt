@@ -20,7 +20,6 @@ xorg-server
 adw-gtk-theme
 papirus-icon-theme
 inter-font
-otf-geist-mono-nerd
 dconf
 
 # Input and hardware

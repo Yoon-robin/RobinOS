@@ -39,7 +39,7 @@ RobinOS는 shadcn/ui의 zinc 팔레트를 따르고, 강조색은 Robin red 하�
 ## 글꼴과 모양
 
 - 인터페이스: Geist, 한글은 Pretendard
-- 코드와 터미널: Geist Mono / GeistMono Nerd Font
+- 코드와 터미널: Geist Mono, 한글은 Noto Sans Mono CJK KR
 - 모서리 반경: 6 (작은 요소), 8 (입력창, 버튼), 10 (카드), 14 (창, 팝오버), 18 (독)
 - 아이콘: Lucide 선 아이콘, 24px 그리드에 2px 선
 

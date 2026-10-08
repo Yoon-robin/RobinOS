@@ -11,6 +11,6 @@ cursor-theme='Adwaita'
 cursor-size=24
 font-name='Geist 11'
 document-font-name='Geist 11'
-monospace-font-name='GeistMono Nerd Font 11'
+monospace-font-name='Geist Mono 11'
 accent-color='red'
 enable-hot-corners=false

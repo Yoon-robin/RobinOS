@@ -45,7 +45,6 @@ xorg-server
 adw-gtk-theme
 papirus-icon-theme
 inter-font
-otf-geist-mono-nerd
 dconf
 fcitx5-gtk
 fcitx5-qt
@@ -74,7 +73,8 @@ flatpak
 ntfs-3g
 exfatprogs
 # Light security tools for the live session and the network missions. The heavy
-# bundles (wireshark-qt, john, hashcat, docker, virt-manager, qemu-full) are left
+# bundles (wireshark-qt, john, hashcat, hydra, gdb, docker, virt-manager,
+# qemu-full) are left
 # out to keep the ISO under GitHub's 2 GiB file limit; on an installed system
 # `robinctl profile <name>` adds them (packages/security-baseline.txt)
 nmap
@@ -86,9 +86,7 @@ openbsd-netcat
 sqlmap
 nikto
 gobuster
-hydra
 binwalk
-gdb
 strace
 ltrace
 testdisk
