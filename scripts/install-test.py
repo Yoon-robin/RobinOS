@@ -570,6 +570,13 @@ def phase_installed(con, qmp):
     con.run("ss -Htuln", check=False)
     con.run(r"! ss -Htln | awk '{print $4}' | grep -Eq '^(0\.0\.0\.0|\*|\[::\]):631$'"
             " && ! systemctl is-enabled --quiet sshd.service")
+    # The system is named RobinOS, and stays so when the filesystem package puts
+    # Arch's os-release back (pacman hook; SNAP_PAC_SKIP keeps the snapshot list
+    # as the later phases expect). The user's ~/.bashrc loads the RobinOS prompt.
+    con.run("SNAP_PAC_SKIP=y pacman -S --noconfirm filesystem > /dev/null"
+            " && (. /etc/os-release && [ \"$ID\" = robinos ] && [ \"$ID_LIKE\" = arch ] && echo \"$PRETTY_NAME\")",
+            timeout=600)
+    con.run("grep -q robinos-bashrc.sh /etc/skel/.bashrc && grep -l robinos-bashrc.sh /home/*/.bashrc")
 
     # QEMU's WHPX can't reset a VM that reboots itself ("Unexpected VP exit code 4"),
     # so every boot is its own QEMU run: power off here, the next phase boots again.

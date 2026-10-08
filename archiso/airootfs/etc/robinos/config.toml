@@ -1,6 +1,6 @@
 [system]
 name = "RobinOS"
-version = "0.1.0-dev"
+version = "0.2.0-dev"
 base = "arch"
 purpose = "security-learning-live"
 
@@ -16,5 +16,5 @@ default_scope = "local-labs-and-authorized-targets"
 
 [profiles]
 default = "security"
-available = ["core", "security"]
+available = ["core", "network", "web", "forensics", "reversing", "passwords", "wireless", "vm", "security"]
 

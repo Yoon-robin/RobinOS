@@ -50,4 +50,6 @@ file_permissions=(
   ["/opt/robinos/desktop/bin/robinos-screenshot"]="0:0:755"
   ["/usr/share/robinos/bin/robinos-session"]="0:0:755"
   ["/usr/share/robinos/bin/robinos-screenshot"]="0:0:755"
+  ["/opt/robinos/desktop/bin/robinos-os-release"]="0:0:755"
+  ["/usr/share/robinos/bin/robinos-os-release"]="0:0:755"
 )

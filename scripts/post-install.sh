@@ -67,6 +67,8 @@ else
 fi
 run dconf update
 run fc-cache -f
+# fastfetch and hostnamectl say RobinOS (a pacman hook keeps it after upgrades)
+run /usr/share/robinos/bin/robinos-os-release
 
 # New users get the defaults from /etc/skel; copy them for the user running sudo too.
 if [[ -n "${SUDO_USER:-}" && "${SUDO_USER}" != "root" ]]; then
@@ -78,12 +80,13 @@ if [[ -n "${SUDO_USER:-}" && "${SUDO_USER}" != "root" ]]; then
     fi
   done
 
-  hints_line='[[ -r /usr/share/robinos/bash/robinos-hints.sh ]] && . /usr/share/robinos/bash/robinos-hints.sh'
-  if [[ -n "${user_home}" ]] && ! grep -qF "robinos-hints.sh" "${user_home}/.bashrc" 2>/dev/null; then
+  # useradd copied Arch's ~/.bashrc before install-desktop.sh put RobinOS's in /etc/skel
+  bashrc_line='[[ -r /usr/share/robinos/bash/robinos-bashrc.sh ]] && . /usr/share/robinos/bash/robinos-bashrc.sh'
+  if [[ -n "${user_home}" ]] && ! grep -qF "robinos-bashrc.sh" "${user_home}/.bashrc" 2>/dev/null; then
     if [[ "${DRY_RUN}" == "true" ]]; then
-      printf '%s/.bashrc에 윈도우 명령 안내를 넣어요\n' "${user_home}"
+      printf '%s/.bashrc에 RobinOS 프롬프트와 윈도우 명령 안내를 넣어요\n' "${user_home}"
     else
-      printf '\n# Windows command hints (RobinOS)\n%s\n' "${hints_line}" >>"${user_home}/.bashrc"
+      printf '\n# RobinOS prompt, Windows command hints and greeting\n%s\n' "${bashrc_line}" >>"${user_home}/.bashrc"
       chown "${SUDO_USER}:$(id -gn "${SUDO_USER}")" "${user_home}/.bashrc"
     fi
   fi

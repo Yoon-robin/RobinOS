@@ -107,17 +107,32 @@ GTK 앱, Firefox, Qt 앱(설치기, Wireshark 등)은 창 위에 제목 표시�
 
 마우스 없이도 쓸 수 있어요. 런처, 빠른 설정, 환영 마법사, 설치기에서 `Tab`으로 버튼과 선택지를 옮겨 다니고(포커스가 테두리로 보여요), `Enter`나 `Space`로 눌러요. 볼륨 같은 슬라이더는 화살표 키로 5%씩, `Home`과 `End`로 끝까지 움직여요.
 
-## 윈도우 명령 힌트
+## 터미널 프롬프트
 
-`~/.bashrc`가 `desktop/bash/robinos-hints.sh`를 불러와요. 터미널에 윈도우 명령을 치면 같은 일을 하는 리눅스 명령을 알려 줘요.
+터미널의 프롬프트는 이렇게 생겼어요. 윈도우 PowerShell의 `PS C:\Users\robin>`처럼 지금 있는 폴더 뒤에 `>`가 와요.
 
 ```text
-$ ipconfig
+robin@robinos ~/practice >
+```
+
+- 흐린 글자는 사용자 이름과 컴퓨터 이름, 굵은 글자는 지금 있는 폴더예요(`~`는 내 홈 폴더). 경로가 길면 마지막 세 단계만 보여요
+- `>`는 RobinOS의 빨간 강조색이에요. 관리자(root) 셸에서는 리눅스의 관례대로 `#`가 돼요
+- 바로 앞 명령이 실패하면 `>` 앞에 종료 코드가 빨갛게 나와요. `robin@robinos ~ 127 >`는 명령을 찾지 못했다는 뜻이에요. 0이 아닌 종료 코드는 실패예요
+- 창 제목이 `robin@robinos: ~/practice`로 바뀌어서 셸의 바에서도 터미널이 어디에 있는지 보여요
+
+프롬프트, 윈도우 명령 힌트, 첫 인사(fastfetch)는 `desktop/bash/robinos-bashrc.sh`(설치 위치 `/usr/share/robinos/bash/robinos-bashrc.sh`)에 모여 있고, `~/.bashrc`는 이 파일을 불러오기만 해요. 그래서 RobinOS가 업데이트되면 이미 있는 사용자에게도 바뀐 것이 들어가요. 내 설정은 `~/.bashrc`의 그 줄 아래에 적어요. 새로 만드는 사용자는 `/etc/skel/.bashrc`로 바로 쓸 수 있고, 설치하는 사용자의 `~/.bashrc`에는 `scripts/post-install.sh`가 그 줄을 넣어 줘요.
+
+## 윈도우 명령 힌트
+
+`desktop/bash/robinos-hints.sh`가 맡아요. 터미널에 윈도우 명령을 치면 같은 일을 하는 리눅스 명령을 알려 줘요.
+
+```text
+robin@robinos ~ > ipconfig
 ipconfig 명령은 윈도우용이에요. 리눅스에서는
   ip a  IP 주소와 네트워크 장치를 보여 줘요
 ```
 
-명령 40개쯤을 알아들어요(`dir`, `cls`, `cd..`, `copy`, `del`, `tasklist`, `tracert`, `netstat`, `findstr`, `notepad`, `calc`, `eventvwr`, `services.msc`, `devmgmt.msc`, `diskmgmt.msc`, `getmac` 등). `nslookup`처럼 리눅스에도 있지만 처음에는 설치돼 있지 않은 명령은 지금 쓸 수 있는 명령(`getent hosts`)과 설치할 프로필을 알려 줘요. 새로 만드는 사용자는 `/etc/skel/.bashrc`로 바로 쓸 수 있고, 설치하는 사용자의 `~/.bashrc`에는 `scripts/post-install.sh`가 넣어 줘요.
+명령 40개쯤을 알아들어요(`dir`, `cls`, `cd..`, `copy`, `del`, `tasklist`, `tracert`, `netstat`, `findstr`, `notepad`, `calc`, `eventvwr`, `services.msc`, `devmgmt.msc`, `diskmgmt.msc`, `getmac` 등). `nslookup`처럼 리눅스에도 있지만 처음에는 설치돼 있지 않은 명령은 지금 쓸 수 있는 명령(`getent hosts`)과 설치할 프로필을 알려 줘요.
 
 ## 환영 마법사
 
@@ -178,7 +193,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 ## 라이브 세션
 
-라이브 ISO는 `robin` 계정(비밀번호 `robin`)으로 RobinOS 세션에 자동 로그인해요. 비밀번호 없는 sudo는 라이브 ISO에만 설정돼 있어요(`/etc/sudoers.d/10-robinos-live`).
+라이브 ISO는 `robin` 계정(비밀번호 `robin`)으로 RobinOS 세션에 자동 로그인해요. 비밀번호 없는 sudo는 라이브 ISO에만 설정돼 있어요(`/etc/sudoers.d/10-robinos-live`). 시간대는 한국(`Asia/Seoul`)이고, 인터넷에 연결되면 `systemd-timesyncd`가 시계를 맞춰요. 설치한 시스템의 시간대는 설치기에서 정해요.
 
 라이브 ISO에는 가벼운 보안 도구(nmap, tcpdump, netcat, dig, sqlmap, binwalk 같은 것)만 들어 있어요. Wireshark 화면 앱, john, hashcat, hydra, gdb, Docker(웹 랩), 가상 머신 도구는 크기가 커서 빠져 있고, 설치한 시스템에서 `sudo robinctl profile <이름>`으로 넣어요. 라이브 세션은 메모리 위에서 돌아서 큰 묶음이나 랩 이미지를 받을 자리가 거의 없어요. 프린터(CUPS와 프린터 설정 앱), 오피스(LibreOffice), 앱 스토어(GNOME 소프트웨어), 디스크 관리(GNOME 디스크)도 설치본에만 들어가요(`packages/apps.txt`).
 
