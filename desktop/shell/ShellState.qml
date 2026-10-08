@@ -536,6 +536,45 @@ Singleton {
             labProc.running = true;
     }
 
+    // ---- Updates, like the Windows Update dot ----
+    // checkupdates (pacman-contrib) looks with its own copy of the package
+    // database, so it never locks pacman. The live session doesn't check.
+
+    property int updateCount: 0
+    property real lastUpdateCheck: 0
+
+    // At most every ten minutes, unless the timer asks
+    function checkUpdates(force) {
+        if (isLive || updateProc.running)
+            return;
+        if (!force && Date.now() - lastUpdateCheck < 10 * 60 * 1000)
+            return;
+        lastUpdateCheck = Date.now();
+        updateProc.running = true;
+    }
+
+    Process {
+        id: updateProc
+
+        command: ["sh", "-c", "checkupdates 2>/dev/null | wc -l"]
+        stdout: StdioCollector {
+            id: updateOut
+
+            onStreamFinished: root.updateCount = parseInt(updateOut.text.trim()) || 0
+        }
+    }
+
+    // First look three minutes after login (not to slow the start), then every three hours
+    Timer {
+        interval: 3 * 60 * 1000
+        running: true
+        onTriggered: {
+            root.checkUpdates(true);
+            interval = 3 * 60 * 60 * 1000;
+            restart();
+        }
+    }
+
     // ---- Learning progress (robinctl learn) ----
 
     // LEARN_COUNT in bin/robinctl (scripts/test-robinctl.sh checks they agree)

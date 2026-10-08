@@ -562,6 +562,8 @@ def phase_installed(con, qmp):
     # App store (packages/apps.txt): GNOME Software with Flathub, without PackageKit
     con.run("test -f /usr/share/applications/org.gnome.Software.desktop && ! pacman -Q packagekit && command -v gnome-disks"
             " && grep -q DisableTelemetry /etc/firefox/policies/policies.json")
+    # The shell's update dot asks checkupdates: 0 = updates, 2 = none, 1 = it failed
+    con.run("checkupdates | tail -n 3; rc=${PIPESTATUS[0]}; echo checkupdates=$rc; [ $rc -ne 1 ]")
     con.run("flatpak remotes --system", check=False)
     # What the default install opens to the network (docs/ethics.md): CUPS only on
     # localhost, no sshd; Avahi's 5353/udp is the one service the LAN can reach

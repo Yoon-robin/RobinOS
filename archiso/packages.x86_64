@@ -53,6 +53,7 @@ bluez
 bluez-utils
 upower
 grim
+pacman-contrib
 slurp
 wl-clipboard
 cliphist

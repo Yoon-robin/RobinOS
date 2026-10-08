@@ -224,7 +224,7 @@ PanelWindow {
         }
 
         BarButton {
-            label: "빠른 설정"
+            label: ShellState.updateCount > 0 ? "빠른 설정, 업데이트 " + ShellState.updateCount + "개" : "빠른 설정"
             padding: 10
             spacing: 10
             active: ShellState.quickSettingsOpen && ShellState.overlayScreen === bar.screen
@@ -238,6 +238,13 @@ PanelWindow {
             Icon {
                 name: ShellState.volumeIcon
                 color: Theme.fgSoft
+            }
+
+            // Updates are waiting (quick settings has the button)
+            Icon {
+                visible: ShellState.updateCount > 0
+                name: "refresh"
+                color: Theme.accent
             }
 
             RowLayout {
