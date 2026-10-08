@@ -44,6 +44,9 @@ done
 known='unqualified|Type PanelWindow is not creatable|Type GlobalShortcut is used but it is not resolved'
 known+='|Type margins is used but it is not resolved|PostReloadHook was not found|incomplete type "FileViewAdapter"'
 known+='|QProcess::ExitStatus|"BluetoothAdapter" of property "defaultAdapter" not found'
+# Qt 6.12 qmllint mixes our Theme singleton up with Qt.labs.StyleKit's Theme type
+# (not imported anywhere) even though the qmldir above declares it a singleton
+known+='|Type Theme not declared as singleton in qmldir but using pragma Singleton'
 
 report="$("${QMLLINT}" -I /usr/lib/qt6/qml -I "${work}" "${files[@]}" 2>&1 || true)"
 problems="$(printf '%s\n' "${report}" | grep -E '^(Warning|Error)' | grep -Ev "${known}" || true)"

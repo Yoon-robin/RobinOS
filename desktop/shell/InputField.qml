@@ -5,12 +5,12 @@ import QtQuick
 Rectangle {
     id: root
 
-    property alias text: input.text
+    property alias text: textInput.text
     property string placeholder
     property bool password: false
     property bool invalid: false
-    property alias inputFocus: input.activeFocus
-    readonly property alias input: input
+    property alias inputFocus: textInput.activeFocus
+    readonly property alias input: textInput
 
     signal accepted()
 
@@ -19,14 +19,14 @@ Rectangle {
     radius: Theme.radiusMd
     color: "transparent"
     border.width: 1
-    border.color: invalid ? Theme.destructive : input.activeFocus ? Theme.ring : Theme.input
+    border.color: invalid ? Theme.destructive : textInput.activeFocus ? Theme.ring : Theme.input
 
     Behavior on border.color {
         ColorAnimation { duration: Theme.durFast }
     }
 
     TextInput {
-        id: input
+        id: textInput
 
         anchors.left: parent.left
         anchors.right: parent.right
@@ -51,7 +51,7 @@ Rectangle {
         Text {
             anchors.fill: parent
             verticalAlignment: Text.AlignVCenter
-            visible: input.text === "" && input.preeditText === ""
+            visible: textInput.text === "" && textInput.preeditText === ""
             text: root.placeholder
             color: Theme.muted
             font.family: Theme.font
@@ -63,7 +63,7 @@ Rectangle {
         anchors.fill: parent
         cursorShape: Qt.IBeamCursor
         onPressed: mouse => {
-            input.forceActiveFocus();
+            textInput.forceActiveFocus();
             mouse.accepted = false;
         }
     }

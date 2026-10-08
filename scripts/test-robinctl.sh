@@ -102,7 +102,8 @@ said "list points to mission 6" "robinctl learn show 6"
 
 # Network basics: answers written the way the missions ask
 in_home "mkdir -p practice/net"
-in_home "echo 10.255.255.254 > practice/net/my-ip.txt"
+# TEST-NET-1 (RFC 5737) is never assigned. Not 10.255.255.254: WSL's DNS tunneling puts it on lo
+in_home "echo 192.0.2.123 > practice/net/my-ip.txt"
 check "6 fails with an address this machine doesn't have" fail learn check 6
 my_ip="$(ip -4 -o addr show | awk '{ split($4, a, "/"); print a[1] }' | grep -v '^127\.' | head -n 1)"
 [[ -n "${my_ip}" ]] || my_ip="127.0.0.1"
