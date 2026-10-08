@@ -126,6 +126,8 @@ Calamares를 쓰지 않은 이유예요.
 2. 그 밖에는 GPU 가속으로 먼저 시작하고, Hyprland가 곧바로 종료되면 소프트웨어 렌더링으로 다시 시작해요.
 3. 소프트웨어 모드(`ROBINOS_RENDER=software`)에서는 Hyprland의 블러와 그림자, 셸의 그림자 효과를 꺼서 VM에서도 버벅이지 않게 해요.
 
+Hyprland 0.56은 `start-hyprland`(감시 프로세스)로 띄우라고 하고, 그냥 띄우면 시작할 때 경고를 남겨요. RobinOS는 `robinos-session`이 `Hyprland`를 직접 띄워요(2026-10-09 결정). `start-hyprland`는 Hyprland가 비정상 종료하면 `--safe-mode`로 다시 띄우는데(실행 파일에서 확인), 그러면 위 2번의 "곧바로 종료되면 소프트웨어 렌더링으로" 대처가 동작하지 않아요. 경고는 무시해도 돼요.
+
 ## v0.1 범위
 
 | # | 항목 | 상태 |

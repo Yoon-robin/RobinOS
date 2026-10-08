@@ -60,6 +60,8 @@ use_software() {
   export AQ_NO_ATOMIC=1
 }
 
+# Hyprland itself, not start-hyprland: that watchdog restarts a Hyprland that
+# exited uncleanly in --safe-mode, so the software retry below would never run
 run_hyprland() {
   local started
   started="$(date +%s)"
