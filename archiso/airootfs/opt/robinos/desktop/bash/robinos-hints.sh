@@ -18,7 +18,7 @@ __robinos_windows_hint() {
     md)                  printf '%s' 'mkdir 폴더|폴더를 만들어요' ;;
     tasklist)            printf '%s' 'ps aux|실행 중인 프로세스를 보여 줘요 (실시간으로 보려면 top)' ;;
     taskkill)            printf '%s' 'kill PID|프로세스를 끝내요 (이름으로는 pkill 이름)' ;;
-    taskmgr)             printf '%s' 'mission-center|작업 관리자에 해당하는 앱이에요' ;;
+    taskmgr)             printf '%s' 'missioncenter|작업 관리자에 해당하는 앱이에요 (Ctrl+Shift+Esc도 돼요)' ;;
     tracert)             printf '%s' 'traceroute 주소|목적지까지 거치는 경로를 보여 줘요' ;;
     netstat)             printf '%s' 'ss -tulpn|열린 포트와 연결을 보여 줘요' ;;
     arp)                 printf '%s' 'ip neigh|같은 네트워크의 장치(ARP 테이블)를 보여 줘요' ;;

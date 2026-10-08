@@ -717,7 +717,9 @@ PanelWindow {
                                 { keys: ["Win", "D"], title: "바탕 화면 보기" },
                                 { keys: ["Win", "Shift", "S"], title: "화면 캡처" },
                                 { keys: ["오른쪽 Alt"], title: "한/영 전환" },
-                                { keys: ["Win", "L"], title: "화면 잠금" }
+                                { keys: ["Win", "L"], title: "화면 잠금" },
+                                { keys: ["Ctrl", "Shift", "Esc"], title: "작업 관리자" },
+                                { keys: ["Win", "V"], title: "클립보드 기록" }
                             ]
 
                             RowLayout {

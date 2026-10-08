@@ -457,7 +457,7 @@ printf '%s\n' "Windows command hints (robinos-hints.sh)"
 # would start the Windows programs through WSL's interop
 hint() { bash -c ". '${HINTS}'; command_not_found_handle '$1'" 2>&1; }
 for pair in "ipconfig:ip a" "IPCONFIG.EXE:ip a" "dir:ls -l" "tasklist:ps aux" "notepad:gnome-text-editor" \
-    "calc:gnome-calculator" "eventvwr:journalctl -b" "services.msc:systemctl" "diskmgmt.msc:gnome-disks" "nslookup:getent hosts"; do
+    "calc:gnome-calculator" "taskmgr:missioncenter" "eventvwr:journalctl -b" "services.msc:systemctl" "diskmgmt.msc:gnome-disks" "nslookup:getent hosts"; do
   out="$(hint "${pair%%:*}")"
   if [[ "${out}" == *"${pair#*:}"* ]]; then ok "hint for ${pair%%:*}"; else bad "hint for ${pair%%:*}: ${out}"; fi
 done

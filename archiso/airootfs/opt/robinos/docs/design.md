@@ -59,7 +59,7 @@
 
 ### 기반: Arch Linux
 
-- Hyprland와 Quickshell 최신판이 공식 저장소에 있어요(2026-10 기준 Hyprland 0.56.2, Quickshell 0.3.1). Hyprland는 버전마다 설정 문법이 바뀔 만큼 빠르게 변해서 최신 패키지가 중요해요.
+- Hyprland와 Quickshell 최신판이 공식 저장소에 있어요(2026-10 기준 Hyprland 0.56.2, Quickshell 0.3.2). Hyprland는 버전마다 설정 문법이 바뀔 만큼 빠르게 변해서 최신 패키지가 중요해요.
 - 공식 ISO 도구(`archiso`)가 있어요.
 - 보안 도구가 최신이고, 필요하면 BlackArch 저장소를 붙일 수 있어요.
 - Debian 기반인 Kali의 변형으로 보이지 않아요.
