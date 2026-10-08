@@ -66,29 +66,38 @@ function Invoke-WhpxBootTest {
     $base, $label, $isoName = (($prepared | Select-Object -Last 1) -split " ")
     Write-Host "ISO: $isoName (WHPX)"
 
-    # A blank disk, so the installer's disk step has something to show
-    & (Join-Path (Split-Path -Parent $Qemu) "qemu-img.exe") create -q -f qcow2 "$out\disk.qcow2" 64G
+    # QEMU for Windows reads its command line and QMP paths as UTF-8, but gets them in the
+    # ANSI code page, so a non-ASCII checkout path (e.g. 바탕화면) breaks every file it opens.
+    # Run it from build\ and give it only relative paths.
+    $build = Join-Path $root "build"
+    Push-Location $build
+    try {
+        # A blank disk, so the installer's disk step has something to show
+        & (Join-Path (Split-Path -Parent $Qemu) "qemu-img.exe") create -q -f qcow2 "boot-test\disk.qcow2" 64G
 
-    $port = 47011
-    $kernelArgs = "archisobasedir=$base archisolabel=$label console=tty0 console=ttyS0,115200 systemd.journald.forward_to_console=1 robinos.debug"
-    # Start-Process joins the arguments with spaces, so quote the ones that have them
-    $qemuArgs = @(
-        "-machine", "q35", "-accel", "whpx", "-m", "6144", "-smp", "4",
-        "-kernel", "`"$vm\$base\boot\x86_64\vmlinuz-linux`"",
-        "-initrd", "`"$vm\$base\boot\x86_64\initramfs-linux.img`"",
-        "-append", "`"$kernelArgs`"",
-        "-cdrom", "`"$vm\robinos.iso`"",
-        "-drive", "`"file=$out\disk.qcow2,format=qcow2,if=virtio`"",
-        "-vga", "none", "-device", "VGA,edid=on,xres=1600,yres=900", "-display", "none",
-        "-netdev", "user,id=net0", "-device", "virtio-net-pci,netdev=net0",
-        "-qmp", "tcp:127.0.0.1:$port,server,nowait",
-        "-serial", "`"file:$out\serial.log`""
-    )
-    $proc = Start-Process -FilePath $Qemu -ArgumentList $qemuArgs -PassThru -WindowStyle Hidden `
-        -RedirectStandardError "$out\qemu-stderr.log" -RedirectStandardOutput "$out\qemu-stdout.log"
+        $port = 47011
+        $kernelArgs = "archisobasedir=$base archisolabel=$label console=tty0 console=ttyS0,115200 systemd.journald.forward_to_console=1 robinos.debug"
+        # Start-Process joins the arguments with spaces, so quote the ones that have them
+        $qemuArgs = @(
+            "-machine", "q35", "-accel", "whpx", "-m", "6144", "-smp", "4",
+            "-kernel", "`"vm\$base\boot\x86_64\vmlinuz-linux`"",
+            "-initrd", "`"vm\$base\boot\x86_64\initramfs-linux.img`"",
+            "-append", "`"$kernelArgs`"",
+            "-cdrom", "`"vm\robinos.iso`"",
+            "-drive", "`"file=boot-test\disk.qcow2,format=qcow2,if=virtio`"",
+            "-vga", "none", "-device", "VGA,edid=on,xres=1600,yres=900", "-display", "none",
+            "-netdev", "user,id=net0", "-device", "virtio-net-pci,netdev=net0",
+            "-qmp", "tcp:127.0.0.1:$port,server,nowait",
+            "-serial", "`"file:boot-test\serial.log`""
+        )
+        $proc = Start-Process -FilePath $Qemu -ArgumentList $qemuArgs -PassThru -WindowStyle Hidden -WorkingDirectory $build `
+            -RedirectStandardError "$out\qemu-stderr.log" -RedirectStandardOutput "$out\qemu-stdout.log"
 
-    python "$root\scripts\boot-test-qmp.py" "tcp:127.0.0.1:$port" $out 1
-    if (-not $proc.WaitForExit(30000)) { $proc.Kill() }
+        python "$root\scripts\boot-test-qmp.py" "tcp:127.0.0.1:$port" "boot-test" 1
+        if (-not $proc.WaitForExit(30000)) { $proc.Kill() }
+    } finally {
+        Pop-Location
+    }
 
     Write-Host "`n시리얼 로그의 주요 줄:"
     Select-String -Path "$out\serial.log" -Pattern "robinos-session|Reached target .*Graphical|Failed to start|hyprland.*(ERR|error|CRIT)" |
@@ -128,24 +137,28 @@ function Invoke-WhpxInstallTest {
         Copy-Item (Join-Path $root $dir) $share -Recurse
     }
 
+    # Like the boot test, QEMU runs from build\ with relative paths only, so a non-ASCII
+    # checkout or user folder works. The firmware is copied next to the disk for the same reason.
+    $build = Join-Path $root "build"
+    Push-Location $build
     if (-not $reuse) {
         # "windows" needs room for a 20 GB C: and 40 GB of free space next to it
         $diskSize = if ($Installer -eq "windows") { "64G" } else { "40G" }
-        & (Join-Path $qemuDir "qemu-img.exe") create -q -f qcow2 "$out\disk.qcow2" $diskSize
+        & (Join-Path $qemuDir "qemu-img.exe") create -q -f qcow2 "install-test\disk.qcow2" $diskSize
         Copy-Item (Join-Path $qemuDir "share\edk2-i386-vars.fd") "$out\OVMF_VARS.fd"
     }
+    Copy-Item (Join-Path $qemuDir "share\edk2-x86_64-code.fd") "$out\OVMF_CODE.fd"
 
     $env:ROBINOS_INSTALLER = $Installer
     if ($Lab) { $env:ROBINOS_TEST_LAB = "1" }
     $env:ROBINOS_SERIAL = "tcp:127.0.0.1:47021"
     $env:ROBINOS_QMP = "tcp:127.0.0.1:47022"
-    $shareFat = (Join-Path $out "share") -replace "\\", "/"
     $common = @(
         "-machine", "q35", "-accel", "whpx", "-m", "6144", "-smp", "4",
-        "-drive", "`"if=pflash,format=raw,readonly=on,file=$qemuDir\share\edk2-x86_64-code.fd`"",
-        "-drive", "`"if=pflash,format=raw,file=$out\OVMF_VARS.fd`"",
-        "-drive", "`"file=$out\disk.qcow2,format=qcow2,if=virtio`"",
-        "-drive", "`"file=fat:$shareFat,format=raw,if=virtio,readonly=on`"",
+        "-drive", "`"if=pflash,format=raw,readonly=on,file=install-test\OVMF_CODE.fd`"",
+        "-drive", "`"if=pflash,format=raw,file=install-test\OVMF_VARS.fd`"",
+        "-drive", "`"file=install-test\disk.qcow2,format=qcow2,if=virtio`"",
+        "-drive", "`"file=fat:install-test/share,format=raw,if=virtio,readonly=on`"",
         "-vga", "none", "-device", "VGA,edid=on,xres=1600,yres=900", "-display", "none",
         "-netdev", "user,id=net0", "-device", "virtio-net-pci,netdev=net0",
         "-qmp", "tcp:127.0.0.1:47022,server,nowait"
@@ -153,10 +166,10 @@ function Invoke-WhpxInstallTest {
     $kernelArgs = "archisobasedir=$base archisolabel=$label console=tty0 console=ttyS0,115200"
     $phases = @(
         @{ name = "live"; extra = @(
-            "-kernel", "`"$vm\$base\boot\x86_64\vmlinuz-linux`"",
-            "-initrd", "`"$vm\$base\boot\x86_64\initramfs-linux.img`"",
+            "-kernel", "`"vm\$base\boot\x86_64\vmlinuz-linux`"",
+            "-initrd", "`"vm\$base\boot\x86_64\initramfs-linux.img`"",
             "-append", "`"$kernelArgs`"",
-            "-cdrom", "`"$vm\robinos.iso`"") },
+            "-cdrom", "`"vm\robinos.iso`"") },
         # Every boot is its own QEMU run: WHPX can't reset a guest that reboots itself
         @{ name = "installed"; extra = @() },
         @{ name = "snapshots"; extra = @() },
@@ -166,16 +179,21 @@ function Invoke-WhpxInstallTest {
     if ($reuse) { $phases = $phases[1..4] }
 
     $failed = $false
-    foreach ($phase in $phases) {
-        $name = $phase.name
-        Write-Host "`n== 설치 테스트: $name"
-        $serial = @("-chardev", "`"socket,id=ser0,host=127.0.0.1,port=47021,server=on,wait=off,logfile=$out\serial-$name.log`"", "-serial", "chardev:ser0")
-        $proc = Start-Process -FilePath $Qemu -ArgumentList ($common + $serial + $phase.extra) -PassThru -WindowStyle Hidden `
-            -RedirectStandardError "$out\qemu-$name-stderr.log" -RedirectStandardOutput "$out\qemu-$name-stdout.log"
-        python "$root\scripts\install-test.py" $name $out 1
-        $status = $LASTEXITCODE
-        if (-not $proc.WaitForExit(60000)) { $proc.Kill() }
-        if ($status -ne 0) { $failed = $true; break }
+    try {
+        foreach ($phase in $phases) {
+            $name = $phase.name
+            Write-Host "`n== 설치 테스트: $name"
+            $serial = @("-chardev", "`"socket,id=ser0,host=127.0.0.1,port=47021,server=on,wait=off,logfile=install-test\serial-$name.log`"", "-serial", "chardev:ser0")
+            $proc = Start-Process -FilePath $Qemu -ArgumentList ($common + $serial + $phase.extra) -PassThru -WindowStyle Hidden -WorkingDirectory $build `
+                -RedirectStandardError "$out\qemu-$name-stderr.log" -RedirectStandardOutput "$out\qemu-$name-stdout.log"
+            # Relative output folder: install-test.py hands screenshot paths to QEMU over QMP
+            python "$root\scripts\install-test.py" $name "install-test" 1
+            $status = $LASTEXITCODE
+            if (-not $proc.WaitForExit(60000)) { $proc.Kill() }
+            if ($status -ne 0) { $failed = $true; break }
+        }
+    } finally {
+        Pop-Location
     }
     Remove-Item Env:ROBINOS_SERIAL, Env:ROBINOS_QMP, Env:ROBINOS_INSTALLER, Env:ROBINOS_TEST_LAB -ErrorAction SilentlyContinue
     Write-Host "`n스크린샷:"

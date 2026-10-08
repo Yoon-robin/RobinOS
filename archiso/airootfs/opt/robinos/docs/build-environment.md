@@ -48,7 +48,16 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test
    & "C:\Program Files\7-Zip\7z.exe" x qemu-w64-setup-20260811.exe "-o$env:USERPROFILE\RobinOS-tools\qemu"
    ```
 
+   7-Zip이 없으면 설치하지 않고 써도 돼요. [7-Zip GitHub 릴리스](https://github.com/ip7z/7zip/releases)에서 `7zr.exe`와 `7z<버전>-x64.exe`를 받아 SHA-256(릴리스 페이지의 digest)을 확인하고, `7zr.exe`로 설치 파일을 풀면 `7z.exe`가 나와요.
+
+   ```powershell
+   .\7zr.exe x 7z2604-x64.exe "-o$env:USERPROFILE\RobinOS-tools\7zip"
+   & "$env:USERPROFILE\RobinOS-tools\7zip\7z.exe" x qemu-w64-setup-20260811.exe "-o$env:USERPROFILE\RobinOS-tools\qemu"
+   ```
+
 3. Windows용 Python이 있어야 해요(`python` 명령).
+
+저장소가 `바탕화면`처럼 한글이 들어간 경로에 있어도 돼요. Windows용 QEMU는 명령줄의 한글 경로를 깨뜨려서, 스크립트가 QEMU를 `build\` 폴더에서 상대 경로로 실행해요.
 
 이렇게 준비하면 `scripts/wsl-build.ps1 boot-test`가 알아서 WHPX를 써요. WSL이 ISO를 `build\vm`으로 복사하고 커널을 꺼내면(`scripts/vm-prepare.sh`), Windows에서 QEMU를 띄우고 `scripts/boot-test-qmp.py`가 TCP로 조작해요. `-Accel tcg`를 붙이면 예전처럼 WSL 안에서 돌고, QEMU 위치가 다르면 `-Qemu <경로>`로 알려 줘요.
 
