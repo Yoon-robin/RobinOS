@@ -120,7 +120,7 @@ robin@robinos ~/practice >
 - 흐린 글자는 사용자 이름과 컴퓨터 이름, 굵은 글자는 지금 있는 폴더예요(`~`는 내 홈 폴더). 경로가 길면 마지막 세 단계만 보여요
 - `>`는 RobinOS의 빨간 강조색이에요. 관리자(root) 셸에서는 리눅스의 관례대로 `#`가 돼요
 - 바로 앞 명령이 실패하면 `>` 앞에 종료 코드가 빨갛게 나와요. `robin@robinos ~ 127 >`는 명령을 찾지 못했다는 뜻이에요. 0이 아닌 종료 코드는 실패예요
-- 창 제목도 `robin@robinos: ~/practice`처럼 지금 있는 곳으로 바뀌어요(셸의 바는 창 제목 대신 앱 이름 "Foot"을 보여 줘요)
+- 창 제목도 `robin@robinos: ~/practice`처럼 지금 있는 곳으로 바뀌어요(셸의 바는 창 제목 대신 앱 이름 "터미널"을 보여 줘요)
 
 프롬프트, 윈도우 명령 힌트, 첫 인사(fastfetch)는 `desktop/bash/robinos-bashrc.sh`(설치 위치 `/usr/share/robinos/bash/robinos-bashrc.sh`)에 모여 있고, `~/.bashrc`는 이 파일을 불러오기만 해요. 그래서 RobinOS가 업데이트되면 이미 있는 사용자에게도 바뀐 것이 들어가요. 내 설정은 `~/.bashrc`의 그 줄 아래에 적어요. 새로 만드는 사용자는 `/etc/skel/.bashrc`로 바로 쓸 수 있고, 설치하는 사용자의 `~/.bashrc`에는 `scripts/post-install.sh`가 그 줄을 넣어 줘요.
 

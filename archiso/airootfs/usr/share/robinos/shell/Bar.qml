@@ -52,10 +52,20 @@ PanelWindow {
         // The shell's own windows (the installer) would read "Quickshell"
         if (top.appId === "" || top.appId === "org.quickshell")
             return top.title;
+        if (appNames[top.appId])
+            return appNames[top.appId];
         DesktopEntries.applications.values; // re-evaluate after the background scan
         const entry = DesktopEntries.heuristicLookup(top.appId);
         return entry?.name ?? top.appId;
     }
+
+    // "Foot" means nothing to someone from Windows, and the shell's floating
+    // terminal (ShellState.runInTerminal) has no desktop entry at all
+    readonly property var appNames: ({
+            "foot": "터미널",
+            "footclient": "터미널",
+            "robinos-float": "터미널"
+        })
 
     IdleInhibitor {
         window: bar
