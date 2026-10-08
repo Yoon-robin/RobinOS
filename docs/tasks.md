@@ -44,19 +44,25 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (없음) | | |
+| (T-030 커밋) | NVIDIA 드라이버, 설치기 테스트 | 설치 테스트 robinos |
 
 `dfcb5fd`까지 2026-10-08 검증(부팅 테스트 30장, 설치 테스트 robinos, robinctl 테스트)을 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
-- **실기기 라이브 부팅**: USB로 실제 PC에서 ISO를 부팅해 봐야 해요. 사용자만 할 수 있어요. (`막힘`)
+- **실기기 라이브 부팅**: USB로 실제 PC에서 ISO를 부팅해 봐야 해요. 사용자만 할 수 있어요. NVIDIA 카드(GTX 16, RTX 20 이후)가 있는 PC라면 설치한 뒤 데스크톱이 뜨는지, `lsmod | grep nvidia`에 나오는지도 봐 주세요(T-030). (`막힘`)
 - **실제 윈도우 PC에서 "윈도우 옆에 설치"**: VM의 가짜 윈도우 디스크로는 파티션과 부팅 파일이 그대로인 것까지 확인했어요(T-006). 진짜 윈도우가 GRUB 메뉴에 나오는지, BitLocker 복구 키를 묻는지는 실제 PC에서만 볼 수 있어요. 백업해 둔 PC나 남는 디스크로 해 주세요. (`막힘`)
 - **집 PC의 VMware 서비스 켜기(T-025)**: 집 PC(Blitz)에서 VM을 만들어 켜려 했더니 VMware의 윈도우 서비스(Authorization, DHCP, NAT, USB Arbitration)가 모두 "사용 안 함"이라 VM이 켜지지 않아요. 관리자 권한이 필요해서 직접 하지 않아요. 쓰려면 관리자 PowerShell에서 `Set-Service VMAuthdService,VMnetDHCP,'VMware NAT Service',VMUSBArbService -StartupType Manual`, `Start-Service VMAuthdService,VMnetDHCP,'VMware NAT Service'`. VM(`문서\Virtual Machines\RobinOS`)과 스크립트(`build\vmware\vmware-test.py`)는 준비돼 있어요 (`막힘`)
 - **작업 브랜치 `work/t025-vmware` 지우기**: 내용은 모두 main에 들어갔어요. GitHub에서 지워도 되는지 알려 주세요
 - **RobinOS 파일 업데이트 배포 방식(T-026)**: 2026-10-08 사용자가 중앙 서버가 필요한지 묻고 추천을 원함. 추천: 따로 서버 없이 깃허브 릴리스를 pacman 저장소로 쓰고, RobinOS 파일을 pacman 패키지로 만들어 서명해요. `robinctl update` 한 번에 함께 올라가고 snap-pac 스냅샷도 그대로 생겨요. 서명 열쇠(GPG)를 이 PC에 만들어야 해서 사용자 답을 기다려요
 
 ## 진행 중
+
+### T-030 NVIDIA 그래픽 카드 드라이버
+- 상태: 검증 대기
+- 출처: 백로그 채우기 1(design.md 요구사항 표 "하드웨어: NVIDIA, `nvidia-open`"이 구현되지 않음). 윈도우에서 넘어오는 게임용 PC에 흔해요
+- 한 것: 설치기가 `/sys/bus/pci/devices`에서 NVIDIA 화면 장치(VGA, 노트북의 3D 컨트롤러)를 찾아요. 장치 번호가 `0x1e00` 이상(Turing, GTX 16·RTX 20 이후)이면 `nvidia-open`을 설치하고 initramfs에서 `kms` 훅을 빼요(nouveau가 먼저 뜨지 않게). 더 오래된 카드는 nouveau 그대로예요(Arch 공식 저장소에 그 드라이버가 없어요). nvidia-utils 615가 nouveau 차단과 절전(커널 suspend notifier)을 스스로 해서 따로 켤 서비스는 없어요(패키지를 받아 확인). 설치기 테스트 `scripts/test-robin-install.py`를 새로 만들어 `check`에 넣음(그래픽 7개, 훅 3개, fstab 1개 통과)
+- 완료 기준: 설치 테스트 robinos 통과(NVIDIA가 없는 VM이라 바뀐 게 없어야 해요). 실제 NVIDIA PC 확인은 "사용자 확인 필요"의 실기기 항목에 더함
 
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
@@ -70,6 +76,20 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 남은 것 (VMware가 있는 PC: robin PC, 집 PC(Blitz, VMware Workstation 26.0)): 최종 ISO로 VMware VM에 다시 설치(`vmrun` 게스트 명령, 계획은 디스크 `/dev/nvme0n1` 전체), 로그인 뒤 셸·해상도 확인. 집 PC에는 VM이 아직 없어서 새로 만들어요(`build\vmware\guest-*.sh`는 robin PC에만 있어요). VMware가 없는 PC의 루프는 이 작업을 건너뛰어요
 
 ## 할 일 (위에서부터)
+
+### T-031 프린터
+- 상태: 할 일
+- 출처: 백로그 채우기 1(design.md 요구사항 표 "하드웨어: 프린터, CUPS"가 구현되지 않음)
+- 목표: 설치본에서 USB·네트워크 프린터를 쓸 수 있게 해요. `cups`, 네트워크 프린터 찾기(`avahi`, `nss-mdns`), 그래픽 설정 도구(`system-config-printer`)를 데스크톱 패키지에 넣고 `cups.socket`, `avahi-daemon`을 켜요. 런처에서 "프린터"(윈도우 이름 "장치 및 프린터")로 찾을 수 있게 해요
+- 완료 기준: 설치 테스트에서 `systemctl is-enabled cups.socket`, 부팅 테스트나 설치 테스트에서 프린터 설정 창이 한국어로 뜸. `lpstat -r`가 "scheduler is running"
+- 확인할 것: 라이브 ISO 크기(2GiB 한도, 넣는다면 `cups`만), avahi가 여는 포트(5353/udp, 방화벽 없음)를 ethics·보안 점검 기준과 맞춰 보기
+
+### T-032 오피스 (LibreOffice)
+- 상태: 할 일
+- 출처: 백로그 채우기 1(design.md 요구사항 표 "앱: 오피스, LibreOffice"가 구현되지 않음)
+- 목표: 설치본에 `libreoffice-fresh`와 한국어 팩(`libreoffice-fresh-ko`)을 넣어요. 라이브 ISO에는 크기 때문에 넣지 않아요. 런처에서 "워드", "엑셀", "파워포인트", "한글" 같은 윈도우 이름으로 찾게 해요(`Launcher.qml` 윈도우 이름 목록)
+- 완료 기준: 설치 테스트 통과, 설치본에서 `libreoffice --version`, 런처 윈도우 이름 검색 테스트(부팅 테스트에서는 없으니 설치 테스트 스크린샷이나 단위 확인)
+- 확인할 것: 설치 시간과 내려받는 양이 얼마나 늘어나는지(설치 테스트 시간 비교)
 
 ### T-026 RobinOS 자체 파일 업데이트
 - 상태: 할 일 (배포 방식은 사용자 결정, "사용자 확인 필요" 참고)

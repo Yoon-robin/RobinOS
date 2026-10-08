@@ -11,7 +11,7 @@ RobinOS는 GitHub Actions를 쓰지 않고 개발 PC에서 검증해요. 윈도�
 | 셸 QML (`desktop/shell/`) | 정적 검증, 데스크톱 설정 검사, ISO 빌드, 자동 부팅 테스트 |
 | Hyprland 설정, foot, 테마 | 데스크톱 설정 검사, ISO 빌드, 자동 부팅 테스트 |
 | 패키지 목록, `archiso/` | 패키지 검사, ISO 빌드, 자동 부팅 테스트 |
-| 설치와 복구 (`post-install.sh`, `robinctl snapshot`, `robin-install`) | 정적 검증, 설치 테스트 |
+| 설치와 복구 (`post-install.sh`, `robinctl snapshot`, `robin-install`) | 정적 검증, 설치기 테스트, 설치 테스트 |
 
 ## 정적 검증
 
@@ -46,6 +46,8 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 check
 ```
 
 Arch Linux에서는 `scripts/check-desktop.sh`와 `scripts/qmllint.sh`를 직접 실행해요.
+
+`check`는 VM 없이 도는 빠른 테스트 두 개도 함께 돌려요. `scripts/test-robinctl.sh`는 미션 채점, 보안 프로필, 랩, 윈도우 명령 힌트를 보고, `scripts/test-robin-install.py`는 설치기가 그래픽 카드에 맞는 드라이버를 고르는지(가짜 `/sys/bus/pci/devices`로), initramfs 훅, fstab 정리를 봐요. 실제 NVIDIA 카드에서 드라이버가 뜨는지는 실기기에서만 확인할 수 있어요.
 
 ## 패키지 검사
 

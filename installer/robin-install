@@ -62,6 +62,12 @@ GUEST_TOOLS = {
     "kvm": (["qemu-guest-agent"], []),
     "qemu": (["qemu-guest-agent"], []),
 }
+PCI_DEVICES = "/sys/bus/pci/devices"
+NVIDIA_VENDOR = 0x10DE
+# NVIDIA's open kernel modules (nvidia-open) run on Turing (GTX 16, RTX 20) and
+# newer, whose PCI device ids start at 0x1e00. Older cards keep nouveau: Arch
+# only has their proprietary driver in the AUR.
+NVIDIA_OPEN_FIRST_DEVICE = 0x1E00
 
 log_file = None
 
@@ -272,10 +278,40 @@ def guest_tools():
     return GUEST_TOOLS.get(virt, ([], []))
 
 
+def nvidia_gpus(devices=PCI_DEVICES):
+    """PCI device ids of the NVIDIA display controllers (VGA or 3D, as on laptops)."""
+    found = []
+    for name in sorted(os.listdir(devices)) if os.path.isdir(devices) else []:
+        try:
+            with open(os.path.join(devices, name, "vendor")) as f:
+                vendor = int(f.read(), 16)
+            with open(os.path.join(devices, name, "class")) as f:
+                pci_class = int(f.read(), 16)
+            with open(os.path.join(devices, name, "device")) as f:
+                device = int(f.read(), 16)
+        except (OSError, ValueError):
+            continue
+        if vendor == NVIDIA_VENDOR and pci_class >> 16 == 0x03:
+            found.append(device)
+    return found
+
+
+def gpu_drivers(devices=PCI_DEVICES):
+    """Driver packages for the graphics cards in this PC."""
+    gpus = nvidia_gpus(devices)
+    if any(device >= NVIDIA_OPEN_FIRST_DEVICE for device in gpus):
+        say("# NVIDIA 그래픽 카드(GTX 16, RTX 20 이후): nvidia-open을 설치해요")
+        return ["nvidia-open"]
+    if gpus:
+        say("# 오래된 NVIDIA 그래픽 카드: 기본 드라이버(nouveau)를 써요")
+    return []
+
+
 def install_packages():
     progress(12, "패키지 설치")
     guest_packages, guest_services = guest_tools()
-    packages = package_list("core") + package_list("desktop") + ["amd-ucode", "intel-ucode"] + guest_packages
+    packages = (package_list("core") + package_list("desktop") + ["amd-ucode", "intel-ucode"]
+                + gpu_drivers() + guest_packages)
     counter = re.compile(r"\(\s*(\d+)/(\d+)\) installing")
 
     def on_line(line):
@@ -307,6 +343,15 @@ def without_subvolid(fstab):
     return "\n".join(lines) + "\n"
 
 
+def initramfs_hooks(nvidia):
+    """mkinitcpio hooks. With nvidia-open the kms hook goes, as the Arch wiki says:
+    it would put nouveau in the initramfs; the NVIDIA driver loads after it."""
+    hooks = UDEV_HOOKS.split()
+    if nvidia:
+        hooks.remove("kms")
+    return " ".join(hooks)
+
+
 def configure_system(plan):
     progress(72, "시스템 설정")
     chroot("ln", "-sf", f"/usr/share/zoneinfo/{plan['timezone']}", "/etc/localtime")
@@ -326,10 +371,11 @@ def configure_system(plan):
     # grub-btrfs-overlayfs hook that robinctl snapshot setup adds (and builds the
     # images with) only works there, and it makes a snapshot booted from the GRUB
     # menu writable in memory, so the desktop starts too (docs/recovery.md)
+    hooks = initramfs_hooks(os.path.exists(f"{TARGET}/usr/lib/modprobe.d/nvidia-utils.conf"))
     with open(f"{TARGET}/etc/mkinitcpio.conf") as f:
-        mkinitcpio, count = re.subn(r"(?m)^HOOKS=\(.*\)$", f"HOOKS=({UDEV_HOOKS})", f.read())
+        mkinitcpio, count = re.subn(r"(?m)^HOOKS=\(.*\)$", f"HOOKS=({hooks})", f.read())
     if count == 0:
-        mkinitcpio += f"\nHOOKS=({UDEV_HOOKS})\n"
+        mkinitcpio += f"\nHOOKS=({hooks})\n"
     write("/etc/mkinitcpio.conf", mkinitcpio)
 
     write("/etc/hostname", plan["hostname"] + "\n")
