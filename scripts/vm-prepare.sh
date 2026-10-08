@@ -17,10 +17,11 @@ ISO="${2:-$({ ls -t "${ROOT_DIR}"/out/robinos-*.iso /root/RobinOS/out/robinos-*.
 [[ -n "${ISO}" && -f "${ISO}" ]] || { printf 'error: no ISO in %s/out (build one first)\n' "${ROOT_DIR}" >&2; exit 1; }
 mkdir -p "${DEST}"
 
-# Copy only when the ISO changed; it is 2.5 GB
-if [[ ! -f "${DEST}/robinos.iso" ]] || ! cmp -s <(stat -c '%s %Y' "${ISO}") "${DEST}/robinos.iso.stamp"; then
+# Copy only when the ISO changed; it is 2.5 GB (no cmp: diffutils isn't in base)
+stamp="$(stat -c '%s %Y' "${ISO}")"
+if [[ ! -f "${DEST}/robinos.iso" || "$(cat "${DEST}/robinos.iso.stamp" 2>/dev/null)" != "${stamp}" ]]; then
   cp "${ISO}" "${DEST}/robinos.iso"
-  stat -c '%s %Y' "${ISO}" >"${DEST}/robinos.iso.stamp"
+  printf '%s\n' "${stamp}" >"${DEST}/robinos.iso.stamp"
 fi
 
 # Same lookups as scripts/boot-test.sh
