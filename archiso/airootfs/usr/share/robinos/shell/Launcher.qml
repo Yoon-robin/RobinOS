@@ -39,6 +39,7 @@ PanelWindow {
             search.text = "";
             pointer = Qt.point(-1, -1);
             pointerMoved = false;
+            ShellState.refreshLearn();
             refresh();
             mapped = true;
             Qt.callLater(() => {
@@ -48,6 +49,16 @@ PanelWindow {
         } else {
             revealed = false;
             hideTimer.restart();
+        }
+    }
+
+    // The progress file loads after the list is built when the launcher opens
+    Connections {
+        target: ShellState
+
+        function onLearnDoneChanged() {
+            if (root.open && search.text === "")
+                root.refresh();
         }
     }
 
@@ -124,13 +135,24 @@ PanelWindow {
         };
     }
 
+    // The learning missions show how far the user got once they started
+    function learnSubtitle(cmd) {
+        const done = ShellState.learnDone;
+        const total = ShellState.learnTotal;
+        if (done >= total)
+            return done + "/" + total + " 모두 끝냈어요 · 다음은 웹 보안 랩이에요";
+        if (done > 0)
+            return done + "/" + total + " 완료 · 이어서 풀어요";
+        return cmd.subtitle;
+    }
+
     function commandItem(cmd) {
         return {
             kind: "cmd",
             key: cmd.key,
             icon: cmd.icon,
             title: cmd.title,
-            subtitle: cmd.subtitle,
+            subtitle: cmd.key === "learn" ? learnSubtitle(cmd) : cmd.subtitle,
             badge: cmd.badge ?? "",
             mono: cmd.mono ?? false
         };

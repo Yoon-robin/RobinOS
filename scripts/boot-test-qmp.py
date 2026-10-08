@@ -26,7 +26,7 @@ LIVE_PASSWORD = "robin"
 # Characters we can type, mapped to QEMU key codes (qcode)
 QCODES = {" ": "spc", "\n": "ret", "-": "minus", ".": "dot", "/": "slash", ";": "semicolon"}
 # Characters typed with Shift on a US keyboard
-SHIFTED = {"(": "9", ")": "0", "&": "7"}
+SHIFTED = {"(": "9", ")": "0", "&": "7", "~": "grave_accent", ">": "dot"}
 
 
 class Qmp:
@@ -173,6 +173,9 @@ def main():
     type_text(qmp, "robinctl learn show 1\n")
     wait(2)
     shot(qmp, "terminal-learn")
+    # Solve mission 1, so the launcher's learning entry shows "1/20" in light-launcher
+    type_text(qmp, "mkdir -p ~/practice/notes && robinctl learn check 1 >/dev/null\n")
+    wait(1)
     # Title bar buttons (desktop/dconf) as GTK, Firefox and Qt apps read them
     type_text(qmp, "clear; gdbus call --session --dest org.freedesktop.portal.Desktop"
               " --object-path /org/freedesktop/portal/desktop --method org.freedesktop.portal.Settings.ReadOne"

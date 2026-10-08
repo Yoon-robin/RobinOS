@@ -245,6 +245,12 @@ said "list says all twenty are done" "20/20"
 said "list points to the web lab" "robinctl lab info web"
 check "show 20" 0 learn show 20
 check "mission 21 doesn't exist" fail learn show 21
+qml_total="$(grep -oE 'learnTotal: [0-9]+' "${ROOT_DIR}/desktop/shell/ShellState.qml" | grep -oE '[0-9]+$')"
+if [[ "${qml_total}" == "$(grep -oE '^readonly LEARN_COUNT=[0-9]+' "${ROBINCTL}" | grep -oE '[0-9]+$')" ]]; then
+  ok "the shell's mission count (learnTotal) matches LEARN_COUNT"
+else
+  bad "ShellState.qml learnTotal (${qml_total}) differs from LEARN_COUNT in robinctl"
+fi
 check "reset" 0 learn reset
 check "check 1 still passes after reset (files stay)" 0 learn check 1
 

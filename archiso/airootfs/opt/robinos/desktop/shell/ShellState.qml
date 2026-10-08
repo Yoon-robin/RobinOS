@@ -492,6 +492,31 @@ Singleton {
             labProc.running = true;
     }
 
+    // ---- Learning progress (robinctl learn) ----
+
+    // LEARN_COUNT in bin/robinctl (scripts/test-robinctl.sh checks they agree)
+    readonly property int learnTotal: 20
+    property int learnDone: 0
+
+    function refreshLearn() {
+        learnFile.reload();
+    }
+
+    FileView {
+        id: learnFile
+
+        // robinctl writes the number of each finished mission here, one per line
+        path: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state") + "/robinos/learn/done"
+        printErrors: false
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            const numbers = learnFile.text().split("\n").map(line => line.trim()).filter(line => /^[0-9]+$/.test(line));
+            root.learnDone = new Set(numbers).size;
+        }
+        onLoadFailed: root.learnDone = 0
+    }
+
     // ---- Host name ----
 
     FileView {
