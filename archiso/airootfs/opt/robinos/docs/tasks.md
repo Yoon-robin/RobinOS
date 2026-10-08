@@ -44,7 +44,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (없음) | | |
+| (T-031 커밋) | 프린터, 설치본 전용 앱 목록 | 설치 테스트 robinos |
 
 `844712d`까지 2026-10-08 검증(설치 테스트 robinos, 설치기·robinctl 테스트)을 마치고 푸시했어요.
 
@@ -57,6 +57,13 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - **RobinOS 파일 업데이트 배포 방식(T-026)**: 2026-10-08 사용자가 중앙 서버가 필요한지 묻고 추천을 원함. 추천: 따로 서버 없이 깃허브 릴리스를 pacman 저장소로 쓰고, RobinOS 파일을 pacman 패키지로 만들어 서명해요. `robinctl update` 한 번에 함께 올라가고 snap-pac 스냅샷도 그대로 생겨요. 서명 열쇠(GPG)를 이 PC에 만들어야 해서 사용자 답을 기다려요
 
 ## 진행 중
+
+### T-031 프린터
+- 상태: 검증 대기
+- 출처: 백로그 채우기 1(design.md 요구사항 표 "하드웨어: 프린터, CUPS"가 구현되지 않음)
+- 한 것: 라이브 ISO에 넣지 않는 설치본 전용 목록 `packages/apps.txt`를 새로 만들고(ISO가 2GiB 한도에 48MB 남음) `cups`, `nss-mdns`, `system-config-printer`를 넣음. `robin-install`의 pacstrap과 `post-install.sh`가 함께 설치하고, `post-install.sh`가 `cups.socket`, `avahi-daemon.service`를 켜고 `/etc/nsswitch.conf`의 hosts에 `mdns_minimal [NOTFOUND=return]`을 넣어요(Arch 기본 줄에 맞춰 확인). 런처 윈도우 이름 "장치 및 프린터". 정적 검증과 패키지 검사에 `apps.txt`를 더함. 설치 테스트 installed 단계에 확인(`is-enabled`, nsswitch, `lpstat -r`)을 넣음
+- 보안 메모: Avahi는 같은 네트워크에 컴퓨터 이름을 알리고 5353/udp를 열어요(desktop.md에 적음). 원격에서 큐를 만드는 cups-browsed는 넣지 않았어요
+- 완료 기준: 설치 테스트 robinos 통과(새 확인 포함)
 
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
@@ -71,12 +78,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 ## 할 일 (위에서부터)
 
-### T-031 프린터
-- 상태: 할 일
-- 출처: 백로그 채우기 1(design.md 요구사항 표 "하드웨어: 프린터, CUPS"가 구현되지 않음)
-- 목표: 설치본에서 USB·네트워크 프린터를 쓸 수 있게 해요. `cups`, 네트워크 프린터 찾기(`avahi`, `nss-mdns`), 그래픽 설정 도구(`system-config-printer`)를 데스크톱 패키지에 넣고 `cups.socket`, `avahi-daemon`을 켜요. 런처에서 "프린터"(윈도우 이름 "장치 및 프린터")로 찾을 수 있게 해요
-- 완료 기준: 설치 테스트에서 `systemctl is-enabled cups.socket`, 부팅 테스트나 설치 테스트에서 프린터 설정 창이 한국어로 뜸. `lpstat -r`가 "scheduler is running"
-- 확인할 것: 라이브 ISO 크기(2GiB 한도, 넣는다면 `cups`만), avahi가 여는 포트(5353/udp, 방화벽 없음)를 ethics·보안 점검 기준과 맞춰 보기
 
 ### T-032 오피스 (LibreOffice)
 - 상태: 할 일

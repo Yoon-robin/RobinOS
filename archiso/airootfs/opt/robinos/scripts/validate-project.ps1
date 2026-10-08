@@ -98,6 +98,7 @@ $requiredPaths = @(
     "themes/grub/robinos/theme.txt",
     "themes/sddm/robinos/Glyph.qml",
     "packages/desktop.txt",
+    "packages/apps.txt",
     "docs/design.md",
     "docs/recovery.md",
     "docs/desktop.md",
@@ -162,6 +163,7 @@ foreach ($line in Get-Content (Join-Path $root "desktop/install-map.txt")) {
 
 Validate-UniquePackages "packages/core.txt"
 Validate-UniquePackages "packages/desktop.txt"
+Validate-UniquePackages "packages/apps.txt"
 Validate-UniquePackages "packages/security-baseline.txt"
 Validate-UniquePackages "packages/security-optional.txt"
 Validate-UniquePackages "archiso/packages.x86_64"

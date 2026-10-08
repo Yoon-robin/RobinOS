@@ -310,8 +310,8 @@ def gpu_drivers(devices=PCI_DEVICES):
 def install_packages():
     progress(12, "패키지 설치")
     guest_packages, guest_services = guest_tools()
-    packages = (package_list("core") + package_list("desktop") + ["amd-ucode", "intel-ucode"]
-                + gpu_drivers() + guest_packages)
+    packages = (package_list("core") + package_list("desktop") + package_list("apps")
+                + ["amd-ucode", "intel-ucode"] + gpu_drivers() + guest_packages)
     counter = re.compile(r"\(\s*(\d+)/(\d+)\) installing")
 
     def on_line(line):

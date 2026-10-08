@@ -33,7 +33,7 @@ check_file() {
 
 # Check every list before failing so one run reports all missing packages
 status=0
-for list in packages/core.txt packages/desktop.txt packages/security-baseline.txt archiso/packages.x86_64; do
+for list in packages/core.txt packages/desktop.txt packages/apps.txt packages/security-baseline.txt archiso/packages.x86_64; do
   check_file "${ROOT_DIR}/${list}" || status=1
 done
 

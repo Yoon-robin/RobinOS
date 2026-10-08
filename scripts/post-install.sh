@@ -46,8 +46,9 @@ fi
 
 mapfile -t core_packages < <(package_file "${ROOT_DIR}/packages/core.txt")
 mapfile -t desktop_packages < <(package_file "${ROOT_DIR}/packages/desktop.txt")
+mapfile -t app_packages < <(package_file "${ROOT_DIR}/packages/apps.txt")
 
-run pacman "${PACMAN_ARGS[@]}" "${core_packages[@]}" "${desktop_packages[@]}"
+run pacman "${PACMAN_ARGS[@]}" "${core_packages[@]}" "${desktop_packages[@]}" "${app_packages[@]}"
 run install -Dm755 "${ROOT_DIR}/bin/robinctl" /usr/local/bin/robinctl
 run install -Dm644 "${ROOT_DIR}/config/robinos.toml" /etc/robinos/config.toml
 
@@ -112,8 +113,15 @@ else
   run localectl set-locale LANG=ko_KR.UTF-8
 fi
 
-# Docker (web profile) starts on first use through its socket, not at boot
-for unit in NetworkManager.service sddm.service bluetooth.service docker.socket; do
+# Printers and other devices on the network answer to name.local (nss-mdns)
+if [[ "${DRY_RUN}" == "true" ]]; then
+  printf '/etc/nsswitch.conf의 hosts에 mdns_minimal을 넣어요\n'
+elif ! grep -q 'mdns_minimal' /etc/nsswitch.conf; then
+  sed -i -E 's/^(hosts:.*) resolve /\1 mdns_minimal [NOTFOUND=return] resolve /' /etc/nsswitch.conf
+fi
+
+# Docker (web profile) and CUPS start on first use through their sockets, not at boot
+for unit in NetworkManager.service sddm.service bluetooth.service docker.socket cups.socket avahi-daemon.service; do
   if [[ "${DRY_RUN}" == "true" ]] || systemctl list-unit-files "${unit}" >/dev/null 2>&1; then
     run systemctl enable "${unit}"
   fi

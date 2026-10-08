@@ -553,6 +553,9 @@ def phase_installed(con, qmp):
     con.run("robinctl profile list")
     con.run("robinctl profile network --dry-run | grep -qx '  nmap'"
             " && robinctl packages web | grep -qx docker")
+    # Printing (packages/apps.txt): CUPS starts through its socket, name.local resolves
+    con.run("systemctl is-enabled cups.socket avahi-daemon.service"
+            " && grep -q '^hosts:.*mdns_minimal' /etc/nsswitch.conf && lpstat -r")
 
     # QEMU's WHPX can't reset a VM that reboots itself ("Unexpected VP exit code 4"),
     # so every boot is its own QEMU run: power off here, the next phase boots again.

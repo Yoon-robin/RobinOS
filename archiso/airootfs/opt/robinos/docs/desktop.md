@@ -155,6 +155,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 | 반디집, 알집, `7-zip` | 압축 관리자 |
 | 볼륨 믹서 | 음량 조절 (pavucontrol) |
 | Acrobat, `pdf` | 문서 뷰어 (Evince) |
+| 장치 및 프린터, 프린터, `printer` | 프린터 설정 (설치본에만 있어요) |
 | 제어판, `control panel` | 빠른 설정 |
 
 목록은 `desktop/shell/Launcher.qml`의 `windowsNames`에 있어요.
@@ -169,7 +170,11 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 라이브 ISO는 `robin` 계정(비밀번호 `robin`)으로 RobinOS 세션에 자동 로그인해요. 비밀번호 없는 sudo는 라이브 ISO에만 설정돼 있어요(`/etc/sudoers.d/10-robinos-live`).
 
-라이브 ISO에는 가벼운 보안 도구(nmap, tcpdump, netcat, dig, sqlmap, binwalk 같은 것)만 들어 있어요. Wireshark 화면 앱, john, hashcat, hydra, gdb, Docker(웹 랩), 가상 머신 도구는 크기가 커서 빠져 있고, 설치한 시스템에서 `sudo robinctl profile <이름>`으로 넣어요. 라이브 세션은 메모리 위에서 돌아서 큰 묶음이나 랩 이미지를 받을 자리가 거의 없어요.
+라이브 ISO에는 가벼운 보안 도구(nmap, tcpdump, netcat, dig, sqlmap, binwalk 같은 것)만 들어 있어요. Wireshark 화면 앱, john, hashcat, hydra, gdb, Docker(웹 랩), 가상 머신 도구는 크기가 커서 빠져 있고, 설치한 시스템에서 `sudo robinctl profile <이름>`으로 넣어요. 라이브 세션은 메모리 위에서 돌아서 큰 묶음이나 랩 이미지를 받을 자리가 거의 없어요. 프린터(CUPS와 프린터 설정 앱)도 설치본에만 들어가요(`packages/apps.txt`).
+
+## 프린터
+
+설치한 시스템에서 USB 프린터를 꽂거나 같은 네트워크의 프린터를 쓸 수 있어요. 요즘 프린터는 대부분 드라이버 없이(IPP Everywhere, AirPrint) 인쇄 창에 바로 나와요. 안 나오면 런처에서 "프린터"를 찾아 프린터 설정 앱에서 추가해요. 인쇄 서비스(CUPS)는 처음 쓸 때 켜지고, 네트워크 프린터는 Avahi로 찾아요(`printer.local` 같은 이름). Avahi는 같은 네트워크에 내 컴퓨터 이름을 알리고 5353/udp를 열어 둬요.
 
 ## 설정 바꾸기
 

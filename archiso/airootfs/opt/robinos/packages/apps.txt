@@ -1,0 +1,9 @@
+# RobinOS apps for the installed system only. The live ISO leaves them out to
+# stay under GitHub's 2 GiB release asset limit (archiso/packages.x86_64);
+# installer/robin-install and scripts/post-install.sh install them.
+
+# Printing: CUPS finds network printers through Avahi (name.local), and the
+# printer settings app adds them ("장치 및 프린터" in the launcher)
+cups
+nss-mdns
+system-config-printer
