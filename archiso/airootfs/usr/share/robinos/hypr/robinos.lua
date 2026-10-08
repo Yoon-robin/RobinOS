@@ -212,6 +212,7 @@ hl.bind(mainMod .. " + space", hl.dsp.global("robinos:launcher"),      { descrip
 hl.bind(mainMod .. " + A",     hl.dsp.global("robinos:launcher"),      { description = "앱 런처" })
 hl.bind(mainMod .. " + S",     hl.dsp.global("robinos:quicksettings"), { description = "빠른 설정" })
 hl.bind(mainMod .. " + N",     hl.dsp.global("robinos:notifications"), { description = "알림 모두 지우기" })
+hl.bind(mainMod .. " + D",     hl.dsp.global("robinos:desktop"),       { description = "바탕 화면 보기" })
 
 -- Apps
 hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(terminal),    { description = "터미널" })

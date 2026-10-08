@@ -37,15 +37,9 @@ PanelWindow {
         { icon: "network", label: "Wireshark", appIds: ["org.wireshark.Wireshark", "wireshark"], command: ["wireshark"] }
     ])
 
-    readonly property var toplevels: ToplevelManager.toplevels.values
-
+    // Minimized windows are still in this list, so they keep their "running" dot
     function windowsFor(appIds) {
-        const out = [];
-        for (let i = 0; i < toplevels.length; i++) {
-            if (appIds.indexOf(toplevels[i].appId) !== -1)
-                out.push(toplevels[i]);
-        }
-        return out;
+        return ShellState.windowsOf(appIds);
     }
 
     function isPinned(appId) {
@@ -60,8 +54,9 @@ PanelWindow {
         DesktopEntries.applications.values; // re-evaluate after the background scan
         const seen = {};
         const out = [];
-        for (let i = 0; i < toplevels.length; i++) {
-            const appId = toplevels[i].appId;
+        const windows = ShellState.windows;
+        for (let i = 0; i < windows.length; i++) {
+            const appId = ShellState.appIdOf(windows[i]);
             if (appId === "" || isPinned(appId) || seen[appId])
                 continue;
             seen[appId] = true;
@@ -75,26 +70,15 @@ PanelWindow {
         return out;
     }
 
-    // Focus the app's window (cycling through several), or start it.
+    // Open, bring to front, minimize or restore, like the Windows taskbar
     function activateOrLaunch(appIds, command) {
-        const wins = windowsFor(appIds);
-        if (wins.length === 0) {
-            if (command)
-                Quickshell.execDetached(command);
-            return;
-        }
-        let current = -1;
-        for (let i = 0; i < wins.length; i++) {
-            if (wins[i].activated)
-                current = i;
-        }
-        wins[(current + 1) % wins.length].activate();
+        ShellState.toggleApp(appIds, command);
     }
 
     function isFocused(appIds) {
         const wins = windowsFor(appIds);
         for (let i = 0; i < wins.length; i++) {
-            if (wins[i].activated)
+            if (wins[i].activated && !ShellState.isMinimized(wins[i]))
                 return true;
         }
         return false;

@@ -7,8 +7,8 @@ speed multiplies every wait (1 with KVM, about 4 with TCG). The scenario:
 boot -> welcome wizard (every step, then its missions terminal) -> desktop ->
 launcher (search, Windows app name) -> installer (first two steps) -> quick settings
 (also with Tab) -> terminal with a Windows command and the first learning mission
--> light mode (terminal, launcher, quick settings) -> lock screen -> unlock with
-the live password.
+-> minimize and restore the terminal -> Super+D twice -> light mode (terminal,
+launcher, quick settings) -> lock screen -> unlock with the live password.
 """
 
 import json
@@ -24,6 +24,8 @@ LIVE_PASSWORD = "robin"
 
 # Characters we can type, mapped to QEMU key codes (qcode)
 QCODES = {" ": "spc", "\n": "ret", "-": "minus", ".": "dot", "/": "slash", ";": "semicolon"}
+# Characters typed with Shift on a US keyboard
+SHIFTED = {"(": "9", ")": "0", "&": "7"}
 
 
 class Qmp:
@@ -83,6 +85,8 @@ def type_text(qmp, text):
     for ch in text:
         if ch.isupper():
             keys(qmp, "shift", ch.lower())
+        elif ch in SHIFTED:
+            keys(qmp, "shift", SHIFTED[ch])
         else:
             keys(qmp, QCODES.get(ch, ch))
 
@@ -168,6 +172,23 @@ def main():
     type_text(qmp, "robinctl learn show 1\n")
     wait(2)
     shot(qmp, "terminal-learn")
+
+    # Minimize like the Windows taskbar: the dock's click on an app goes through the
+    # same shell function as this IPC call. The focused terminal minimizes itself, and
+    # a background job brings it back a few seconds later.
+    ipc = "qs ipc -p /usr/share/robinos/shell call shell "
+    type_text(qmp, "clear; (sleep 6; " + ipc + "toggleApp foot) & " + ipc + "toggleApp foot\n")
+    wait(3)
+    shot(qmp, "minimized")
+    wait(7)
+    shot(qmp, "restored")
+    # Super+D hides every window on the workspace; pressed again, they come back
+    keys(qmp, "meta_l", "d")
+    wait(2)
+    shot(qmp, "show-desktop")
+    keys(qmp, "meta_l", "d")
+    wait(2)
+    shot(qmp, "desktop-back")
 
     # Light mode, through the shell's IPC (the same as the quick settings tile)
     type_text(qmp, "clear; qs ipc -p /usr/share/robinos/shell call shell setDark false\n")

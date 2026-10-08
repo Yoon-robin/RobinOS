@@ -61,6 +61,13 @@ ShellRoot {
         onPressed: Notifs.clearAll()
     }
 
+    GlobalShortcut {
+        appid: "robinos"
+        name: "desktop"
+        description: "바탕 화면 보기 (다시 누르면 창이 돌아와요)"
+        onPressed: ShellState.toggleDesktop()
+    }
+
     // qs ipc -p /usr/share/robinos/shell call shell <function>
     IpcHandler {
         target: "shell"
@@ -83,6 +90,15 @@ ShellRoot {
 
         function installer(): void {
             ShellState.openInstaller();
+        }
+
+        // The dock's click on an app: open, bring to front, minimize or restore
+        function toggleApp(appId: string): void {
+            ShellState.toggleApp([appId], null);
+        }
+
+        function toggleDesktop(): void {
+            ShellState.toggleDesktop();
         }
     }
 }

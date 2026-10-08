@@ -209,6 +209,117 @@ Singleton {
         Hyprland.dispatch(Hyprland.usingLua ? "hl.dsp.focus({ workspace = " + id + " })" : "workspace " + id);
     }
 
+    // ---- Windows-style minimize and show desktop ----
+    // A minimized window moves to a hidden special workspace. The dock keeps showing
+    // it as running, and a click on the app (or Super+D again) brings it back.
+
+    readonly property string minimizedWorkspace: "special:minimized"
+    // Window address -> workspace it was minimized from
+    property var restoreTo: ({})
+    // Windows that Super+D hid, brought back by the next Super+D
+    property var desktopHidden: []
+
+    // Hyprland's windows (HyprlandToplevel): they know their workspace, unlike Wayland's
+    readonly property var windows: Hyprland.toplevels.values
+
+    function appIdOf(win) {
+        return win?.wayland?.appId ?? win?.lastIpcObject?.class ?? "";
+    }
+
+    function isMinimized(win) {
+        return win?.workspace?.name === minimizedWorkspace;
+    }
+
+    function windowsOf(appIds) {
+        const out = [];
+        for (let i = 0; i < windows.length; i++) {
+            if (appIds.indexOf(appIdOf(windows[i])) !== -1)
+                out.push(windows[i]);
+        }
+        return out;
+    }
+
+    function selector(win) {
+        return "address:0x" + win.address;
+    }
+
+    function moveWindow(win, workspace) {
+        Hyprland.dispatch(Hyprland.usingLua
+            ? "hl.dsp.window.move({ workspace = " + JSON.stringify(workspace) + ", follow = false, window = \"" + selector(win) + "\" })"
+            : "movetoworkspacesilent " + workspace + "," + selector(win));
+    }
+
+    function focusWindow(win) {
+        Hyprland.dispatch(Hyprland.usingLua
+            ? "hl.dsp.focus({ window = \"" + selector(win) + "\" })"
+            : "focuswindow " + selector(win));
+    }
+
+    function minimize(win) {
+        if (!win || isMinimized(win))
+            return;
+        const restore = Object.assign({}, restoreTo);
+        restore[win.address] = win.workspace?.name ?? "";
+        restoreTo = restore;
+        moveWindow(win, minimizedWorkspace);
+    }
+
+    function restore(win, focus) {
+        if (!win)
+            return;
+        if (isMinimized(win)) {
+            // Back where it was, or to the workspace on screen if that is unknown
+            let target = restoreTo[win.address] ?? "";
+            if (target === "" || target.startsWith("special:"))
+                target = Hyprland.focusedMonitor?.activeWorkspace?.name ?? "1";
+            moveWindow(win, target);
+        }
+        if (focus)
+            focusWindow(win);
+    }
+
+    // What a click on an app in the dock does, like the Windows taskbar: open the app,
+    // bring its window to the front, minimize it when it already is in front, or
+    // restore it when it is minimized. Several windows take turns.
+    function toggleApp(appIds, command) {
+        const wins = windowsOf(appIds);
+        if (wins.length === 0) {
+            if (command)
+                Quickshell.execDetached(command);
+            return;
+        }
+        const shown = wins.filter(w => !isMinimized(w));
+        const active = shown.findIndex(w => w.activated);
+        if (active !== -1) {
+            if (shown.length > 1)
+                focusWindow(shown[(active + 1) % shown.length]);
+            else
+                minimize(shown[active]);
+        } else if (shown.length > 0) {
+            focusWindow(shown[0]);
+        } else {
+            restore(wins[wins.length - 1], true);
+        }
+    }
+
+    // Super+D: hide every window on the workspace on screen; pressed again with
+    // nothing shown, bring back the ones it hid.
+    function toggleDesktop() {
+        const workspace = Hyprland.focusedMonitor?.activeWorkspace?.name ?? "";
+        const all = toArray(windows);
+        const shown = all.filter(w => w.workspace?.name === workspace);
+        if (shown.length > 0) {
+            desktopHidden = shown.map(w => w.address);
+            for (const win of shown)
+                minimize(win);
+            return;
+        }
+        const back = all.filter(w => desktopHidden.indexOf(w.address) !== -1 && isMinimized(w));
+        desktopHidden = [];
+        for (let i = 0; i < back.length; i++)
+            restore(back[i], i === back.length - 1);
+    }
+
     // ---- Clock ----
 
     SystemClock {
