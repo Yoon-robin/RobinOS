@@ -14,7 +14,7 @@ RobinOS는 Hyprland 위에 직접 만든 Quickshell 셸을 얹어 써요. 디자
 | 로그인 화면 | SDDM (Qt 6 테마) | `themes/sddm/robinos/` |
 | 잠금 화면과 대기 | hyprlock, hypridle | `desktop/hypr/hyprlock.conf`, `hypridle.conf` |
 | 터미널 | foot | `desktop/foot/foot.ini` |
-| 파일, 브라우저 | Nautilus, Firefox | - |
+| 파일, 브라우저 | Nautilus, Firefox (원격 측정과 실험 기능은 꺼 둬요: `/etc/firefox/policies/policies.json`) | - |
 | GTK, libadwaita 앱 | adw-gtk3, dconf 기본값 | `desktop/dconf/` |
 | Qt 앱 | qt6ct 팔레트 | `desktop/qt6ct/` |
 | 한글 입력 | fcitx5-hangul | `desktop/fcitx5/` |
