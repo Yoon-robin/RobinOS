@@ -18,6 +18,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-10-08 | `968795d` ISO | 집 PC(Blitz)에서 ISO 빌드, 부팅 테스트(WHPX, 30장, 새 장면 `button-layout`), 설치 테스트 robinos(다섯 단계) | 통과. 설치기에 Qt 제목 표시줄(최대화, 닫기), 라이브 독에 Wireshark 없음, 설치본 독은 터미널·파일·브라우저 |
 | 2026-10-08 | `933ca31` ISO, `e038f2a` 테스트 | ISO 빌드, 부팅 테스트(WHPX, 29장, 새 장면 `shell-restarted`), 설치 테스트 robinos(다섯 단계) | 통과. 셸을 끄면 1초 뒤 다시 뜸(`exited with 143` → `starting the shell`). 환영 마법사 단축키가 `Win`으로, 윈도우 명령 힌트가 새 문구로 나옴. 설치기 마무리가 "설치가 끝났어요"까지 감. 테스트 도중 WSL에 `cmp`가 없어 ISO를 매번 복사하던 것을 고침(`e038f2a`) |
 | 2026-10-08 | `5de4149` | 두 번째 PC(사용자 `robin`, 한글 경로)에서 처음 검증: ISO 빌드(처음부터, 6분, Qt 6.12), 부팅 테스트(WHPX, 254초, 24장) | 통과. 한글 경로에서 WHPX QEMU가 파일을 못 열던 문제를 고친 뒤 통과. 스크린샷 24장 모두 정상(라이트 모드, 잠금 화면 포함) |
 | 2026-10-08 | `4fbb2c6` | ISO 빌드(처음부터, 8분), 부팅 테스트(221초, 21장), 설치 테스트 windows(8분, 다섯 단계) | 통과. 같은 날 archinstall·robinos 설치 테스트도 각각 통과 |
@@ -30,7 +31,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 영역 | 마지막으로 본 날 | 메모 |
 |---|---|---|
-| 코드 검토 | 2026-10-08 | `robin-install`(fstab의 `subvolid=`), `robinctl`(스냅샷 부팅 상태의 되돌리기, 랩 권한), `post-install.sh`(영어 출력), `Installer.qml`, `ShellState.qml`, `Launcher.qml`(열 때 hover 선택), `Dock.qml`(설치 안 된 Wireshark가 고정돼 눌러도 반응 없음 → `6faf853`), `Bar.qml`(좁은 화면에서 앱 이름이 가운데 시계와 겹칠 수 있음, 1024px 이하라 그대로 둠). QuickSettings, Welcome은 아직 |
+| 코드 검토 | 2026-10-08 | `robin-install`(fstab의 `subvolid=`), `robinctl`(스냅샷 부팅 상태의 되돌리기, 랩 권한), `post-install.sh`(영어 출력), `Installer.qml`, `ShellState.qml`, `Launcher.qml`(열 때 hover 선택), `Dock.qml`(설치 안 된 Wireshark가 고정돼 눌러도 반응 없음 → `6faf853`), `Bar.qml`(좁은 화면에서 앱 이름이 가운데 시계와 겹칠 수 있음, 1024px 이하라 그대로 둠), `QuickSettings.qml`(Docker 없이 "랩 시작"을 누르면 설치 방법 없이 "docker가 필요해요"만 나옴 → `dfcb5fd`), `Welcome.qml`(문제 없음). 셸 QML은 한 바퀴 다 봄 |
 | 문서와 코드 맞추기 | 2026-10-08 | 문서에 나오는 `robinctl` 명령, `scripts/` 경로, `wsl-build.ps1` 작업·옵션이 모두 실제와 같음. 단축키 표는 `robinos.lua`와 같고, 빠진 `Super+방향키`·`Super+휠`을 더함 |
 | 보안과 윤리 | 2026-10-08 | 웹 랩: docker 그룹 대신 sudo, 재부팅 때 자동 시작 끔, 기준을 ethics.md에 적음, 이미지 고정(T-014). 라이브 ISO: sshd는 이미 꺼져 있음, releng의 cloud-init 유닛을 뺌. 설치본: root 잠금(robin-install), wheel은 비밀번호 sudo |
 | 접근성 | 2026-10-08 | 버튼과 선택지가 마우스 전용이던 것(T-015), 보조 글자 대비(subtle 3.9:1·2.6:1 → muted). 화면 읽기 프로그램(Orca)은 아직 |
@@ -45,7 +46,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 |---|---|---|
 | (없음) | | |
 
-`6faf853`까지 2026-10-08 부팅 테스트(30장, 라이브 독에 설치·터미널·파일·브라우저만 보임)를 마치고 푸시했어요.
+`dfcb5fd`까지 2026-10-08 검증(부팅 테스트 30장, 설치 테스트 robinos, robinctl 테스트)을 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -89,6 +90,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ## 완료
 
 최근 것이 위에 있어요.
+
+- 2026-10-08 코드 검토로 고친 것 두 가지: 라이브 ISO와 새 설치본의 독에 설치 안 된 Wireshark가 고정돼 눌러도 반응 없던 것(`6faf853`, 부팅·설치 테스트에서 확인), Docker 없이 랩을 켜면 설치 방법을 알려 주지 않던 것(`dfcb5fd`, robinctl 테스트에 Docker 없는 경우를 더함)
 
 - 2026-10-08 T-029 Qt 앱 제목 표시줄(`cc63716`): Hyprland 0.56.2는 xdg-decoration 요청에 언제나 "서버가 그린다"고 답하면서 제목 표시줄은 그리지 않아요(`XDGDecoration.cpp`). Qt가 그 프로토콜을 보지 않게 하고(`QT_WAYLAND_DISABLED_INTERFACES=zxdg_decoration_manager_v1`) qt6-wayland의 Adwaita 장식을 씀. 앱의 최소화 요청(`xdg_toplevel.set_minimized`)은 0.56.2가 받기만 하고 처리하지 않아서(Lua 이벤트 `window.minimize`는 위키에만 있고 `hl.on: unknown event`), dconf `button-layout='appmenu:maximize,close'`로 GTK, Firefox, Qt의 최소화 단추를 뺌. 부팅 테스트(30장)에서 설치기에 어두운 제목 표시줄(최대화, 닫기), 포털 값 `appmenu:maximize,close` 확인. foot은 이 방법이 안 통해서 그대로예요. Hyprland에 `window.minimize`가 들어오면 최소화 단추를 다시 켜요
 
