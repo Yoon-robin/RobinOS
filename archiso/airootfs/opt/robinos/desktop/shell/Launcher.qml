@@ -145,6 +145,7 @@ PanelWindow {
         { key: "wifi", group: "system", icon: "wifi", title: "Wi-Fi 연결", subtitle: "nmtui", mono: true, words: "wifi network 네트워크 인터넷" },
         { key: "screenshot", group: "system", icon: "scan", title: "영역 스크린샷", subtitle: "Win + Shift + S", words: "screenshot capture 스크린샷 캡처 화면 캡처" },
         { key: "settings", group: "system", icon: "sliders", title: "빠른 설정", subtitle: "Win + S", words: "settings quick 설정 빠른 설정 테마 다크 모드" },
+        { key: "steam", group: "store", icon: "download", title: "Steam 설치하기", subtitle: "앱 스토어에서 Flathub의 Steam을 받아요", words: "steam 스팀 게임 game games valve 게임 설치" },
         { key: "install", group: "live", icon: "download", title: "RobinOS 설치", subtitle: "이 컴퓨터에 설치해요", words: "install installer setup 설치 설치기 하드 디스크 윈도우 옆" },
         { key: "welcome", group: "system", icon: "sparkles", title: "환영 마법사", subtitle: "테마, 한/영 키, 단축키 안내", words: "welcome tour setup 환영 마법사 처음 시작 안내 투어 한영" },
         { key: "lock", group: "power", icon: "lock", title: "화면 잠금", subtitle: "Win + L", words: "lock 잠금" },
@@ -211,6 +212,13 @@ PanelWindow {
             badge: cmd.badge ?? "",
             mono: cmd.mono ?? false
         };
+    }
+
+    // App store suggestions: only where GNOME Software is (the installed system)
+    // and the app isn't installed yet
+    function storeOffers(key) {
+        const apps = { "steam": "com.valvesoftware.Steam" };
+        return !!DesktopEntries.byId("org.gnome.Software") && !DesktopEntries.byId(apps[key]);
     }
 
     function lookup(id) {
@@ -312,6 +320,7 @@ PanelWindow {
             }
 
             const cmds = commands.filter(c => !shownCmds[c.key] && (c.group !== "live" || ShellState.isLive)
+                                         && (c.group !== "store" || storeOffers(c.key))
                                          && (matches(c.title, q) || matches(c.subtitle, q) || matches(c.words, q)));
             if (cmds.length > 0) {
                 out.push({ kind: "header", title: "명령" });
@@ -383,6 +392,11 @@ PanelWindow {
             break;
         case "ctf":
             ShellState.openTerminal("robinctl ctf");
+            break;
+        case "steam":
+            // Flathub's Steam needs no multilib repository and gets the GPU drivers as
+            // Flatpak extensions, NVIDIA's included
+            Quickshell.execDetached(["gnome-software", "--details=com.valvesoftware.Steam"]);
             break;
         case "lab-start":
             ShellState.runInTerminal("robinctl lab start web && printf '\\nJuice Shop  http://localhost:3000\\nDVWA        http://localhost:8080\\n'");

@@ -203,6 +203,8 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 설치한 시스템에서 런처의 "소프트웨어"(검색어 "스토어", "앱 설치")를 열면 Flathub의 앱을 찾아 설치할 수 있어요. 윈도우의 Microsoft Store 자리예요. 앱은 Flatpak으로 설치돼서 시스템과 떨어져 돌아가요. 시스템 패키지(pacman)는 건드리지 않고(PackageKit을 넣지 않았어요), 설치할 때 비밀번호를 물어요. 업데이트는 `sudo robinctl update`가 시스템 다음에 함께 해요.
 
+게임은 Steam으로 해요. 런처에서 "steam"이나 "게임"을 찾으면 "Steam 설치하기"가 나오고, 고르면 앱 스토어의 Steam(Flathub) 페이지가 열려요. Flathub판은 32비트 저장소(multilib)를 켜지 않아도 되고, 그래픽 드라이버(NVIDIA 포함)도 Flatpak이 알아서 맞춰 받아요. 설치하고 나면 "Steam 설치하기" 대신 Steam 앱이 나와요.
+
 ## 오피스
 
 설치한 시스템에는 LibreOffice 안정판(`libreoffice-still`)이 한국어로 들어 있어요. Writer는 Word, Calc는 Excel, Impress는 PowerPoint 자리예요. `.docx`, `.xlsx`, `.pptx`를 열고 저장할 수 있지만, 복잡한 서식은 조금 달라 보일 수 있어요. 한글 문서(`.hwp`)는 오래된 형식(한글 97)만 열려요. 요즘 `.hwp`·`.hwpx` 파일은 보내는 사람에게 PDF나 `.docx`로 받는 게 가장 확실해요.
