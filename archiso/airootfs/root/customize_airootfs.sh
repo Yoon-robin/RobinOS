@@ -5,6 +5,11 @@ set -euo pipefail
 sed -i -e 's/^#\(ko_KR.UTF-8 UTF-8\)/\1/' -e 's/^#\(en_US.UTF-8 UTF-8\)/\1/' /etc/locale.gen
 locale-gen
 
+# Korean time in the live session too (releng's default is UTC, so the bar's
+# clock was 9 hours behind once systemd-timesyncd set the time); the installer
+# asks for the installed system's time zone itself
+ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime
+
 # Live session user. Credentials are shown in /etc/motd and docs/desktop.md.
 if ! id robin >/dev/null 2>&1; then
   groups="wheel"
