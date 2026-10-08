@@ -13,6 +13,9 @@ system-config-printer
 libreoffice-still
 libreoffice-still-ko
 
+# Disks: format a USB stick, check partitions ("디스크 관리" in the launcher)
+gnome-disk-utility
+
 # App store for Flathub apps (flatpak ships the Flathub remote). Without
 # PackageKit it never touches pacman; robinctl update updates its apps too.
 gnome-software

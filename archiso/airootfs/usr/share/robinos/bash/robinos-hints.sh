@@ -37,6 +37,14 @@ __robinos_windows_hint() {
     control|msconfig)    printf '%s' 'Win+S|빠른 설정을 열어요. 서비스 목록은 systemctl list-unit-files' ;;
     regedit)             printf '%s' 'ls /etc|리눅스에는 레지스트리가 없어요. 설정은 /etc와 ~/.config의 파일이에요' ;;
     powershell|cmd)      printf '%s' 'bash|지금 쓰고 있는 이 셸이 리눅스의 명령 프롬프트예요' ;;
+    calc)                printf '%s' 'gnome-calculator|계산기에 해당하는 앱이에요 (터미널에서는 echo $((1+2)))' ;;
+    eventvwr|eventvwr.msc) printf '%s' 'journalctl -b|이번 부팅의 시스템 기록을 보여 줘요 (오류만: journalctl -b -p err)' ;;
+    services.msc)        printf '%s' 'systemctl list-units --type=service|서비스 목록을 보여 줘요' ;;
+    devmgmt.msc)         printf '%s' 'lspci -k|장치와 쓰고 있는 드라이버를 보여 줘요 (USB 장치는 lsusb)' ;;
+    diskmgmt.msc)        printf '%s' 'gnome-disks|디스크 관리에 해당하는 앱이에요 (터미널에서는 lsblk)' ;;
+    getmac)              printf '%s' 'ip link|네트워크 장치의 MAC 주소(link/ether)를 보여 줘요' ;;
+    winver)              printf '%s' 'fastfetch|운영체제 이름과 버전을 보여 줘요' ;;
+    nslookup)            printf '%s' 'getent hosts 이름|이름으로 주소를 찾아요 (nslookup과 dig는 network 프로필에 있어요)' ;;
   esac
 }
 

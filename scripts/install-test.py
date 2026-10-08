@@ -560,7 +560,7 @@ def phase_installed(con, qmp):
     con.run("ls /usr/share/applications/libreoffice-writer.desktop /usr/share/applications/libreoffice-calc.desktop"
             " /usr/share/applications/libreoffice-impress.desktop && pacman -Q libreoffice-still-ko")
     # App store (packages/apps.txt): GNOME Software with Flathub, without PackageKit
-    con.run("test -f /usr/share/applications/org.gnome.Software.desktop && ! pacman -Q packagekit")
+    con.run("test -f /usr/share/applications/org.gnome.Software.desktop && ! pacman -Q packagekit && command -v gnome-disks")
     con.run("flatpak remotes --system", check=False)
 
     # QEMU's WHPX can't reset a VM that reboots itself ("Unexpected VP exit code 4"),
@@ -674,6 +674,16 @@ def phase_rollback(con, qmp):
     qmp.keys("esc")  # welcome wizard
     sleep(5)
     shot(qmp, "desktop-after-wizard")
+    # Windows names for apps only the installed system has (packages/apps.txt):
+    # "word" finds LibreOffice Writer, "store" GNOME Software, "printer" the printer settings
+    for query in ("word", "store", "printer"):
+        qmp.keys("meta_l", "spc")
+        sleep(3)
+        qmp.type_text(query)
+        sleep(2)
+        shot(qmp, f"launcher-{query}")
+        qmp.keys("esc")
+        sleep(2)
     con.run("journalctl -b --no-pager -o cat -t robinos-session | tail -n 20", check=False)
 
     if TEST_LAB:

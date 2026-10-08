@@ -114,7 +114,7 @@ ipconfig 명령은 윈도우용이에요. 리눅스에서는
   ip a  IP 주소와 네트워크 장치를 보여 줘요
 ```
 
-명령 30개쯤을 알아들어요(`dir`, `cls`, `cd..`, `copy`, `del`, `tasklist`, `tracert`, `netstat`, `findstr`, `notepad` 등). 새로 만드는 사용자는 `/etc/skel/.bashrc`로 바로 쓸 수 있고, 설치하는 사용자의 `~/.bashrc`에는 `scripts/post-install.sh`가 넣어 줘요.
+명령 40개쯤을 알아들어요(`dir`, `cls`, `cd..`, `copy`, `del`, `tasklist`, `tracert`, `netstat`, `findstr`, `notepad`, `calc`, `eventvwr`, `services.msc`, `devmgmt.msc`, `diskmgmt.msc`, `getmac` 등). `nslookup`처럼 리눅스에도 있지만 처음에는 설치돼 있지 않은 명령은 지금 쓸 수 있는 명령(`getent hosts`)과 설치할 프로필을 알려 줘요. 새로 만드는 사용자는 `/etc/skel/.bashrc`로 바로 쓸 수 있고, 설치하는 사용자의 `~/.bashrc`에는 `scripts/post-install.sh`가 넣어 줘요.
 
 ## 환영 마법사
 
@@ -155,6 +155,8 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 | 반디집, 알집, `7-zip` | 압축 관리자 |
 | 볼륨 믹서 | 음량 조절 (pavucontrol) |
 | Acrobat, `pdf` | 문서 뷰어 (Evince) |
+| 계산기, `calc` | 계산기 |
+| 디스크 관리, USB 포맷 | 디스크 (GNOME 디스크, 설치본에만 있어요) |
 | 워드, 엑셀, 파워포인트, 오피스 | LibreOffice Writer, Calc, Impress (설치본에만 있어요) |
 | Microsoft Store, 스토어, 앱 설치 | GNOME 소프트웨어 (설치본에만 있어요) |
 | 장치 및 프린터, 프린터, `printer` | 프린터 설정 (설치본에만 있어요) |
@@ -172,7 +174,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 라이브 ISO는 `robin` 계정(비밀번호 `robin`)으로 RobinOS 세션에 자동 로그인해요. 비밀번호 없는 sudo는 라이브 ISO에만 설정돼 있어요(`/etc/sudoers.d/10-robinos-live`).
 
-라이브 ISO에는 가벼운 보안 도구(nmap, tcpdump, netcat, dig, sqlmap, binwalk 같은 것)만 들어 있어요. Wireshark 화면 앱, john, hashcat, hydra, gdb, Docker(웹 랩), 가상 머신 도구는 크기가 커서 빠져 있고, 설치한 시스템에서 `sudo robinctl profile <이름>`으로 넣어요. 라이브 세션은 메모리 위에서 돌아서 큰 묶음이나 랩 이미지를 받을 자리가 거의 없어요. 프린터(CUPS와 프린터 설정 앱), 오피스(LibreOffice), 앱 스토어(GNOME 소프트웨어)도 설치본에만 들어가요(`packages/apps.txt`).
+라이브 ISO에는 가벼운 보안 도구(nmap, tcpdump, netcat, dig, sqlmap, binwalk 같은 것)만 들어 있어요. Wireshark 화면 앱, john, hashcat, hydra, gdb, Docker(웹 랩), 가상 머신 도구는 크기가 커서 빠져 있고, 설치한 시스템에서 `sudo robinctl profile <이름>`으로 넣어요. 라이브 세션은 메모리 위에서 돌아서 큰 묶음이나 랩 이미지를 받을 자리가 거의 없어요. 프린터(CUPS와 프린터 설정 앱), 오피스(LibreOffice), 앱 스토어(GNOME 소프트웨어), 디스크 관리(GNOME 디스크)도 설치본에만 들어가요(`packages/apps.txt`).
 
 ## 앱 스토어
 

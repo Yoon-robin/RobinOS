@@ -326,15 +326,16 @@ printf '%s\n' "Windows command hints (robinos-hints.sh)"
 # Calls the not-found handler directly: running "ipconfig" or "notepad" for real
 # would start the Windows programs through WSL's interop
 hint() { bash -c ". '${HINTS}'; command_not_found_handle '$1'" 2>&1; }
-for pair in "ipconfig:ip a" "IPCONFIG.EXE:ip a" "dir:ls -l" "tasklist:ps aux" "notepad:gnome-text-editor"; do
+for pair in "ipconfig:ip a" "IPCONFIG.EXE:ip a" "dir:ls -l" "tasklist:ps aux" "notepad:gnome-text-editor" \
+    "calc:gnome-calculator" "eventvwr:journalctl -b" "services.msc:systemctl" "diskmgmt.msc:gnome-disks" "nslookup:getent hosts"; do
   out="$(hint "${pair%%:*}")"
   if [[ "${out}" == *"${pair#*:}"* ]]; then ok "hint for ${pair%%:*}"; else bad "hint for ${pair%%:*}: ${out}"; fi
 done
 out="$(hint "surely-not-a-command-xyz")"
 if [[ "${out}" == *"명령을 찾을 수 없어요"* ]]; then ok "unknown commands say so"; else bad "unknown command: ${out}"; fi
 # Apps the hints send people to must be installed by RobinOS
-for app in gnome-text-editor nautilus mission-center fastfetch traceroute; do
-  if grep -qx "${app}" "${ROOT_DIR}/packages/core.txt" "${ROOT_DIR}/packages/desktop.txt" "${ROOT_DIR}/packages/security-baseline.txt"; then
+for app in gnome-text-editor nautilus mission-center fastfetch traceroute gnome-calculator gnome-disk-utility; do
+  if grep -qx "${app}" "${ROOT_DIR}/packages/core.txt" "${ROOT_DIR}/packages/desktop.txt" "${ROOT_DIR}/packages/apps.txt" "${ROOT_DIR}/packages/security-baseline.txt"; then
     ok "hinted app ${app} is in a package list"
   else
     bad "hinted app ${app} is in no package list"

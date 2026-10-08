@@ -44,7 +44,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (없음) | | |
+| (T-035·T-037 커밋) | 설치본 런처 장면, 윈도우 이름 넓히기 | 설치 테스트 robinos (다음 묶음 검증) |
 
 `e83c5d8`까지 2026-10-08 검증(부팅 테스트 30장, robinctl 테스트)을 마치고 푸시했어요.
 
@@ -58,6 +58,18 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 ## 진행 중
 
+### T-035 설치본 런처의 윈도우 이름 장면
+- 상태: 검증 대기
+- 출처: 백로그 채우기 2(검증이 빠진 기능). Word, Excel, PowerPoint, Microsoft Store, 장치 및 프린터는 설치본에만 있는 앱이라 부팅 테스트에서는 보이지 않아요
+- 한 것: 설치 테스트 rollback 단계의 데스크톱에서 런처를 열고 `word`, `store`, `printer`를 검색해 찍어요(`launcher-*`)
+- 완료 기준: 설치 테스트 스크린샷에 "윈도우에서 쓰던 이름" 아래 Writer, 소프트웨어, 프린터 설정이 "윈도우의 …에 해당해요"로 나옴
+
+### T-037 윈도우 이름 넓히기
+- 상태: 검증 대기
+- 출처: 백로그 채우기 4(윈도우 명령 힌트와 런처 윈도우 이름 넓히기)
+- 한 것: 명령 힌트 8개(`calc`, `eventvwr`, `services.msc`, `devmgmt.msc`, `diskmgmt.msc`, `getmac`, `winver`, `nslookup` → 새 설치본에는 없어서 `getent hosts`와 network 프로필 안내). 런처 "계산기", "디스크 관리"(USB 포맷). `gnome-disk-utility`를 `apps.txt`에. robinctl 테스트에 힌트 5개와 앱 2개, 설치 테스트에 `gnome-disks` 확인
+- 완료 기준: robinctl 테스트(완료), 설치 테스트 통과
+
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
 - 출처: 사용자 요청("vmware로 깔아줘"). VMware Workstation Pro 26H1, VM은 `문서\Virtual Machines\RobinOS\RobinOS.vmx`(EFI, 8GB, NVMe 64GB, 3D 가속 켬)
@@ -70,12 +82,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 남은 것 (VMware가 있는 PC: robin PC, 집 PC(Blitz, VMware Workstation 26.0)): 최종 ISO로 VMware VM에 다시 설치(`vmrun` 게스트 명령, 계획은 디스크 `/dev/nvme0n1` 전체), 로그인 뒤 셸·해상도 확인. 집 PC에는 VM이 아직 없어서 새로 만들어요(`build\vmware\guest-*.sh`는 robin PC에만 있어요). VMware가 없는 PC의 루프는 이 작업을 건너뛰어요
 
 ## 할 일 (위에서부터)
-
-### T-035 설치본 런처의 윈도우 이름 장면
-- 상태: 할 일
-- 출처: 백로그 채우기 2(검증이 빠진 기능). Word, Excel, PowerPoint, Microsoft Store, 장치 및 프린터는 설치본에만 있는 앱이라 부팅 테스트에서는 보이지 않아요
-- 목표: 설치 테스트의 설치본 데스크톱 단계에서 런처를 열고 "워드", "스토어"를 검색한 화면을 찍어요
-- 완료 기준: 설치 테스트 스크린샷에 "윈도우에서 쓰던 이름" 아래 LibreOffice Writer와 소프트웨어가 "윈도우의 Word에 해당해요"처럼 나옴
 
 ### T-026 RobinOS 자체 파일 업데이트
 - 상태: 할 일 (배포 방식은 사용자 결정, "사용자 확인 필요" 참고)
