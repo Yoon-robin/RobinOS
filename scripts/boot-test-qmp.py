@@ -115,7 +115,7 @@ def main():
         shot(qmp, name)
 
     # Wizard: Enter moves to the next step; the last one opens the default goal
-    # (Linux basics missions) in a terminal, which we close again
+    # (Linux basics missions) in the learning center, which we close again
     for name in ("welcome-theme", "welcome-hangul", "welcome-goal", "welcome-tour"):
         keys(qmp, "ret")
         wait(2)
@@ -179,7 +179,7 @@ def main():
     type_text(qmp, "robinctl learn show 1\n")
     wait(2)
     shot(qmp, "terminal-learn")
-    # Solve mission 1, so the launcher's learning entry shows "1/20" in light-launcher
+    # Solve mission 1, so the launcher's learning entry shows "1/25" in light-launcher
     type_text(qmp, "mkdir -p ~/practice/notes && robinctl learn check 1 >/dev/null\n")
     wait(1)
     # Title bar buttons (desktop/dconf) as GTK, Firefox and Qt apps read them
@@ -235,6 +235,12 @@ def main():
     wait(3)
     shot(qmp, "light-launcher")
     keys(qmp, "esc")
+    wait(2)
+    # The learning center opened again after Alt+F4 closed it: mission 1 is ticked off
+    type_text(qmp, "clear; " + ipc + "learnCenter\n")
+    wait(3)
+    shot(qmp, "light-learn-center")
+    keys(qmp, "alt", "f4")
     wait(2)
     keys(qmp, "meta_l", "s")
     wait(3)

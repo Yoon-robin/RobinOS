@@ -98,11 +98,13 @@
 
 | 영역 | 일치 수준 | 방법 |
 |---|---|---|
-| RobinOS가 만드는 앱 (설정, 학습 센터) | 동일 | 진짜 shadcn/ui 코드(React + Tailwind)를 Tauri로 감싸요 |
-| 데스크톱 셸 (환영 마법사 포함) | 수치 일치 | QML로 같은 색, 간격, 모서리, 글꼴(Geist), 아이콘(Lucide) 재현 |
+| RobinOS가 만드는 독립 앱 (아직 없음) | 동일 | 진짜 shadcn/ui 코드(React + Tailwind)를 Tauri로 감싸요 |
+| 데스크톱 셸 (환영 마법사, 설치기, 학습 센터 포함) | 수치 일치 | QML로 같은 색, 간격, 모서리, 글꼴(Geist), 아이콘(Lucide) 재현 |
+| 외부 앱 (Firefox, Nautilus, Qt 앱) | 색과 글꼴 | GTK(adw-gtk3, libadwaita), qt6ct 팔레트, 글꼴 설정 |
 
 환영 마법사는 셸 안에 QML로 만들었어요(`desktop/shell/Welcome.qml`, 2026-10 결정). 테마와 한/영 키를 셸의 `Theme`, `ShellState`로 바로 적용할 수 있고, 첫 로그인 직후 셸과 함께 떠야 하며, Tauri 빌드 도구(Rust, Node)를 ISO 빌드에 들이지 않아도 되기 때문이에요.
-| 외부 앱 (Firefox, Nautilus, Qt 앱) | 색과 글꼴 | GTK(adw-gtk3, libadwaita), qt6ct 팔레트, 글꼴 설정 |
+
+학습 센터도 처음 계획(Tauri 앱)과 달리 셸 안의 QML 창으로 만들었어요(`desktop/shell/LearnCenter.qml`, 2026-10-09 결정). 환영 마법사와 같은 이유에 더해, 미션을 푸는 터미널 옆에서 진행도가 바로 바뀌어야 해서예요. 셸은 이미 `robinctl`의 진행도 파일을 지켜보고 있고, 미션 목록은 `robinctl learn tsv`에서 읽어서 미션 제목이 `robinctl` 한곳에만 있어요.
 
 다크/라이트와 강조 색상을 바꾸면 셸이 GTK, libadwaita, foot, qt6ct, Hyprland 창 테두리에 한꺼번에 적용해요.
 
