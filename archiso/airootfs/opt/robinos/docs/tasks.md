@@ -44,9 +44,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (T-034 커밋) | 리버싱 기초 미션 | ISO 빌드, 부팅 테스트(미션 목록) |
+| (없음) | | |
 
-`fff598a`까지 2026-10-08 검증(설치 테스트 robinos, 설치기·robinctl 테스트)을 마치고 푸시했어요.
+`e83c5d8`까지 2026-10-08 검증(부팅 테스트 30장, robinctl 테스트)을 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -57,12 +57,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - **RobinOS 파일 업데이트 배포 방식(T-026)**: 2026-10-08 사용자가 중앙 서버가 필요한지 묻고 추천을 원함. 추천: 따로 서버 없이 깃허브 릴리스를 pacman 저장소로 쓰고, RobinOS 파일을 pacman 패키지로 만들어 서명해요. `robinctl update` 한 번에 함께 올라가고 snap-pac 스냅샷도 그대로 생겨요. 서명 열쇠(GPG)를 이 PC에 만들어야 해서 사용자 답을 기다려요
 
 ## 진행 중
-
-### T-034 리버싱 기초 미션 5개 (16~20)
-- 상태: 검증 대기
-- 출처: 백로그 채우기 4(design.md 학습 순서의 마지막 "리버싱". 웹 보안 T-021은 보류라 포렌식 다음으로)
-- 한 것: 직접 만든 무해한 C 연습 프로그램 5개(`practice/reversing/*.c`, `build.sh`가 빌드해서 gzip+base64로 출력, 합쳐 14KB)를 `robinctl`에 넣고 `~/practice/reversing`에 풀어요. 16 실행 파일 살펴보기(`file`, `readelf`, NEEDED → libc.so.6, ldd를 낯선 프로그램에 쓰지 않는 이유), 17 프로그램 속 글자(`strings`로 비밀번호), 18 라이브러리 호출(`ltrace`로 strcmp 비교값, 열쇠는 실행 중 조립해서 strings에 안 보임), 19 시스템 호출(`strace`로 찾는 파일 경로), 20 기계어(`objdump`로 `cmp $0x539` → 1337). 정답 코드는 XOR로 숨겨 strings로는 안 보여요. ltrace·strace가 없으면 `pacman -S` 하나로 안내(reversing 프로필은 Ghidra까지 커요). 런처 학습 미션 설명, README·desktop·design·install 문서. robinctl 테스트에 미션 흐름과 실제 도구 결과 확인(WSL에 gcc·ltrace·strace 설치)
-- 완료 기준: robinctl 테스트 통과(완료), ISO 빌드와 부팅 테스트에서 미션 목록 20개(네 묶음)
 
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
@@ -103,6 +97,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 최근 것이 위에 있어요.
 
+- 2026-10-08 T-034 리버싱 기초 미션 5개(`9707f73`): 직접 만든 무해한 C 연습 프로그램(`practice/reversing`, 압축해서 robinctl에 14KB)으로 `readelf`(NEEDED), `strings`(비밀번호), `ltrace`(strcmp 비교값), `strace`(찾는 파일 경로), `objdump`(`cmp $0x539` → 1337)를 연습해요. 정답 코드는 XOR로 숨겨 strings에 안 보임. robinctl 테스트에 미션 흐름과 실제 도구 결과(WSL에 gcc·ltrace·strace 설치), 부팅 테스트에서 미션 목록 20개(네 묶음)와 런처 설명 확인. 같이: 문서와 코드 맞추기(`630f101`), 루프 절차에 느린 검증 모아 하기(`e83c5d8`, 사용자 요청)
 - 2026-10-08 매일 쓰는 앱 세 가지(design.md 요구사항 표에서 빠져 있던 것): 라이브 ISO에 넣지 않는 설치본 전용 목록 `packages/apps.txt`를 새로 만듦(ISO가 2GiB 한도에 48MB 남음). 설치 테스트 robinos 다섯 단계 통과, 걸린 시간 6.3분 → 6.4분
   - T-031 프린터(`e1a537b`): `cups`, `nss-mdns`, `system-config-printer`. `cups.socket`, `avahi-daemon.service`, nsswitch에 `mdns_minimal`. 설치본에서 `lpstat -r` → "scheduler is running". cups-browsed는 넣지 않음. 런처 "장치 및 프린터"
   - T-032 오피스(`c5db7ca`): `libreoffice-still`(26.2)과 `-ko`. 런처 Word, Excel, PowerPoint. hwp는 97 형식만 열린다고 desktop.md에 적음
