@@ -24,9 +24,10 @@ SPEED = float(sys.argv[3]) if len(sys.argv) > 3 else 1.0
 LIVE_PASSWORD = "robin"
 
 # Characters we can type, mapped to QEMU key codes (qcode)
-QCODES = {" ": "spc", "\n": "ret", "-": "minus", ".": "dot", "/": "slash", ";": "semicolon"}
+QCODES = {" ": "spc", "\n": "ret", "-": "minus", ".": "dot", "/": "slash", ";": "semicolon",
+          "'": "apostrophe", "\\": "backslash"}
 # Characters typed with Shift on a US keyboard
-SHIFTED = {"(": "9", ")": "0", "&": "7", "~": "grave_accent", ">": "dot"}
+SHIFTED = {"(": "9", ")": "0", "&": "7", "~": "grave_accent", ">": "dot", "$": "4"}
 
 
 class Qmp:
@@ -218,6 +219,14 @@ def main():
     wait(3)
     shot(qmp, "clipboard")
     keys(qmp, "esc")
+    wait(1)
+    # A notification toast bottom right ("알림" / "오른쪽 아래에 떠요": QMP only types
+    # ASCII, so bash's \u escapes spell the Korean), then Super+N clears it
+    type_text(qmp, "clear; notify-send -a RobinOS $'\\uc54c\\ub9bc'"
+              " $'\\uc624\\ub978\\ucabd \\uc544\\ub798\\uc5d0 \\ub5a0\\uc694'\n")
+    wait(2)
+    shot(qmp, "notification")
+    keys(qmp, "meta_l", "n")
     wait(1)
 
     # robinos-shell starts the shell again when it dies
