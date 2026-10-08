@@ -21,7 +21,6 @@ RobinOS는 Arch Linux 기반의 한국어 우선 보안 학습 OS예요. Hyprlan
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/ready.ps1 [-Check]              # 커밋 전 필수: 오버레이 동기화 + sddm 되돌리기 + 정적 검증 (+ check)
-powershell -ExecutionPolicy Bypass -File scripts/validate-project.ps1            # 정적 검증만
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 check             # Hyprland, QML 파싱, qmllint
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 status            # WSL에서 도는 빌드/VM, 최근 결과
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build             # ISO 빌드 (WSL, HEAD 기준)
@@ -31,19 +30,11 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 verify -Installer
 powershell -ExecutionPolicy Bypass -File scripts/sync-archiso-files.ps1          # ISO 오버레이 맞추기
 ```
 
-## 저장소 지도
+## 저장소에서 코드만으로는 모르는 것
 
-| 위치 | 내용 |
-|---|---|
-| `bin/robinctl` | 관리 도구 (bash): doctor, update, snapshot, profile, learn, lab |
-| `installer/robin-install` | 설치기 백엔드 (Python, 라이브 ISO에서 실행) |
-| `desktop/shell/` | Quickshell 셸 (QML). `Theme.qml`이 디자인 토큰 원본, `ShellState.qml`이 공유 상태 |
-| `desktop/hypr/`, `desktop/foot/`, ... | 데스크톱 설정. 설치 위치는 `desktop/install-map.txt` |
-| `scripts/` | 빌드, 설치, 테스트 스크립트 |
-| `packages/*.txt` | 패키지 목록. ISO 목록은 `archiso/packages.x86_64`. `apps.txt`는 설치본에만 들어가요(ISO는 2GiB 한도) |
-| `practice/` | 학습 미션 연습 프로그램의 소스. `build.sh`가 만든 압축본이 `bin/robinctl` 안에 있어요 |
-| `archiso/` | ISO 프로필 오버레이. `archiso/airootfs/opt/robinos`와 `usr/share/robinos`는 동기화 스크립트가 만드는 사본 |
-| `docs/` | 문서 (한국어) |
+- `archiso/airootfs/opt/robinos`와 `usr/share/robinos`는 원본이 아니라 동기화 스크립트가 만드는 사본이에요. 원본(`bin/`, `desktop/`, `scripts/` 등)을 고쳐요. 데스크톱 파일의 설치 위치는 `desktop/install-map.txt`예요.
+- `packages/apps.txt`는 설치본에만 들어가요. 라이브 ISO는 깃허브 첨부 한도(2GiB) 때문에 `archiso/packages.x86_64`에 넣지 않아요.
+- `practice/`는 학습 미션 연습 프로그램의 소스예요. 각 `build.sh`가 만든 압축본이 `bin/robinctl` 안에 들어 있어서, 소스를 고치면 다시 만들어 넣어요.
 
 ## 이 환경에서 자주 걸리는 것
 
