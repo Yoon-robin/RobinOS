@@ -999,7 +999,7 @@ EOF
   cat <<'EOF'
   터미널 두 개로 해요.
   1. 첫 번째 터미널에서 nc -l 127.0.0.1 9000 을 실행해 9000번 포트를 열어 두세요.
-  2. 두 번째 터미널(Super+Return)에서 열린 포트 중 9000번 줄을 ~/practice/net/listen.txt에 저장하세요.
+  2. 두 번째 터미널(Win+Enter)에서 열린 포트 중 9000번 줄을 ~/practice/net/listen.txt에 저장하세요.
   3. 첫 번째 터미널은 Ctrl+C로 닫아요.
 EOF
   learn_section "써 볼 명령"

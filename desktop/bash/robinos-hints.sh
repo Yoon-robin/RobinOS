@@ -33,8 +33,8 @@ __robinos_windows_hint() {
     sfc)                 printf '%s' 'sudo pacman -Qkk|설치된 파일이 망가졌는지 검사해요' ;;
     winget|choco)        printf '%s' 'sudo pacman -S 패키지|프로그램을 설치해요 (앱 스토어 앱은 flatpak install)' ;;
     notepad)             printf '%s' 'gnome-text-editor|메모장에 해당하는 앱이에요 (터미널에서는 nano)' ;;
-    explorer)            printf '%s' 'nautilus|파일 탐색기에 해당하는 앱이에요 (Super+E)' ;;
-    control|msconfig)    printf '%s' 'Super+S|빠른 설정을 열어요. 서비스 목록은 systemctl list-unit-files' ;;
+    explorer)            printf '%s' 'nautilus|파일 탐색기에 해당하는 앱이에요 (Win+E)' ;;
+    control|msconfig)    printf '%s' 'Win+S|빠른 설정을 열어요. 서비스 목록은 systemctl list-unit-files' ;;
     regedit)             printf '%s' 'ls /etc|리눅스에는 레지스트리가 없어요. 설정은 /etc와 ~/.config의 파일이에요' ;;
     powershell|cmd)      printf '%s' 'bash|지금 쓰고 있는 이 셸이 리눅스의 명령 프롬프트예요' ;;
   esac

@@ -270,7 +270,7 @@ FloatingWindow {
                         model: [
                             { icon: ShellState.online ? "check" : "wifi-off", ok: ShellState.online,
                               title: ShellState.online ? "인터넷에 연결돼 있어요" : "인터넷에 연결해 주세요",
-                              desc: "설치할 때 패키지를 내려받아요. 빠른 설정(Super+S)에서 네트워크를 연결할 수 있어요." },
+                              desc: "설치할 때 패키지를 내려받아요. 빠른 설정(Win+S)에서 네트워크를 연결할 수 있어요." },
                             { icon: "battery-charging", ok: true, title: "노트북은 전원에 연결해 두세요",
                               desc: "설치에는 10분에서 30분쯤 걸려요." },
                             { icon: "shield", ok: true, title: "중요한 파일은 먼저 백업하세요",

@@ -77,10 +77,10 @@ PanelWindow {
         { key: "update", group: "system", icon: "refresh", title: "시스템 업데이트", subtitle: "업데이트 전에 스냅샷을 자동으로 만들어요", words: "update upgrade pacman 업데이트" },
         { key: "doctor", group: "system", icon: "activity", title: "시스템 점검", subtitle: "robinctl doctor", mono: true, words: "doctor check 점검 진단" },
         { key: "wifi", group: "system", icon: "wifi", title: "Wi-Fi 연결", subtitle: "nmtui", mono: true, words: "wifi network 네트워크 인터넷" },
-        { key: "settings", group: "system", icon: "sliders", title: "빠른 설정", subtitle: "Super + S", words: "settings quick 설정 빠른 설정 테마 다크 모드" },
+        { key: "settings", group: "system", icon: "sliders", title: "빠른 설정", subtitle: "Win + S", words: "settings quick 설정 빠른 설정 테마 다크 모드" },
         { key: "install", group: "live", icon: "download", title: "RobinOS 설치", subtitle: "이 컴퓨터에 설치해요", words: "install installer setup 설치 설치기 하드 디스크 윈도우 옆" },
         { key: "welcome", group: "system", icon: "sparkles", title: "환영 마법사", subtitle: "테마, 한/영 키, 단축키 안내", words: "welcome tour setup 환영 마법사 처음 시작 안내 투어 한영" },
-        { key: "lock", group: "power", icon: "lock", title: "화면 잠금", subtitle: "Super + L", words: "lock 잠금" },
+        { key: "lock", group: "power", icon: "lock", title: "화면 잠금", subtitle: "Win + L", words: "lock 잠금" },
         { key: "logout", group: "power", icon: "log-out", title: "로그아웃", subtitle: "", words: "logout exit 로그아웃" },
         { key: "reboot", group: "power", icon: "rotate-ccw", title: "다시 시작", subtitle: "", words: "reboot restart 재부팅 재시작" },
         { key: "poweroff", group: "power", icon: "power", title: "전원 끄기", subtitle: "", words: "poweroff shutdown 종료 전원" }

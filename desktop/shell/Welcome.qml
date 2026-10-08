@@ -19,10 +19,10 @@ PanelWindow {
 
     readonly property var steps: [
         { title: "RobinOS에 오신 걸 환영해요", desc: "윈도우에서 넘어와 매일 쓰는 컴퓨터예요. 쓰다 보면 리눅스와 보안 실력이 늘어요. 몇 가지만 고르면 바로 시작할 수 있어요." },
-        { title: "화면 모양을 골라요", desc: "나중에 빠른 설정(Super+S)에서 언제든 바꿀 수 있어요." },
+        { title: "화면 모양을 골라요", desc: "나중에 빠른 설정(Win+S)에서 언제든 바꿀 수 있어요." },
         { title: "한/영 전환 키를 골라요", desc: "한/영 키와 오른쪽 Alt로는 언제나 한/영을 바꿀 수 있어요. 함께 쓸 단축키를 하나 더 고르세요." },
         { title: "무엇부터 해 볼까요?", desc: "고른 것은 마지막에 바로 열려요. 나머지도 런처에서 언제든 시작할 수 있어요." },
-        { title: "이것만 알면 돼요", desc: "윈도우에서 쓰던 단축키 대부분이 그대로 돼요." }
+        { title: "이것만 알면 돼요", desc: "윈도우에서 쓰던 단축키 대부분이 그대로 돼요. Win 키는 리눅스에서 Super 키라고 불러요." }
     ]
     readonly property bool last: step === steps.length - 1
 
@@ -708,14 +708,14 @@ PanelWindow {
 
                         Repeater {
                             model: [
-                                { keys: ["Super", "Space"], title: "런처: 앱과 명령 찾기" },
-                                { keys: ["Super", "S"], title: "빠른 설정" },
+                                { keys: ["Win", "Space"], title: "런처: 앱과 명령 찾기" },
+                                { keys: ["Win", "S"], title: "빠른 설정" },
                                 { keys: ["Alt", "Tab"], title: "창 전환" },
                                 { keys: ["Alt", "F4"], title: "창 닫기" },
-                                { keys: ["Super", "E"], title: "파일" },
-                                { keys: ["Super", "Enter"], title: "터미널" },
+                                { keys: ["Win", "E"], title: "파일" },
+                                { keys: ["Win", "Enter"], title: "터미널" },
                                 { keys: ["오른쪽 Alt"], title: "한/영 전환" },
-                                { keys: ["Super", "L"], title: "화면 잠금" }
+                                { keys: ["Win", "L"], title: "화면 잠금" }
                             ]
 
                             RowLayout {

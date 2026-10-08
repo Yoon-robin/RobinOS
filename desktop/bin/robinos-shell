@@ -29,6 +29,12 @@ note() {
   logger -t robinos-shell -- "$*" 2>/dev/null || true
 }
 
+# Qt prints these within a few seconds of the first window when it can't draw
+# with the GPU. The shell then either shows nothing or dies with a Wayland error.
+gpu_failed() {
+  tail -n +"$((start_line + 1))" "${log}" | grep -qE 'Could not create EGL surface|eglSwapBuffers failed'
+}
+
 compositor_alive() {
   [[ -S "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/${WAYLAND_DISPLAY:-wayland-1}" ]]
 }
@@ -43,24 +49,25 @@ while compositor_alive; do
   fi
   pid=$!
 
-  # Qt prints these within a few seconds of the first window when it can't draw with the GPU
   if [[ "${software}" != "true" ]]; then
     for _ in $(seq 1 20); do
       sleep 0.5
+      gpu_failed && break
       kill -0 "${pid}" 2>/dev/null || break
-      if tail -n +"$((start_line + 1))" "${log}" | grep -qE 'Could not create EGL surface|eglSwapBuffers failed'; then
-        note "Qt can't draw with the GPU here; restarting the shell with software rendering"
-        software="true"
-        kill "${pid}" 2>/dev/null
-        wait "${pid}" 2>/dev/null
-        continue 2
-      fi
     done
+  fi
+  if [[ "${software}" != "true" ]] && gpu_failed; then
+    kill "${pid}" 2>/dev/null
   fi
 
   wait "${pid}"
   status=$?
   compositor_alive || break
+  if [[ "${software}" != "true" ]] && gpu_failed; then
+    note "Qt can't draw with the GPU here; restarting the shell with software rendering"
+    software="true"
+    continue
+  fi
   note "the shell exited with ${status}"
 
   now=$(date +%s)
@@ -71,7 +78,7 @@ while compositor_alive; do
   crashes=("${recent[@]}")
   if (( ${#crashes[@]} >= 5 )); then
     note "the shell crashed 5 times within 2 minutes; not restarting"
-    hyprctl notify 3 600000 "rgb(f87171)" "RobinOS 셸이 계속 멈춰요. Super+Return으로 터미널을 열고 robinctl doctor로 확인하세요. 최근 업데이트 때문이라면 robinctl snapshot list에서 이전 상태로 되돌릴 수 있어요. 기록: ~/.local/state/robinos/shell.log" >/dev/null 2>&1
+    hyprctl notify 3 600000 "rgb(f87171)" "RobinOS 셸이 계속 멈춰요. Win+Enter로 터미널을 열고 robinctl doctor로 확인하세요. 최근 업데이트 때문이라면 robinctl snapshot list에서 이전 상태로 되돌릴 수 있어요. 기록: ~/.local/state/robinos/shell.log" >/dev/null 2>&1
     exit 1
   fi
   sleep 1

@@ -86,6 +86,8 @@
 | `Win+E`, `Win+L` | 파일, 화면 잠금 |
 | `PrtSc` | 영역 스크린샷(클립보드 + 사진 폴더) |
 
+화면에 단축키를 보여 줄 때는 윈도우 키를 `Win`이라고 적어요(`Win+S`, `Win+Enter`). 리눅스 이름인 `Super`는 환영 마법사에서 한 번 알려 주고, 기술 문서와 설정 파일에서만 써요.
+
 ### 디자인: shadcn/ui와 일치
 
 디자인 기준은 shadcn/ui의 zinc 팔레트예요. 토큰은 `desktop/shell/Theme.qml`이 원본이고, 같은 값을 [brand.md](brand.md), foot, hyprlock, qt6ct 팔레트, SDDM 테마가 따라요.

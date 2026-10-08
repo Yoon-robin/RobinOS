@@ -388,6 +388,13 @@ def grub_mkconfig_with_udev():
             subprocess.run(["umount", "-R", f"{TARGET}/{name}"], capture_output=True)
 
 
+def stop_keyring_agent():
+    """pacstrap -K runs pacman-key on the new system's keyring, which can leave a
+    gpg-agent running there; it keeps the target busy and umount fails."""
+    subprocess.run(["gpgconf", "--homedir", f"{TARGET}/etc/pacman.d/gnupg", "--kill", "all"],
+                   capture_output=True)
+
+
 def install(plan_path):
     if os.geteuid() != 0:
         raise InstallError("관리자 권한이 필요해요: sudo robin-install run <계획 파일>")
@@ -408,6 +415,7 @@ def install(plan_path):
     install_robinos(plan)
 
     progress(97, "마무리")
+    stop_keyring_agent()
     run("sync")
     run("umount", "-R", TARGET)
     progress(100, "설치가 끝났어요")
@@ -416,7 +424,7 @@ def install(plan_path):
 def guide():
     print("""RobinOS 설치기
 
-라이브 화면의 런처(Super+Space)에서 "RobinOS 설치"를 골라 시작하세요.
+라이브 화면의 런처(Win+Space)에서 "RobinOS 설치"를 골라 시작하세요.
 
 명령으로 쓰려면:
   robin-install disks                설치할 수 있는 디스크 보기
@@ -439,6 +447,7 @@ def main():
             return 0
         except (InstallError, subprocess.CalledProcessError, OSError, KeyError, ValueError) as error:
             say(f"@@ error {error}")
+            stop_keyring_agent()
             subprocess.run(["umount", "-R", TARGET], capture_output=True)
             return 1
     guide()
