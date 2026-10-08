@@ -51,6 +51,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 - **실기기 라이브 부팅**: USB로 실제 PC에서 ISO를 부팅해 봐야 해요. 사용자만 할 수 있어요. (`막힘`)
 - **실제 윈도우 PC에서 "윈도우 옆에 설치"**: VM의 가짜 윈도우 디스크로는 파티션과 부팅 파일이 그대로인 것까지 확인했어요(T-006). 진짜 윈도우가 GRUB 메뉴에 나오는지, BitLocker 복구 키를 묻는지는 실제 PC에서만 볼 수 있어요. 백업해 둔 PC나 남는 디스크로 해 주세요. (`막힘`)
+- **집 PC의 VMware 서비스 켜기(T-025)**: 집 PC(Blitz)에서 VM을 만들어 켜려 했더니 VMware의 윈도우 서비스(Authorization, DHCP, NAT, USB Arbitration)가 모두 "사용 안 함"이라 VM이 켜지지 않아요. 관리자 권한이 필요해서 직접 하지 않아요. 쓰려면 관리자 PowerShell에서 `Set-Service VMAuthdService,VMnetDHCP,'VMware NAT Service',VMUSBArbService -StartupType Manual`, `Start-Service VMAuthdService,VMnetDHCP,'VMware NAT Service'`. VM(`문서\Virtual Machines\RobinOS`)과 스크립트(`buildmwaremware-test.py`)는 준비돼 있어요 (`막힘`)
 - **작업 브랜치 `work/t025-vmware` 지우기**: 내용은 모두 main에 들어갔어요. GitHub에서 지워도 되는지 알려 주세요
 - **RobinOS 파일 업데이트 배포 방식(T-026)**: 2026-10-08 사용자가 중앙 서버가 필요한지 묻고 추천을 원함. 추천: 따로 서버 없이 깃허브 릴리스를 pacman 저장소로 쓰고, RobinOS 파일을 pacman 패키지로 만들어 서명해요. `robinctl update` 한 번에 함께 올라가고 snap-pac 스냅샷도 그대로 생겨요. 서명 열쇠(GPG)를 이 PC에 만들어야 해서 사용자 답을 기다려요
 
