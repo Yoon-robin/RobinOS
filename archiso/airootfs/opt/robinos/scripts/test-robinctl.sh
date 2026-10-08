@@ -96,7 +96,7 @@ check "5 fails with a made-up line" fail learn check 5
 in_home "grep bash /etc/passwd > practice/bash-users.txt"
 check "5 passes with grep's output" 0 learn check 5
 check "list after the first five" 0 learn
-said "list counts 5 of 15" "5/15"
+said "list counts 5 of 20" "5/20"
 said "list shows the network group" "네트워크 기초"
 said "list points to mission 6" "robinctl learn show 6"
 
@@ -144,7 +144,7 @@ in_home "printf '# Nmap 7.95 scan\nNmap scan report for localhost (127.0.0.1)\nP
 check "10 passes with 9000 open on 127.0.0.1" 0 learn check 10
 
 check "list after the first ten" 0 learn
-said "list counts 10 of 15" "10/15"
+said "list counts 10 of 20" "10/20"
 said "list shows the forensics group" "포렌식 기초"
 said "list points to mission 11" "robinctl learn show 11"
 
@@ -187,11 +187,64 @@ check "15 passes with the pipeline from the mission" 0 learn check 15
 
 in_home "bsdtar -xOf practice/forensics/logo.png secret.txt > practice/forensics/found.txt"
 check "14 passes again" 0 learn check 14
-check "list after all fifteen" 0 learn
-said "list says all fifteen are done" "15/15"
+check "list after the first fifteen" 0 learn
+said "list counts 15 of 20" "15/20"
+said "list shows the reversing group" "리버싱 기초"
+said "list points to mission 16" "robinctl learn show 16"
+
+# Reversing basics: show 16 unpacks the practice programs, the tools solve them
+REV="practice/reversing"
+check "16 fails before the practice programs exist" fail learn check 16
+check "show 16 unpacks the practice programs" 0 learn show 16
+said "show 16 says where the programs are" "~/practice/reversing"
+in_home "cd ${REV} && test -x hello && test -x vault && test -x gate && test -x seeker && test -x count" \
+  && ok "practice programs are there and executable" || bad "practice programs are missing"
+in_home "${REV}/hello" | grep -q "연습용 프로그램" && ok "hello runs" || bad "hello doesn't run"
+in_home "readelf -d ${REV}/hello | grep NEEDED | grep -o 'libc[^]]*' > ${REV}/library.txt"
+check "16 passes with the NEEDED library" 0 learn check 16
+in_home "echo libc > ${REV}/library.txt"
+check "16 fails with half a name" fail learn check 16
+in_home "echo libc.so.6 > ${REV}/library.txt"
+
+in_home "strings ${REV}/vault" | grep -q "robin-sesame-2026" && ok "strings shows the vault password" || bad "strings doesn't show the vault password"
+in_home "strings ${REV}/vault" | grep -q "ROBIN-VAULT" && bad "strings shows the vault code" || ok "strings doesn't show the vault code"
+in_home "echo robin-sesame-2026 > ${REV}/vault.txt"
+check "17 fails with the password instead of the code" fail learn check 17
+said "17 explains password vs code" "비밀번호"
+in_home "cd ${REV} && echo robin-sesame-2026 | ./vault | grep -o 'ROBIN-[A-Z-]*' > vault.txt"
+check "17 passes with the code the vault prints" 0 learn check 17
+
+in_home "strings ${REV}/gate" | grep -q "open-sesame-7" && bad "strings shows the gate key" || ok "strings doesn't show the gate key"
+if command -v ltrace >/dev/null; then
+  in_home "cd ${REV} && ltrace ./gate guess 2>&1; true" | grep -q 'strcmp("guess", "open-sesame-7")' \
+    && ok "ltrace shows the key going into strcmp" || bad "ltrace doesn't show the key in strcmp"
+fi
+in_home "cd ${REV} && ./gate open-sesame-7 | grep -o 'ROBIN-[A-Z-]*' > gate.txt"
+check "18 passes with the code the gate prints" 0 learn check 18
+
+check "19 fails before the key file exists" fail learn check 19
+if command -v strace >/dev/null; then
+  in_home "cd ${REV} && strace -e trace=openat ./seeker 2>&1; true" | grep -q "practice/reversing/.hidden/seeker.key" \
+    && ok "strace shows the path seeker opens" || bad "strace doesn't show the key file path"
+fi
+in_home "cd ${REV} && mkdir -p .hidden && touch .hidden/seeker.key && ./seeker | grep -o 'ROBIN-[A-Z-]*' > seeker.txt"
+check "19 passes with the key file and the code" 0 learn check 19
+
+if command -v objdump >/dev/null; then
+  in_home "objdump -d ${REV}/count --disassemble=check" | grep -q 'cmp.*\$0x539' \
+    && ok "objdump shows cmp \$0x539 in check" || bad "objdump doesn't show the constant in check"
+fi
+in_home "echo 0x539 > ${REV}/number.txt"
+check "20 fails with the hexadecimal number" fail learn check 20
+said "20 explains hexadecimal" "16진수"
+in_home "cd ${REV} && ./count 1337 | grep -q ROBIN-COUNT-1337 && echo \$((0x539)) > number.txt"
+check "20 passes with 1337" 0 learn check 20
+
+check "list after all twenty" 0 learn
+said "list says all twenty are done" "20/20"
 said "list points to the web lab" "robinctl lab info web"
-check "show 15" 0 learn show 15
-check "mission 16 doesn't exist" fail learn show 16
+check "show 20" 0 learn show 20
+check "mission 21 doesn't exist" fail learn show 21
 check "reset" 0 learn reset
 check "check 1 still passes after reset (files stay)" 0 learn check 1
 

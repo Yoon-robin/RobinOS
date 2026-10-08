@@ -44,7 +44,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (없음) | | |
+| (T-034 커밋) | 리버싱 기초 미션 | ISO 빌드, 부팅 테스트(미션 목록) |
 
 `fff598a`까지 2026-10-08 검증(설치 테스트 robinos, 설치기·robinctl 테스트)을 마치고 푸시했어요.
 
@@ -58,6 +58,12 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 ## 진행 중
 
+### T-034 리버싱 기초 미션 5개 (16~20)
+- 상태: 검증 대기
+- 출처: 백로그 채우기 4(design.md 학습 순서의 마지막 "리버싱". 웹 보안 T-021은 보류라 포렌식 다음으로)
+- 한 것: 직접 만든 무해한 C 연습 프로그램 5개(`practice/reversing/*.c`, `build.sh`가 빌드해서 gzip+base64로 출력, 합쳐 14KB)를 `robinctl`에 넣고 `~/practice/reversing`에 풀어요. 16 실행 파일 살펴보기(`file`, `readelf`, NEEDED → libc.so.6, ldd를 낯선 프로그램에 쓰지 않는 이유), 17 프로그램 속 글자(`strings`로 비밀번호), 18 라이브러리 호출(`ltrace`로 strcmp 비교값, 열쇠는 실행 중 조립해서 strings에 안 보임), 19 시스템 호출(`strace`로 찾는 파일 경로), 20 기계어(`objdump`로 `cmp $0x539` → 1337). 정답 코드는 XOR로 숨겨 strings로는 안 보여요. ltrace·strace가 없으면 `pacman -S` 하나로 안내(reversing 프로필은 Ghidra까지 커요). 런처 학습 미션 설명, README·desktop·design·install 문서. robinctl 테스트에 미션 흐름과 실제 도구 결과 확인(WSL에 gcc·ltrace·strace 설치)
+- 완료 기준: robinctl 테스트 통과(완료), ISO 빌드와 부팅 테스트에서 미션 목록 20개(네 묶음)
+
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
 - 출처: 사용자 요청("vmware로 깔아줘"). VMware Workstation Pro 26H1, VM은 `문서\Virtual Machines\RobinOS\RobinOS.vmx`(EFI, 8GB, NVMe 64GB, 3D 가속 켬)
@@ -70,6 +76,18 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 남은 것 (VMware가 있는 PC: robin PC, 집 PC(Blitz, VMware Workstation 26.0)): 최종 ISO로 VMware VM에 다시 설치(`vmrun` 게스트 명령, 계획은 디스크 `/dev/nvme0n1` 전체), 로그인 뒤 셸·해상도 확인. 집 PC에는 VM이 아직 없어서 새로 만들어요(`build\vmware\guest-*.sh`는 robin PC에만 있어요). VMware가 없는 PC의 루프는 이 작업을 건너뛰어요
 
 ## 할 일 (위에서부터)
+
+### T-035 설치본 런처의 윈도우 이름 장면
+- 상태: 할 일
+- 출처: 백로그 채우기 2(검증이 빠진 기능). Word, Excel, PowerPoint, Microsoft Store, 장치 및 프린터는 설치본에만 있는 앱이라 부팅 테스트에서는 보이지 않아요
+- 목표: 설치 테스트의 설치본 데스크톱 단계에서 런처를 열고 "워드", "스토어"를 검색한 화면을 찍어요
+- 완료 기준: 설치 테스트 스크린샷에 "윈도우에서 쓰던 이름" 아래 LibreOffice Writer와 소프트웨어가 "윈도우의 Word에 해당해요"처럼 나옴
+
+### T-036 품질 점검: 문서와 코드 맞추기
+- 상태: 할 일
+- 출처: 백로그 채우기 6. 오늘 바뀐 것이 많아요(제목 표시줄, 독, 앱 세 가지, NVIDIA, 리버싱 미션)
+- 목표: README, docs/desktop.md, install.md, testing.md, release.md의 명령·경로·목록이 실제와 같은지 훑어요. `robinctl` 도움말(`robinctl help`)에 새 미션과 update의 Flatpak이 맞게 나오는지도 봐요
+- 완료 기준: 찾은 차이를 고치고 "품질 점검 기록"에 날짜를 남김
 
 
 

@@ -690,18 +690,23 @@ packages_print() {
   esac
 }
 
-# ---- Learning missions: Linux basics (1-5), network basics (6-10), forensics basics (11-15) ----
+# ---- Learning missions: Linux basics (1-5), network basics (6-10), forensics basics (11-15),
+# reversing basics (16-20) ----
 #
 # Missions are solved in a real terminal. `robinctl learn check N` looks at the
 # result (files under ~/practice) and records progress in the user's state dir.
 # The network missions work without the internet except mission 8, which
 # installs the network profile. The forensics missions work on practice files
 # robinctl makes under ~/practice/forensics; 13 and 14 need the forensics profile.
+# The reversing missions work on small practice programs (practice/reversing/*.c)
+# put in ~/practice/reversing; 18 and 19 need ltrace and strace (in the live ISO and
+# the reversing profile, or pacman -S on their own).
 
-readonly LEARN_COUNT=15
+readonly LEARN_COUNT=20
 LEARN_DIR="${HOME:-/root}/practice"
 LEARN_NET="${HOME:-/root}/practice/net"
 LEARN_FOR="${HOME:-/root}/practice/forensics"
+LEARN_REV="${HOME:-/root}/practice/reversing"
 LEARN_STATE="${XDG_STATE_HOME:-${HOME:-/root}/.local/state}/robinos/learn"
 LEARN_FAILS=0
 
@@ -722,6 +727,11 @@ learn_title() {
     13) printf '사진 속 정보 읽기' ;;
     14) printf '파일 속에 숨은 파일 찾기' ;;
     15) printf '로그에서 수상한 접속 찾기' ;;
+    16) printf '실행 파일 살펴보기' ;;
+    17) printf '프로그램 속 글자 찾기' ;;
+    18) printf '라이브러리 호출 엿보기' ;;
+    19) printf '시스템 호출 엿보기' ;;
+    20) printf '기계어 읽어 보기' ;;
   esac
 }
 
@@ -731,6 +741,7 @@ learn_group() {
     1) printf '리눅스 기초' ;;
     6) printf '네트워크 기초' ;;
     11) printf '포렌식 기초' ;;
+    16) printf '리버싱 기초' ;;
   esac
 }
 
@@ -751,6 +762,11 @@ learn_tools() {
     13) printf 'exiftool' ;;
     14) printf 'binwalk strings' ;;
     15) printf 'grep sort uniq -c' ;;
+    16) printf 'file readelf' ;;
+    17) printf 'strings' ;;
+    18) printf 'ltrace' ;;
+    19) printf 'strace' ;;
+    20) printf 'objdump' ;;
   esac
 }
 
@@ -792,7 +808,7 @@ learn_mission_arg() {
     n="$(learn_next)"
     [[ -n "${n}" ]] || n="${LEARN_COUNT}"
   fi
-  [[ "${n}" =~ ^([1-9]|1[0-5])$ ]] || die "미션 번호는 1부터 ${LEARN_COUNT}까지예요"
+  [[ "${n}" =~ ^([1-9]|1[0-9]|20)$ ]] || die "미션 번호는 1부터 ${LEARN_COUNT}까지예요"
   printf '%s' "${n}"
 }
 
@@ -1197,6 +1213,142 @@ learn_auth_log() {
   printf 'Oct  8 12:30:02 robinos sshd[3101]: Accepted password for robin from 192.168.0.23 port 51544 ssh2\n'
 }
 
+learn_show_16() {
+  cat <<'EOF'
+윈도우 프로그램이 .exe라면 리눅스 프로그램은 ELF라는 형식이에요. 프로그램은 혼자 돌지 않고
+공유 라이브러리(윈도우의 .dll)를 빌려 써요. 리버싱은 낯선 프로그램을 실행하기 전에 살펴보는 데서 시작해요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  ~/practice/reversing/hello가 쓰는 공유 라이브러리 이름을
+  ~/practice/reversing/library.txt에 적으세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  cd ~/practice/reversing
+  file hello                        어떤 실행 파일인지 (64비트? 동적 링크?)
+  readelf -h hello                  ELF 머리말: CPU 종류, 시작 주소
+  readelf -d hello | grep NEEDED    필요한 공유 라이브러리
+  echo 이름 > library.txt           (찾은 이름으로 바꿔서)
+
+  ldd도 라이브러리를 보여 주지만 프로그램을 실제로 띄울 수도 있어서, 낯선 프로그램에는 readelf를 써요.
+EOF
+}
+
+learn_show_17() {
+  cat <<'EOF'
+프로그램 안에는 화면에 나오는 문장, 파일 이름, 때로는 비밀번호까지 글자 그대로 들어 있어요.
+strings는 파일에서 읽을 수 있는 글자만 골라 보여 줘요. 비밀번호를 프로그램에 그대로 넣으면 안 되는 이유예요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  ~/practice/reversing/vault의 비밀번호를 찾아 금고를 열고,
+  나온 코드를 ~/practice/reversing/vault.txt에 적으세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  cd ~/practice/reversing
+  ./vault                           비밀번호를 물어요 (모르면 Ctrl+C)
+  strings vault                     프로그램 속 글자 모두
+  strings vault | less              길면 한 화면씩 (q로 나가요)
+  ./vault                           찾은 비밀번호를 넣어요
+  echo 코드 > vault.txt             (나온 코드로 바꿔서)
+EOF
+}
+
+learn_show_18() {
+  cat <<'EOF'
+이번 열쇠는 프로그램이 실행되면서 한 글자씩 조립해서 strings로는 보이지 않아요.
+하지만 입력과 비교하려면 결국 라이브러리 함수(strcmp)에 넘겨야 해요.
+ltrace는 프로그램이 부르는 라이브러리 함수와 거기에 넘긴 값을 보여 줘요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  ~/practice/reversing/gate의 열쇠를 찾아 문을 열고,
+  나온 코드를 ~/practice/reversing/gate.txt에 적으세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  cd ~/practice/reversing
+  ./gate 아무거나                   틀린 열쇠
+  strings gate                      이번에는 열쇠가 안 보여요
+  ltrace ./gate 아무거나            strcmp가 무엇과 비교하는지
+  ./gate 찾은열쇠
+  echo 코드 > gate.txt              (나온 코드로 바꿔서)
+
+  ltrace가 없다고 나오면: sudo pacman -S ltrace  (Ghidra까지 든 묶음은 sudo robinctl profile reversing)
+EOF
+}
+
+learn_show_19() {
+  cat <<'EOF'
+프로그램이 파일을 열고, 네트워크에 연결하고, 화면에 글을 쓰는 일은 모두 커널에 부탁해서 해요(시스템 호출).
+strace는 그 부탁을 모두 보여 줘요. 프로그램이 "안 돼요"라고만 할 때 무엇을 찾다가 실패했는지 알아낼 수 있어요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  ~/practice/reversing/seeker가 찾는 열쇠 파일을 만들어 주고,
+  나온 코드를 ~/practice/reversing/seeker.txt에 적으세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  cd ~/practice/reversing
+  ./seeker                          열쇠 파일을 못 찾았대요
+  strace ./seeker                   시스템 호출 모두 (많아요)
+  strace -e trace=openat ./seeker   파일을 여는 것만
+  mkdir -p 폴더 && touch 파일       (strace에 나온 경로로 바꿔서)
+  ./seeker
+  echo 코드 > seeker.txt            (나온 코드로 바꿔서)
+
+  strace가 없다고 나오면: sudo pacman -S strace  (Ghidra까지 든 묶음은 sudo robinctl profile reversing)
+EOF
+}
+
+learn_show_20() {
+  cat <<'EOF'
+컴파일된 프로그램은 CPU가 읽는 기계어예요. objdump는 그걸 사람이 읽을 수 있는 어셈블리로 바꿔 보여 줘요(디스어셈블).
+어셈블리에서 숫자는 보통 16진수(0x...)로 나와요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  ~/practice/reversing/count가 원하는 숫자를 check 함수에서 찾아 맞히고,
+  그 숫자를 10진수로 ~/practice/reversing/number.txt에 적으세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  cd ~/practice/reversing
+  ./count 7                         틀렸대요
+  objdump -d count --disassemble=check
+                                    check 함수만 디스어셈블. cmp 줄의 $0x... 숫자를 봐요
+  echo $((0x10))                    16진수를 10진수로 (0x10 → 16)
+  ./count 숫자
+  echo 숫자 > number.txt            (맞힌 숫자로 바꿔서)
+EOF
+}
+
+# Practice programs for missions 16-20, built from practice/reversing/*.c by
+# practice/reversing/build.sh and kept here as gzip + base64 (a few KB each)
+LEARN_REV_HELLO_B64="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"
+LEARN_REV_VAULT_B64="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"
+LEARN_REV_GATE_B64="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"
+LEARN_REV_SEEKER_B64="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"
+LEARN_REV_COUNT_B64="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"
+
+learn_prepare_reversing() {
+  local name
+  if [[ -f "${LEARN_STATE}/prepared-reversing" ]]; then
+    return
+  fi
+  mkdir -p "${LEARN_REV}" "${LEARN_STATE}"
+  for name in hello vault gate seeker count; do
+    local var="LEARN_REV_${name^^}_B64"
+    printf '%s' "${!var}" | base64 -d | gzip -dc >"${LEARN_REV}/${name}"
+    chmod 755 "${LEARN_REV}/${name}"
+  done
+  : >"${LEARN_STATE}/prepared-reversing"
+  printf '\n%s연습용 프로그램을 ~/practice/reversing에 만들어 뒀어요.%s\n' "${C_DIM}" "${C_RESET}"
+}
+
 # Mission 3 needs a file to delete. It is created the first time the mission is shown.
 learn_prepare_3() {
   if [[ -f "${LEARN_STATE}/prepared-3" ]]; then
@@ -1215,6 +1367,8 @@ learn_show() {
   "learn_show_${n}"
   if [[ "${n}" == "3" ]]; then
     learn_prepare_3
+  elif ((n >= 16)); then
+    learn_prepare_reversing
   elif ((n >= 11)); then
     learn_prepare_forensics
   fi
@@ -1535,6 +1689,85 @@ learn_check_15() {
   fi
 }
 
+learn_check_16() {
+  local answer
+  answer="$(learn_answer "${LEARN_REV}/library.txt")"
+  if [[ -z "${answer}" ]]; then
+    learn_bad "~/practice/reversing/library.txt가 없거나 비어 있어요" "readelf -d hello | grep NEEDED"
+  elif [[ "${answer,,}" == *libc.so.6* ]]; then
+    learn_ok "hello는 C 표준 라이브러리 libc.so.6을 빌려 써요"
+  elif [[ "${answer,,}" == *libc* ]]; then
+    learn_bad "거의 맞았어요. 파일 이름 그대로 적어요" "NEEDED 줄의 [ ] 안에 있는 이름 전체를 적어요"
+  else
+    learn_bad "'${answer}'이(가) 아니에요" "readelf -d hello | grep NEEDED 의 [ ] 안을 봐요"
+  fi
+}
+
+learn_check_17() {
+  local answer
+  answer="$(learn_answer "${LEARN_REV}/vault.txt")"
+  if [[ -z "${answer}" ]]; then
+    learn_bad "~/practice/reversing/vault.txt가 없거나 비어 있어요" "strings vault 로 비밀번호를 찾고 ./vault 에 넣어요"
+  elif [[ "${answer^^}" == *ROBIN-VAULT-OPEN* ]]; then
+    learn_ok "strings로 찾은 비밀번호로 금고를 열었어요"
+  elif [[ "${answer}" == *robin-sesame-2026* ]]; then
+    learn_bad "그건 비밀번호예요" "./vault 에 비밀번호를 넣으면 나오는 코드를 적어요"
+  else
+    learn_bad "'${answer}'이(가) 아니에요" "금고를 열면 '코드:' 뒤에 나오는 글자를 적어요"
+  fi
+}
+
+learn_check_18() {
+  local answer
+  answer="$(learn_answer "${LEARN_REV}/gate.txt")"
+  if [[ -z "${answer}" ]]; then
+    learn_bad "~/practice/reversing/gate.txt가 없거나 비어 있어요" "ltrace ./gate 아무거나 로 strcmp를 봐요"
+  elif [[ "${answer^^}" == *ROBIN-GATE-PASS* ]]; then
+    learn_ok "ltrace로 strcmp에 넘긴 열쇠를 봤어요"
+  elif [[ "${answer}" == *open-sesame-7* ]]; then
+    learn_bad "그건 열쇠예요" "./gate 열쇠 로 문을 열면 나오는 코드를 적어요"
+  else
+    learn_bad "'${answer}'이(가) 아니에요" "문을 열면 '코드:' 뒤에 나오는 글자를 적어요"
+  fi
+  if ! have_cmd ltrace; then
+    printf '    %sltrace가 없으면: sudo pacman -S ltrace%s\n' "${C_DIM}" "${C_RESET}"
+  fi
+}
+
+learn_check_19() {
+  local answer
+  if [[ -e "${LEARN_REV}/.hidden/seeker.key" ]]; then
+    learn_ok "seeker가 찾던 열쇠 파일(~/practice/reversing/.hidden/seeker.key)이 있어요"
+  else
+    learn_bad "seeker가 찾는 열쇠 파일이 아직 없어요" "strace -e trace=openat ./seeker 에 나온 경로에 파일을 만들어요"
+  fi
+  answer="$(learn_answer "${LEARN_REV}/seeker.txt")"
+  if [[ -z "${answer}" ]]; then
+    learn_bad "~/practice/reversing/seeker.txt가 없거나 비어 있어요" "열쇠 파일을 만든 뒤 ./seeker 가 보여 주는 코드를 적어요"
+  elif [[ "${answer^^}" == *ROBIN-SEEKER-FOUND* ]]; then
+    learn_ok "strace로 찾은 경로에 열쇠를 두자 코드가 나왔어요"
+  else
+    learn_bad "'${answer}'이(가) 아니에요" "./seeker 가 '코드:' 뒤에 보여 주는 글자를 적어요"
+  fi
+  if ! have_cmd strace; then
+    printf '    %sstrace가 없으면: sudo pacman -S strace%s\n' "${C_DIM}" "${C_RESET}"
+  fi
+}
+
+learn_check_20() {
+  local answer
+  answer="$(learn_answer "${LEARN_REV}/number.txt")"
+  if [[ -z "${answer}" ]]; then
+    learn_bad "~/practice/reversing/number.txt가 없거나 비어 있어요" "objdump -d count --disassemble=check 의 cmp 줄을 봐요"
+  elif [[ "${answer}" == "1337" ]]; then
+    learn_ok "check 함수의 cmp \$0x539는 10진수로 1337이에요"
+  elif [[ "${answer,,}" == "0x539" || "${answer}" == "539" ]]; then
+    learn_bad "16진수 그대로예요" "echo \$((0x539)) 로 10진수로 바꿔서 적어요"
+  else
+    learn_bad "'${answer}'이(가) 아니에요" "cmp 줄의 \$0x... 숫자를 10진수로 바꿔요"
+  fi
+}
+
 learn_check() {
   local n next
   n="$(learn_mission_arg "${1:-}")"
@@ -1556,6 +1789,8 @@ learn_check() {
     printf '리눅스 기초를 끝냈어요. 6번부터는 네트워크 기초예요.\n'
   elif [[ "${n}" == "10" ]]; then
     printf '네트워크 기초를 끝냈어요. 11번부터는 포렌식 기초예요.\n'
+  elif [[ "${n}" == "15" ]]; then
+    printf '포렌식 기초를 끝냈어요. 16번부터는 리버싱 기초예요.\n'
   fi
   next="$(learn_next)"
   if [[ -n "${next}" ]]; then

@@ -164,7 +164,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 ## 학습 미션
 
-런처의 "학습 미션"을 고르면 터미널이 열리고 `robinctl learn`이 미션 목록과 진행도를 보여 줘요. 미션은 그 터미널에서 직접 풀고, `robinctl learn check`로 확인해요. 리눅스 기초, 네트워크 기초, 포렌식 기초가 5개씩 있고(포렌식 연습 파일은 `~/practice/forensics`에 만들어요), 자세한 내용은 [README](../README.md#학습-미션)에 있어요.
+런처의 "학습 미션"을 고르면 터미널이 열리고 `robinctl learn`이 미션 목록과 진행도를 보여 줘요. 미션은 그 터미널에서 직접 풀고, `robinctl learn check`로 확인해요. 리눅스 기초, 네트워크 기초, 포렌식 기초, 리버싱 기초가 5개씩 있고(연습 파일은 `~/practice/forensics`, 연습 프로그램은 `~/practice/reversing`에 만들어요), 자세한 내용은 [README](../README.md#학습-미션)에 있어요.
 
 셸이 작업용으로 여는 터미널은 `ROBINOS_NO_GREETING=1`로 시작해서 `~/.bashrc`가 fastfetch를 띄우지 않아요. fastfetch는 한국어 라벨로 짧게 줄인 설정(`desktop/fastfetch/config.jsonc` → `/etc/xdg/fastfetch/config.jsonc`)을 써요.
 
