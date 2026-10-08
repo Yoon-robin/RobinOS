@@ -16,6 +16,7 @@
 | 설치 방법 | [install.md](install.md) |
 | 스냅샷과 복구 | [recovery.md](recovery.md) |
 | 데스크톱 구성, 단축키, 셸 기능 | [desktop.md](desktop.md) |
+| CTF 시작하기, 입문 CTF, 다음 연습장 | [ctf.md](ctf.md) |
 | 디자인 토큰 | `desktop/shell/Theme.qml` (코드가 원본, [brand.md](brand.md)의 표는 사본) |
 
 ## 문서 목록

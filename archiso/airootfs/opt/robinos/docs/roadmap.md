@@ -59,5 +59,5 @@ v0.1 범위와 진행 상황은 `docs/design.md`에서 관리해요.
 - 서명된 ISO 빌드
 - 체크섬 공개
 - 설치 가이드 작성 - 초안 완료 ([install.md](install.md)), 윈도우 옆 설치 검증 뒤 다듬기
-- 첫 CTF 랩 가이드 작성
+- 첫 CTF 랩 가이드 작성 - [ctf.md](ctf.md), 입문 CTF 5문제 `robinctl ctf` (2026-10-09)
 - GitHub 릴리스 만들기
