@@ -21,7 +21,7 @@ build/logs/mkarchiso-*.log
 - 정적 검증 (`scripts/validate-project.ps1`)
 - 데스크톱 설정 검사와 `qmllint` (`scripts/wsl-build.ps1 check`)
 - 패키지 검사 (빌드할 때 자동)
-- ISO 빌드 성공과 `SHA256SUMS`
+- ISO 빌드 성공과 `SHA256SUMS`. 릴리스 ISO는 `wsl-build.ps1 build`(xz 압축)로 만들어요. `verify`가 만드는 테스트 ISO는 zstd라 2GiB를 넘어서 올릴 수 없어요
 - 자동 부팅 테스트: 스크린샷을 한 장씩 보고 이상이 없는지
 - `robinctl` 테스트(`scripts/test-robinctl.sh`)와 설치기 테스트(`scripts/test-robin-install.py`), 둘 다 `check`에 들어 있어요
 - 설치 테스트: `archinstall`, `robinos`, `windows` 세 방식 모두, 한 번은 `-Lab`을 붙여 웹 랩까지

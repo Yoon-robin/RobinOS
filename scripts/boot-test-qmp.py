@@ -163,6 +163,12 @@ def main():
     shot(qmp, "quick-settings-keyboard")
     keys(qmp, "meta_l", "s")
     wait(2)
+    # Super+Alt+D opens the clock's month calendar (a click on the clock does too)
+    keys(qmp, "meta_l", "alt", "d")
+    wait(2)
+    shot(qmp, "calendar")
+    keys(qmp, "esc")
+    wait(1)
 
     keys(qmp, "meta_l", "ret")
     wait(6)

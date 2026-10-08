@@ -19,7 +19,8 @@
 
 param(
     [Parameter(Position = 0)]
-    [ValidateSet("setup", "check", "status", "build", "boot-test", "install-test", "shell")]
+    # verify: a fast test ISO (zstd), then the boot and the install test side by side
+    [ValidateSet("setup", "check", "status", "build", "boot-test", "install-test", "verify", "shell")]
     [string]$Task = "build",
     # install-test: archinstall (docs/install.md method 2), robinos (installer/robin-install on
     # the whole disk) or windows (robin-install next to a stand-in Windows disk)
@@ -35,7 +36,10 @@ param(
     [switch]$ReuseDisk,
     # install-test: also start the web lab on the installed system (downloads its images)
     [switch]$Lab,
-    [string]$Distro = "archlinux"
+    [string]$Distro = "archlinux",
+    # Internal: the boot test that verify starts next to its install test (no busy
+    # check, no reset of the WSL clone, the VM files verify already prepared)
+    [switch]$Inner
 )
 
 $ErrorActionPreference = "Stop"
@@ -54,16 +58,23 @@ function Invoke-Wsl([string]$script) {
 
 # Boot test with QEMU for Windows (WHPX). WSL prepares the ISO (scripts/vm-prepare.sh),
 # QEMU runs here, and scripts/boot-test-qmp.py drives it over QMP on TCP.
-function Invoke-WhpxBootTest {
-    $out = Join-Path $root "build\boot-test"
+# Copies the newest ISO to build\vm and extracts its kernel (scripts/vm-prepare.sh).
+# verify does it once for both tests: two runs at a time would delete each other's files.
+function Get-VmFiles {
+    if ($env:ROBINOS_VM_PREPARED) { return $env:ROBINOS_VM_PREPARED }
     $vm = Join-Path $root "build\vm"
-    if (Test-Path $out) { Remove-Item $out -Recurse -Force }
-    New-Item -ItemType Directory -Force $out, $vm | Out-Null
+    New-Item -ItemType Directory -Force $vm | Out-Null
     $wslVm = (wsl.exe -d $Distro -u root -e wslpath -a ($vm -replace "\\", "/")).Trim()
-
     $prepared = wsl.exe -d $Distro -u root -e bash "$wslRoot/scripts/vm-prepare.sh" $wslVm
     if ($LASTEXITCODE -ne 0) { throw "ISO를 준비하지 못했어요" }
-    $base, $label, $isoName = (($prepared | Select-Object -Last 1) -split " ")
+    return ($prepared | Select-Object -Last 1)
+}
+
+function Invoke-WhpxBootTest {
+    $out = Join-Path $root "build\boot-test"
+    if (Test-Path $out) { Remove-Item $out -Recurse -Force }
+    New-Item -ItemType Directory -Force $out | Out-Null
+    $base, $label, $isoName = ((Get-VmFiles) -split " ")
     Write-Host "ISO: $isoName (WHPX)"
 
     # QEMU for Windows reads its command line and QMP paths as UTF-8, but gets them in the
@@ -122,12 +133,8 @@ function Invoke-WhpxInstallTest {
     } elseif (Test-Path $out) {
         Remove-Item $out -Recurse -Force
     }
-    New-Item -ItemType Directory -Force $out, $vm | Out-Null
-    $wslVm = (wsl.exe -d $Distro -u root -e wslpath -a ($vm -replace "\\", "/")).Trim()
-
-    $prepared = wsl.exe -d $Distro -u root -e bash "$wslRoot/scripts/vm-prepare.sh" $wslVm
-    if ($LASTEXITCODE -ne 0) { throw "ISO를 준비하지 못했어요" }
-    $base, $label, $isoName = (($prepared | Select-Object -Last 1) -split " ")
+    New-Item -ItemType Directory -Force $out | Out-Null
+    $base, $label, $isoName = ((Get-VmFiles) -split " ")
     Write-Host "ISO: $isoName (WHPX), 설치 방식: $Installer"
 
     # This checkout's files for the installed system, as a read-only FAT disk
@@ -237,7 +244,7 @@ if ($Task -eq "status") {
     exit 0
 }
 
-if ($busy -and $Task -ne "shell") {
+if ($busy -and $Task -ne "shell" -and -not $Inner) {
     Write-Host "WSL에서 다른 빌드나 VM이 돌고 있어서 시작하지 않아요:" -ForegroundColor Yellow
     Write-Host $busy
     exit 3
@@ -247,8 +254,9 @@ if (git -C $root status --porcelain) {
     Write-Host "알림: 커밋하지 않은 변경은 WSL로 넘어가지 않아요. HEAD 기준으로 진행해요." -ForegroundColor Yellow
 }
 
-Write-Host "WSL의 /root/RobinOS를 $(git -C $root rev-parse --short HEAD)로 맞춰요"
-Invoke-Wsl @"
+if (-not $Inner) {
+    Write-Host "WSL의 /root/RobinOS를 $(git -C $root rev-parse --short HEAD)로 맞춰요"
+    Invoke-Wsl @"
 set -e
 [ -d /root/RobinOS/.git ] || git clone -q '$wslRoot' /root/RobinOS
 cd /root/RobinOS
@@ -256,6 +264,7 @@ git fetch -q '$wslRoot' HEAD
 git reset -q --hard FETCH_HEAD
 git clean -qfd
 "@
+}
 
 switch ($Task) {
     "build" {
@@ -279,6 +288,32 @@ switch ($Task) {
         }
         Invoke-Wsl "cd /root/RobinOS && scripts/install-test.sh --installer=$Installer; rc=`$?; mkdir -p '$wslRoot/build/install-test' && cp build/install-test/*.png build/install-test/*.log '$wslRoot/build/install-test/' 2>/dev/null; exit `$rc"
         Write-Host "결과: $root\build\install-test"
+    }
+    "verify" {
+        # One pass for a batch of commits (docs/loop.md "5. 검증"): a test ISO with zstd,
+        # then the boot test and the install test at the same time. Each WHPX VM takes
+        # 6 GB and 4 CPUs; the two use their own folders and ports.
+        if ($Accel -eq "auto") { $Accel = if (Test-Path $Qemu) { "whpx" } else { "tcg" } }
+        if ($Accel -ne "whpx") { throw "verify는 WHPX가 필요해요. TCG에서는 build, boot-test, install-test를 차례로 돌려요" }
+        $started = Get-Date
+        Invoke-Wsl "cd /root/RobinOS && ROBINOS_FAST_ISO=1 scripts/build-iso.sh"
+        $built = Get-Date
+        $env:ROBINOS_VM_PREPARED = Get-VmFiles
+
+        $bootLog = Join-Path $root "build\verify-boot.log"
+        $bootArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`" boot-test -Inner -Accel whpx -Qemu `"$Qemu`" -Distro $Distro"
+        $boot = Start-Process powershell.exe -ArgumentList $bootArgs -PassThru -WindowStyle Hidden `
+            -RedirectStandardOutput $bootLog -RedirectStandardError "$bootLog.err"
+        $installError = $null
+        try { Invoke-WhpxInstallTest } catch { $installError = $_ }
+        $boot.WaitForExit()
+        Remove-Item Env:ROBINOS_VM_PREPARED -ErrorAction SilentlyContinue
+
+        Write-Host ("`n빌드 {0:N1}분, 테스트 {1:N1}분 (부팅 테스트 기록: {2})" -f `
+            ($built - $started).TotalMinutes, ((Get-Date) - $built).TotalMinutes, $bootLog)
+        if ($boot.ExitCode -ne 0) { Write-Host "부팅 테스트가 실패했어요 (종료 코드 $($boot.ExitCode))" -ForegroundColor Yellow }
+        if ($installError) { throw $installError }
+        if ($boot.ExitCode -ne 0) { exit 1 }
     }
     "shell" {
         wsl.exe -d $Distro -u root --cd /root/RobinOS

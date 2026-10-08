@@ -34,6 +34,7 @@ PanelWindow {
             confirmPower = false;
             ShellState.refreshBrightness();
             ShellState.refreshLab();
+            ShellState.checkUpdates(false);
             mapped = true;
             Qt.callLater(() => {
                 root.revealed = true;
@@ -258,6 +259,73 @@ PanelWindow {
                             onClicked: powerButton.press()
                         }
                     }
+                }
+            }
+
+            // ---- Updates waiting (ShellState.updateCount) ----
+            Rectangle {
+                id: updateButton
+
+                visible: ShellState.updateCount > 0
+                Layout.fillWidth: true
+                implicitHeight: 40
+                radius: Theme.radiusMd
+                color: updateMouse.containsMouse ? Theme.secondaryHover : Theme.secondary
+
+                Accessible.role: Accessible.Button
+                Accessible.name: "업데이트 " + ShellState.updateCount + "개 설치하기"
+
+                function start() {
+                    root.close();
+                    ShellState.runInTerminal("sudo robinctl update");
+                }
+
+                activeFocusOnTab: true
+                Keys.onPressed: event => {
+                    if (Keyboard.activates(event)) {
+                        updateButton.start();
+                        event.accepted = true;
+                    }
+                }
+
+                FocusRing {
+                    baseRadius: updateButton.radius
+                }
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 12
+                    anchors.rightMargin: 12
+                    spacing: 10
+
+                    Icon {
+                        name: "refresh"
+                        color: Theme.fg
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: "업데이트 " + ShellState.updateCount + "개가 있어요"
+                        color: Theme.fg
+                        font.family: Theme.font
+                        font.pixelSize: 13
+                        font.weight: Font.Medium
+                    }
+
+                    Text {
+                        text: "지금 업데이트"
+                        color: Theme.muted
+                        font.family: Theme.font
+                        font.pixelSize: 12
+                    }
+                }
+
+                MouseArea {
+                    id: updateMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: updateButton.start()
                 }
             }
 

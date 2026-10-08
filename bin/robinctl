@@ -47,7 +47,7 @@ robinctl - RobinOS 관리 도구
   robinctl packages core                기본 패키지 목록
   robinctl packages <프로필>            보안 실습 프로필의 패키지 목록
   robinctl packages optional            선택 패키지 목록
-  robinctl learn                        학습 미션(리눅스·네트워크·포렌식·리버싱)과 진행도
+  robinctl learn                        학습 미션(리눅스·네트워크·포렌식·리버싱·웹)과 진행도
   robinctl learn show [번호]            미션 설명 보기
   robinctl learn check [번호]           미션 결과 확인
   robinctl learn reset                  미션 진행도 초기화
@@ -730,7 +730,7 @@ packages_print() {
 }
 
 # ---- Learning missions: Linux basics (1-5), network basics (6-10), forensics basics (11-15),
-# reversing basics (16-20) ----
+# reversing basics (16-20), web basics (21-25) ----
 #
 # Missions are solved in a real terminal. `robinctl learn check N` looks at the
 # result (files under ~/practice) and records progress in the user's state dir.
@@ -739,13 +739,15 @@ packages_print() {
 # robinctl makes under ~/practice/forensics; 13 and 14 need the forensics profile.
 # The reversing missions work on small practice programs (practice/reversing/*.c)
 # put in ~/practice/reversing; 18 and 19 need ltrace and strace (in the live ISO and
-# the reversing profile, or pacman -S on their own).
+# the reversing profile, or pacman -S on their own). The web basics missions talk to a
+# practice server (practice/web/server.py) that only listens on 127.0.0.1:8000.
 
-readonly LEARN_COUNT=20
+readonly LEARN_COUNT=25
 LEARN_DIR="${HOME:-/root}/practice"
 LEARN_NET="${HOME:-/root}/practice/net"
 LEARN_FOR="${HOME:-/root}/practice/forensics"
 LEARN_REV="${HOME:-/root}/practice/reversing"
+LEARN_WEB="${HOME:-/root}/practice/web"
 LEARN_STATE="${XDG_STATE_HOME:-${HOME:-/root}/.local/state}/robinos/learn"
 LEARN_FAILS=0
 
@@ -771,6 +773,11 @@ learn_title() {
     18) printf '라이브러리 호출 엿보기' ;;
     19) printf '시스템 호출 엿보기' ;;
     20) printf '기계어 읽어 보기' ;;
+    21) printf '웹 서버 켜고 접속하기' ;;
+    22) printf '응답 헤더 읽기' ;;
+    23) printf 'robots.txt 읽기' ;;
+    24) printf '쿠키 주고받기' ;;
+    25) printf '상태 코드와 리다이렉트' ;;
   esac
 }
 
@@ -781,6 +788,7 @@ learn_group() {
     6) printf '네트워크 기초' ;;
     11) printf '포렌식 기초' ;;
     16) printf '리버싱 기초' ;;
+    21) printf '웹 기초' ;;
   esac
 }
 
@@ -806,6 +814,11 @@ learn_tools() {
     18) printf 'ltrace' ;;
     19) printf 'strace' ;;
     20) printf 'objdump' ;;
+    21) printf 'python3 curl' ;;
+    22) printf 'curl -I' ;;
+    23) printf 'robots.txt' ;;
+    24) printf 'curl -c -b' ;;
+    25) printf 'curl -i -L' ;;
   esac
 }
 
@@ -847,7 +860,7 @@ learn_mission_arg() {
     n="$(learn_next)"
     [[ -n "${n}" ]] || n="${LEARN_COUNT}"
   fi
-  [[ "${n}" =~ ^([1-9]|1[0-9]|20)$ ]] || die "미션 번호는 1부터 ${LEARN_COUNT}까지예요"
+  [[ "${n}" =~ ^([1-9]|1[0-9]|2[0-5])$ ]] || die "미션 번호는 1부터 ${LEARN_COUNT}까지예요"
   printf '%s' "${n}"
 }
 
@@ -1365,6 +1378,118 @@ EOF
 EOF
 }
 
+learn_show_21() {
+  cat <<'EOF'
+웹 페이지는 서버가 보내 주는 글(HTML)이에요. 브라우저 대신 curl로 받으면 서버가 실제로 보낸 내용이 그대로 보여요.
+연습 서버는 내 컴퓨터(127.0.0.1)에서만 열려서 다른 컴퓨터에서는 보이지 않아요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  연습 서버를 켜 두고, 첫 페이지에 적힌 코드를 ~/practice/web/hello.txt에 적으세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  python3 ~/practice/web/server.py      (새 터미널 Win+Enter에서) 서버 켜기. 끄려면 Ctrl+C
+  curl http://127.0.0.1:8000/           (이 터미널에서) 첫 페이지 받기
+  firefox http://127.0.0.1:8000/        브라우저로도 열어 봐요
+  echo 코드 > ~/practice/web/hello.txt  (나온 코드로 바꿔서)
+
+  22~25번도 이 서버를 써요. 미션을 다 할 때까지 켜 두세요.
+EOF
+}
+
+learn_show_22() {
+  cat <<'EOF'
+서버는 내용 앞에 헤더를 붙여 보내요. 내용 종류, 길이, 서버 이름, 쿠키 같은 정보예요.
+브라우저에서는 개발자 도구(F12)의 "네트워크" 탭에서 볼 수 있어요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  첫 페이지의 응답 헤더 중 X-Robin-Code의 값을 ~/practice/web/header.txt에 적으세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  curl -I http://127.0.0.1:8000/        헤더만 보기
+  curl -i http://127.0.0.1:8000/        헤더와 내용을 함께
+  echo 값 > ~/practice/web/header.txt   (찾은 값으로 바꿔서)
+EOF
+}
+
+learn_show_23() {
+  cat <<'EOF'
+robots.txt는 검색 로봇에게 "여기는 보지 말아 주세요"라고 부탁하는 파일이에요.
+막는 기능이 아니라서, 숨기고 싶은 주소를 적으면 오히려 알려 주는 셈이에요.
+웹 점검에서 먼저 보는 파일이에요. 허가받은 곳에서만 해요(docs/ethics.md).
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  연습 서버의 robots.txt가 감춘 주소를 열어 보고, 나온 코드를 ~/practice/web/notes.txt에 적으세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  curl http://127.0.0.1:8000/robots.txt
+  curl http://127.0.0.1:8000/주소/      (Disallow에 적힌 주소로 바꿔서)
+  echo 코드 > ~/practice/web/notes.txt  (나온 코드로 바꿔서)
+EOF
+}
+
+learn_show_24() {
+  cat <<'EOF'
+웹은 요청마다 따로라서, 서버는 로그인한 사람을 쿠키로 알아봐요. 서버가 Set-Cookie로 준 값을
+브라우저가 다음 요청마다 Cookie로 돌려보내요. 쿠키를 훔치면 로그인을 가로챌 수 있어서
+자바스크립트가 읽지 못하게 하는 HttpOnly 같은 보호를 붙여요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  /me 는 쿠키가 없으면 401을 돌려줘요. /login 에서 쿠키를 받아 /me 에 보내고,
+  나온 코드를 ~/practice/web/cookie.txt에 적으세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  cd ~/practice/web
+  curl -i http://127.0.0.1:8000/me                 쿠키 없이 (401)
+  curl -i -c jar.txt http://127.0.0.1:8000/login   받은 쿠키를 jar.txt에 저장
+  cat jar.txt                                      받은 쿠키 보기
+  curl -b jar.txt http://127.0.0.1:8000/me         쿠키 보내기
+  echo 코드 > cookie.txt                           (나온 코드로 바꿔서)
+EOF
+}
+
+learn_show_25() {
+  cat <<'EOF'
+응답의 첫 줄에는 상태 코드가 있어요. 200은 성공, 301은 주소가 옮겨졌다, 401은 로그인이 필요하다,
+404는 없다는 뜻이에요. 301이면 Location 헤더가 새 주소를 알려 줘요. 브라우저는 알아서 따라가요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  /old-page 의 상태 코드와 옮겨 간 주소를 확인하고, 따라가서 나온 코드를
+  ~/practice/web/redirect.txt에 적으세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  curl -i http://127.0.0.1:8000/old-page     상태 코드와 Location 보기
+  curl -L http://127.0.0.1:8000/old-page     리다이렉트 따라가기
+  echo 코드 > ~/practice/web/redirect.txt    (나온 코드로 바꿔서)
+
+  웹 기초를 마치면 진짜 취약한 앱으로 연습할 수 있어요: robinctl lab info web
+EOF
+}
+
+# The practice web server for missions 21-25 (practice/web/server.py), kept here
+# as gzip + base64 by practice/web/build.sh
+LEARN_WEB_SERVER_B64="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"
+
+learn_prepare_web() {
+  if [[ -f "${LEARN_STATE}/prepared-web" && -f "${LEARN_WEB}/server.py" ]]; then
+    return
+  fi
+  mkdir -p "${LEARN_WEB}" "${LEARN_STATE}"
+  printf '%s' "${LEARN_WEB_SERVER_B64}" | base64 -d | gzip -dc >"${LEARN_WEB}/server.py"
+  chmod 755 "${LEARN_WEB}/server.py"
+  : >"${LEARN_STATE}/prepared-web"
+  printf '\n%s연습 서버를 ~/practice/web/server.py에 만들어 뒀어요.%s\n' "${C_DIM}" "${C_RESET}"
+}
+
 # Practice programs for missions 16-20, built from practice/reversing/*.c by
 # practice/reversing/build.sh and kept here as gzip + base64 (a few KB each)
 LEARN_REV_HELLO_B64="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"
@@ -1406,6 +1531,8 @@ learn_show() {
   "learn_show_${n}"
   if [[ "${n}" == "3" ]]; then
     learn_prepare_3
+  elif ((n >= 21)); then
+    learn_prepare_web
   elif ((n >= 16)); then
     learn_prepare_reversing
   elif ((n >= 11)); then
@@ -1807,6 +1934,55 @@ learn_check_20() {
   fi
 }
 
+# Missions 21-25: an answer file holds a code from the practice server
+learn_check_web_code() {
+  local file="$1" code="$2" ok="$3" hint="$4" answer
+  answer="$(learn_answer "${LEARN_WEB}/${file}")"
+  if [[ -z "${answer}" ]]; then
+    learn_bad "~/practice/web/${file}가 없거나 비어 있어요" "${hint}"
+  elif [[ "${answer^^}" == *"${code}"* ]]; then
+    learn_ok "${ok}"
+  else
+    learn_bad "'${answer}'이(가) 아니에요" "${hint}"
+  fi
+}
+
+learn_check_21() {
+  if [[ -f "${LEARN_WEB}/server.py" ]]; then
+    learn_ok "연습 서버(~/practice/web/server.py)가 있어요"
+  else
+    learn_bad "연습 서버가 없어요" "robinctl learn show 21 을 다시 실행하면 만들어요"
+  fi
+  learn_check_web_code hello.txt ROBIN-WEB-HELLO "curl로 첫 페이지를 받아 코드를 찾았어요" \
+    "python3 ~/practice/web/server.py 를 켜 두고 curl http://127.0.0.1:8000/"
+}
+
+learn_check_22() {
+  learn_check_web_code header.txt ROBIN-WEB-HEADER "응답 헤더 X-Robin-Code를 읽었어요" \
+    "curl -I http://127.0.0.1:8000/ 의 X-Robin-Code 줄을 봐요"
+}
+
+learn_check_23() {
+  learn_check_web_code notes.txt ROBIN-WEB-ROBOTS "robots.txt가 감춘 /secret-notes/ 를 열었어요. 숨기는 기능이 아니에요" \
+    "curl http://127.0.0.1:8000/robots.txt 의 Disallow 주소를 열어요"
+}
+
+learn_check_24() {
+  local answer
+  answer="$(learn_answer "${LEARN_WEB}/cookie.txt")"
+  if [[ "${answer}" == *robin-practice* ]]; then
+    learn_bad "그건 쿠키 값이에요" "curl -b jar.txt http://127.0.0.1:8000/me 가 보여 주는 코드를 적어요"
+    return
+  fi
+  learn_check_web_code cookie.txt ROBIN-WEB-COOKIE "쿠키를 돌려보내 서버가 누군지 알아보게 했어요" \
+    "curl -c jar.txt 로 /login 쿠키를 받고 curl -b jar.txt 로 /me 에 보내요"
+}
+
+learn_check_25() {
+  learn_check_web_code redirect.txt ROBIN-WEB-REDIRECT "301과 Location을 따라 /new-page 에 갔어요" \
+    "curl -L http://127.0.0.1:8000/old-page"
+}
+
 learn_check() {
   local n next
   n="$(learn_mission_arg "${1:-}")"
@@ -1830,6 +2006,8 @@ learn_check() {
     printf '네트워크 기초를 끝냈어요. 11번부터는 포렌식 기초예요.\n'
   elif [[ "${n}" == "15" ]]; then
     printf '포렌식 기초를 끝냈어요. 16번부터는 리버싱 기초예요.\n'
+  elif [[ "${n}" == "20" ]]; then
+    printf '리버싱 기초를 끝냈어요. 21번부터는 웹 기초예요.\n'
   fi
   next="$(learn_next)"
   if [[ -n "${next}" ]]; then

@@ -26,6 +26,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 status           
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build             # ISO 빌드 (WSL, HEAD 기준)
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 boot-test         # 부팅 테스트 → build\boot-test
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test      # 설치 테스트 → build\install-test
+powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 verify -Installer robinos  # 묶음 검증: 빠른 ISO + 부팅·설치 테스트 동시에
 powershell -ExecutionPolicy Bypass -File scripts/sync-archiso-files.ps1          # ISO 오버레이 맞추기
 ```
 

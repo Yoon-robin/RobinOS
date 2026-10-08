@@ -95,6 +95,7 @@ VM 창 크기를 바꾸면 VMware(`vmtoolsd`)나 QEMU(`virtio-gpu`)가 새 크�
 | `Print`, `Shift+Print` | 영역 또는 전체 화면을 찍어 `~/Pictures/Screenshots`와 클립보드에 저장 |
 | `Super+Shift+S` | 영역 스크린샷 (윈도우의 캡처 도구 `Win+Shift+S`와 같아요) |
 | `Super+V` | 클립보드 기록 (윈도우의 `Win+V`처럼 복사한 것 50개, 로그아웃하면 지워져요) |
+| `Super+Alt+D` 또는 바의 시계 클릭 | 달력 (←, → 로 달 바꾸기, Home은 이번 달) |
 | `Right Alt` | 한/영 전환 (`Right Ctrl`은 한자) |
 | `Super+Shift+Escape` | 로그아웃 |
 
@@ -169,7 +170,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 ## 학습 미션
 
-런처의 "학습 미션"을 고르면 터미널이 열리고 `robinctl learn`이 미션 목록과 진행도를 보여 줘요. 미션은 그 터미널에서 직접 풀고, `robinctl learn check`로 확인해요. 리눅스 기초, 네트워크 기초, 포렌식 기초, 리버싱 기초가 5개씩 있고(연습 파일은 `~/practice/forensics`, 연습 프로그램은 `~/practice/reversing`에 만들어요), 자세한 내용은 [README](../README.md#학습-미션)에 있어요. 미션을 하나라도 끝내면 런처의 "학습 미션"에 "3/20 완료"처럼 진행도가 보여요(`~/.local/state/robinos/learn/done`을 셸이 읽어요).
+런처의 "학습 미션"을 고르면 터미널이 열리고 `robinctl learn`이 미션 목록과 진행도를 보여 줘요. 미션은 그 터미널에서 직접 풀고, `robinctl learn check`로 확인해요. 리눅스, 네트워크, 포렌식, 리버싱, 웹 기초가 5개씩 있고(연습 파일은 `~/practice/forensics`, 연습 프로그램은 `~/practice/reversing`, 웹 연습 서버는 `~/practice/web`에 만들어요), 자세한 내용은 [README](../README.md#학습-미션)에 있어요. 미션을 하나라도 끝내면 런처의 "학습 미션"에 "3/25 완료"처럼 진행도가 보여요(`~/.local/state/robinos/learn/done`을 셸이 읽어요).
 
 셸이 작업용으로 여는 터미널은 `ROBINOS_NO_GREETING=1`로 시작해서 `~/.bashrc`가 fastfetch를 띄우지 않아요. fastfetch는 한국어 라벨로 짧게 줄인 설정(`desktop/fastfetch/config.jsonc` → `/etc/xdg/fastfetch/config.jsonc`)을 써요.
 
@@ -186,6 +187,10 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 ## 오피스
 
 설치한 시스템에는 LibreOffice 안정판(`libreoffice-still`)이 한국어로 들어 있어요. Writer는 Word, Calc는 Excel, Impress는 PowerPoint 자리예요. `.docx`, `.xlsx`, `.pptx`를 열고 저장할 수 있지만, 복잡한 서식은 조금 달라 보일 수 있어요. 한글 문서(`.hwp`)는 오래된 형식(한글 97)만 열려요. 요즘 `.hwp`·`.hwpx` 파일은 보내는 사람에게 PDF나 `.docx`로 받는 게 가장 확실해요.
+
+## 업데이트 알림
+
+설치한 시스템은 로그인하고 3분 뒤, 그다음엔 3시간마다 업데이트가 있는지 봐요(`checkupdates`, 패키지 DB의 사본으로 확인해서 pacman을 막지 않아요). 있으면 바의 빠른 설정 단추에 강조 색 새로 고침 아이콘이 생기고, 빠른 설정 맨 위에 "업데이트 N개가 있어요" 단추가 나와요. 누르면 터미널에서 `sudo robinctl update`가 돌아서 업데이트 전후 스냅샷과 함께 설치해요. 빠른 설정을 열 때도 10분이 지났으면 다시 봐요. 라이브 세션에서는 보지 않아요.
 
 ## 프린터
 

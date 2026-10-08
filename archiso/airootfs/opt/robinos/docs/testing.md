@@ -76,7 +76,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 3. 데스크톱
 4. 런처: 추천 목록, `term` 검색, 윈도우 이름 `notepad` 검색
 5. 설치기 첫 두 단계(테스트 VM에는 빈 64GB 디스크가 있어요)
-6. 빠른 설정, Tab으로 옮긴 키보드 포커스
+6. 빠른 설정, Tab으로 옮긴 키보드 포커스, `Super+Alt+D`로 연 달력
 7. 터미널: `ipconfig` 힌트, `robinctl learn show 1`과 미션 1 풀기(라이트 모드 런처에 "1/20 완료"), 포털이 알려 주는 제목 표시줄 단추 배치(`button-layout`)
 8. 독처럼 최소화하고 되돌리기, `Super+D` 두 번(바탕 화면 보기와 되돌리기), `Super+Shift+S`(영역 고르기 화면, Esc로 취소), `Super+V`(복사한 글이 클립보드 기록에)
 9. 셸을 끄면 `robinos-shell`이 다시 띄우는지
@@ -90,6 +90,20 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 boot-test
 스크린샷과 `serial.log`는 `build\boot-test`에 생겨요. 테스트는 `robinos.debug`를 붙여 부팅해서 `robinos-session`이 Hyprland와 셸 출력을 저널로 보내고, 그 내용이 `serial.log`에 남아요. 셸이 안 뜨면 여기서 QML 오류를 찾으세요.
 
 Windows용 QEMU가 준비돼 있으면 WHPX 가속으로 돌아요([build-environment.md](build-environment.md)). 없으면 WSL 안에서 소프트웨어 에뮬레이션(TCG)으로 돌고, 기다리는 시간을 4배로 늘려요. TCG에서는 VM이 느려서 키 입력이 반복될 수 있으니, 이상한 결과가 나오면 테스트 탓인지 먼저 가려요.
+
+## 묶음 검증 (verify)
+
+여러 커밋을 한 번에 검증할 때는 빌드와 두 테스트를 따로 돌리지 않고 이렇게 해요.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 verify -Installer robinos
+```
+
+1. squashfs를 xz 대신 zstd로 압축한 테스트 ISO를 빌드해요(`ROBINOS_FAST_ISO=1`). 빌드와 부팅이 빨라지는 대신 2GiB를 넘어서 릴리스에는 쓰지 않아요.
+2. ISO를 `build\vm`에 한 번만 준비하고, 부팅 테스트(QMP 47011)와 설치 테스트(47021, 47022)를 동시에 띄워요. VM마다 6GB와 CPU 4개를 써요. 부팅 테스트의 출력은 `build\verify-boot.log`에 남아요.
+3. 끝나면 빌드와 테스트에 걸린 시간을 보여 줘요. 결과는 따로 돌릴 때와 같은 `build\boot-test`, `build\install-test`에 생겨요.
+
+WHPX가 필요해요. TCG에서는 `build`, `boot-test`, `install-test`를 차례로 돌려요.
 
 ## 설치 테스트
 

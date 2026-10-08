@@ -103,6 +103,7 @@ Singleton {
             return;
         }
         quickSettingsOpen = false;
+        calendarOpen = false;
         overlayScreen = focusedScreen;
         launcherClipboard = false;
         launcherOpen = true;
@@ -116,6 +117,7 @@ Singleton {
             return;
         }
         quickSettingsOpen = false;
+        calendarOpen = false;
         overlayScreen = focusedScreen;
         launcherClipboard = true;
         launcherOpen = true;
@@ -129,8 +131,25 @@ Singleton {
             return;
         }
         launcherOpen = false;
+        calendarOpen = false;
         overlayScreen = screen ?? focusedScreen;
         quickSettingsOpen = true;
+    }
+
+    // Month calendar under the bar's clock (Calendar.qml), like Windows' clock flyout
+    property bool calendarOpen: false
+
+    function toggleCalendar(screen) {
+        if (welcomeOpen)
+            return;
+        if (calendarOpen) {
+            calendarOpen = false;
+            return;
+        }
+        launcherOpen = false;
+        quickSettingsOpen = false;
+        overlayScreen = screen ?? focusedScreen;
+        calendarOpen = true;
     }
 
     // ---- Installer (Installer.qml), only offered in the live session ----
@@ -185,6 +204,7 @@ Singleton {
     function openWelcome() {
         launcherOpen = false;
         quickSettingsOpen = false;
+        calendarOpen = false;
         overlayScreen = focusedScreen;
         welcomeOpen = true;
     }
@@ -345,6 +365,13 @@ Singleton {
     }
 
     readonly property var weekdays: ["일", "월", "화", "수", "목", "금", "토"]
+    readonly property var now: clock.date
+
+    // "2026년 10월 8일 목요일", the calendar's heading
+    readonly property string dateLong: {
+        const d = clock.date;
+        return d.getFullYear() + "년 " + (d.getMonth() + 1) + "월 " + d.getDate() + "일 " + weekdays[d.getDay()] + "요일";
+    }
 
     function pad(n) {
         return n < 10 ? "0" + n : "" + n;
@@ -509,10 +536,49 @@ Singleton {
             labProc.running = true;
     }
 
+    // ---- Updates, like the Windows Update dot ----
+    // checkupdates (pacman-contrib) looks with its own copy of the package
+    // database, so it never locks pacman. The live session doesn't check.
+
+    property int updateCount: 0
+    property real lastUpdateCheck: 0
+
+    // At most every ten minutes, unless the timer asks
+    function checkUpdates(force) {
+        if (isLive || updateProc.running)
+            return;
+        if (!force && Date.now() - lastUpdateCheck < 10 * 60 * 1000)
+            return;
+        lastUpdateCheck = Date.now();
+        updateProc.running = true;
+    }
+
+    Process {
+        id: updateProc
+
+        command: ["sh", "-c", "checkupdates 2>/dev/null | wc -l"]
+        stdout: StdioCollector {
+            id: updateOut
+
+            onStreamFinished: root.updateCount = parseInt(updateOut.text.trim()) || 0
+        }
+    }
+
+    // First look three minutes after login (not to slow the start), then every three hours
+    Timer {
+        interval: 3 * 60 * 1000
+        running: true
+        onTriggered: {
+            root.checkUpdates(true);
+            interval = 3 * 60 * 60 * 1000;
+            restart();
+        }
+    }
+
     // ---- Learning progress (robinctl learn) ----
 
     // LEARN_COUNT in bin/robinctl (scripts/test-robinctl.sh checks they agree)
-    readonly property int learnTotal: 20
+    readonly property int learnTotal: 25
     property int learnDone: 0
 
     function refreshLearn() {
