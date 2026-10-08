@@ -44,9 +44,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (T-030 커밋) | NVIDIA 드라이버, 설치기 테스트 | 설치 테스트 robinos |
+| (없음) | | |
 
-`dfcb5fd`까지 2026-10-08 검증(부팅 테스트 30장, 설치 테스트 robinos, robinctl 테스트)을 마치고 푸시했어요.
+`844712d`까지 2026-10-08 검증(설치 테스트 robinos, 설치기·robinctl 테스트)을 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -57,12 +57,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - **RobinOS 파일 업데이트 배포 방식(T-026)**: 2026-10-08 사용자가 중앙 서버가 필요한지 묻고 추천을 원함. 추천: 따로 서버 없이 깃허브 릴리스를 pacman 저장소로 쓰고, RobinOS 파일을 pacman 패키지로 만들어 서명해요. `robinctl update` 한 번에 함께 올라가고 snap-pac 스냅샷도 그대로 생겨요. 서명 열쇠(GPG)를 이 PC에 만들어야 해서 사용자 답을 기다려요
 
 ## 진행 중
-
-### T-030 NVIDIA 그래픽 카드 드라이버
-- 상태: 검증 대기
-- 출처: 백로그 채우기 1(design.md 요구사항 표 "하드웨어: NVIDIA, `nvidia-open`"이 구현되지 않음). 윈도우에서 넘어오는 게임용 PC에 흔해요
-- 한 것: 설치기가 `/sys/bus/pci/devices`에서 NVIDIA 화면 장치(VGA, 노트북의 3D 컨트롤러)를 찾아요. 장치 번호가 `0x1e00` 이상(Turing, GTX 16·RTX 20 이후)이면 `nvidia-open`을 설치하고 initramfs에서 `kms` 훅을 빼요(nouveau가 먼저 뜨지 않게). 더 오래된 카드는 nouveau 그대로예요(Arch 공식 저장소에 그 드라이버가 없어요). nvidia-utils 615가 nouveau 차단과 절전(커널 suspend notifier)을 스스로 해서 따로 켤 서비스는 없어요(패키지를 받아 확인). 설치기 테스트 `scripts/test-robin-install.py`를 새로 만들어 `check`에 넣음(그래픽 7개, 훅 3개, fstab 1개 통과)
-- 완료 기준: 설치 테스트 robinos 통과(NVIDIA가 없는 VM이라 바뀐 게 없어야 해요). 실제 NVIDIA PC 확인은 "사용자 확인 필요"의 실기기 항목에 더함
 
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
@@ -110,6 +104,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ## 완료
 
 최근 것이 위에 있어요.
+
+- 2026-10-08 T-030 NVIDIA 그래픽 카드 드라이버(`844712d`): 설치기가 `/sys/bus/pci/devices`에서 NVIDIA 화면 장치(VGA, 노트북의 3D 컨트롤러)를 찾고, 장치 번호 `0x1e00` 이상(Turing, GTX 16·RTX 20 이후)이면 `nvidia-open`을 설치하고 initramfs에서 `kms` 훅을 빼요. 오래된 카드는 nouveau 그대로(Arch 공식 저장소에 드라이버 없음). nvidia-utils 615가 nouveau 차단과 절전(커널 suspend notifier)을 스스로 해서 켤 서비스는 없음(패키지를 받아 확인). 설치기 테스트 `scripts/test-robin-install.py`(11개)를 `check`에 넣음. 설치 테스트 robinos 다섯 단계 통과. 실제 NVIDIA PC는 "사용자 확인 필요"
 
 - 2026-10-08 코드 검토로 고친 것 두 가지: 라이브 ISO와 새 설치본의 독에 설치 안 된 Wireshark가 고정돼 눌러도 반응 없던 것(`6faf853`, 부팅·설치 테스트에서 확인), Docker 없이 랩을 켜면 설치 방법을 알려 주지 않던 것(`dfcb5fd`, robinctl 테스트에 Docker 없는 경우를 더함)
 
