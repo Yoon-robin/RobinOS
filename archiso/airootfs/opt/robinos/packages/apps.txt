@@ -7,3 +7,8 @@
 cups
 nss-mdns
 system-config-printer
+
+# Office: LibreOffice's stable branch with the Korean interface and help
+# ("워드", "엑셀", "파워포인트" in the launcher). About 150 MiB to download.
+libreoffice-still
+libreoffice-still-ko

@@ -38,7 +38,7 @@ RobinOS는 라이브 USB로 부팅해서 설치해요. 방법은 두 가지예�
 - 부트로더는 GRUB이에요. 윈도우 옆에 설치하면 부팅 메뉴에 윈도우도 나오고, 윈도우와 시계가 어긋나지 않게 하드웨어 시계를 지역 시간으로 둬요.
 - NVIDIA 그래픽 카드가 있으면 GTX 16, RTX 20 이후 카드에는 NVIDIA 드라이버(`nvidia-open`)를 설치해요. 노트북처럼 인텔·AMD 그래픽과 함께 있어도 마찬가지예요. 그보다 오래된 카드(GTX 10 이전)는 기본 드라이버(nouveau)로 돌아가서 화면이 느릴 수 있어요. 실제 NVIDIA 카드에서는 아직 확인 전이에요.
 - VMware, QEMU 같은 가상 머신에서는 게스트 도구(`open-vm-tools`, `qemu-guest-agent`)를 설치해요.
-- 라이브 ISO에는 없는 앱(`packages/apps.txt`)을 더 설치해요. 지금은 프린터(CUPS와 프린터 설정 앱)예요.
+- 라이브 ISO에는 없는 앱(`packages/apps.txt`)을 더 설치해요. 지금은 프린터(CUPS와 프린터 설정 앱)와 오피스(LibreOffice, 한국어)예요. LibreOffice만 150MB쯤 더 내려받아요.
 - 설치 기록은 라이브 세션의 `/var/log/robin-install.log`에 남아요. 실패하면 설치기 화면에 이유가 나오고, 고친 뒤 처음부터 다시 할 수 있어요.
 
 ### 윈도우 옆에 설치하려면

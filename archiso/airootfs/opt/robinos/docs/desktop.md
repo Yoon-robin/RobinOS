@@ -155,6 +155,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 | 반디집, 알집, `7-zip` | 압축 관리자 |
 | 볼륨 믹서 | 음량 조절 (pavucontrol) |
 | Acrobat, `pdf` | 문서 뷰어 (Evince) |
+| 워드, 엑셀, 파워포인트, 오피스 | LibreOffice Writer, Calc, Impress (설치본에만 있어요) |
 | 장치 및 프린터, 프린터, `printer` | 프린터 설정 (설치본에만 있어요) |
 | 제어판, `control panel` | 빠른 설정 |
 
@@ -170,7 +171,11 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 라이브 ISO는 `robin` 계정(비밀번호 `robin`)으로 RobinOS 세션에 자동 로그인해요. 비밀번호 없는 sudo는 라이브 ISO에만 설정돼 있어요(`/etc/sudoers.d/10-robinos-live`).
 
-라이브 ISO에는 가벼운 보안 도구(nmap, tcpdump, netcat, dig, sqlmap, binwalk 같은 것)만 들어 있어요. Wireshark 화면 앱, john, hashcat, hydra, gdb, Docker(웹 랩), 가상 머신 도구는 크기가 커서 빠져 있고, 설치한 시스템에서 `sudo robinctl profile <이름>`으로 넣어요. 라이브 세션은 메모리 위에서 돌아서 큰 묶음이나 랩 이미지를 받을 자리가 거의 없어요. 프린터(CUPS와 프린터 설정 앱)도 설치본에만 들어가요(`packages/apps.txt`).
+라이브 ISO에는 가벼운 보안 도구(nmap, tcpdump, netcat, dig, sqlmap, binwalk 같은 것)만 들어 있어요. Wireshark 화면 앱, john, hashcat, hydra, gdb, Docker(웹 랩), 가상 머신 도구는 크기가 커서 빠져 있고, 설치한 시스템에서 `sudo robinctl profile <이름>`으로 넣어요. 라이브 세션은 메모리 위에서 돌아서 큰 묶음이나 랩 이미지를 받을 자리가 거의 없어요. 프린터(CUPS와 프린터 설정 앱)와 오피스(LibreOffice)도 설치본에만 들어가요(`packages/apps.txt`).
+
+## 오피스
+
+설치한 시스템에는 LibreOffice 안정판(`libreoffice-still`)이 한국어로 들어 있어요. Writer는 Word, Calc는 Excel, Impress는 PowerPoint 자리예요. `.docx`, `.xlsx`, `.pptx`를 열고 저장할 수 있지만, 복잡한 서식은 조금 달라 보일 수 있어요. 한글 문서(`.hwp`)는 오래된 형식(한글 97)만 열려요. 요즘 `.hwp`·`.hwpx` 파일은 보내는 사람에게 PDF나 `.docx`로 받는 게 가장 확실해요.
 
 ## 프린터
 

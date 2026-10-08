@@ -98,6 +98,9 @@ PanelWindow {
         { win: "반디집", words: "반디집 bandizip 알집 7-zip 7zip winrar 압축 풀기", app: "org.gnome.FileRoller" },
         { win: "볼륨 믹서", words: "볼륨 믹서 volume mixer 소리 설정 sound settings", app: "org.pulseaudio.pavucontrol" },
         { win: "Acrobat Reader", words: "acrobat 아크로뱃 adobe reader pdf 뷰어", app: "org.gnome.Evince" },
+        { win: "Word", words: "워드 word 문서 작성 docx 오피스 office", app: "libreoffice-writer" },
+        { win: "Excel", words: "엑셀 excel 스프레드시트 spreadsheet xlsx 오피스 office", app: "libreoffice-calc" },
+        { win: "PowerPoint", words: "파워포인트 powerpoint ppt pptx 프레젠테이션 발표 오피스 office", app: "libreoffice-impress" },
         { win: "장치 및 프린터", words: "장치 및 프린터 devices and printers 프린터 printer 인쇄 print", app: "system-config-printer" },
         { win: "제어판", words: "제어판 control panel 윈도우 설정 windows settings", cmd: "settings" }
     ]

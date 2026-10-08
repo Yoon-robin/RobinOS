@@ -44,7 +44,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (T-031 커밋) | 프린터, 설치본 전용 앱 목록 | 설치 테스트 robinos |
+| `e1a537b` | 프린터, 설치본 전용 앱 목록 | 설치 테스트 robinos (돌아가는 중) |
+| (T-032 커밋) | LibreOffice | 설치 테스트 robinos |
 
 `844712d`까지 2026-10-08 검증(설치 테스트 robinos, 설치기·robinctl 테스트)을 마치고 푸시했어요.
 
@@ -65,6 +66,12 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 보안 메모: Avahi는 같은 네트워크에 컴퓨터 이름을 알리고 5353/udp를 열어요(desktop.md에 적음). 원격에서 큐를 만드는 cups-browsed는 넣지 않았어요
 - 완료 기준: 설치 테스트 robinos 통과(새 확인 포함)
 
+### T-032 오피스 (LibreOffice)
+- 상태: 검증 대기
+- 출처: 백로그 채우기 1(design.md 요구사항 표 "앱: 오피스, LibreOffice"가 구현되지 않음)
+- 한 것: `packages/apps.txt`에 `libreoffice-still`(안정판, 26.2)과 `libreoffice-still-ko`를 넣음(내려받기 약 150MB, 설치 약 460MB). fresh(26.8) 대신 매일 쓰는 컴퓨터라 안정판을 골랐어요. 런처 윈도우 이름 Word, Excel, PowerPoint(검색어 워드, 엑셀, 파워포인트, 오피스). "한글"은 hwp 97만 열려서 연결하지 않고 desktop.md에 한계를 적음. 설치 테스트 installed 단계에 데스크톱 항목 세 개와 한국어 팩 확인을 넣음
+- 완료 기준: 설치 테스트 robinos 통과(새 확인 포함), 설치 시간이 크게 늘지 않음(T-031 테스트와 비교)
+
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
 - 출처: 사용자 요청("vmware로 깔아줘"). VMware Workstation Pro 26H1, VM은 `문서\Virtual Machines\RobinOS\RobinOS.vmx`(EFI, 8GB, NVMe 64GB, 3D 가속 켬)
@@ -79,12 +86,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ## 할 일 (위에서부터)
 
 
-### T-032 오피스 (LibreOffice)
-- 상태: 할 일
-- 출처: 백로그 채우기 1(design.md 요구사항 표 "앱: 오피스, LibreOffice"가 구현되지 않음)
-- 목표: 설치본에 `libreoffice-fresh`와 한국어 팩(`libreoffice-fresh-ko`)을 넣어요. 라이브 ISO에는 크기 때문에 넣지 않아요. 런처에서 "워드", "엑셀", "파워포인트", "한글" 같은 윈도우 이름으로 찾게 해요(`Launcher.qml` 윈도우 이름 목록)
-- 완료 기준: 설치 테스트 통과, 설치본에서 `libreoffice --version`, 런처 윈도우 이름 검색 테스트(부팅 테스트에서는 없으니 설치 테스트 스크린샷이나 단위 확인)
-- 확인할 것: 설치 시간과 내려받는 양이 얼마나 늘어나는지(설치 테스트 시간 비교)
 
 ### T-026 RobinOS 자체 파일 업데이트
 - 상태: 할 일 (배포 방식은 사용자 결정, "사용자 확인 필요" 참고)
