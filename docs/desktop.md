@@ -167,7 +167,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 라이브 ISO는 `robin` 계정(비밀번호 `robin`)으로 RobinOS 세션에 자동 로그인해요. 비밀번호 없는 sudo는 라이브 ISO에만 설정돼 있어요(`/etc/sudoers.d/10-robinos-live`).
 
-라이브 ISO에는 가벼운 보안 도구(nmap, tcpdump, netcat, dig, sqlmap, binwalk 같은 것)만 들어 있어요. Wireshark 화면 앱, john, hashcat, Docker(웹 랩), 가상 머신 도구는 크기가 커서 빠져 있고, 설치한 시스템에서 `sudo robinctl profile <이름>`으로 넣어요. 라이브 세션은 메모리 위에서 돌아서 큰 묶음이나 랩 이미지를 받을 자리가 거의 없어요.
+라이브 ISO에는 가벼운 보안 도구(nmap, tcpdump, netcat, dig, sqlmap, binwalk 같은 것)만 들어 있어요. Wireshark 화면 앱, john, hashcat, hydra, gdb, Docker(웹 랩), 가상 머신 도구는 크기가 커서 빠져 있고, 설치한 시스템에서 `sudo robinctl profile <이름>`으로 넣어요. 라이브 세션은 메모리 위에서 돌아서 큰 묶음이나 랩 이미지를 받을 자리가 거의 없어요.
 
 ## 설정 바꾸기
 

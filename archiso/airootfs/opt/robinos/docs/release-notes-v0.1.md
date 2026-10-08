@@ -35,7 +35,7 @@ RobinOS는 윈도우에서 넘어와 매일 쓰면서 리눅스와 보안을 배
 - 설치한 뒤 RobinOS 자체 파일(셸, `robinctl`)을 새 버전으로 올리는 길은 아직 없어요. 시스템 패키지는 `sudo robinctl update`로 올라가요.
 - 설치기에서 언어와 시간대를 고르는 기능, 디스크 암호화는 아직 없어요.
 - ISO에 서명이 아직 없어요. 내려받은 뒤 `SHA256SUMS`로 확인하세요.
-- 라이브 ISO에는 가벼운 보안 도구만 들어 있어요. Wireshark 화면 앱, john, hashcat, 웹 랩(Docker), 가상 머신 도구는 설치한 뒤 `sudo robinctl profile <이름>`으로 넣어요.
+- 라이브 ISO에는 가벼운 보안 도구만 들어 있어요. Wireshark 화면 앱, john, hashcat, hydra, gdb, 웹 랩(Docker), 가상 머신 도구는 설치한 뒤 `sudo robinctl profile <이름>`으로 넣어요. 라이브 ISO의 프로그램 번역은 한국어와 영어만 들어 있어요.
 
 ## 윤리
 
