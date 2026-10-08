@@ -91,6 +91,20 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 boot-test
 
 Windows용 QEMU가 준비돼 있으면 WHPX 가속으로 돌아요([build-environment.md](build-environment.md)). 없으면 WSL 안에서 소프트웨어 에뮬레이션(TCG)으로 돌고, 기다리는 시간을 4배로 늘려요. TCG에서는 VM이 느려서 키 입력이 반복될 수 있으니, 이상한 결과가 나오면 테스트 탓인지 먼저 가려요.
 
+## 묶음 검증 (verify)
+
+여러 커밋을 한 번에 검증할 때는 빌드와 두 테스트를 따로 돌리지 않고 이렇게 해요.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 verify -Installer robinos
+```
+
+1. squashfs를 xz 대신 zstd로 압축한 테스트 ISO를 빌드해요(`ROBINOS_FAST_ISO=1`). 빌드와 부팅이 빨라지는 대신 2GiB를 넘어서 릴리스에는 쓰지 않아요.
+2. ISO를 `build\vm`에 한 번만 준비하고, 부팅 테스트(QMP 47011)와 설치 테스트(47021, 47022)를 동시에 띄워요. VM마다 6GB와 CPU 4개를 써요. 부팅 테스트의 출력은 `build\verify-boot.log`에 남아요.
+3. 끝나면 빌드와 테스트에 걸린 시간을 보여 줘요. 결과는 따로 돌릴 때와 같은 `build\boot-test`, `build\install-test`에 생겨요.
+
+WHPX가 필요해요. TCG에서는 `build`, `boot-test`, `install-test`를 차례로 돌려요.
+
 ## 설치 테스트
 
 `scripts/install-test.sh`는 빈 40GB 디스크에 RobinOS를 설치하고, 설치한 시스템을 시리얼 콘솔로 조작하면서 확인해요. RobinOS 파일은 ISO 안의 사본이 아니라 지금 저장소 것을 써요(읽기 전용 FAT 디스크로 넘겨요).

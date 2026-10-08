@@ -63,6 +63,15 @@ fi
 
 "${ROOT_DIR}/scripts/prepare-archiso.sh"
 
+# ROBINOS_FAST_ISO=1 (wsl-build.ps1 verify): zstd instead of xz for a test ISO. It
+# builds a few minutes faster and boots a little faster, but it is bigger than
+# GitHub's 2 GiB release limit, so releases are built without it (docs/release.md).
+if [[ "${ROBINOS_FAST_ISO:-}" == "1" ]]; then
+  sed -i 's/^airootfs_image_tool_options=.*/airootfs_image_tool_options=("-comp" "zstd" "-Xcompression-level" "3" "-b" "1M")/' \
+    "${ROOT_DIR}/build/archiso-profile/profiledef.sh"
+  printf 'Test ISO: zstd squashfs (faster, not for a release)\n'
+fi
+
 printf 'Building RobinOS ISO...\n'
 # mkarchiso skips every stage that has a marker in its work directory, so a
 # leftover build/work makes it repackage the previous build. Start clean, and
