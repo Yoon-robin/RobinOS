@@ -12,14 +12,11 @@ it come back -> light mode (terminal,
 launcher, quick settings) -> lock screen -> unlock with the live password.
 """
 
-import ast
-import base64
 import json
 import os
 import socket
 import sys
 import time
-import zlib
 
 SOCK = sys.argv[1]
 OUT = sys.argv[2]
@@ -30,7 +27,7 @@ LIVE_PASSWORD = "robin"
 QCODES = {" ": "spc", "\n": "ret", "-": "minus", ".": "dot", "/": "slash", ";": "semicolon",
           "'": "apostrophe", "\\": "backslash", ",": "comma", "=": "equal"}
 # Characters typed with Shift on a US keyboard
-SHIFTED = {"(": "9", ")": "0", "&": "7", "~": "grave_accent", ">": "dot", "$": "4", "+": "equal",
+SHIFTED = {"(": "9", ")": "0", "&": "7", "~": "grave_accent", ">": "dot", "$": "4",
            '"': "apostrophe", "{": "bracket_left", "}": "bracket_right", ":": "semicolon", "_": "minus"}
 
 
@@ -79,12 +76,13 @@ def wait(seconds):
     time.sleep(seconds * SPEED)
 
 
-def keys(qmp, *names, hold=80, pause=0.15):
+def keys(qmp, *names):
     """Press a key combination, e.g. keys(qmp, "meta_l", "spc")."""
-    qmp.execute("send-key", keys=[{"type": "qcode", "data": n} for n in names], **{"hold-time": hold})
+    qmp.execute("send-key", keys=[{"type": "qcode", "data": n} for n in names], **{"hold-time": 80})
     # A slow (TCG) guest that falls behind sees the release late and auto-repeats
-    # the key, so give it time to catch up between keys.
-    time.sleep(pause * SPEED)
+    # the key, so give it time to catch up between keys. Faster typing (20 ms a key)
+    # left Shift stuck halfway through long text, so keep this pace.
+    time.sleep(0.15 * SPEED)
 
 
 def hold(qmp, key, down):
@@ -108,31 +106,14 @@ def click(qmp, x, y, button="left"):
         time.sleep(0.1 * SPEED)
 
 
-def type_text(qmp, text, fast=False):
-    """Type ASCII text. fast is for long machine-made text, at about 20 ms a key."""
-    timing = {"hold": 15, "pause": 0.03} if fast else {}
+def type_text(qmp, text):
     for ch in text:
         if ch.isupper():
-            keys(qmp, "shift", ch.lower(), **timing)
+            keys(qmp, "shift", ch.lower())
         elif ch in SHIFTED:
-            keys(qmp, "shift", SHIFTED[ch], **timing)
+            keys(qmp, "shift", SHIFTED[ch])
         else:
-            keys(qmp, QCODES.get(ch, ch), **timing)
-
-
-def run_python(qmp, name):
-    """Start a Python helper from this directory in the VM's terminal, in the background.
-
-    The VM only gets what we type, so the script goes in compressed: without its
-    docstring and comments, zlib, then base64 (letters, digits, + / =).
-    """
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), name), encoding="utf-8") as f:
-        tree = ast.parse(f.read())
-    if tree.body and isinstance(tree.body[0], ast.Expr) and isinstance(tree.body[0].value, ast.Constant):
-        tree.body = tree.body[1:]
-    payload = base64.b64encode(zlib.compress(ast.unparse(tree).encode(), 9)).decode()
-    type_text(qmp, "python -c \"import zlib,base64;exec(zlib.decompress(base64.b64decode('"
-              + payload + "')))\" &\n", fast=True)
+            keys(qmp, QCODES.get(ch, ch))
 
 
 shot_number = 0
@@ -333,9 +314,9 @@ def main():
     keys(qmp, "esc")
     wait(1)
     # Apps' tray icons in the bar, like the Windows notification area: a test item
-    # (sni-test-item.py) shows up left of 한/A, and a click on it reaches the app
-    type_text(qmp, "clear; ")
-    run_python(qmp, "sni-test-item.py")
+    # (scripts/sni-test-item.sh, in the ISO) shows up left of 한/A, and a click on it
+    # reaches the app
+    type_text(qmp, "clear; bash /opt/robinos/scripts/sni-test-item.sh &\n")
     wait(4)
     click(qmp, 1454, 18)
     wait(1)

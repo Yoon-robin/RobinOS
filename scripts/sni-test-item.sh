@@ -1,10 +1,12 @@
-#!/usr/bin/env python3
-"""A tray icon (StatusNotifierItem) for the boot test, shown in the bar's tray.
+#!/usr/bin/env bash
+# A tray icon (StatusNotifierItem) for the boot test, shown in the bar's tray.
+#
+# The live ISO has no app with a tray icon of its own (the shell hides fcitx5's),
+# so boot-test-qmp.py runs this from /opt/robinos/scripts. A click on the icon
+# calls Activate, which this writes to /tmp/sni-activated.
+set -euo pipefail
 
-The live ISO has no app with a tray icon of its own (the shell hides fcitx5's),
-so boot-test-qmp.py types this into the VM's terminal. A click on the icon calls
-Activate, which this writes to /tmp/sni-activated.
-"""
+exec python3 - <<'EOF'
 import os
 
 from gi.repository import Gio, GLib
@@ -38,3 +40,4 @@ bus.call_sync("org.kde.StatusNotifierWatcher", "/StatusNotifierWatcher", "org.kd
               "RegisterStatusNotifierItem", GLib.Variant("(s)", (name,)), None,
               Gio.DBusCallFlags.NONE, -1, None)
 GLib.MainLoop().run()
+EOF
