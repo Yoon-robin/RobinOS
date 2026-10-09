@@ -421,6 +421,9 @@ def phase_live(con, qmp):
     con.login("root")
     wait_network(con)
     shot(qmp, "live-session")
+    # The live system answers no name queries from the network: LLMNR (5355) is off
+    # (archiso/airootfs/etc/systemd/resolved.conf.d/robinos.conf)
+    con.run("ss -Hun | awk '{print $4}' | sort -u; ! ss -Hun | awk '{print $4}' | grep -Eq ':5355$'")
 
     con.run("mkdir -p /share && (mount -o ro /dev/vdb1 /share 2>/dev/null || mount -o ro /dev/vdb /share)"
             " && test -f /share/robinos/bin/robinctl")
