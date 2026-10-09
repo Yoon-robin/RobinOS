@@ -23,7 +23,8 @@ Copy-Item "$root\installer\robin-install" "$root\archiso\airootfs\usr\local\bin\
 Copy-Item "$root\assets\*" "$root\archiso\airootfs\opt\robinos\assets" -Recurse -Force
 Copy-Item "$root\bin\*" "$root\archiso\airootfs\opt\robinos\bin" -Force
 Copy-Item "$root\config\*" "$root\archiso\airootfs\opt\robinos\config" -Recurse -Force
-Copy-Item "$root\docs\*" "$root\archiso\airootfs\opt\robinos\docs" -Force
+# Only the Markdown: docs\screenshots (README pictures) stays out of the ISO
+Copy-Item "$root\docs\*.md" "$root\archiso\airootfs\opt\robinos\docs" -Force
 Copy-Item "$root\packages\*.txt" "$root\archiso\airootfs\opt\robinos\packages" -Force
 Copy-Item "$root\labs\*" "$root\archiso\airootfs\opt\robinos\labs" -Recurse -Force
 if (Test-Path "$root\archiso\airootfs\opt\robinos\desktop") {

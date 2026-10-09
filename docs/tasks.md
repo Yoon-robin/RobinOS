@@ -56,13 +56,13 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ## 진행 중
 
 ### T-109 README에 화면 사진
-- 상태: 검증 대기 (묶음 40)
+- 상태: 검증 대기 (묶음 40, 다시)
 - 출처: 백로그 채우기 5(로드맵 6단계 공개 프리뷰 준비). README에 로고만 있고 실제 화면이 없어서, 깃허브에서 처음 보는 사람이 어떤 OS인지 알기 어려웠어요
-- 한 것: 묶음 39 부팅 테스트에서 고른 네 장(런처, 빠른 설정, Alt+Tab, 라이트 모드 학습 센터)을 `docs/screenshots/`에 두고 README 앞에 "화면" 표. ISO에는 들어가지 않아요(문서 복사는 하위 폴더 내용을 가져가지 않아요)
+- 한 것: 묶음 39 부팅 테스트에서 고른 네 장(런처, 빠른 설정, Alt+Tab, 라이트 모드 학습 센터)을 `docs/screenshots/`에 두고 README 앞에 "화면" 표. ISO에는 들어가지 않아요. 묶음 40 첫 검증은 빌드에서 실패했어요: WSL 빌드의 `sync-archiso-files.sh`가 `install docs/*`로 복사하다 폴더를 만나 멈췄어요(윈도우의 `ready.ps1`은 PowerShell 판이라 못 잡았어요). 두 동기화 스크립트 모두 `docs/*.md`만 복사하게 고침
 - 완료 기준: 정적 검사, ISO 오버레이에 사진이 없음
 
 ### T-108 윈도우 명령 힌트: 보안 미션과 이어지는 명령
-- 상태: 검증 대기 (묶음 40)
+- 상태: 검증 대기 (묶음 40, 다시)
 - 출처: 백로그 채우기 4(윈도우 명령 힌트 넓히기). 보안 기초 미션(36~40)과 같은 일을 하는 윈도우 명령(`certutil -hashfile`, `cipher`, `runas`, `cacls`)을 치면 "명령을 찾을 수 없어요"만 나왔어요
 - 한 것: `robinos-hints.sh`에 `certutil`(sha256sum, 미션 39), `cipher`(gpg -c, 미션 40), `runas`(sudo, 미션 36), `cacls`(chmod 600, 미션 37), `netsh`(nmcli), `tree`, `comp`, `sc`(systemctl, 미션 34), `schtasks`, `pathping`, `assoc`·`ftype`. 이름으로 74개. `fc`는 bash의 내장 명령이라 뺐어요
 - 완료 기준: robinctl 테스트의 힌트 확인(certutil, cipher, runas, netsh, sc)
