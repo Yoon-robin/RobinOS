@@ -8,6 +8,16 @@ RobinOS는 Arch 기반 보안 학습용 운영체제예요. 윤리적 해킹, CT
 
 RobinOS는 윈도우에서 넘어온 사람이 매일 쓰는 OS예요. 쓰면서 리눅스와 보안을 함께 배워요. 전체 설계는 [docs/design.md](docs/design.md)에 있어요.
 
+## 화면
+
+부팅 테스트(VM, 1600×900)가 찍은 화면이에요. 다크·라이트 모드를 고를 수 있어요.
+
+| 런처 (`Win+Space`) | 빠른 설정 (`Win+S`) |
+|---|---|
+| ![앱, 학습 미션, 보안 랩을 함께 찾는 런처](docs/screenshots/launcher.png) | ![Wi-Fi, 블루투스, 방해 금지, 화면 배율, 음량이 있는 빠른 설정](docs/screenshots/quick-settings.png) |
+| **창 전환 (`Alt+Tab`)** | **학습 센터 (라이트 모드)** |
+| ![창 미리보기와 함께 최근에 쓴 순서로 나오는 Alt+Tab](docs/screenshots/alt-tab.png) | ![미션 40개의 진행도와 다음 미션이 있는 학습 센터](docs/screenshots/learn-center.png) |
+
 ## 누구를 위한 OS인가요
 
 이런 사람에게 맞아요:

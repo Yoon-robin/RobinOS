@@ -156,7 +156,7 @@ ipconfig 명령은 윈도우용이에요. 리눅스에서는
   ip a  IP 주소와 네트워크 장치를 보여 줘요
 ```
 
-명령 55개쯤을 알아들어요(`dir`, `cls`, `cd..`, `copy`, `del`, `tasklist`, `tracert`, `netstat`, `findstr`, `notepad`, `calc`, `start`, `clip`, `powercfg`, `eventvwr`, `services.msc`, `devmgmt.msc`, `diskmgmt.msc`, `ncpa.cpl`, `appwiz.cpl`, `getmac` 등). `nslookup`처럼 리눅스에도 있지만 처음에는 설치돼 있지 않은 명령은 지금 쓸 수 있는 명령(`getent hosts`)과 설치할 프로필을 알려 줘요.
+명령 70개 넘게 알아들어요(`dir`, `cls`, `cd..`, `copy`, `del`, `tasklist`, `tracert`, `netstat`, `findstr`, `notepad`, `calc`, `start`, `clip`, `powercfg`, `eventvwr`, `services.msc`, `devmgmt.msc`, `diskmgmt.msc`, `ncpa.cpl`, `appwiz.cpl`, `getmac`, 보안 미션과 이어지는 `certutil`·`cipher`·`runas`·`cacls` 등). `nslookup`처럼 리눅스에도 있지만 처음에는 설치돼 있지 않은 명령은 지금 쓸 수 있는 명령(`getent hosts`)과 설치할 프로필을 알려 줘요.
 
 ## 환영 마법사
 

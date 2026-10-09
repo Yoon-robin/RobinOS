@@ -26,7 +26,7 @@ RobinOS는 윈도우에서 넘어와 매일 쓰면서 리눅스와 보안을 배
 - `Alt+Tab`: Alt를 누르고 있는 동안 창 미리보기가 최근에 쓴 순서로 나오고, 놓으면 그 창으로 가요
 - `Win+←/→` 창을 화면 반쪽에, `Win+↑` 최대화, `Win+↓` 되돌리기·최소화, `Win+Ctrl+←/→` 작업 공간 바꾸기
 - 바의 트레이 아이콘(Steam, Discord 등): 누르면 열리고 오른쪽 버튼은 메뉴
-- 윈도우 명령 힌트 55개쯤(`calc`, `start`, `clip`, `powercfg`, `eventvwr`, `services.msc`, `diskmgmt.msc`, `ncpa.cpl` ...)
+- 윈도우 명령 힌트 70개 넘게(`calc`, `start`, `clip`, `powercfg`, `eventvwr`, `services.msc`, `diskmgmt.msc`, `ncpa.cpl` ...)
 - 독에는 설치된 앱만 고정돼요(설치 안 된 Wireshark가 눌러도 반응 없던 문제를 고쳤어요)
 
 ### RobinOS다운 모습
