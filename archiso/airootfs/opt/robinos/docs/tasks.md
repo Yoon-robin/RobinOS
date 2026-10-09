@@ -40,9 +40,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| 묶음 62 | T-137 VMware가 아닌 VM에서 VMware 도구 건너뛰기 | `verify -Installer robinos` (설치 테스트 로그의 `systemctl --failed`가 비고 설치본에 `open-vm-tools` 없음, 부팅 테스트 `failed-units`) |
+| (없음) | | |
 
-`b1319d5`까지 2026-10-10 묶음 61 검증(`verify`: 빌드 3.6분 + 테스트 14.3분)을 마치고 푸시했어요.
+`eab6589`까지 2026-10-10 묶음 62 검증(`verify`: 빌드 3.4분 + 테스트 14.2분)을 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -67,13 +67,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 남은 것 (VMware가 있는 PC: robin PC, 집 PC(Blitz, VMware Workstation 26.0)): 최종 ISO로 VMware VM에 다시 설치(`vmrun` 게스트 명령, 계획은 디스크 `/dev/nvme0n1` 전체), 로그인 뒤 셸·해상도 확인. 집 PC에는 VM이 아직 없어서 새로 만들어요(`build\vmware\guest-*.sh`는 robin PC에만 있어요). VMware가 없는 PC의 루프는 이 작업을 건너뛰어요
 
 ## 할 일 (위에서부터)
-
-### T-137 테스트 VM에서 실패하는 vmtoolsd
-- 상태: 검증 대기 (묶음 62)
-- 출처: 묶음 59 `30-failed-units`. `vmtoolsd.service`는 원래 `ConditionVirtualization=vmware`가 있는데도 QEMU(WHPX) 테스트 VM에서 시작해서 실패해요
-- 찾은 것(묶음 61 설치 테스트 로그): 이 VM을 systemd가 라이브와 설치본 모두에서 `vmware`로 감지해요(`ConditionResult=yes`). 그래서 설치기도 `open-vm-tools`를 깔고 설치본에서도 vmtoolsd가 실패했어요. QEMU의 VMware 백도어 포트를 꺼도(`vmport=off`, 묶음 60) 그대로라 CPU 정보 쪽에서 오는 것 같아요. 실제 PC와 리눅스 KVM에서는 생기지 않고, 윈도우의 QEMU(WHPX)에서만 생겨요
-- 한 것: 라이브 ISO의 vmtoolsd·vmware-vmblock-fuse에 `ExecCondition=/usr/bin/vmware-checkvm`(VMware에 직접 물어서 아니면 실패 대신 건너뛰어요). 설치기는 `systemd-detect-virt`가 vmware라고 해도 `vmware-checkvm`이 아니라고 하면 VMware 도구를 깔지 않아요(`scripts/test-robin-install.py`에 네 경우)
-- 완료 기준: 설치 테스트 로그의 라이브·설치본 `systemctl --failed`가 비어 있고, 설치본에 `open-vm-tools`가 없음. 부팅 테스트 `failed-units`에 실패한 서비스 0개
 
 ### T-104 2029년 공휴일 넣기
 - 상태: 할 일 (2028년 가을에 해요)
@@ -106,6 +99,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 최근 것이 위에 있어요. 더 오래된 기록은 [done.md](done.md)에 있어요.
 
+- 2026-10-10 묶음 62 검증(`eab6589`, verify 빌드 3.4분 + 테스트 14.2분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)
+  - T-137 VMware가 아닌 VM의 VMware 도구(`eab6589`): QEMU(WHPX) 테스트 VM은 여전히 `vmware`로 감지되지만, 라이브 단계 vmtoolsd가 `ExecCondition`(vmware-checkvm)으로 건너뛰어 `ConditionResult=no`, 실패한 서비스 없음. 설치본에는 `open-vm-tools`가 깔리지 않고 실패한 서비스 없음. `30-failed-units`에 0 loaded units, networkd inactive, NetworkManager active
 - 2026-10-10 묶음 61 검증(`b1319d5`, verify 빌드 3.6분 + 테스트 14.3분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)
   - T-137 원인 찾기(`b1319d5`): 설치 테스트 로그에서 QEMU(WHPX) 테스트 VM을 systemd가 라이브·설치본 모두 `vmware`로 감지(`ConditionResult=yes`), 설치기가 `open-vm-tools`를 깔고 설치본에서도 vmtoolsd가 실패. 고침은 다음 묶음
 - 2026-10-10 묶음 60 검증(`0d7c3bf`, verify 빌드 3.3분 + 테스트 14.2분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)
