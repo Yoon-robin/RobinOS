@@ -43,6 +43,8 @@ ShellRoot {
         id: altTab
     }
 
+    TaskView {}
+
     SoundPanel {}
 
     Toasts {}
@@ -134,6 +136,13 @@ ShellRoot {
         // Sent from a timer in robinos.lua, so it may arrive as either event
         onPressed: altTab.finish()
         onReleased: altTab.finish()
+    }
+
+    GlobalShortcut {
+        appid: "robinos"
+        name: "taskview"
+        description: "작업 보기 (모든 작업 공간의 창)"
+        onPressed: ShellState.toggleTaskView()
     }
 
     // Win+Down on a window that is neither maximized nor snapped (robinos.lua)

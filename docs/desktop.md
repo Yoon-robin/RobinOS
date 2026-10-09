@@ -7,7 +7,7 @@ RobinOS는 Hyprland 위에 직접 만든 Quickshell 셸을 얹어 써요. 디자
 | 부분 | 프로그램 | 저장소 안 위치 |
 |---|---|---|
 | 컴포지터 | Hyprland 0.56+ (Lua 설정) | `desktop/hypr/robinos.lua` |
-| 셸: 상단 바(트레이 포함), 독, 런처, Alt+Tab 창 전환, 빠른 설정, Wi-Fi·블루투스 연결 창, 소리 창, 알림, 볼륨 표시, 배경화면, 환영 마법사, 달력, 학습 센터, 단축키 보기, 설치기 | Quickshell 0.3 | `desktop/shell/` |
+| 셸: 상단 바(트레이 포함), 독, 런처, Alt+Tab 창 전환, 작업 보기, 빠른 설정, Wi-Fi·블루투스 연결 창, 소리 창, 알림, 볼륨 표시, 배경화면, 환영 마법사, 달력, 학습 센터, 단축키 보기, 설치기 | Quickshell 0.3 | `desktop/shell/` |
 | 세션 시작, 렌더링 자동 전환 | `robinos-session` | `desktop/bin/robinos-session` |
 | 셸 다시 띄우기, 셸 렌더링 전환 | `robinos-shell` | `desktop/bin/robinos-shell` |
 | VM 화면을 창 크기에 맞추기 | `robinos-vm-display` | `desktop/bin/robinos-vm-display` |
@@ -109,6 +109,7 @@ VM 창 크기를 바꾸면 VMware(`vmtoolsd`)나 QEMU(`virtio-gpu`)가 새 크�
 | `Super+1`...`Super+9` | 작업 공간 전환 (`Shift`를 같이 누르면 창을 옮겨요) |
 | `Super+←`, `Super+→` | 창을 화면 왼쪽·오른쪽 절반에 붙여요 (윈도우의 창 끌어 놓기와 같아요). 타일 배치에서는 그쪽 창과 자리를 바꿔요 |
 | `Super+↓` | 최대화나 반쪽에 붙인 창을 원래 크기와 자리로 되돌리고, 다시 누르면 최소화 (독에서 다시 열어요) |
+| `Super+Tab` | 작업 보기: 모든 작업 공간의 창을 미리보기와 함께 작업 공간별로 보여 줘요(최소화한 창도). 누르거나 화살표·`Enter`로 그 창으로 가고, "새 작업 공간"은 빈 작업 공간을 열어요. `Esc`로 닫아요 (윈도우의 `Win+Tab`과 같아요) |
 | `Super+Ctrl+←`, `Super+Ctrl+→` | 이전·다음 작업 공간 (윈도우의 가상 데스크톱 전환과 같아요) |
 | `Super+Shift+방향키` | 창을 그쪽으로 옮겨요 |
 | `Super+마우스 휠` | 이웃 작업 공간으로 |

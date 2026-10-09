@@ -1,9 +1,7 @@
 import QtQuick
 import QtQuick.Effects
-import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Widgets
 
 // Alt+Tab like Windows: while Alt is held, this workspace's windows (the last used
 // first, minimized ones too) with a picture of each. Tab moves on, Shift+Tab back,
@@ -80,21 +78,6 @@ PanelWindow {
         items = [];
     }
 
-    function title(win) {
-        if (!win)
-            return "";
-        const entry = DesktopEntries.heuristicLookup(ShellState.appIdOf(win));
-        return win.title || entry?.name || ShellState.appIdOf(win);
-    }
-
-    function icon(win) {
-        if (!win)
-            return "";
-        const appId = ShellState.appIdOf(win);
-        const entry = DesktopEntries.heuristicLookup(appId);
-        return Quickshell.iconPath(entry?.icon ?? appId, "application-x-executable");
-    }
-
     // A click outside the card closes without switching
     MouseArea {
         anchors.fill: parent
@@ -139,79 +122,15 @@ PanelWindow {
             Repeater {
                 model: root.items
 
-                Rectangle {
-                    id: tile
-
+                WindowTile {
                     required property var modelData
                     required property int index
-                    readonly property bool chosen: index === root.selected
 
-                    width: card.tileWidth
-                    height: card.tileHeight
-                    radius: Theme.radiusMd
-                    color: chosen ? Theme.raised : tileMouse.containsMouse ? Theme.hover : "transparent"
-                    border.width: chosen ? 2 : 0
-                    border.color: Theme.primary
-
-                    Accessible.role: Accessible.Button
-                    Accessible.name: root.title(modelData)
-
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 8
-                        spacing: 6
-
-                        // The window as it looks now; its icon when there is no picture
-                        // (minimized windows, or before the first frame comes in)
-                        Item {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-
-                            ScreencopyView {
-                                id: preview
-                                anchors.centerIn: parent
-                                captureSource: tile.modelData.wayland ?? null
-                                live: false
-                                constraintSize: Qt.size(parent.width, parent.height)
-                            }
-
-                            IconImage {
-                                visible: !preview.hasContent
-                                anchors.centerIn: parent
-                                implicitSize: 48
-                                source: root.icon(tile.modelData)
-                            }
-                        }
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 6
-
-                            IconImage {
-                                implicitSize: 16
-                                source: root.icon(tile.modelData)
-                            }
-
-                            Text {
-                                Layout.fillWidth: true
-                                text: root.title(tile.modelData)
-                                color: Theme.fg
-                                font.family: Theme.font
-                                font.pixelSize: 12
-                                font.weight: tile.chosen ? Font.DemiBold : Font.Normal
-                                elide: Text.ElideRight
-                            }
-                        }
-                    }
-
-                    MouseArea {
-                        id: tileMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: {
-                            root.selected = tile.index;
-                            root.finish();
-                        }
+                    win: modelData
+                    chosen: index === root.selected
+                    onPicked: {
+                        root.selected = index;
+                        root.finish();
                     }
                 }
             }

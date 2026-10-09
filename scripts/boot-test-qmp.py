@@ -389,6 +389,12 @@ def main():
     shot(qmp, "alt-tab-switched")
     keys(qmp, "alt", "tab")
     wait(1)
+    # Win+Tab like Windows' task view: both windows under "작업 공간 1 · 지금 화면"
+    keys(qmp, "meta_l", "tab")
+    wait(2)
+    shot(qmp, "task-view")
+    keys(qmp, "esc")
+    wait(1)
     keys(qmp, "alt", "f4")  # the calculator has the focus
     wait(2)
     # The launcher's right click pins an app too, like "작업 표시줄에 고정":

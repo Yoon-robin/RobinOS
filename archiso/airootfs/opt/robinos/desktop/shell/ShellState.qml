@@ -110,6 +110,7 @@ Singleton {
             return;
         }
         detailPanel = "";
+        taskViewOpen = false;
         quickSettingsOpen = false;
         calendarOpen = false;
         overlayScreen = focusedScreen;
@@ -126,6 +127,7 @@ Singleton {
             return;
         }
         detailPanel = "";
+        taskViewOpen = false;
         quickSettingsOpen = false;
         calendarOpen = false;
         overlayScreen = focusedScreen;
@@ -143,6 +145,7 @@ Singleton {
             return;
         }
         detailPanel = "";
+        taskViewOpen = false;
         quickSettingsOpen = false;
         calendarOpen = false;
         overlayScreen = focusedScreen;
@@ -159,6 +162,7 @@ Singleton {
             return;
         }
         detailPanel = "";
+        taskViewOpen = false;
         launcherOpen = false;
         calendarOpen = false;
         overlayScreen = screen ?? focusedScreen;
@@ -176,6 +180,7 @@ Singleton {
             return;
         }
         detailPanel = "";
+        taskViewOpen = false;
         launcherOpen = false;
         quickSettingsOpen = false;
         overlayScreen = screen ?? focusedScreen;
@@ -196,6 +201,7 @@ Singleton {
         quickSettingsOpen = false;
         calendarOpen = false;
         detailPanel = "";
+        taskViewOpen = false;
         shortcutsOpen = false;
         overlayScreen = focusedScreen;
         notifCenterOpen = true;
@@ -219,6 +225,26 @@ Singleton {
         detailPanel = ["wifi", "bluetooth", "sound"].includes(name) ? name : "wifi";
     }
 
+    // Win+Tab: every window on every workspace (TaskView.qml)
+    property bool taskViewOpen: false
+
+    function toggleTaskView() {
+        if (welcomeOpen)
+            return;
+        if (taskViewOpen) {
+            taskViewOpen = false;
+            return;
+        }
+        launcherOpen = false;
+        quickSettingsOpen = false;
+        calendarOpen = false;
+        notifCenterOpen = false;
+        shortcutsOpen = false;
+        detailPanel = "";
+        overlayScreen = focusedScreen;
+        taskViewOpen = true;
+    }
+
     // Every shortcut on one card (Shortcuts.qml, Super+F1)
     property bool shortcutsOpen: false
 
@@ -233,6 +259,7 @@ Singleton {
         quickSettingsOpen = false;
         calendarOpen = false;
         detailPanel = "";
+        taskViewOpen = false;
         overlayScreen = focusedScreen;
         shortcutsOpen = true;
     }

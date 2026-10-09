@@ -190,8 +190,15 @@ PanelWindow {
         else if (shown.length === 0)
             title = "찾는 기록이 없어요";
         out.push({ kind: "header", title: title });
-        for (const clip of shown)
-            out.push({ kind: "clip", id: clip.id, icon: "clipboard", title: clip.text, subtitle: "" });
+        for (const clip of shown) {
+            // cliphist lists a copied picture (a screenshot, an image from the browser)
+            // as "[[ binary data 51 KiB png 1600x900 ]]"
+            const image = /^\[\[ binary data (\S+ \S+) (\S+) (\S+) \]\]$/.exec(clip.text);
+            if (image)
+                out.push({ kind: "clip", id: clip.id, icon: "image", title: "이미지 · " + image[2].toUpperCase() + " " + image[3], subtitle: image[1] });
+            else
+                out.push({ kind: "clip", id: clip.id, icon: "clipboard", title: clip.text, subtitle: "" });
+        }
         return out;
     }
 
