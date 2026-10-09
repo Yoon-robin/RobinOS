@@ -219,6 +219,8 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 그 아래 "최근 파일"에는 파일, 텍스트 편집기, 이미지 보기 같은 GTK 앱으로 최근에 연 파일이 3개까지 나와요(윈도우 시작 메뉴의 추천 파일처럼). 앱들이 `~/.local/share/recently-used.xbel`에 남기는 기록을 읽어요. 고르면 그 파일을 기본 앱으로 열어요.
 
+앱을 고른 채 `Shift+Delete`를 누르면 그 앱을 지워요(윈도우 시작 메뉴의 "제거"처럼). 터미널에서 `robinctl app remove`가 앱의 패키지(앱 스토어 앱은 Flatpak)를 찾아 `sudo pacman -Rns`로 지우고, 비밀번호와 확인을 물어요. 터미널, 파일, 브라우저, 계산기처럼 RobinOS 기본 구성에 든 앱(`packages/core.txt`, `desktop.txt`)은 지우지 않아요.
+
 ## 런처에서 파일 찾기
 
 런처(`Win+Space`)에 두 글자 이상 치면 앱과 명령 아래에 "파일"이 나와요. 윈도우 시작 메뉴처럼 홈 폴더에서 이름에 그 글자가 들어간 파일과 폴더를 6개까지 찾아요(5단계 아래까지, `.config` 같은 숨김 폴더는 빼요). 고르면 알맞은 앱으로 열려요(폴더는 파일 앱). 치기를 멈추고 잠깐 뒤에 `find`로 찾고, 검색어는 셸을 거치지 않아요.

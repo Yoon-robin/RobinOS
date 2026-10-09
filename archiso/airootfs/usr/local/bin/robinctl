@@ -38,6 +38,7 @@ robinctl - RobinOS 관리 도구
   robinctl version                      버전 보기
   robinctl doctor                       시스템 점검
   robinctl audit                        보안 점검 (윈도우 보안처럼: 열린 포트, 원격 접속, 권한, 암호화)
+  robinctl app remove <앱 ID> [--dry-run]  앱 제거 (런처에서 Shift+Delete, RobinOS 기본 앱은 막아요)
   robinctl update [--dry-run]           스냅샷을 만든 뒤 시스템 업데이트 (앱 스토어 앱도)
   robinctl snapshot create [이름]       스냅샷 만들기
   robinctl snapshot list                스냅샷 목록
@@ -201,6 +202,71 @@ audit() {
   else
     printf '살펴볼 것 %s개. %s!%s 줄 아래의 방법을 참고해요.\n' "${AUDIT_WARNINGS}" "${C_YELLOW}" "${C_RESET}"
   fi
+}
+
+# ---- App removal (robinctl app remove), like the Start menu's "제거" ----
+#
+# Takes a desktop entry id (org.gnome.Calculator), finds the Flatpak or the pacman
+# package behind it and removes that. Packages RobinOS needs (packages/core.txt and
+# desktop.txt: the terminal, files, browser, the shell itself) are refused, so a
+# learner can't uninstall their desktop by accident.
+# Test hooks: ROBINOS_APP_DIRS (where .desktop files are), ROBINOS_APP_OWNER (the
+# package to pretend owns the file), ROBINOS_NO_FLATPAK.
+
+app_desktop_file() {
+  local id="$1" dir
+  local dirs="${ROBINOS_APP_DIRS:-${HOME:-/root}/.local/share/applications:/usr/local/share/applications:/usr/share/applications}"
+  local IFS=:
+  for dir in ${dirs}; do
+    if [[ -f "${dir}/${id}.desktop" ]]; then
+      printf '%s' "${dir}/${id}.desktop"
+      return 0
+    fi
+  done
+  return 1
+}
+
+app_owner() {
+  if [[ -n "${ROBINOS_APP_OWNER:-}" ]]; then
+    printf '%s' "${ROBINOS_APP_OWNER}"
+  else
+    pacman -Qqo "$1" 2>/dev/null
+  fi
+}
+
+app_remove() {
+  local id="${1:-}" dry="${2:-}" file pkg list
+  [[ "${id}" =~ ^[A-Za-z0-9._-]+$ ]] || die "사용법: robinctl app remove <앱 ID> [--dry-run] (예: org.gnome.Calculator)"
+  if [[ -z "${ROBINOS_NO_FLATPAK:-}" ]] && have_cmd flatpak && flatpak info "${id}" >/dev/null 2>&1; then
+    printf '앱 스토어(Flathub)로 설치한 앱이에요: %s\n' "${id}"
+    printf '실행: flatpak uninstall %s\n' "${id}"
+    [[ "${dry}" == "--dry-run" ]] && return 0
+    flatpak uninstall "${id}"
+    return
+  fi
+  file="$(app_desktop_file "${id}")" || die "${id} 앱을 찾지 못했어요"
+  pkg="$(app_owner "${file}")" || die "패키지로 설치한 앱이 아니에요: ${file} (직접 지워도 돼요)"
+  [[ -n "${pkg}" ]] || die "패키지로 설치한 앱이 아니에요: ${file}"
+  for list in "${PROJECT_ROOT}/packages/core.txt" "${PROJECT_ROOT}/packages/desktop.txt"; do
+    if [[ -f "${list}" ]] && package_file "${list}" | grep -qx -- "${pkg}"; then
+      die "${pkg}는 RobinOS 기본 구성에 들어 있는 앱이라 지우지 않아요 (packages/core.txt, desktop.txt)"
+    fi
+  done
+  printf '%s 앱은 %s 패키지예요. 같이 깔린 것 중 다른 데서 안 쓰는 것도 함께 지워요.\n' "${id}" "${pkg}"
+  printf '실행: sudo pacman -Rns %s\n' "${pkg}"
+  [[ "${dry}" == "--dry-run" ]] && return 0
+  sudo pacman -Rns "${pkg}"
+}
+
+app() {
+  case "${1:-}" in
+    remove)
+      app_remove "${2:-}" "${3:-}"
+      ;;
+    *)
+      die "사용법: robinctl app remove <앱 ID> [--dry-run]"
+      ;;
+  esac
 }
 
 check_line() {
@@ -3384,6 +3450,10 @@ main() {
       ;;
     audit)
       audit
+      ;;
+    app)
+      shift
+      app "$@"
       ;;
     update)
       shift

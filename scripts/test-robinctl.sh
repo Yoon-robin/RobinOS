@@ -537,6 +537,19 @@ said "audit ends with a count or an all-clear" "살펴볼"
 # The test's home is chmod 777 (root owns it, so the learner can't tighten it)
 said "audit says the home folder is open to others" "홈 폴더 권한이 777"
 
+printf '%s\n' "app remove: RobinOS's own apps stay, others go through pacman"
+APPS="${WORK}/apps"
+mkdir -p "${APPS}"
+printf '[Desktop Entry]\nName=Foot\n' >"${APPS}/foot.desktop"
+printf '[Desktop Entry]\nName=Writer\n' >"${APPS}/libreoffice-writer.desktop"
+app_remove() { ROBINOS_NO_FLATPAK=1 ROBINOS_APP_DIRS="${APPS}" ROBINOS_APP_OWNER="$1" bash "${ROBINCTL}" app remove "$2" --dry-run; }
+check "the terminal (foot, core list) can't be removed" fail app_remove foot foot
+said "it says why" "기본 구성에 들어 있는 앱"
+check "LibreOffice (apps.txt) can" 0 app_remove libreoffice-still libreoffice-writer
+said "it shows the pacman command" "sudo pacman -Rns libreoffice-still"
+check "an app that isn't there" fail app_remove x nope
+check "an id with a path in it" fail bash "${ROBINCTL}" app remove ../etc/passwd
+
 printf '%s\n' "doctor: NVIDIA cards on a stand-in /sys/bus/pci/devices"
 pci_dev() {
   mkdir -p "$1"

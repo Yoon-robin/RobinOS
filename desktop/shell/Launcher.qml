@@ -550,6 +550,16 @@ PanelWindow {
             ShellState.unpinFromDock(item.entry.id, item.entry.name);
     }
 
+    // Shift+Delete on an app, like the Start menu's "제거": robinctl finds its package
+    // (or Flatpak), refuses RobinOS's own apps and asks pacman in a terminal
+    function removeApp(index) {
+        const item = results[index];
+        if (!item || item.kind !== "app" || !/^[A-Za-z0-9._-]+$/.test(item.entry.id))
+            return;
+        close();
+        ShellState.runInTerminal("robinctl app remove " + item.entry.id);
+    }
+
     function activate(index) {
         const item = results[index];
         if (!item || item.kind === "header")
@@ -764,6 +774,9 @@ PanelWindow {
                             event.accepted = true;
                         } else if (event.key === Qt.Key_Escape) {
                             root.close();
+                            event.accepted = true;
+                        } else if (event.key === Qt.Key_Delete && (event.modifiers & Qt.ShiftModifier)) {
+                            root.removeApp(root.current);
                             event.accepted = true;
                         }
                     }

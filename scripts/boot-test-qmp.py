@@ -451,6 +451,17 @@ def main():
     wait(2)
     type_text(qmp, "clear; " + "qs ipc -p /usr/share/robinos/shell call shell " + "unpinFromDock org.gnome.Calculator\n")
     wait(2)
+    # Shift+Delete on an app, like the Start menu's "제거": the calculator is one of
+    # RobinOS's own apps, so robinctl keeps it and says why (Enter closes the window)
+    keys(qmp, "meta_l", "spc")
+    wait(3)
+    type_text(qmp, "calc")
+    wait(2)
+    keys(qmp, "shift", "delete")
+    wait(4)
+    shot(qmp, "app-remove-kept")
+    keys(qmp, "ret")
+    wait(2)
 
     # robinos-shell starts the shell again when it dies
     type_text(qmp, "clear; pkill -x qs; sleep 4; grep -a robinos-shell .local/state/robinos/shell.log\n")
