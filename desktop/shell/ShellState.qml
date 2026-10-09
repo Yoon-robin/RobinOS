@@ -505,12 +505,17 @@ Singleton {
 
     readonly property var dockPins: desktopSettings.dockPins
 
+    // The app's own name ("계산기") for a desktop entry id, when the caller has none
+    function appName(id, name) {
+        return name || (DesktopEntries.byId(id)?.name ?? id);
+    }
+
     function pinToDock(id, name) {
         if (!id || dockPins.indexOf(id) !== -1)
             return;
         desktopSettings.dockPins = dockPins.concat([id]);
         desktopStore.writeAdapter();
-        Quickshell.execDetached(["notify-send", "-a", "RobinOS", "독에 고정했어요", (name || id) + " · 다시 오른쪽 클릭하면 고정을 풀어요"]);
+        Quickshell.execDetached(["notify-send", "-a", "RobinOS", "독에 고정했어요", appName(id, name) + " · 다시 오른쪽 클릭하면 고정을 풀어요"]);
     }
 
     function unpinFromDock(id, name) {
@@ -518,7 +523,7 @@ Singleton {
             return;
         desktopSettings.dockPins = dockPins.filter(pin => pin !== id);
         desktopStore.writeAdapter();
-        Quickshell.execDetached(["notify-send", "-a", "RobinOS", "독에서 뺐어요", name || id]);
+        Quickshell.execDetached(["notify-send", "-a", "RobinOS", "독에서 뺐어요", appName(id, name)]);
     }
     // Hyprland changes the colors through the graphics driver (KMS CTM), which VM
     // graphics (QEMU, VMware, Hyper-V) don't offer; the tile says so there
