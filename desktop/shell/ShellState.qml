@@ -565,6 +565,19 @@ Singleton {
         onLoadFailed: root.wallpaperPath = ""
     }
 
+    // The Wallpaper portal asks before an app sets the wallpaper for the first time.
+    // Apps outside a sandbox (Files, Image Viewer: app id "") could write the
+    // state file above anyway, so they get a standing yes; Flatpak apps still ask.
+    Timer {
+        interval: 3000
+        running: true
+        onTriggered: Quickshell.execDetached(["gdbus", "call", "--session",
+            "--dest", "org.freedesktop.impl.portal.PermissionStore",
+            "--object-path", "/org/freedesktop/impl/portal/PermissionStore",
+            "--method", "org.freedesktop.impl.portal.PermissionStore.SetPermission",
+            "wallpaper", "true", "wallpaper", "", "['yes']"])
+    }
+
     function resetWallpaper() {
         wallpaperPath = "";
         Quickshell.execDetached(["rm", "-f", wallpaperFile.path]);

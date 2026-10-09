@@ -225,7 +225,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 기본 배경화면은 셸이 직접 그려요(점 무늬와 위에서 비치는 빛, 다크·라이트를 따라가요). 내 사진으로 바꾸려면 파일 앱에서 사진을 오른쪽 버튼으로 누르고 "배경으로 설정…"을 골라요. 이미지 보기 앱에서는 메뉴의 "백그라운드로 설정"이에요. 런처에서 "배경화면"이나 "배경 화면"(윈도우 이름)을 찾으면 사진 폴더를 열고 방법을 알려 줘요. 되돌리려면 런처의 "기본 배경화면으로"를 골라요.
 
-두 앱은 Wallpaper 포털에 부탁하는데, Hyprland와 GTK 포털에는 이 기능이 없어서 RobinOS가 작은 포털 백엔드(`desktop/bin/robinos-wallpaper-portal`)를 넣었어요. 고른 사진을 `~/.local/share/robinos/wallpaper/`에 복사하고 그 경로를 `~/.local/state/robinos/wallpaper`에 적으면 셸이 바로 그려요. 어떤 포털이 어떤 일을 맡는지는 `/etc/xdg/xdg-desktop-portal/hyprland-portals.conf`에 있어요.
+두 앱은 Wallpaper 포털에 부탁하는데, Hyprland와 GTK 포털에는 이 기능이 없어서 RobinOS가 작은 포털 백엔드(`desktop/bin/robinos-wallpaper-portal`)를 넣었어요. 고른 사진을 `~/.local/share/robinos/wallpaper/`에 복사하고 그 경로를 `~/.local/state/robinos/wallpaper`에 적으면 셸이 바로 그려요. 포털은 앱이 처음 배경화면을 바꿀 때 허락을 묻는데, 샌드박스 밖의 앱(파일, 이미지 보기)은 셸이 로그인할 때 미리 허락해 둬요. 그런 앱은 어차피 위 파일을 직접 쓸 수 있기 때문이에요. Flatpak으로 설치한 앱은 지금처럼 물어요. 어떤 포털이 어떤 일을 맡는지는 `/etc/xdg/xdg-desktop-portal/hyprland-portals.conf`에 있어요.
 
 ## 전원 모드와 배터리
 
