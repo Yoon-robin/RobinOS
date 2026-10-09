@@ -20,6 +20,8 @@ RobinOS는 윈도우에서 넘어와 매일 쓰면서 리눅스와 보안을 배
 - `Win+Shift+S` 화면 캡처, 바의 시계를 누르면 달력(`Win+Alt+D`)
 - `Ctrl+Shift+Esc` 작업 관리자, `Win+I` 설정(빠른 설정), `Win+R` 실행(런처)
 - 빠른 설정 타일의 화살표로 Wi-Fi 목록(비밀번호 입력 포함)과 블루투스 장치 목록, 음량 막대의 화살표로 출력 장치·마이크·앱별 음량(볼륨 믹서), `Win+N` 알림 센터
+- `Win+←/→` 창을 화면 반쪽에, `Win+↑` 최대화, `Win+↓` 되돌리기·최소화, `Win+Ctrl+←/→` 작업 공간 바꾸기
+- 바의 트레이 아이콘(Steam, Discord 등): 누르면 열리고 오른쪽 버튼은 메뉴
 - 윈도우 명령 힌트 55개쯤(`calc`, `start`, `clip`, `powercfg`, `eventvwr`, `services.msc`, `diskmgmt.msc`, `ncpa.cpl` ...)
 - 독에는 설치된 앱만 고정돼요(설치 안 된 Wireshark가 눌러도 반응 없던 문제를 고쳤어요)
 

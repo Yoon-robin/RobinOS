@@ -3,7 +3,9 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
+import Quickshell.Services.SystemTray
 import Quickshell.Services.UPower
+import Quickshell.Widgets
 
 // Top bar: logo, workspaces, focused app | clock | input method, status, notifications.
 PanelWindow {
@@ -195,6 +197,54 @@ PanelWindow {
         anchors.verticalCenter: parent.verticalCenter
         spacing: 4
 
+        // Apps' tray icons (Steam, Discord ...), like the Windows notification area:
+        // click opens the app, right click its menu. fcitx5's is left out, the
+        // 한/A indicator next to it does the same job.
+        Repeater {
+            model: ShellState.toArray(SystemTray.items.values)
+                .filter(item => item.status !== Status.Passive && !(item.id ?? "").toLowerCase().startsWith("fcitx"))
+
+            Rectangle {
+                id: trayItem
+
+                required property var modelData
+
+                implicitWidth: 24
+                implicitHeight: 24
+                radius: Theme.radiusSm
+                color: trayMouse.containsMouse ? Theme.hover : "transparent"
+
+                Accessible.role: Accessible.Button
+                Accessible.name: modelData.tooltipTitle || modelData.title || modelData.id
+
+                IconImage {
+                    anchors.centerIn: parent
+                    implicitSize: 16
+                    source: trayItem.modelData.icon
+                }
+
+                MouseArea {
+                    id: trayMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: mouse => {
+                        const item = trayItem.modelData;
+                        if (mouse.button === Qt.MiddleButton) {
+                            item.secondaryActivate();
+                        } else if (item.hasMenu && (mouse.button === Qt.RightButton || item.onlyMenu)) {
+                            const p = trayItem.mapToItem(null, 0, trayItem.height + 6);
+                            item.display(bar, p.x, p.y);
+                        } else {
+                            item.activate();
+                        }
+                    }
+                    onWheel: wheel => trayItem.modelData.scroll(Math.round(wheel.angleDelta.y / 120), false)
+                }
+            }
+        }
+
         // 한/A indicator; click to switch
         Rectangle {
             implicitWidth: 24
@@ -239,6 +289,12 @@ PanelWindow {
             spacing: 10
             active: ShellState.quickSettingsOpen && ShellState.overlayScreen === bar.screen
             onClicked: ShellState.toggleQuickSettings(bar.screen)
+
+            // The wheel over the status icons changes the volume, like Windows'
+            // speaker icon; a touchpad's small steps add up the same way
+            WheelHandler {
+                onWheel: event => ShellState.setVolume(ShellState.volume + event.angleDelta.y / 120 * 0.05)
+            }
 
             Icon {
                 name: ShellState.netIcon

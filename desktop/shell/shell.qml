@@ -101,6 +101,14 @@ ShellRoot {
         onPressed: ShellState.toggleDesktop()
     }
 
+    // Win+Down on a window that is neither maximized nor snapped (robinos.lua)
+    GlobalShortcut {
+        appid: "robinos"
+        name: "minimize"
+        description: "지금 창 최소화"
+        onPressed: ShellState.minimize(Hyprland.activeToplevel)
+    }
+
     // qs ipc -p /usr/share/robinos/shell call shell <function>
     IpcHandler {
         target: "shell"
