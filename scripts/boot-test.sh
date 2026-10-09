@@ -58,7 +58,7 @@ printf 'Acceleration: %s\n' "${accel[1]}"
 qemu-img create -q -f qcow2 "${OUT_DIR}/disk.qcow2" 64G
 
 qemu-system-x86_64 \
-  -machine q35 "${accel[@]}" -m 6144 -smp 4 \
+  -machine q35,vmport=off "${accel[@]}" -m 6144 -smp 4 \
   -kernel "${OUT_DIR}/${base_dir}/boot/x86_64/vmlinuz-linux" \
   -initrd "${OUT_DIR}/${base_dir}/boot/x86_64/initramfs-linux.img" \
   -append "archisobasedir=${base_dir} archisolabel=${label} console=tty0 console=ttyS0,115200 systemd.journald.forward_to_console=1 robinos.debug" \

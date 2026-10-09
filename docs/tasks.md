@@ -69,10 +69,11 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ## 할 일 (위에서부터)
 
 ### T-137 테스트 VM에서 실패하는 vmtoolsd
-- 상태: 할 일
+- 상태: 진행 중 (묶음 60)
 - 출처: 묶음 59 `30-failed-units`. `vmtoolsd.service`는 원래 `ConditionVirtualization=vmware`가 있는데도 QEMU(WHPX) 테스트 VM에서 시작해서 실패해요(설치 테스트의 라이브 단계에서도 "Started ... VMware Tools"). 테스트 VM이 VMware로 감지되는 것 같아요(QEMU q35의 VMware 백도어 포트 `vmport`가 기본으로 켜져 있어요)
 - 할 것: 부팅 테스트에서 `systemd-detect-virt`를 찍어 무엇으로 감지되는지 확인. VMware로 나오면 테스트 VM에 `vmport=off`를 줘서 실제 QEMU/KVM처럼 만들고(설치기도 VMware 도구 대신 QEMU 도구를 깔아야 맞아요), T-136에서 넣은 vmtoolsd·vmblock drop-in은 원래 유닛에 같은 조건이 있으니 지워요
-- 완료 기준: 부팅 테스트 `failed-units`에 실패한 서비스 0개
+- 한 것: 테스트 VM(부팅·설치 테스트, WHPX와 TCG 모두)에 `-machine q35,vmport=off`. `vmtoolsd`·`vmware-vmblock-fuse` 유닛은 원래 `ConditionVirtualization=vmware`가 있어서 T-136의 drop-in을 지웠어요. `failed-units` 장면이 `systemd-detect-virt`도 찍어요
+- 완료 기준: 부팅 테스트 `failed-units`에 `systemd-detect-virt`가 vmware가 아니고 실패한 서비스 0개
 
 ### T-104 2029년 공휴일 넣기
 - 상태: 할 일 (2028년 가을에 해요)
@@ -106,7 +107,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 최근 것이 위에 있어요. 더 오래된 기록은 [done.md](done.md)에 있어요.
 
 - 2026-10-10 묶음 59 검증(`8f96fba`, verify 빌드 3.4분 + 테스트 14.1분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)
-  - T-134 런처 계산·웹 검색(`cce5c5f`): `16-launcher-calc`에 `(12+3)*4` = 60, `17-launcher-web`에 "웹에서 \"arch wiki hyprland\" 찾기"만
+  - T-134 런처 계산·웹 검색(`cce5c5f`): `16-launcher-calc`에 `(12+3)*4` = 60, `17-launcher-web`에 "웹에서 'arch wiki hyprland' 찾기" 항목만
   - T-135 런처 오른쪽 클릭 메뉴(`27c7d29`): `64-launcher-menu`에 열기·독에 고정·제거, `65-launcher-pin`에 고정 알림과 열린 채인 런처, 그 뒤 `66-app-remove-kept`는 전과 같음. 같은 메뉴 카드를 쓰는 `quick-links`, `desktop-menu`, `dock-menu`도 전과 같음
   - T-136 라이브 ISO 서비스(`8f96fba`): `30-failed-units`에 `systemd-networkd` inactive, `NetworkManager` active. `29-event-viewer`에서 networkd 다툼, resolved `LinkBusy`, preset `unresolvable alias` 경고가 사라짐. `vmtoolsd`는 여전히 실패해서 따로 봐요(T-137)
 - 2026-10-10 묶음 58 검증(`d335d16`, verify 빌드 3.7분 + 테스트 13.7분, 설치 테스트 다섯 단계 통과, 부팅 테스트 75장)

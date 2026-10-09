@@ -98,7 +98,7 @@ run_qemu() {
   shift
   rm -f "${OUT_DIR}/serial.sock" "${OUT_DIR}/qmp.sock"
   qemu-system-x86_64 \
-    -machine q35 "${accel[@]}" -m 6144 -smp 4 \
+    -machine q35,vmport=off "${accel[@]}" -m 6144 -smp 4 \
     -drive "if=pflash,format=raw,readonly=on,file=${ovmf_code}" \
     -drive "if=pflash,format=raw,file=${OUT_DIR}/OVMF_VARS.fd" \
     -drive "file=${OUT_DIR}/disk.qcow2,format=qcow2,if=virtio" \
