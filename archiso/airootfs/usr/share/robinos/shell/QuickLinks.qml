@@ -32,7 +32,7 @@ PanelWindow {
             .concat([
                 { icon: "activity", title: "시스템 점검", hint: "robinctl doctor", run: () => ShellState.runInTerminal("robinctl doctor") },
                 { icon: "shield", title: "보안 점검", hint: "robinctl audit", run: () => ShellState.runInTerminal("robinctl audit") },
-                { icon: "file", title: "이벤트 뷰어", hint: "journalctl", run: () => ShellState.openTerminal("journalctl -b -p warning --no-pager | tail -n 40") },
+                { icon: "file", title: "이벤트 뷰어", hint: "journalctl", run: () => ShellState.showCommand(ShellState.adminCommands.logs) },
                 { separator: true },
                 { icon: "lock", title: "화면 잠금", hint: "Win+L", run: () => ShellState.lock() },
                 { icon: "power", title: "종료 또는 로그아웃", run: () => ShellState.openPowerMenu() }

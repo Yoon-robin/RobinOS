@@ -1074,6 +1074,21 @@ Singleton {
         Quickshell.execDetached(["foot", "env", "ROBINOS_NO_GREETING=1", "bash", "-c", script + "; exec bash"]);
     }
 
+    // Windows admin tools' jobs as commands (the launcher's Windows names, Win+X)
+    readonly property var adminCommands: ({
+            logs: "journalctl -b -p warning --no-pager | tail -n 40",
+            services: "systemctl list-units --type=service --state=running --no-pager",
+            timers: "systemctl list-timers --no-pager",
+            devices: "lspci -k && lsusb",
+            sysinfo: "fastfetch"
+        })
+
+    // The Linux command behind a Windows tool (이벤트 뷰어 → journalctl), printed
+    // before it runs so the terminal teaches it. Fixed commands only, no quotes.
+    function showCommand(command) {
+        openTerminal("printf '\\033[2m$ %s\\033[0m\\n' '" + command + "'; " + command);
+    }
+
     function openUrl(url) {
         Quickshell.execDetached(["xdg-open", url]);
     }

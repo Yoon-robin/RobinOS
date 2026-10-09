@@ -69,7 +69,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 
 ## 자동 부팅 테스트
 
-`scripts/boot-test.sh`가 QEMU에서 ISO를 부팅하고, `scripts/boot-test-qmp.py`가 화면을 조작하면서 스크린샷을 찍어요(2026-10-10 기준 70장). 키는 QMP `send-key`로, 마우스는 VM에 붙인 `usb-tablet`에 QMP `input-send-event`로 화면 좌표(1600×900)를 찍어 눌러요(`click()`). 소리 창을 보려고 소리를 버리는 사운드 카드(`-audiodev none`, `hda-duplex`)도 붙여요.
+`scripts/boot-test.sh`가 QEMU에서 ISO를 부팅하고, `scripts/boot-test-qmp.py`가 화면을 조작하면서 스크린샷을 찍어요(2026-10-10 기준 71장). 키는 QMP `send-key`로, 마우스는 VM에 붙인 `usb-tablet`에 QMP `input-send-event`로 화면 좌표(1600×900)를 찍어 눌러요(`click()`). 소리 창을 보려고 소리를 버리는 사운드 카드(`-audiodev none`, `hda-duplex`)도 붙여요.
 
 1. 부팅과 첫 로그인
 2. 환영 마법사의 모든 단계, 마지막에 열리는 학습 센터(0/40)
@@ -77,7 +77,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 4. 런처: 추천 목록, `term` 검색, 윈도우 이름 `notepad` 검색
 5. 설치기 첫 두 단계(테스트 VM에는 빈 64GB 디스크가 있어요)
 6. 빠른 설정, Tab으로 옮긴 키보드 포커스, 마우스로 누른 방해 금지 타일, Wi-Fi 타일 화살표로 연 연결 창(VM에는 Wi-Fi 장치가 없다는 안내), `Super+Alt+D`로 연 달력(그달의 공휴일 목록), `Super+F1`로 연 단축키 보기
-7. 터미널: `ipconfig` 힌트, `robinctl learn show 1`, `robinctl audit` 보안 점검과 미션 1 풀기(라이트 모드 런처에 "1/40 완료"), 포털이 알려 주는 제목 표시줄 단추 배치(`button-layout`)
+7. 터미널: `ipconfig` 힌트, `robinctl learn show 1`, `robinctl audit` 보안 점검, 런처에서 `eventvwr`로 연 시스템 기록(새 터미널 맨 위에 `journalctl` 명령, `Alt+F4`로 닫기)과 미션 1 풀기(라이트 모드 런처에 "1/40 완료"), 포털이 알려 주는 제목 표시줄 단추 배치(`button-layout`)
 8. 독처럼 최소화하고 되돌리기, `Super+←`(왼쪽 절반), `Super+↑`(최대화), `Super+↓` 두 번(원래 크기), `Super+Ctrl+→`(빈 작업 공간 2)와 `Super+Ctrl+←`, `Super+D` 두 번(바탕 화면 보기와 되돌리기), `Super+Shift+S`(영역 고르기 화면, Esc로 취소), `Shift+Print`로 찍은 전체 화면 알림("폴더 열기" 단추), `Super+V`(복사한 글이 클립보드 기록에), `Super+.`로 `heart`를 찾아 터미널에 넣은 이모지, `notify-send`로 띄운 한국어 알림(오른쪽 아래)과 `Super+N`으로 연 알림 센터, 알림 센터의 스크린샷 알림을 눌러 이미지 뷰어로 연 사진(`Ctrl+W`로 닫기), IPC로 연 블루투스 연결 창(창 밖을 눌러 닫기), 런처에서 윈도우 이름 `mixer`로 연 소리 창과 `Tab`으로 옮긴 장치 줄의 포커스(VM 사운드 카드가 출력·입력 장치로, `pw-play`가 앱별 음량에), 바의 트레이 아이콘(ISO에 든 테스트용 `scripts/sni-test-item.sh`를 띄우고, 아이콘을 눌러 앱에 닿는지), 바의 상태 아이콘 위 휠로 줄인 음량(음량 표시), 독의 터미널 위에 마우스를 올려 뜬 창 미리보기, Wallpaper 포털로 바꾼 배경화면과 런처의 "기본 배경화면으로", 독과 런처에서 오른쪽 클릭으로 계산기 고정하기, 런처에서 계산기에 `Shift+Delete`(기본 앱이라 지우지 않는다는 안내), `Alt`를 누른 채 `Tab`을 눌러 연 창 전환 화면(터미널과 계산기 미리보기)과 `Alt`를 놓아 바뀐 창, `Super+Tab` 작업 보기
 9. 셸을 끄면 `robinos-shell`이 다시 띄우는지
 10. 라이트 모드(셸 IPC `setDark false`): 터미널(`robinctl learn` 목록), 런처(최근에 연 앱, recently-used.xbel에 적은 최근 파일)와 파일 찾기(`notes`), Alt+F4로 닫았다가 IPC로 다시 연 학습 센터(미션 1에 체크, 미션 2 줄을 눌러 터미널에 열기, 휠로 내린 목록 끝의 입문 CTF 10문제, 닫기 단추), 빠른 설정, 화면 배율 125%(저장된 파일 내용과 함께), 야간 모드(VM 그래픽에는 색 변환이 없어 `hyprsunset`이 켜지는지만 봐요). 찍은 뒤 다크로 돌려요
@@ -117,7 +117,7 @@ WHPX가 필요해요. TCG에서는 `build`, `boot-test`, `install-test`를 차�
 
 설치한 뒤 확인하는 것:
 
-1. `robinctl doctor`, 스냅샷 설정, `/etc/fstab`의 `@snapshots`, grub-btrfs 항목, 부팅 메뉴 이름, 보안 프로필 목록, 설치본 전용 앱(`packages/apps.txt`: 인쇄 서비스가 응답하는지, LibreOffice 한국어판, 앱 스토어와 Flathub 저장소, 동영상·음악 재생 앱과 `gio`로 본 기본 앱), 배경화면 포털 백엔드와 포털 설정, `filesystem`을 다시 설치한 뒤에도 RobinOS인 os-release, 사용자 `~/.bashrc`의 RobinOS 설정, `which`·`ssh-keygen`·`gpg`·`wtype`(학습 미션과 이모지에 필요), 열린 포트
+1. `robinctl doctor`, 스냅샷 설정, `/etc/fstab`의 `@snapshots`, grub-btrfs 항목, 부팅 메뉴 이름, 보안 프로필 목록, 설치본 전용 앱(`packages/apps.txt`: 인쇄 서비스가 응답하는지, LibreOffice 한국어판, 앱 스토어와 Flathub 저장소, 동영상·음악 재생 앱과 `gio`로 본 기본 앱), 배경화면 포털 백엔드와 포털 설정, `filesystem`을 다시 설치한 뒤에도 RobinOS인 os-release, 사용자 `~/.bashrc`의 RobinOS 설정, `which`·`ssh-keygen`·`gpg`·`wtype`·`lspci`·`lsusb`(학습 미션, 이모지, 런처의 장치 관리자에 필요), 열린 포트
 2. 재부팅해서 GRUB 메뉴와 스냅샷 하위 메뉴 스크린샷
 3. `pacman -S cowsay`로 snap-pac의 전후 스냅샷이 생기는지
 4. 다시 켜서 GRUB의 스냅샷 하위 메뉴로 cowsay 설치 전 스냅샷을 골라 부팅하고([recovery.md](recovery.md)의 비상 경로), 그 안에서 `robinctl snapshot rollback`

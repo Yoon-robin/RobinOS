@@ -595,8 +595,9 @@ def phase_installed(con, qmp):
     con.run("grep -q robinos-bashrc.sh /etc/skel/.bashrc && grep -l robinos-bashrc.sh /home/*/.bashrc")
     # which isn't in Arch's base; the where hint and learning mission 27 need it.
     # ssh-keygen (mission 38) and gpg (mission 40, CTF 8) for the security missions,
-    # wtype for the Win+. emoji picker
-    con.run("command -v which && command -v ssh-keygen && command -v gpg && command -v wtype")
+    # wtype for the Win+. emoji picker, lspci and lsusb for the launcher's 장치 관리자
+    con.run("command -v which && command -v ssh-keygen && command -v gpg && command -v wtype"
+            " && command -v lspci && command -v lsusb")
 
     # QEMU's WHPX can't reset a VM that reboots itself ("Unexpected VP exit code 4"),
     # so every boot is its own QEMU run: power off here, the next phase boots again.

@@ -247,6 +247,17 @@ def main():
     type_text(qmp, "clear; robinctl audit\n")
     wait(3)
     shot(qmp, "security-audit")
+    # Windows admin tools by name in the launcher: "eventvwr" finds the system log,
+    # which opens in a new terminal that prints the command (journalctl) first
+    keys(qmp, "meta_l", "spc")
+    wait(2)
+    type_text(qmp, "eventvwr")
+    wait(2)
+    keys(qmp, "ret")
+    wait(4)
+    shot(qmp, "event-viewer")
+    keys(qmp, "alt", "f4")  # the new terminal has the focus
+    wait(2)
     # Solve mission 1, so the launcher's learning entry shows "1/40" in light-launcher
     type_text(qmp, "mkdir -p ~/practice/notes && robinctl learn check 1 >/dev/null\n")
     wait(1)

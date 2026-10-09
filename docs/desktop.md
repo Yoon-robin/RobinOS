@@ -192,7 +192,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 | 메모장, `notepad` | 텍스트 편집기 |
 | 작업 관리자, `taskmgr` | Mission Center |
 | 파일 탐색기, 내 PC, `explorer` | 파일 (Nautilus) |
-| 명령 프롬프트, `cmd`, `powershell` | 터미널 (foot) |
+| 명령 프롬프트, `cmd`, `powershell`, Windows 터미널 | 터미널 (foot) |
 | Edge, 크롬, `chrome` | Firefox |
 | 사진 | 이미지 뷰어 (Loupe) |
 | 반디집, 알집, `7-zip` | 압축 관리자 |
@@ -210,6 +210,16 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 | 미디어 플레이어, 영화 및 TV, 동영상 | 동영상 재생 앱 (Showtime, 설치본에만 있어요) |
 | 그루브 음악, 음악 | 오디오 재생기 (Decibels, 설치본에만 있어요) |
 | 제어판, `control panel` | 빠른 설정 |
+| 배경 화면, 개인 설정 | 배경화면 바꾸기 |
+| Windows 보안, 디펜더, 방화벽 | 보안 점검 (`robinctl audit`) |
+| Windows Update | 시스템 업데이트 (`sudo robinctl update`) |
+| 이벤트 뷰어, `eventvwr` | 시스템 기록 (`journalctl -b -p warning`) |
+| 서비스, `services.msc` | 서비스 목록 (`systemctl list-units --type=service`) |
+| 작업 스케줄러, `taskschd` | 예약 작업 (`systemctl list-timers`) |
+| 장치 관리자, `devmgmt` | 장치와 드라이버 (`lspci -k`, `lsusb`) |
+| 시스템 정보, `msinfo32`, `winver` | 시스템 정보 (`fastfetch`) |
+
+마지막 다섯 줄처럼 윈도우의 관리 도구는 같은 일을 하는 리눅스 명령을 새 터미널에서 실행해요. 명령이 맨 위에 흐리게 찍히고 터미널은 그대로 열려 있어서, 그 명령을 직접 바꿔 쳐 볼 수 있어요(`desktop/shell/ShellState.qml`의 `adminCommands`). 빠른 메뉴(`Super+X`)의 "이벤트 뷰어"도 같아요.
 
 목록은 `desktop/shell/Launcher.qml`의 `windowsNames`에 있어요.
 

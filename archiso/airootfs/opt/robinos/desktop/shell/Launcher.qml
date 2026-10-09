@@ -286,12 +286,16 @@ PanelWindow {
         { key: "update", group: "system", icon: "refresh", title: "시스템 업데이트", subtitle: "업데이트 전에 스냅샷을 자동으로 만들어요", words: "update upgrade pacman 업데이트" },
         { key: "doctor", group: "system", icon: "activity", title: "시스템 점검", subtitle: "robinctl doctor", mono: true, words: "doctor check 점검 진단" },
         { key: "audit", group: "system", icon: "shield", title: "보안 점검", subtitle: "robinctl audit · 열린 포트, 원격 접속, 권한, 암호화", words: "audit security 보안 점검 보안 센터 방화벽 firewall 포트 암호화" },
-        { key: "wifi", group: "system", icon: "wifi", title: "Wi-Fi 연결", subtitle: "nmtui", mono: true, words: "wifi network 네트워크 인터넷" },
         { key: "screenshot", group: "system", icon: "scan", title: "영역 스크린샷", subtitle: "Win + Shift + S", words: "screenshot capture 스크린샷 캡처 화면 캡처" },
         { key: "settings", group: "system", icon: "sliders", title: "빠른 설정", subtitle: "Win + S", words: "settings quick 설정 빠른 설정 테마 다크 모드" },
         { key: "sound", group: "system", icon: "volume", title: "소리 설정", subtitle: "출력 장치, 마이크, 앱별 음량", words: "sound audio volume mixer speaker headphones microphone mic 소리 음량 볼륨 믹서 스피커 이어폰 헤드폰 마이크 출력" },
-        { key: "wifi", group: "system", icon: "wifi", title: "Wi-Fi 연결", subtitle: "주변 네트워크에 연결해요", words: "wifi wi-fi wireless network internet 와이파이 무선 네트워크 인터넷 연결" },
+        { key: "wifi", group: "system", icon: "wifi", title: "Wi-Fi 연결", subtitle: "주변 네트워크에 연결해요", words: "wifi wi-fi wireless network internet nmtui 와이파이 무선 네트워크 인터넷 연결" },
         { key: "bluetooth", group: "system", icon: "bluetooth", title: "블루투스 장치", subtitle: "이어폰, 마우스, 키보드를 연결해요", words: "bluetooth 블루투스 이어폰 에어팟 airpods 버즈 buds 헤드셋 무선 마우스 키보드 장치 페어링 pairing" },
+        { key: "logs", group: "system", icon: "file", title: "시스템 기록", subtitle: "journalctl · 이번 부팅의 경고와 오류", words: "log logs journal journalctl syslog 로그 기록 시스템 기록 오류 경고 이벤트" },
+        { key: "services", group: "system", icon: "activity", title: "서비스 목록", subtitle: "systemctl · 지금 도는 서비스", words: "service services systemctl systemd daemon 서비스 데몬" },
+        { key: "timers", group: "system", icon: "history", title: "예약 작업", subtitle: "systemctl list-timers · 정해진 때 도는 작업", words: "timer timers cron schedule 예약 작업 스케줄" },
+        { key: "devices", group: "system", icon: "cpu", title: "장치와 드라이버", subtitle: "lspci -k · lsusb", words: "device devices driver drivers lspci lsusb hardware usb 장치 드라이버 하드웨어" },
+        { key: "sysinfo", group: "system", icon: "monitor", title: "시스템 정보", subtitle: "fastfetch · CPU, 메모리, 그래픽, 버전", words: "system info information about fastfetch neofetch hostnamectl 시스템 정보 사양 버전 메모리 그래픽" },
         { key: "wallpaper", group: "system", icon: "image", title: "배경화면 바꾸기", subtitle: "사진 폴더에서 사진을 오른쪽 버튼으로 누르고 \"배경으로 설정\"", words: "wallpaper background 배경 배경화면 바탕 화면 바탕화면 사진 개인 설정 personalize" },
         { key: "wallpaper-reset", group: "wallpaper", icon: "rotate-ccw", title: "기본 배경화면으로", subtitle: "RobinOS 배경화면으로 되돌려요", words: "wallpaper background reset default 배경 배경화면 바탕 화면 기본 되돌리기" },
         { key: "steam", group: "store", icon: "download", title: "Steam 설치하기", subtitle: "앱 스토어에서 Flathub의 Steam을 받아요", words: "steam 스팀 게임 game games valve 게임 설치" },
@@ -310,7 +314,7 @@ PanelWindow {
         { win: "메모장", words: "메모장 notepad 워드패드 wordpad", app: "org.gnome.TextEditor" },
         { win: "작업 관리자", words: "작업 관리자 task manager taskmgr 리소스 모니터 resource monitor", app: "io.missioncenter.MissionCenter" },
         { win: "파일 탐색기", words: "파일 탐색기 explorer 내 pc 내 컴퓨터 this pc my computer", app: "org.gnome.Nautilus" },
-        { win: "명령 프롬프트", words: "명령 프롬프트 command prompt cmd powershell 파워셸", app: "foot" },
+        { win: "명령 프롬프트", words: "명령 프롬프트 command prompt cmd powershell 파워셸 windows terminal wt 윈도우 터미널", app: "foot" },
         { win: "Edge", words: "edge 엣지 internet explorer 인터넷 익스플로러 chrome 크롬", app: "firefox" },
         { win: "사진 앱", words: "사진 photos 사진 보기 image viewer", app: "org.gnome.Loupe" },
         { win: "반디집", words: "반디집 bandizip 알집 7-zip 7zip winrar 압축 풀기", app: "org.gnome.FileRoller" },
@@ -330,7 +334,13 @@ PanelWindow {
         { win: "그루브 음악", words: "그루브 음악 groove music 음악 노래 music audio 오디오 mp3", app: "org.gnome.Decibels" },
         { win: "장치 및 프린터", words: "장치 및 프린터 devices and printers 프린터 printer 인쇄 print", app: "system-config-printer" },
         { win: "배경 화면", words: "배경 화면 바탕 화면 바탕화면 desktop background 개인 설정 personalization", cmd: "wallpaper" },
-        { win: "Windows 보안", words: "windows 보안 windows security defender 디펜더 보안 센터 security center 백신 바이러스 antivirus", cmd: "audit" },
+        { win: "Windows 보안", words: "windows 보안 windows security defender 디펜더 보안 센터 security center 백신 바이러스 antivirus 방화벽 firewall wf.msc", cmd: "audit" },
+        { win: "이벤트 뷰어", words: "이벤트 뷰어 event viewer eventvwr 이벤트 로그 event log", cmd: "logs" },
+        { win: "서비스", words: "서비스 services services.msc", cmd: "services" },
+        { win: "작업 스케줄러", words: "작업 스케줄러 task scheduler taskschd 예약 작업", cmd: "timers" },
+        { win: "장치 관리자", words: "장치 관리자 device manager devmgmt 드라이버 driver", cmd: "devices" },
+        { win: "시스템 정보", words: "시스템 정보 system information msinfo32 winver dxdiag 사양", cmd: "sysinfo" },
+        { win: "Windows Update", words: "windows update 윈도우 업데이트 업데이트 확인", cmd: "update" },
         { win: "제어판", words: "제어판 control panel 윈도우 설정 windows settings", cmd: "settings" }
     ]
 
@@ -652,8 +662,12 @@ PanelWindow {
         case "audit":
             ShellState.runInTerminal("robinctl audit");
             break;
-        case "wifi":
-            ShellState.runInTerminal("nmtui");
+        case "logs":
+        case "services":
+        case "timers":
+        case "devices":
+        case "sysinfo":
+            ShellState.showCommand(ShellState.adminCommands[item.key]);
             break;
         case "lock":
             ShellState.lock();

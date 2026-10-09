@@ -55,6 +55,12 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 ## 진행 중
 
+### T-128 런처에서 윈도우 관리 도구 이름 찾기
+- 상태: 진행 중 (묶음 57)
+- 출처: 백로그 채우기 1 (윈도우와 다른 점). 런처는 메모장, 작업 관리자 같은 앱 이름은 알아듣는데, 윈도우 사용자가 문제를 볼 때 여는 이벤트 뷰어, 서비스, 작업 스케줄러, 장치 관리자, 시스템 정보는 몰라요. 터미널 힌트(`eventvwr` 등)는 있지만 런처에서는 찾을 수 없었어요
+- 한 것: 다섯 가지를 같은 일을 하는 명령(`journalctl`, `systemctl`, `systemctl list-timers`, `lspci -k`·`lsusb`, `fastfetch`)으로 새 터미널에서 열어요. 명령을 맨 위에 흐리게 보여 주고 터미널을 그대로 둬서 배우게 해요(`ShellState.showCommand`). Windows Update, Windows 터미널, 방화벽 이름도 넣었어요. 빠른 메뉴의 이벤트 뷰어도 같은 명령을 써요. 런처에 "Wi-Fi 연결"이 두 번 나오던 것(옛 nmtui 항목)을 지웠어요. 설치본에 `lsusb`가 없어서(`usbutils`는 라이브 ISO에만) `packages/core.txt`에 넣었어요
+- 완료 기준: 부팅 테스트 `event-viewer`에 `$ journalctl -b -p warning ...`와 그 출력, 설치 테스트에서 `lspci`, `lsusb`가 있음
+
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
 - 출처: 사용자 요청("vmware로 깔아줘"). VMware Workstation Pro 26H1, VM은 `문서\Virtual Machines\RobinOS\RobinOS.vmx`(EFI, 8GB, NVMe 64GB, 3D 가속 켬)
