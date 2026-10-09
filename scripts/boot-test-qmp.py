@@ -269,6 +269,11 @@ def main():
     shot(qmp, "event-viewer")
     keys(qmp, "alt", "f4")  # the new terminal has the focus
     wait(2)
+    # A clean live boot: no failed units (the VMware tools only start in VMware) and
+    # NetworkManager alone, without systemd-networkd fighting it over the interface
+    type_text(qmp, "clear; systemctl --failed; systemctl is-active systemd-networkd NetworkManager\n")
+    wait(2)
+    shot(qmp, "failed-units")
     # Solve mission 1, so the launcher's learning entry shows "1/40" in light-launcher
     type_text(qmp, "mkdir -p ~/practice/notes && robinctl learn check 1 >/dev/null\n")
     wait(1)

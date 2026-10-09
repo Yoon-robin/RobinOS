@@ -67,6 +67,12 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 한 것: 런처 안에 메뉴(열기, 독에 고정·고정 풀기, 제거). 런처가 키보드를 독점하는 창이라 따로 창을 띄우지 않고 같은 창 안에 그려요. 메뉴 카드를 `MenuCard.qml`로 떼어 `PopupMenu.qml`(Win+X, 바탕 화면, 독)과 함께 써요. 메뉴 키와 `Shift+F10`으로도 열어요
 - 완료 기준: 부팅 테스트 `launcher-menu`, `launcher-pin`(아래 화살표·Enter로 고정, 런처는 열린 채), 그 뒤 장면(계산기 열기, 앱 제거 안내)이 전과 같음
 
+### T-136 라이브 ISO의 네트워크 관리자 다툼과 실패하는 서비스
+- 상태: 진행 중 (묶음 59)
+- 출처: 묶음 58 `27-event-viewer`의 경고. ① systemd-networkd가 NetworkManager와 같은 장치를 관리하려 다퉜어요(`conflicting with our setting`, resolved `LinkBusy`). 라이브 ISO의 machine-id가 "uninitialized"라 부팅할 때마다 systemd가 preset을 적용하고, systemd의 `90-systemd.preset`이 `prepare-archiso.sh`가 뺀 networkd를 다시 켰어요. ② releng가 켜 둔 ModemManager, hv_fcopy_daemon 링크가 RobinOS에 없는 패키지를 가리켜서 preset 적용이 `unresolvable alias`로 실패했어요. ③ releng가 켠 `vmtoolsd`가 QEMU와 실제 PC에서 실패해 `systemctl --failed`에 남았어요
+- 한 것: `/etc/systemd/system-preset/10-robinos.preset`(`disable systemd-networkd*`, 처음 맞는 줄이 이겨요), `customize_airootfs.sh`가 깨진 서비스 링크를 지워요, `vmtoolsd`·`vmware-vmblock-fuse`에 `ConditionVirtualization=vmware`
+- 완료 기준: 부팅 테스트 `failed-units`에 실패한 서비스 0개, `systemd-networkd` inactive, `NetworkManager` active. `event-viewer`에 networkd·vmtoolsd·preset 경고가 없음
+
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
 - 출처: 사용자 요청("vmware로 깔아줘"). VMware Workstation Pro 26H1, VM은 `문서\Virtual Machines\RobinOS\RobinOS.vmx`(EFI, 8GB, NVMe 64GB, 3D 가속 켬)

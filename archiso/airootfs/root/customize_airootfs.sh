@@ -41,6 +41,13 @@ systemctl enable bluetooth.service
 systemctl enable power-profiles-daemon.service
 systemctl set-default graphical.target
 
+# releng enables units of packages RobinOS leaves out (ModemManager, Hyper-V's
+# hv_fcopy_daemon). Their dangling links made systemd's first-boot preset-all fail
+# on every live boot ("unresolvable alias"), so drop them.
+while IFS= read -r link; do
+  [[ "$(readlink "${link}")" == /dev/null || -e "${link}" ]] || rm -f "${link}"
+done < <(find /etc/systemd/system -type l)
+
 # Docker starts on first use (robinctl lab start, or the socket), not at boot:
 # docker.service at boot held the login screen back by about 5 s
 if systemctl list-unit-files docker.socket >/dev/null 2>&1; then

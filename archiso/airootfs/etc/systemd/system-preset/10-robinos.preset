@@ -1,0 +1,7 @@
+# The live ISO's machine-id is "uninitialized", so systemd applies the presets on
+# every boot, and systemd's own 90-systemd.preset turns systemd-networkd back on
+# after scripts/prepare-archiso.sh took it out. RobinOS uses NetworkManager; two
+# managers on one interface fight over it (boot test journal, 2026-10-10).
+# The first matching line wins, and this file sorts before 90-systemd.preset.
+disable systemd-networkd*
+disable iwd.service
