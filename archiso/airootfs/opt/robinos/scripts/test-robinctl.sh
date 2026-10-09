@@ -104,15 +104,15 @@ grep -q '리눅스 기초를 끝냈어요|다음은 네트워크 기초예요' "
 check "checking 5 again" 0 learner env WAYLAND_DISPLAY=wayland-test PATH="${WORK}/fakebin:${PATH}" bash "${ROBINCTL}" learn check 5
 [[ "$(grep -o '끝냈어요' "${WORK}/notified" | wc -l)" == "1" ]] && ok "a mission already done doesn't notify again" || bad "the group notification came twice"
 check "list after the first five" 0 learn
-said "list counts 5 of 40" "5/40"
+said "list counts 5 of 45" "5/45"
 said "list shows the network group" "네트워크 기초"
 said "list points to mission 6" "robinctl learn show 6"
 # The shell's learning center (LearnCenter.qml) reads this
 check "tsv for the learning center" 0 learn tsv
-if [[ "$(grep -c '^mission	' "${WORK}/out")" == "40" && "$(awk -F'\t' '$1 == "mission" && $6 == 1' "${WORK}/out" | wc -l)" == "5" ]] \
+if [[ "$(grep -c '^mission	' "${WORK}/out")" == "45" && "$(awk -F'\t' '$1 == "mission" && $6 == 1' "${WORK}/out" | wc -l)" == "5" ]] \
     && grep -qx 'mission	6	네트워크 기초	내 IP 주소 보기	ip a	0' "${WORK}/out" && grep -qx 'ctf	0	10' "${WORK}/out" \
     && [[ "$(grep -c '^ctfitem	' "${WORK}/out")" == "10" ]] && grep -qx 'ctfitem	9	포트 뒤의 목소리	네트워크	0' "${WORK}/out"; then
-  ok "tsv: 40 missions, 5 done, groups, then the CTF"
+  ok "tsv: 45 missions, 5 done, groups, then the CTF"
 else
   bad "tsv: $(head -n 7 "${WORK}/out" | tr '\t' '|')"
 fi
@@ -161,7 +161,7 @@ in_home "printf '# Nmap 7.95 scan\nNmap scan report for localhost (127.0.0.1)\nP
 check "10 passes with 9000 open on 127.0.0.1" 0 learn check 10
 
 check "list after the first ten" 0 learn
-said "list counts 10 of 40" "10/40"
+said "list counts 10 of 45" "10/45"
 said "list shows the forensics group" "포렌식 기초"
 said "list points to mission 11" "robinctl learn show 11"
 
@@ -205,7 +205,7 @@ check "15 passes with the pipeline from the mission" 0 learn check 15
 in_home "bsdtar -xOf practice/forensics/logo.png secret.txt > practice/forensics/found.txt"
 check "14 passes again" 0 learn check 14
 check "list after the first fifteen" 0 learn
-said "list counts 15 of 40" "15/40"
+said "list counts 15 of 45" "15/45"
 said "list shows the reversing group" "리버싱 기초"
 said "list points to mission 16" "robinctl learn show 16"
 
@@ -258,7 +258,7 @@ in_home "cd ${REV} && ./count 1337 | grep -q ROBIN-COUNT-1337 && echo \$((0x539)
 check "20 passes with 1337" 0 learn check 20
 
 check "list after the first twenty" 0 learn
-said "list counts 20 of 40" "20/40"
+said "list counts 20 of 45" "20/45"
 said "list shows the web group" "웹 기초"
 said "list points to mission 21" "robinctl learn show 21"
 
@@ -308,7 +308,7 @@ in_home "kill \$(cat ${WEB}/.test-server)"
 if ss -Htln 2>/dev/null | grep -q ":${WEB_PORT} "; then bad "the practice server is still listening"; fi
 
 check "list after twenty-five" 0 learn
-said "list counts 25 of 40" "25/40"
+said "list counts 25 of 45" "25/45"
 said "list shows the shell group" "셸 기초"
 
 # Shell basics: answers written the way the missions ask
@@ -336,7 +336,7 @@ in_home "{ ls ~ > /dev/null; echo \$?; ls /no-such-dir 2> /dev/null; echo \$?; }
 check "30 passes with 0 and a failure code" 0 learn check 30
 
 check "list after thirty" 0 learn
-said "list counts 30 of 40" "30/40"
+said "list counts 30 of 45" "30/45"
 said "list shows the system group" "시스템 기초"
 
 # System basics: a real background process, the disk, a service and the journal
@@ -366,7 +366,7 @@ in_home "uname -r > practice/system/kernel.txt"
 check "35 passes with the running kernel" 0 learn check 35
 
 check "list after thirty-five" 0 learn
-said "list counts 35 of 40" "35/40"
+said "list counts 35 of 45" "35/45"
 said "list shows the security group" "보안 기초"
 
 # Security basics: groups, a private file, an SSH key, a tampered download, encryption
@@ -411,11 +411,49 @@ check "40 fails with a plain copy" fail learn check 40
 in_home "rm practice/security/secret.txt.gpg && GNUPGHOME=\$(mktemp -d) gpg -q --batch --passphrase test --pinentry-mode loopback -c practice/security/secret.txt"
 check "40 passes with gpg -c" 0 learn check 40
 
-check "list after all forty" 0 learn
-said "list says all forty are done" "40/40"
+check "list after forty" 0 learn
+said "list counts 40 of 45" "40/45"
+said "list shows the text group" "텍스트 다루기"
+
+# Text: grep -c, sort | uniq -c, awk, sed and diff on ~/practice/text
+check "41 fails before the files exist" fail learn check 41
+check "show 41 makes ~/practice/text" 0 learn show 41
+in_home "echo 0 > practice/text/404.txt"
+check "41 fails with a wrong count" fail learn check 41
+in_home "cd practice/text && grep -c ' 404 ' access.log > 404.txt"
+check "41 passes with grep -c" 0 learn check 41
+in_home "cd practice/text && cut -d' ' -f1 access.log | sort | uniq -c | sort -n | head -n 1 | awk '{print \$2}' > top-ip.txt"
+check "42 fails with the quietest address" fail learn check 42
+in_home "cd practice/text && cut -d' ' -f1 access.log | sort | uniq -c | sort -rn | head -n 1 | awk '{print \$2}' > top-ip.txt"
+check "42 passes with sort | uniq -c | sort -rn" 0 learn check 42
+in_home "cd practice/text && awk '{print \$7}' access.log | sort -u > paths.txt"
+check "43 fails with every address's paths" fail learn check 43
+in_home "cd practice/text && awk -v ip=\$(cat top-ip.txt) '\$1 == ip {print \$7}' access.log | sort -u > paths.txt"
+check "43 passes with awk and sort -u" 0 learn check 43
+in_home "cd practice/text && cp config.ini masked.ini"
+check "44 fails with the passwords still there" fail learn check 44
+in_home "cd practice/text && sed 's/^password=.*/password=***/' config.ini | grep -v '^#' > masked.ini"
+check "44 fails when another line is gone" fail learn check 44
+in_home "cd practice/text && sed 's/^password=.*/password=***/' config.ini > masked.ini"
+check "44 passes with sed" 0 learn check 44
+in_home "cd practice/text && head -n 1 users-old.txt > added.txt"
+check "45 fails with an old user" fail learn check 45
+if learner bash -c 'command -v diff' >/dev/null 2>&1; then
+  in_home "cd practice/text && diff users-old.txt users-new.txt | grep '^>' > added.txt"
+  check "45 passes with diff's > line" 0 learn check 45
+else
+  # The same "> name" line diff would give
+  in_home "cd practice/text && comm -13 users-old.txt users-new.txt | sed 's/^/> /' > added.txt"
+  check "45 passes with a diff-style > line" 0 learn check 45
+fi
+in_home "cd practice/text && comm -13 users-old.txt users-new.txt > added.txt"
+check "45 passes with comm -13" 0 learn check 45
+
+check "list after all forty-five" 0 learn
+said "list says all forty-five are done" "45/45"
 said "list points to the CTF" "robinctl ctf"
-check "show 40" 0 learn show 40
-check "mission 41 doesn't exist" fail learn show 41
+check "show 45" 0 learn show 45
+check "mission 46 doesn't exist" fail learn show 46
 
 printf '%s\n' "Local CTF (robinctl ctf): each challenge solved the way its hints say"
 CTF="practice/ctf"

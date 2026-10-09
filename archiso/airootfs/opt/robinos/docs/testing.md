@@ -72,7 +72,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 `scripts/boot-test.sh`가 QEMU에서 ISO를 부팅하고, `scripts/boot-test-qmp.py`가 화면을 조작하면서 스크린샷을 찍어요(2026-10-10 기준 79장). 키는 QMP `send-key`로, 마우스는 VM에 붙인 `usb-tablet`에 QMP `input-send-event`로 화면 좌표(1600×900)를 찍어 눌러요(`click()`). 소리 창을 보려고 소리를 버리는 사운드 카드(`-audiodev none`, `hda-duplex`)도 붙여요.
 
 1. 부팅과 첫 로그인
-2. 환영 마법사의 모든 단계, 마지막에 열리는 학습 센터(0/40)
+2. 환영 마법사의 모든 단계, 마지막에 열리는 학습 센터(0/45)
 3. 데스크톱, 창이 없을 때 `Alt+F4`로 뜨는 전원 메뉴, `Super+X` 빠른 메뉴
 4. 런처: 추천 목록, `term` 검색, 윈도우 이름 `notepad` 검색, 수식 `(12+3)*4`의 계산 결과(= 60), 아무것도 맞지 않는 `arch wiki hyprland`의 웹 검색 항목
 5. 설치기 첫 두 단계(테스트 VM에는 빈 64GB 디스크가 있어요)
@@ -117,7 +117,7 @@ WHPX가 필요해요. TCG에서는 `build`, `boot-test`, `install-test`를 차�
 
 설치한 뒤 확인하는 것:
 
-1. `robinctl doctor`, 스냅샷 설정, `/etc/fstab`의 `@snapshots`, grub-btrfs 항목, 부팅 메뉴 이름, 보안 프로필 목록, 설치본 전용 앱(`packages/apps.txt`: 인쇄 서비스가 응답하는지, LibreOffice 한국어판, 앱 스토어와 Flathub 저장소, 동영상·음악 재생 앱과 `gio`로 본 기본 앱, 디스크 관리(`gnome-disks`)와 디스크 사용량(`baobab`)), 바의 업데이트 점이 쓰는 `checkupdates`, Firefox 원격 측정을 끄는 정책, 배경화면 포털 백엔드와 포털 설정, `filesystem`을 다시 설치한 뒤에도 RobinOS인 os-release, 사용자 `~/.bashrc`의 RobinOS 설정, `which`·`ssh-keygen`·`gpg`·`wtype`·`lspci`·`lsusb`(학습 미션, 이모지, 런처의 장치 관리자에 필요), 소리 서버의 실시간 우선순위(`rtkit`), 열린 포트
+1. `robinctl doctor`, 스냅샷 설정, `/etc/fstab`의 `@snapshots`, grub-btrfs 항목, 부팅 메뉴 이름, 보안 프로필 목록, 설치본 전용 앱(`packages/apps.txt`: 인쇄 서비스가 응답하는지, LibreOffice 한국어판, 앱 스토어와 Flathub 저장소, 동영상·음악 재생 앱과 `gio`로 본 기본 앱, 디스크 관리(`gnome-disks`)와 디스크 사용량(`baobab`)), 바의 업데이트 점이 쓰는 `checkupdates`, Firefox 원격 측정을 끄는 정책, 배경화면 포털 백엔드와 포털 설정, `filesystem`을 다시 설치한 뒤에도 RobinOS인 os-release, 사용자 `~/.bashrc`의 RobinOS 설정, `which`·`ssh-keygen`·`gpg`·`wtype`·`lspci`·`lsusb`·`diff`(학습 미션, 이모지, 런처의 장치 관리자에 필요), 소리 서버의 실시간 우선순위(`rtkit`), 열린 포트
 2. 재부팅해서 GRUB 메뉴와 스냅샷 하위 메뉴 스크린샷
 3. `pacman -S cowsay`로 snap-pac의 전후 스냅샷이 생기는지
 4. 다시 켜서 GRUB의 스냅샷 하위 메뉴로 cowsay 설치 전 스냅샷을 골라 부팅하고([recovery.md](recovery.md)의 비상 경로), 그 안에서 `robinctl snapshot rollback`

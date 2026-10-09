@@ -931,8 +931,10 @@ packages_print() {
 # The system basics missions (processes, disk, services, logs) write to ~/practice/system.
 # The security basics missions (users, permissions, SSH keys, checksums, encryption)
 # work in ~/practice/security; 38 makes a key in ~/.ssh with the user's own ssh-keygen.
+# The text missions (grep -c, sort | uniq -c, awk, sed, diff) work on ~/practice/text:
+# a web server log, a config file and two user lists, made the first time one is shown.
 
-readonly LEARN_COUNT=40
+readonly LEARN_COUNT=45
 LEARN_DIR="${HOME:-/root}/practice"
 LEARN_NET="${HOME:-/root}/practice/net"
 LEARN_FOR="${HOME:-/root}/practice/forensics"
@@ -941,6 +943,7 @@ LEARN_WEB="${HOME:-/root}/practice/web"
 LEARN_SHELL="${HOME:-/root}/practice/shell"
 LEARN_SYSTEM="${HOME:-/root}/practice/system"
 LEARN_SEC="${HOME:-/root}/practice/security"
+LEARN_TEXT="${HOME:-/root}/practice/text"
 LEARN_STATE="${XDG_STATE_HOME:-${HOME:-/root}/.local/state}/robinos/learn"
 LEARN_FAILS=0
 
@@ -986,6 +989,11 @@ learn_title() {
     38) printf 'SSH 열쇠 만들기' ;;
     39) printf '내려받은 파일 검사하기' ;;
     40) printf '파일 암호화하기' ;;
+    41) printf '줄 세고 거르기' ;;
+    42) printf '가장 많이 온 주소 찾기' ;;
+    43) printf '칸 골라내기' ;;
+    44) printf '비밀번호 가리기' ;;
+    45) printf '두 파일 비교하기' ;;
   esac
 }
 
@@ -1000,6 +1008,7 @@ learn_group() {
     26) printf '셸 기초' ;;
     31) printf '시스템 기초' ;;
     36) printf '보안 기초' ;;
+    41) printf '텍스트 다루기' ;;
   esac
 }
 
@@ -1045,6 +1054,11 @@ learn_tools() {
     38) printf 'ssh-keygen' ;;
     39) printf 'sha256sum -c' ;;
     40) printf 'gpg -c' ;;
+    41) printf 'grep -c wc -l' ;;
+    42) printf 'cut sort uniq -c' ;;
+    43) printf 'awk sort -u' ;;
+    44) printf 'sed' ;;
+    45) printf 'diff comm' ;;
   esac
 }
 
@@ -1086,7 +1100,7 @@ learn_mission_arg() {
     n="$(learn_next)"
     [[ -n "${n}" ]] || n="${LEARN_COUNT}"
   fi
-  [[ "${n}" =~ ^([1-9]|[123][0-9]|40)$ ]] || die "미션 번호는 1부터 ${LEARN_COUNT}까지예요"
+  [[ "${n}" =~ ^([1-9]|[123][0-9]|4[0-5])$ ]] || die "미션 번호는 1부터 ${LEARN_COUNT}까지예요"
   printf '%s' "${n}"
 }
 
@@ -2023,6 +2037,170 @@ EOF
 EOF
 }
 
+learn_show_41() {
+  cat <<'EOF'
+보안 공부의 많은 부분은 긴 기록(로그)에서 필요한 줄을 골라내는 일이에요. 윈도우에서는
+메모장의 "찾기"로 하나씩 보지만, 리눅스에서는 grep으로 맞는 줄만 뽑고 grep -c나
+wc -l로 개수를 세요. ~/practice/text/access.log는 웹 서버가 남긴 접속 기록이에요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  access.log에서 "없는 페이지"(상태 코드 404) 응답이 몇 번인지 세서, 그 숫자만
+  ~/practice/text/404.txt에 저장하세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  cd ~/practice/text
+  head -n 5 access.log                     처음 다섯 줄. 아홉째 칸이 상태 코드예요
+  grep ' 404 ' access.log                  404가 들어간 줄만
+  grep -c ' 404 ' access.log               그 줄의 개수
+  grep ' 404 ' access.log | wc -l          같은 일을 파이프로
+  grep -c ' 404 ' access.log > 404.txt
+EOF
+}
+
+learn_show_42() {
+  cat <<'EOF'
+한 주소에서 유난히 많은 요청이 오면 누군가 사이트를 훑고 있을 수 있어요. 접속 기록의
+첫 칸이 접속한 컴퓨터의 IP 주소예요. cut으로 그 칸만 잘라 sort로 줄 세우고,
+uniq -c로 같은 것을 세면 누가 몇 번 왔는지 보여요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  access.log에서 요청을 가장 많이 보낸 IP 주소를 ~/practice/text/top-ip.txt에 저장하세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  cd ~/practice/text
+  cut -d' ' -f1 access.log | head          첫 칸(IP 주소)만
+  cut -d' ' -f1 access.log | sort | uniq -c                 주소마다 몇 번인지
+  cut -d' ' -f1 access.log | sort | uniq -c | sort -rn | head -n 3   많은 순서로
+  echo 주소 > top-ip.txt
+EOF
+}
+
+learn_show_43() {
+  cat <<'EOF'
+awk는 줄을 칸(빈칸으로 나뉜 조각)으로 나눠 다뤄요. $1은 첫 칸, $7은 일곱째 칸이에요.
+접속 기록의 일곱째 칸은 요청한 경로(/admin 같은)예요. 조건을 붙이면 원하는 줄에서만
+칸을 뽑을 수 있어요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  미션 42에서 찾은 주소가 요청한 경로를 중복 없이 한 줄에 하나씩
+  ~/practice/text/paths.txt에 저장하세요. 무엇을 노렸는지 보여요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  cd ~/practice/text
+  awk '{print $7}' access.log | head                     모든 줄의 경로
+  awk '$1 == "주소" {print $7}' access.log                그 주소의 줄만
+  awk '$1 == "주소" {print $7}' access.log | sort -u > paths.txt     중복 없이
+EOF
+}
+
+learn_show_44() {
+  cat <<'EOF'
+설정 파일을 남에게 보여 줄 때는 비밀번호를 가려야 해요. sed는 글자를 규칙대로 바꿔서
+내보내요. 's/찾을 것/바꿀 것/'에서 ^는 줄의 처음, .*는 "그 뒤의 모든 글자"예요.
+원본은 그대로 두고 결과를 다른 파일로 받아요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  ~/practice/text/config.ini에서 password= 뒤의 값을 모두 ***로 바꾼 사본을
+  ~/practice/text/masked.ini로 저장하세요. 나머지 줄은 그대로여야 해요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  cd ~/practice/text
+  grep password config.ini                 가려야 할 줄
+  sed 's/^password=.*/password=***/' config.ini                바뀐 결과를 화면에
+  sed 's/^password=.*/password=***/' config.ini > masked.ini
+  diff config.ini masked.ini               바뀐 줄만 보여요
+EOF
+}
+
+learn_show_45() {
+  cat <<'EOF'
+두 파일에서 달라진 곳은 diff로 찾아요. 어제와 오늘의 사용자 목록을 비교하면 몰래
+생긴 계정을 찾을 수 있어요. diff 결과의 > 줄은 두 번째 파일에만 있는 줄이에요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  ~/practice/text/users-old.txt와 users-new.txt를 비교해서, 새로 생긴 사용자 이름을
+  ~/practice/text/added.txt에 저장하세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  cd ~/practice/text
+  diff users-old.txt users-new.txt         > 는 새 파일에만 있는 줄
+  comm -13 users-old.txt users-new.txt     새 파일에만 있는 줄만 (정렬된 파일끼리)
+  echo 이름 > added.txt
+EOF
+}
+
+# The text missions' files: a web server log where one address probes for admin
+# pages, a config file with three passwords and two user lists, one name apart.
+# Random each time they are made; the answers go to the state dir.
+learn_prepare_text() {
+  if [[ -f "${LEARN_STATE}/text-answers" && -f "${LEARN_TEXT}/access.log" && -f "${LEARN_TEXT}/config.ini" \
+    && -f "${LEARN_TEXT}/users-old.txt" && -f "${LEARN_TEXT}/users-new.txt" ]]; then
+    return
+  fi
+  mkdir -p "${LEARN_TEXT}" "${LEARN_STATE}"
+  python3 - "${LEARN_TEXT}" "${LEARN_STATE}" <<'EOF'
+import datetime, random, sys
+text, state = sys.argv[1], sys.argv[2]
+r = random.Random()
+normal = ["192.168.0.%d" % n for n in r.sample(range(2, 99), 6)]
+attacker = "203.0.113.%d" % r.randint(2, 254)
+pages = ["/", "/index.html", "/about.html", "/news.html", "/contact.html", "/css/site.css", "/img/logo.png", "/favicon.ico"]
+probes = ["/admin", "/wp-login.php", "/.env", "/phpmyadmin/", "/backup.zip", "/config.php", "/.git/HEAD", "/server-status"]
+tried = sorted(r.sample(probes, r.randint(4, 6)))
+browsers = ['"Mozilla/5.0 (Windows NT 10.0; Win64; x64) Firefox/131.0"', '"Mozilla/5.0 (X11; Linux x86_64) Firefox/131.0"']
+requests = []
+for ip in normal:
+    for _ in range(r.randint(8, 20)):
+        path = r.choice(pages)
+        requests.append((ip, path, 404 if path == "/favicon.ico" else 200, r.choice(browsers)))
+attempts = tried + [r.choice(tried) for _ in range(r.randint(26, 40))]
+for path in attempts:
+    requests.append((attacker, path, r.choice([403, 404]), '"python-requests/2.32"'))
+r.shuffle(requests)
+when = datetime.datetime(2026, 10, 10, 9, 0, 0)
+lines = []
+for ip, path, status, agent in requests:
+    when += datetime.timedelta(seconds=r.randint(1, 40))
+    size = r.randint(500, 9000) if status == 200 else r.randint(150, 399)
+    lines.append('%s - - [%s +0900] "GET %s HTTP/1.1" %d %d "-" %s' % (
+        ip, when.strftime("%d/%b/%Y:%H:%M:%S"), path, status, size, agent))
+with open(text + "/access.log", "w") as f:
+    f.write("\n".join(lines) + "\n")
+
+words = ["sunrise", "maple", "tiger", "ocean", "winter", "rocket", "lemon", "river"]
+passwords = ["%s%d" % (r.choice(words), r.randint(10, 9999)) for _ in range(3)]
+with open(text + "/config.ini", "w") as f:
+    f.write("# 쇼핑몰 설정 (연습용)\n[database]\nhost=127.0.0.1\nuser=shop\npassword=%s\n\n"
+            "[mail]\nserver=mail.example.com\nuser=notice\npassword=%s\n\n[admin]\npassword=%s\n" % tuple(passwords))
+
+users = ["alice", "bob", "chris", "dana", "erin", "frank", "grace", "henry"]
+added = r.choice(["backup", "support", "tester", "sysadm", "guest2", "update"])
+with open(text + "/users-old.txt", "w") as f:
+    f.write("\n".join(sorted(users)) + "\n")
+with open(text + "/users-new.txt", "w") as f:
+    f.write("\n".join(sorted(users + [added])) + "\n")
+
+with open(state + "/text-answers", "w") as f:
+    f.write("404=%d\ntop=%s\nadded=%s\n" % (sum(1 for q in requests if q[2] == 404), attacker, added))
+with open(state + "/text-paths", "w") as f:
+    f.write("\n".join(tried) + "\n")
+with open(state + "/text-passwords", "w") as f:
+    f.write("\n".join(passwords) + "\n")
+EOF
+  cp "${LEARN_TEXT}/config.ini" "${LEARN_STATE}/text-config.ini"
+  printf '\n%s연습 파일을 ~/practice/text에 만들어 뒀어요.%s\n' "${C_DIM}" "${C_RESET}"
+}
+
 # Mission 39 needs downloads to check: three files and their SHA256SUMS, one of
 # them changed afterwards. Made the first time the mission is shown; the changed
 # file is picked at random and remembered in the state dir.
@@ -2101,6 +2279,8 @@ learn_show() {
   elif [[ "${n}" == "39" ]]; then
     mkdir -p "${LEARN_SEC}"
     learn_prepare_39
+  elif ((n >= 41)); then
+    learn_prepare_text
   elif ((n >= 36)); then
     mkdir -p "${LEARN_SEC}"
   elif ((n >= 31)); then
@@ -2821,6 +3001,112 @@ learn_check_40() {
 }
 
 # The first mission of n's group, and the first of the next group (or one past the last)
+learn_text_answer() {
+  sed -n "s/^$1=//p" "${LEARN_STATE}/text-answers" 2>/dev/null | head -n 1
+}
+
+# The first word of a learner's answer file, without Windows line ends
+learn_text_written() {
+  head -n 1 "${LEARN_TEXT}/$1" 2>/dev/null | tr -d '\r' | awk '{print $1}' || true
+}
+
+learn_check_41() {
+  local want written
+  want="$(learn_text_answer 404)"
+  if [[ -z "${want}" ]]; then
+    learn_bad "연습 파일이 아직 없어요" "robinctl learn show 41"
+    return
+  fi
+  written="$(learn_text_written 404.txt)"
+  if [[ -z "${written}" ]]; then
+    learn_bad "~/practice/text/404.txt가 없거나 비어 있어요" "grep -c ' 404 ' access.log > 404.txt"
+  elif [[ "${written}" == "${want}" ]]; then
+    learn_ok "404 응답이 ${want}번이에요. 없는 페이지를 자꾸 찾는 건 누가 사이트를 훑는다는 신호예요"
+  else
+    learn_bad "404 응답은 ${written}번이 아니에요" "grep ' 404 ' access.log | wc -l 로 다시 세 봐요"
+  fi
+}
+
+learn_check_42() {
+  local want written
+  want="$(learn_text_answer top)"
+  if [[ -z "${want}" ]]; then
+    learn_bad "연습 파일이 아직 없어요" "robinctl learn show 42"
+    return
+  fi
+  written="$(learn_text_written top-ip.txt)"
+  if [[ -z "${written}" ]]; then
+    learn_bad "~/practice/text/top-ip.txt가 없거나 비어 있어요" "cut -d' ' -f1 access.log | sort | uniq -c | sort -rn | head -n 3"
+  elif [[ "${written}" == "${want}" ]]; then
+    learn_ok "${want}가 가장 많이 왔어요. 다음 미션에서 무엇을 찾았는지 봐요"
+  else
+    learn_bad "${written}는 가장 많이 온 주소가 아니에요" "uniq -c 결과를 sort -rn으로 큰 순서로 줄 세워 봐요"
+  fi
+}
+
+learn_check_43() {
+  local want got
+  want="$(sort -u "${LEARN_STATE}/text-paths" 2>/dev/null || true)"
+  if [[ -z "${want}" ]]; then
+    learn_bad "연습 파일이 아직 없어요" "robinctl learn show 43"
+    return
+  fi
+  if [[ ! -s "${LEARN_TEXT}/paths.txt" ]]; then
+    learn_bad "~/practice/text/paths.txt가 없거나 비어 있어요" "awk '\$1 == \"주소\" {print \$7}' access.log | sort -u > paths.txt"
+    return
+  fi
+  got="$(tr -d '\r' <"${LEARN_TEXT}/paths.txt" | awk 'NF {print $1}' | sort -u)"
+  if [[ "${got}" == "${want}" ]]; then
+    learn_ok "관리자 페이지와 숨은 파일을 찾고 있었어요: $(printf '%s' "${want}" | tr '\n' ' ')"
+  elif [[ "$(printf '%s\n' "${got}" | wc -l)" -gt "$(printf '%s\n' "${want}" | wc -l)" ]]; then
+    learn_bad "다른 주소가 요청한 경로도 섞였어요" "awk에 \$1 == \"주소\" 조건을 붙여요"
+  else
+    learn_bad "그 주소가 요청한 경로가 빠졌거나 달라요" "awk '\$1 == \"주소\" {print \$7}' access.log | sort -u"
+  fi
+}
+
+learn_check_44() {
+  local out="${LEARN_TEXT}/masked.ini" password
+  if [[ ! -f "${LEARN_STATE}/text-config.ini" ]]; then
+    learn_bad "연습 파일이 아직 없어요" "robinctl learn show 44"
+    return
+  fi
+  if [[ ! -s "${out}" ]]; then
+    learn_bad "~/practice/text/masked.ini가 없어요" "sed 's/^password=.*/password=***/' config.ini > masked.ini"
+    return
+  fi
+  while IFS= read -r password; do
+    if [[ -n "${password}" ]] && grep -qF -- "${password}" "${out}"; then
+      learn_bad "masked.ini에 비밀번호가 그대로 보여요" "sed 's/^password=.*/password=***/' config.ini > masked.ini"
+      return
+    fi
+  done <"${LEARN_STATE}/text-passwords"
+  # Compared in bash: diff (diffutils) isn't in Arch's base
+  if [[ "$(sed 's/^password=.*/password=***/' "${LEARN_STATE}/text-config.ini")" == "$(tr -d '\r' <"${out}")" ]]; then
+    learn_ok "비밀번호 세 개를 가렸고 나머지 줄은 그대로예요"
+  else
+    learn_bad "비밀번호 말고 다른 줄도 바뀌었거나 빠졌어요" "diff config.ini masked.ini 로 바뀐 줄을 봐요"
+  fi
+}
+
+learn_check_45() {
+  local want written
+  want="$(learn_text_answer added)"
+  if [[ -z "${want}" ]]; then
+    learn_bad "연습 파일이 아직 없어요" "robinctl learn show 45"
+    return
+  fi
+  # "> backup" straight from diff counts too
+  written="$(head -n 1 "${LEARN_TEXT}/added.txt" 2>/dev/null | tr -d '\r' | sed 's/^[>[:space:]]*//' | awk '{print $1}' || true)"
+  if [[ -z "${written}" ]]; then
+    learn_bad "~/practice/text/added.txt가 없거나 비어 있어요" "diff users-old.txt users-new.txt"
+  elif [[ "${written}" == "${want}" ]]; then
+    learn_ok "${want} 계정이 새로 생겼어요. 내가 만든 게 아니면 누가 만들었는지 확인해야 해요"
+  else
+    learn_bad "${written}는 새로 생긴 이름이 아니에요" "diff 결과에서 > 로 시작하는 줄을 봐요"
+  fi
+}
+
 learn_group_first() {
   local i="$1"
   while [[ -z "$(learn_group "${i}")" ]]; do

@@ -602,7 +602,7 @@ def phase_installed(con, qmp):
     # wtype for the Win+. emoji picker, lspci and lsusb for the launcher's 장치 관리자,
     # rtkit for PipeWire's realtime priority
     con.run("command -v which && command -v ssh-keygen && command -v gpg && command -v wtype"
-            " && command -v lspci && command -v lsusb && pacman -Q rtkit")
+            " && command -v lspci && command -v lsusb && command -v diff && pacman -Q rtkit")
     # The guest tools robin-install picked for this VM (systemd-detect-virt, T-137)
     con.run("systemd-detect-virt; pacman -Q open-vm-tools qemu-guest-agent; systemctl --failed --no-legend",
             check=False)

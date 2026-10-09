@@ -276,7 +276,7 @@ def main():
     # The guest is still taking the typed keys for a while after QMP sent them
     wait(5)
     shot(qmp, "failed-units")
-    # Solve mission 1, so the launcher's learning entry shows "1/40" in light-launcher
+    # Solve mission 1, so the launcher's learning entry shows "1/45" in light-launcher
     type_text(qmp, "mkdir -p ~/practice/notes && robinctl learn check 1 >/dev/null\n")
     wait(1)
     # Title bar buttons (desktop/dconf) as GTK, Firefox and Qt apps read them
@@ -571,7 +571,7 @@ def main():
     keys(qmp, "alt", "f4")  # the new terminal has the focus
     wait(2)
     # At the end of the list, the ten CTF challenges as one more group
-    for _ in range(40):
+    for _ in range(60):
         click(qmp, 800, 500, "wheel-down")
     wait(1)
     shot(qmp, "learn-center-ctf")

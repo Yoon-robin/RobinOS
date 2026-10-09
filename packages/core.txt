@@ -12,6 +12,8 @@ which
 curl
 # ssh and ssh-keygen (learning mission 38); sshd stays off (docs/ethics.md)
 openssh
+# diff for learning mission 45 (diffutils isn't in Arch's base)
+diffutils
 # lsusb: the launcher's 장치 관리자 and the devmgmt.msc hint (lspci comes with base)
 usbutils
 python

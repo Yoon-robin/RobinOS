@@ -23,7 +23,7 @@ v0.1 범위와 진행 상황은 `docs/design.md`에서 관리해요.
 - `robinctl profile` 구현 - 학습 단계별 프로필 7개(network, web, forensics, reversing, passwords, wireless, vm)와 전부(security)
 - `robinctl update` 구현 - 첫 프로토타입 완료
 - `robinctl snapshot create` 구현 - 첫 프로토타입 완료
-- `robinctl learn` 구현 - 리눅스·네트워크·포렌식·리버싱·웹·셸·시스템·보안 기초 미션 5개씩, 모두 40개 완료
+- `robinctl learn` 구현 - 리눅스·네트워크·포렌식·리버싱·웹·셸·시스템·보안 기초·텍스트 다루기 미션 5개씩, 모두 45개 완료
 - `/etc/robinos/config.toml`에 간단한 설정 파일 추가 - 완료 (버전, 데스크톱, 프로필 목록. `robinctl doctor`가 있는지 확인)
 
 ## 3단계: 보안 프로필
