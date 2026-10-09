@@ -2711,13 +2711,14 @@ learn() {
   esac
 }
 
-# ---- Local CTF (robinctl ctf): five beginner challenges that mix the missions' skills ----
+# ---- Local CTF (robinctl ctf): ten beginner challenges that mix the missions' skills ----
 #
 # The files go to ~/practice/ctf. Flags look like ROBIN{...}; robinctl keeps only
 # their SHA-256, so the answers aren't sitting in this script. Challenge 5 uses
-# the web practice server (practice/web/server.py, /ctf and /ctf/admin).
+# the web practice server (practice/web/server.py, /ctf and /ctf/admin). Challenge 9
+# starts a small server that only listens on 127.0.0.1 (ctf_door), for an hour.
 
-readonly CTF_COUNT=5
+readonly CTF_COUNT=10
 CTF_DIR="${HOME:-/root}/practice/ctf"
 CTF_STATE="${XDG_STATE_HOME:-${HOME:-/root}/.local/state}/robinos/ctf"
 
@@ -2728,6 +2729,11 @@ ctf_title() {
     3) printf '로그 속 이상한 요청' ;;
     4) printf '네 자리 자물쇠' ;;
     5) printf '관리자 쿠키' ;;
+    6) printf '바꿔치기된 파일' ;;
+    7) printf '열리지 않는 금고' ;;
+    8) printf '약한 비밀번호' ;;
+    9) printf '포트 뒤의 목소리' ;;
+    10) printf '사진 속 압축 파일' ;;
   esac
 }
 
@@ -2738,6 +2744,11 @@ ctf_skill() {
     3) printf '포렌식' ;;
     4) printf '스크립트' ;;
     5) printf '웹' ;;
+    6) printf '무결성' ;;
+    7) printf '권한' ;;
+    8) printf '암호화' ;;
+    9) printf '네트워크' ;;
+    10) printf '포렌식' ;;
   esac
 }
 
@@ -2748,6 +2759,11 @@ ctf_flag_sha256() {
     3) printf 'ce88290753a6557a0b8cb0e828e60ef2274dbc21169a4d8c1cafb3201f0f27d7' ;;
     4) printf '189d042558322f318e8321cda50e25abf721bd241091f077cea30226801904de' ;;
     5) printf 'fd1f7ca1df6a1102abeebc4787af77f199062f8260eebd1867f89077bb898bfd' ;;
+    6) printf '0f8c1724cf81dc0dc4fb1e830c5f29c83256919887b681452acb0d1e5c243855' ;;
+    7) printf '53fa755fd292e9d772fe9cba73b5fcf1bf13b7db34c646343b3313b6b9d351d7' ;;
+    8) printf '31c1ea276ce937e4a3d16019136e0103f8da6bb3a53a419046f9fd05c2e2cf48' ;;
+    9) printf '7200ea1f6def0fcbd2d3c55e50b3217834455f308872fba290f4d0873ce823dd' ;;
+    10) printf 'a7241ea574c719ff5986782739d745a2bbb33182fbee2129c54e47a647b2f89f' ;;
   esac
 }
 
@@ -2815,19 +2831,112 @@ print("열렸어요! " + bytes(b ^ key[i % len(key)] for i, b in enumerate(LOCKE
 EOF
 }
 
+# Challenge 6: twelve downloads and their SHA256SUMS. Every file carries a flag-shaped
+# decoy, so grep alone doesn't help; the one changed after the list has the real flag.
+ctf_downloads() {
+  local dir="${CTF_DIR}/6" i pick
+  rm -rf "${dir}"
+  mkdir -p "${dir}"
+  for i in $(seq -w 1 12); do
+    printf 'RobinOS 도구 %s\nROBIN{not_this_one_%s}\n' "${i}" "${i}" >"${dir}/tool-${i}.bin"
+  done
+  (cd "${dir}" && sha256sum tool-*.bin >SHA256SUMS)
+  pick="$(printf '%02d' $((RANDOM % 12 + 1)))"
+  { printf 'RobinOS 도구 %s\n' "${pick}"; ctf_unxor '0815181314212c3f28333c2305383f3c35283f0523352f05282f3427'; printf '\n'; } \
+    >"${dir}/tool-${pick}.bin"
+}
+
+# Challenge 8: a note locked with a password from a list of common ones
+ctf_weak_gpg() {
+  local dir="${CTF_DIR}/8" home
+  rm -rf "${dir}"
+  mkdir -p "${dir}"
+  printf '%s\n' 123456 password qwerty 111111 iloveyou dragon monkey letmein football baseball \
+    abc123 admin welcome master sunshine princess shadow superman michael 1q2w3e4r \
+    qwer1234 asdf1234 zxcvbnm passw0rd starwars whatever trustno1 hello123 freedom 000000 >"${dir}/passwords.txt"
+  command -v gpg >/dev/null 2>&1 || return 0
+  home="$(mktemp -d)"
+  ctf_unxor '081518131421293235282e052a3b29292d35283e29053c3b3636053c3b292e27' \
+    | GNUPGHOME="${home}" gpg --batch --quiet --pinentry-mode loopback --passphrase sunshine -c -o "${dir}/note.txt.gpg" 2>/dev/null || true
+  gpgconf --homedir "${home}" --kill gpg-agent >/dev/null 2>&1 || true
+  rm -rf "${home}"
+}
+
+# Challenge 10: a small PNG with a zip glued to its end; image viewers show the picture
+ctf_photo() {
+  local dir="${CTF_DIR}/10"
+  rm -rf "${dir}"
+  mkdir -p "${dir}"
+  ctf_unxor '0815181314213c33363f2905333429333e3f053c33363f2927' | python3 -c '
+import io, struct, sys, zipfile, zlib
+flag, out = sys.stdin.read(), sys.argv[1]
+def chunk(kind, data):
+    return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
+rows = b"".join(b"\x00" + bytes(c for x in range(64) for c in ((200, 40, 40) if (x // 8 + y // 8) % 2 else (250, 250, 250))) for y in range(64))
+png = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", 64, 64, 8, 2, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(rows)) + chunk(b"IEND", b"")
+buf = io.BytesIO()
+with zipfile.ZipFile(buf, "w") as z:
+    z.writestr("secret.txt", flag + "\n")
+open(out, "wb").write(png + buf.getvalue())
+' "${dir}/photo.png"
+}
+
+# Challenge 9: a small server on a random 127.0.0.1 port that tells whoever connects
+# the flag. The flag goes in on stdin, so ps and /proc/PID/cmdline don't show it.
+ctf_door() {
+  local port pid
+  if [[ -f "${CTF_STATE}/door" ]]; then
+    read -r port pid <"${CTF_STATE}/door" || true
+    if [[ -n "${pid:-}" && -r "/proc/${pid}/cmdline" ]] && grep -q ctf-door "/proc/${pid}/cmdline" 2>/dev/null; then
+      return
+    fi
+  fi
+  mkdir -p "${CTF_STATE}"
+  cat >"${CTF_STATE}/ctf-door.py" <<'EOF'
+import socket, sys
+flag = sys.stdin.read().strip()
+server = socket.socket()
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+server.bind(("127.0.0.1", int(sys.argv[1])))
+server.listen(5)
+server.settimeout(3600)
+while True:
+    try:
+        conn, _ = server.accept()
+    except socket.timeout:
+        break
+    conn.sendall(("RobinOS CTF 9: 잘 찾아왔어요! " + flag + "\n").encode())
+    conn.close()
+EOF
+  port=$((4000 + RANDOM % 1000))
+  ctf_unxor '0815181314213633292e3f3433343d053534053635393b363235292e27' \
+    | nohup python3 "${CTF_STATE}/ctf-door.py" "${port}" >/dev/null 2>&1 &
+  printf '%s %s\n' "${port}" "$!" >"${CTF_STATE}/door"
+  disown 2>/dev/null || true
+}
+
 ctf_prepare() {
   # Made again when any challenge file was deleted (solved ones stay solved)
   if [[ -f "${CTF_STATE}/prepared" && -f "${CTF_DIR}/1/.archive/.old/.flag" && -f "${CTF_DIR}/2/note.txt" \
-    && -f "${CTF_DIR}/3/access.log" && -f "${CTF_DIR}/4/lock.py" ]]; then
+    && -f "${CTF_DIR}/3/access.log" && -f "${CTF_DIR}/4/lock.py" && -f "${CTF_DIR}/6/SHA256SUMS" \
+    && -e "${CTF_DIR}/7/vault.txt" && -f "${CTF_DIR}/8/passwords.txt" && -f "${CTF_DIR}/10/photo.png" ]]; then
     return
   fi
-  mkdir -p "${CTF_DIR}/1/.archive/.old" "${CTF_DIR}/2" "${CTF_DIR}/3" "${CTF_DIR}/4" "${CTF_STATE}"
+  mkdir -p "${CTF_DIR}/1/.archive/.old" "${CTF_DIR}/2" "${CTF_DIR}/3" "${CTF_DIR}/4" "${CTF_DIR}/7" "${CTF_STATE}"
   printf '여기에는 아무것도 없어 보여요. 정말 그럴까요?\n' >"${CTF_DIR}/1/readme.txt"
   ctf_unxor '08151813142132333e3e3f34053334052a363b33340529333d322e27' >"${CTF_DIR}/1/.archive/.old/.flag"
   printf '%s\n' 'VWs5Q1NVNTdZbUZ6WlRZMFgzUjNhV05sZlE9PQ==' >"${CTF_DIR}/2/note.txt"
   ctf_access_log >"${CTF_DIR}/3/access.log"
   ctf_lock_py >"${CTF_DIR}/4/lock.py"
   chmod 755 "${CTF_DIR}/4/lock.py"
+  ctf_downloads
+  # Challenge 7: the owner can't even read it until the permission bits change
+  rm -f "${CTF_DIR}/7/vault.txt"
+  ctf_unxor '0815181314212a3f283733292933353429053b283f05302f292e0538332e2927' >"${CTF_DIR}/7/vault.txt"
+  printf '\n' >>"${CTF_DIR}/7/vault.txt"
+  chmod 000 "${CTF_DIR}/7/vault.txt"
+  ctf_weak_gpg
+  ctf_photo
   : >"${CTF_STATE}/prepared"
   printf '%s문제 파일을 ~/practice/ctf에 만들어 뒀어요.%s\n\n' "${C_DIM}" "${C_RESET}"
 }
@@ -2848,7 +2957,7 @@ ctf_list() {
 
 ctf_show() {
   local n="${1:-}"
-  [[ "${n}" =~ ^[1-5]$ ]] || die "문제 번호는 1부터 ${CTF_COUNT}까지예요"
+  [[ "${n}" =~ ^([1-9]|10)$ ]] || die "문제 번호는 1부터 ${CTF_COUNT}까지예요"
   ctf_prepare
   printf '%sCTF %s · %s%s  %s%s%s\n\n' "${C_BOLD}" "${n}" "$(ctf_title "${n}")" "${C_RESET}" "${C_DIM}" "$(ctf_skill "${n}")" "${C_RESET}"
   case "${n}" in
@@ -2886,13 +2995,59 @@ EOF
 교훈: 브라우저가 보내는 값은 믿으면 안 돼요. 권한은 서버가 직접 확인해야 해요.
 EOF
       ;;
+    6)
+      cat <<'EOF'
+~/practice/ctf/6 에는 내려받은 도구 12개와 SHA256SUMS가 있어요. 모든 파일에 플래그처럼 생긴
+글자가 들어 있지만, 진짜는 SHA256SUMS와 맞지 않는(누가 바꿔치기한) 파일에만 있어요.
+힌트: grep 만으로는 못 골라요. sha256sum -c 로 FAILED인 파일을 찾아요 (미션 39).
+교훈: 받은 파일은 열기 전에 배포한 곳의 해시와 맞춰 봐요.
+EOF
+      ;;
+    7)
+      cat <<'EOF'
+~/practice/ctf/7/vault.txt 는 내 파일인데 cat 하면 "허가 거부"가 나와요.
+힌트: ls -l 로 권한을 봐요. ---------- 는 아무도 못 읽는다는 뜻이에요. 주인은 권한을 바꿀 수
+      있어요: chmod (미션 4, 37).
+교훈: 권한은 파일에 붙은 몇 비트일 뿐이에요. 주인이나 root는 언제든 바꿀 수 있어요.
+EOF
+      ;;
+    8)
+      cat <<'EOF'
+~/practice/ctf/8/note.txt.gpg 는 비밀번호로 잠근 쪽지예요(미션 40). 비밀번호는 몰라요.
+다만 이걸 잠근 사람은 passwords.txt 에 있는 흔한 비밀번호 중 하나를 썼대요.
+힌트: 하나씩 넣어 보는 반복문을 만들어요(사전 공격).
+  for p in $(cat passwords.txt); do
+    gpg --batch --quiet --pinentry-mode loopback --passphrase "$p" -d note.txt.gpg 2>/dev/null && break
+  done
+교훈: 암호화가 튼튼해도 비밀번호가 흔하면 소용없어요. 목록에 없을 긴 비밀번호를 써요.
+EOF
+      ;;
+    9)
+      ctf_door
+      cat <<'EOF'
+지금 이 컴퓨터(127.0.0.1)의 어떤 포트에서 누군가 기다리고 있어요(1시간 동안). 찾아가서 말을 걸면
+플래그를 알려 줘요. 포트 번호는 4000~4999 중 하나예요.
+힌트: 듣고 있는 포트는 ss -tln 으로 봐요 (미션 9). 찾으면 nc 127.0.0.1 포트,
+      nc가 없으면 bash만으로: cat < /dev/tcp/127.0.0.1/포트
+교훈: ss는 내 컴퓨터에서 무엇이 연결을 기다리는지 보여 줘요. 모르는 포트가 열려 있으면 의심해요.
+EOF
+      ;;
+    10)
+      cat <<'EOF'
+~/practice/ctf/10/photo.png 는 그냥 체크무늬 사진이에요. 그런데 파일 크기가 사진치고 조금 커요.
+힌트: 파일 뒤에 다른 파일이 붙어 있을 수 있어요 (미션 14). binwalk 가 있으면 binwalk photo.png,
+      없으면 파이썬으로 압축 목록을 봐요: python3 -m zipfile -l photo.png
+      풀기는 python3 -m zipfile -e photo.png 풀린곳/
+교훈: 파일의 겉모습(확장자, 미리보기)만으로는 속을 알 수 없어요.
+EOF
+      ;;
   esac
   printf "\n찾으면: %srobinctl ctf submit %s 'ROBIN{...}'%s\n" "${C_BOLD}" "${n}" "${C_RESET}"
 }
 
 ctf_submit() {
   local n="${1:-}" flag="${2:-}" given
-  [[ "${n}" =~ ^[1-5]$ ]] || die "사용법: robinctl ctf submit 번호 'ROBIN{...}'"
+  [[ "${n}" =~ ^([1-9]|10)$ ]] || die "사용법: robinctl ctf submit 번호 'ROBIN{...}'"
   [[ -n "${flag}" ]] || die "플래그를 함께 적어요: robinctl ctf submit ${n} 'ROBIN{...}'"
   flag="$(printf '%s' "${flag}" | tr -d '\r\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
   given="$(printf '%s' "${flag}" | sha256sum | cut -d' ' -f1)"

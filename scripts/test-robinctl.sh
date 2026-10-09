@@ -102,7 +102,7 @@ said "list points to mission 6" "robinctl learn show 6"
 # The shell's learning center (LearnCenter.qml) reads this
 check "tsv for the learning center" 0 learn tsv
 if [[ "$(grep -c '^mission	' "${WORK}/out")" == "40" && "$(awk -F'\t' '$1 == "mission" && $6 == 1' "${WORK}/out" | wc -l)" == "5" ]] \
-    && grep -qx 'mission	6	네트워크 기초	내 IP 주소 보기	ip a	0' "${WORK}/out" && grep -qx 'ctf	0	5' "${WORK}/out"; then
+    && grep -qx 'mission	6	네트워크 기초	내 IP 주소 보기	ip a	0' "${WORK}/out" && grep -qx 'ctf	0	10' "${WORK}/out"; then
   ok "tsv: 40 missions, 5 done, groups, then the CTF"
 else
   bad "tsv: $(head -n 7 "${WORK}/out" | tr '\t' '|')"
@@ -401,9 +401,9 @@ printf '%s\n' "Local CTF (robinctl ctf): each challenge solved the way its hints
 CTF="practice/ctf"
 ctf_submit() { learner bash "${ROBINCTL}" ctf submit "$1" "$2"; }
 check "ctf list makes the challenge files" 0 learner bash "${ROBINCTL}" ctf
-said "ctf list counts 0 of 5" "0/5"
+said "ctf list counts 0 of 10" "0/10"
 check "ctf show 4" 0 learner bash "${ROBINCTL}" ctf show 4
-check "challenge 6 doesn't exist" fail learner bash "${ROBINCTL}" ctf show 6
+check "challenge 11 doesn't exist" fail learner bash "${ROBINCTL}" ctf show 11
 check "a wrong flag fails" fail ctf_submit 1 'ROBIN{nope}'
 check "a flag without ROBIN{} fails" fail ctf_submit 1 'hello'
 said "the shape of a flag is explained" "ROBIN{...}"
@@ -426,8 +426,53 @@ in_home "true; cd ~ && { ROBIN_WEB_PORT=${WEB_PORT} python3 ${WEB}/server.py >/d
 in_home "curl -si ${URL}/ctf" | grep -q "Set-Cookie: role=guest" && ok "5: /ctf hands out role=guest" || bad "5: /ctf gives no role cookie"
 check "5: role=admin in the cookie" 0 ctf_submit 5 "$(in_home "curl -s -b 'role=admin' ${URL}/ctf/admin" | grep -o 'ROBIN{[^}]*}')"
 in_home "kill \$(cat ${WEB}/.test-server)"
-check "ctf list after all five" 0 learner bash "${ROBINCTL}" ctf
-said "ctf list says 5 of 5" "5/5"
+decoys="$(in_home "cat ${CTF}/6/tool-*.bin" | grep -c 'ROBIN{')"
+[[ "${decoys}" == "12" ]] && ok "6: all twelve downloads carry a flag-shaped line" || bad "6: ${decoys} flag-shaped lines, not 12"
+tampered="$(in_home "cd ${CTF}/6 && sha256sum -c SHA256SUMS 2>/dev/null | grep FAILED | cut -d: -f1")"
+[[ "$(printf '%s\n' "${tampered}" | grep -c .)" == "1" ]] && ok "6: exactly one download fails sha256sum -c" || bad "6: failing downloads: ${tampered}"
+check "6: the flag in the file that fails sha256sum -c" 0 ctf_submit 6 "$(in_home "grep -o 'ROBIN{[^}]*}' ${CTF}/6/${tampered}")"
+in_home "cat ${CTF}/7/vault.txt" >/dev/null 2>&1 && bad "7: the vault reads without chmod" || ok "7: the vault can't be read at first"
+check "7: chmod, then the flag" 0 ctf_submit 7 "$(in_home "chmod 600 ${CTF}/7/vault.txt && cat ${CTF}/7/vault.txt")"
+if learner bash -c 'command -v gpg' >/dev/null 2>&1; then
+  cat >"${WORK}/dict.sh" <<'SH'
+cd ~/practice/ctf/8 || exit 1
+GNUPGHOME="$(mktemp -d)"
+export GNUPGHOME
+for p in $(cat passwords.txt); do
+  gpg --batch --quiet --pinentry-mode loopback --passphrase "$p" -d note.txt.gpg 2>/dev/null && break
+done
+gpgconf --kill gpg-agent >/dev/null 2>&1
+rm -rf "${GNUPGHOME}"
+SH
+  chmod 644 "${WORK}/dict.sh"
+  check "8: the password found from the list" 0 ctf_submit 8 "$(learner bash "${WORK}/dict.sh" | grep -o 'ROBIN{[^}]*}')"
+else
+  ok "8: skipped, no gpg here"
+fi
+check "show 9 starts the server" 0 learner bash "${ROBINCTL}" ctf show 9
+sleep 1
+# Like ss -tln would show: whatever answers on 127.0.0.1:4000-4999
+door="$(python3 - <<'PY'
+import socket
+for port in range(4000, 5000):
+    try:
+        with socket.create_connection(("127.0.0.1", port), timeout=0.2) as conn:
+            data = conn.recv(200).decode(errors="replace")
+            if "ROBIN{" in data:
+                print(data)
+                break
+    except OSError:
+        pass
+PY
+)"
+check "9: the flag from the port on 127.0.0.1" 0 ctf_submit 9 "$(printf '%s' "${door}" | grep -o 'ROBIN{[^}]*}')"
+check "show 9 again keeps the same server" 0 learner bash "${ROBINCTL}" ctf show 9
+[[ "$(in_home "pgrep -c -f 'ctf-[d]oor.py'")" == "1" ]] && ok "9: one server, not two" || bad "9: the server was started twice"
+in_home "kill \$(cut -d' ' -f2 ~/.local/state/robinos/ctf/door)"
+in_home "file -b ${CTF}/10/photo.png" | grep -q '^PNG image data' && ok "10: photo.png is a PNG" || bad "10: photo.png isn't a PNG"
+check "10: the zip glued to the photo" 0 ctf_submit 10 "$(in_home "python3 -m zipfile -e ${CTF}/10/photo.png ${CTF}/10/out && cat ${CTF}/10/out/secret.txt")"
+check "ctf list after all ten" 0 learner bash "${ROBINCTL}" ctf
+said "ctf list says 10 of 10" "10/10"
 check "ctf reset" 0 learner bash "${ROBINCTL}" ctf reset
 in_home "rm ${CTF}/2/note.txt"
 check "ctf show after a deleted file" 0 learner bash "${ROBINCTL}" ctf show 2

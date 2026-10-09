@@ -225,7 +225,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 셸이 작업용으로 여는 터미널은 `ROBINOS_NO_GREETING=1`로 시작해서 `~/.bashrc`가 fastfetch를 띄우지 않아요. fastfetch는 한국어 라벨로 짧게 줄인 설정(`desktop/fastfetch/config.jsonc` → `/etc/xdg/fastfetch/config.jsonc`)을 쓰고, 왼쪽에 Arch 로고 대신 RobinOS 울새 그림(`/usr/share/robinos/fastfetch/robinos-logo.ansi`, [brand.md](brand.md))을 보여 줘요.
 
-런처의 "입문 CTF"(보안 랩 아래)는 터미널에서 `robinctl ctf`를 열어요. 학습 미션 다음 단계로, 배운 기술을 섞어 플래그 5개를 찾아요([README](../README.md#입문-ctf)).
+런처의 "입문 CTF"(보안 랩 아래)는 터미널에서 `robinctl ctf`를 열어요. 학습 미션 다음 단계로, 배운 기술을 섞어 플래그 10개를 찾아요([README](../README.md#입문-ctf)).
 
 ## 라이브 세션
 

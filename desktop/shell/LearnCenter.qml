@@ -16,7 +16,7 @@ FloatingWindow {
     // { number, group, groupStart, title, tools, done } from `robinctl learn tsv`
     property var missions: []
     property int ctfSolved: 0
-    property int ctfCount: 5
+    property int ctfCount: 10
     property bool loaded: false
     property bool failed: false
 
