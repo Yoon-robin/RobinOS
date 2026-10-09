@@ -61,6 +61,12 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 한 것: 알림 센터의 알림을 누르거나 Tab으로 가서 Enter를 누르면, 알림이 아직 살아 있으면 보낸 앱의 기본 동작, 사라졌으면 알림이 가리킨 파일(`x-robinos-open` 힌트, 스크린샷), 그것도 없으면 보낸 앱을 열어요. 열 것이 없는 알림은 눌러도 반응하지 않아요. 스크린샷 알림에 힌트를 넣었어요
 - 완료 기준: 부팅 테스트 `notification-opened`에서 알림 센터의 스크린샷 알림을 누르면 이미지 뷰어(Loupe)가 그 사진을 열어요
 
+### T-127 야간 모드 아이콘 바로 그리기
+- 상태: 검증 대기 (묶음 56)
+- 출처: 백로그 채우기 3 (화면 다듬기). `65-light-quick-settings`의 야간 모드 아이콘(Lucide sunset)이 해 모양이 아니라 선이 흩어져 있었어요. `icons.js`는 아이콘의 선들을 SVG 경로 하나로 이어 붙이는데, Lucide에서 가져온 선 셋이 상대 좌표(`m`)로 시작해서 앞 선 끝에 붙어 그려졌어요
+- 한 것: 세 선을 절대 좌표(`M`)로 바꾸고, `scripts/check-desktop.sh`에 `m`으로 시작하는 선을 찾는 검사를 넣었어요(옛 파일에서 셋을 찾는 것을 확인)
+- 완료 기준: 부팅 테스트 `quick-settings`, `light-quick-settings`의 야간 모드 아이콘이 해 지는 모양(반원, 빛살, 아래 화살표)
+
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
 - 출처: 사용자 요청("vmware로 깔아줘"). VMware Workstation Pro 26H1, VM은 `문서\Virtual Machines\RobinOS\RobinOS.vmx`(EFI, 8GB, NVMe 64GB, 3D 가속 켬)

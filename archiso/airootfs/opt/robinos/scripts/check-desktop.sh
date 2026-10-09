@@ -9,6 +9,7 @@ set -euo pipefail
 #   - Syntax of desktop scripts              (bash -n, Python ast)
 #   - JSON syntax of the Firefox policies    (python3 -m json.tool)
 #   - fastfetch logo size matches its config (python3)
+#   - Shell icon subpaths start with "M"     (python3)
 #
 # Missing tools are reported and skipped. Install them with:
 #   sudo pacman -S --needed lua qt6-declarative hyprland
@@ -116,6 +117,23 @@ if (logo["width"], logo["height"]) != (width, len(lines)):
     sys.exit(f"config says {logo['width']}x{logo['height']}, robinos-logo.ansi is {width}x{len(lines)}")
 PY
   then ok "desktop/fastfetch/robinos-logo.ansi"; else fail "desktop/fastfetch/robinos-logo.ansi"; fi
+else
+  skip "python3 not found"
+fi
+
+# icons.js joins each icon's subpaths into one SVG path, so a subpath copied from
+# Lucide that starts with a relative "m" lands next to the previous one instead
+# (the night light icon, 2026-10-10)
+printf 'Shell icons\n'
+if command -v python3 >/dev/null 2>&1; then
+  if python3 - "${ROOT_DIR}/desktop/shell/icons.js" <<'PY'
+import re, sys
+text = open(sys.argv[1], encoding="utf-8").read()
+bad = re.findall(r'"m[-0-9.][^"]*"', text)
+if bad:
+    sys.exit("subpaths must start with an absolute M: " + ", ".join(bad))
+PY
+  then ok "desktop/shell/icons.js"; else fail "desktop/shell/icons.js"; fi
 else
   skip "python3 not found"
 fi
