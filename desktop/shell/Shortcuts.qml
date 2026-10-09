@@ -17,7 +17,7 @@ PanelWindow {
 
     readonly property var groups: [
         { title: "창", items: [
-            { keys: ["Alt", "Tab"], title: "다음 창 (Shift를 같이 누르면 이전 창)" },
+            { keys: ["Alt", "Tab"], title: "창 전환: Alt를 누른 채 고르고 놓기" },
             { keys: ["Alt", "F4"], title: "창 닫기 (Win+Q도 돼요)" },
             { keys: ["Win", "D"], title: "바탕 화면 보기, 다시 누르면 되돌리기" },
             { keys: ["Win", "↑"], title: "최대화 (Win+M도 돼요)" },

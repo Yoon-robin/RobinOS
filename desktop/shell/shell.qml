@@ -39,6 +39,10 @@ ShellRoot {
 
     ConnectPanel {}
 
+    AltTab {
+        id: altTab
+    }
+
     SoundPanel {}
 
     Toasts {}
@@ -99,6 +103,28 @@ ShellRoot {
         name: "desktop"
         description: "바탕 화면 보기 (다시 누르면 창이 돌아와요)"
         onPressed: ShellState.toggleDesktop()
+    }
+
+    // Alt+Tab: Tab moves on, Shift+Tab back, letting go of Alt switches (AltTab.qml)
+    GlobalShortcut {
+        appid: "robinos"
+        name: "alttab"
+        description: "창 전환: 다음 창"
+        onPressed: altTab.step(1)
+    }
+
+    GlobalShortcut {
+        appid: "robinos"
+        name: "alttab-back"
+        description: "창 전환: 이전 창"
+        onPressed: altTab.step(-1)
+    }
+
+    GlobalShortcut {
+        appid: "robinos"
+        name: "alttab-done"
+        description: "창 전환: Alt를 놓으면 고른 창으로"
+        onReleased: altTab.finish()
     }
 
     // Win+Down on a window that is neither maximized nor snapped (robinos.lua)

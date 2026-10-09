@@ -7,7 +7,7 @@ RobinOS는 Hyprland 위에 직접 만든 Quickshell 셸을 얹어 써요. 디자
 | 부분 | 프로그램 | 저장소 안 위치 |
 |---|---|---|
 | 컴포지터 | Hyprland 0.56+ (Lua 설정) | `desktop/hypr/robinos.lua` |
-| 셸: 상단 바(트레이 포함), 독, 런처, 빠른 설정, Wi-Fi·블루투스 연결 창, 소리 창, 알림, 볼륨 표시, 배경화면, 환영 마법사, 달력, 학습 센터, 단축키 보기, 설치기 | Quickshell 0.3 | `desktop/shell/` |
+| 셸: 상단 바(트레이 포함), 독, 런처, Alt+Tab 창 전환, 빠른 설정, Wi-Fi·블루투스 연결 창, 소리 창, 알림, 볼륨 표시, 배경화면, 환영 마법사, 달력, 학습 센터, 단축키 보기, 설치기 | Quickshell 0.3 | `desktop/shell/` |
 | 세션 시작, 렌더링 자동 전환 | `robinos-session` | `desktop/bin/robinos-session` |
 | 셸 다시 띄우기, 셸 렌더링 전환 | `robinos-shell` | `desktop/bin/robinos-shell` |
 | VM 화면을 창 크기에 맞추기 | `robinos-vm-display` | `desktop/bin/robinos-vm-display` |
@@ -99,7 +99,7 @@ VM 창 크기를 바꾸면 VMware(`vmtoolsd`)나 QEMU(`virtio-gpu`)가 새 크�
 | `Super+B` | 브라우저 |
 | `Super+L` | 화면 잠금 |
 | `Ctrl+Shift+Escape` | 작업 관리자 (Mission Center) |
-| `Alt+Tab`, `Alt+Shift+Tab` | 다음 창 / 이전 창 |
+| `Alt+Tab`, `Alt+Shift+Tab` | 창 전환: `Alt`를 누르고 있는 동안 지금 작업 공간의 창이 미리보기 그림과 함께 최근에 쓴 순서로 나와요(최소화한 창도). `Tab`으로 다음, `Shift+Tab`으로 이전 창을 고르고, `Alt`를 놓으면 그 창으로 가요. 마우스로 눌러도 돼요 (윈도우와 같아요) |
 | `Alt+F4` 또는 `Super+Q` | 창 닫기 |
 | `Super+D` | 바탕 화면 보기 (지금 작업 공간의 창을 모두 숨기고, 다시 누르면 돌아와요) |
 | `Super+T` | 창을 자유 배치와 타일 배치 사이에서 전환 |

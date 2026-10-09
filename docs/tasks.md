@@ -55,6 +55,12 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 ## 진행 중
 
+### T-094 Alt+Tab 창 전환 화면
+- 상태: 진행 중
+- 출처: 백로그 채우기 3(윈도우에서 넘어온 사람의 불편). `Alt+Tab`이 화면 없이 Hyprland 순서로 창만 바꿔서, 창이 셋 이상이면 어디로 가는지 몰랐어요. 윈도우는 Alt를 누르고 있는 동안 창 목록을 보여 주고 최근에 쓴 순서예요
+- 한 것: `AltTab.qml`(미리보기 `ScreencopyView`, 없으면 앱 아이콘, 클릭으로도 고르기), `ShellState.focusOrder`(최근에 쓴 순서), `switcherWindows()`(지금 작업 공간과 최소화한 창), `switchTo()`. `robinos.lua`의 `robinos:alttab`·`alttab-back`과 `Alt_L`의 놓음 신호(`alttab-done`, global 바인드는 키를 놓을 때 released를 보내요)
+- 완료 기준: 부팅 테스트 `alt-tab`에 터미널과 계산기 미리보기(터미널 선택), `alt-tab-switched`에 터미널이 앞에
+
 ### T-093 바에서 휠로 음량 조절
 - 상태: 검증 대기 (묶음 32)
 - 출처: 백로그 채우기 3. 윈도우는 작업 표시줄의 스피커 아이콘 위에서 휠을 돌리면 음량이 바뀌는데, 바에서는 빠른 설정을 열어야 했어요

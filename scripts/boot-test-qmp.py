@@ -87,6 +87,12 @@ def keys(qmp, *names, hold=80, pause=0.15):
     time.sleep(pause * SPEED)
 
 
+def hold(qmp, key, down):
+    """Press (down=True) or let go of a key, for shots taken while it is held."""
+    qmp.execute("input-send-event", events=[{"type": "key", "data": {"down": down, "key": {"type": "qcode", "data": key}}}])
+    time.sleep(0.15 * SPEED)
+
+
 SCREEN = (1600, 900)  # the VGA mode in boot-test.sh and wsl-build.ps1
 
 
@@ -372,6 +378,18 @@ def main():
     wait(2)
     shot(qmp, "dock-pinned")
     click(qmp, 900, 860, "right")
+    wait(1)
+    # Alt+Tab like Windows: with Alt held, the two windows with their pictures, the
+    # terminal (used before) chosen; letting go switches to it. A quick Alt+Tab
+    # comes back to the calculator.
+    hold(qmp, "alt", True)
+    keys(qmp, "tab")
+    wait(2)
+    shot(qmp, "alt-tab")
+    hold(qmp, "alt", False)
+    wait(1)
+    shot(qmp, "alt-tab-switched")
+    keys(qmp, "alt", "tab")
     wait(1)
     keys(qmp, "alt", "f4")  # the calculator has the focus
     wait(2)

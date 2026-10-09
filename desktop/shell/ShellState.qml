@@ -429,6 +429,39 @@ Singleton {
         }
     }
 
+    // ---- Alt+Tab (AltTab.qml) ----
+
+    // Window addresses, the most recently focused first, like Windows' Alt+Tab order
+    property var focusOrder: []
+
+    Connections {
+        target: Hyprland
+
+        function onActiveToplevelChanged() {
+            const address = Hyprland.activeToplevel?.address ?? "";
+            if (address !== "")
+                root.focusOrder = [address].concat(root.focusOrder.filter(a => a !== address)).slice(0, 50);
+        }
+    }
+
+    // Where a window comes in Alt+Tab: windows never focused since login go last
+    function switcherRank(win) {
+        const i = focusOrder.indexOf(win.address);
+        return i === -1 ? focusOrder.length : i;
+    }
+
+    // The windows Alt+Tab offers: this workspace's and the minimized ones, last used first
+    function switcherWindows() {
+        const workspace = Hyprland.focusedMonitor?.activeWorkspace?.name ?? "";
+        return toArray(windows).filter(w => w.workspace?.name === workspace || isMinimized(w))
+            .sort((a, b) => switcherRank(a) - switcherRank(b));
+    }
+
+    function switchTo(win) {
+        restore(win, true);
+        Hyprland.dispatch(Hyprland.usingLua ? "hl.dsp.window.bring_to_top()" : "bringactivetotop");
+    }
+
     // Super+D: hide every window on the workspace on screen; pressed again with
     // nothing shown, bring back the ones it hid.
     function toggleDesktop() {
