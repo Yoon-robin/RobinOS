@@ -45,6 +45,19 @@ __robinos_windows_hint() {
     getmac)              printf '%s' 'ip link|네트워크 장치의 MAC 주소(link/ether)를 보여 줘요' ;;
     winver)              printf '%s' 'fastfetch|운영체제 이름과 버전을 보여 줘요' ;;
     nslookup)            printf '%s' 'getent hosts 이름|이름으로 주소를 찾아요 (nslookup과 dig는 network 프로필에 있어요)' ;;
+    start)               printf '%s' 'xdg-open 파일|파일이나 주소를 알맞은 앱으로 열어요 (폴더는 nautilus 폴더)' ;;
+    clip)                printf '%s' 'wl-copy|글을 클립보드에 넣어요 (예: echo 안녕 | wl-copy, 붙여 넣기는 wl-paste)' ;;
+    net)                 printf '%s' 'id|사용자 정보는 id, 서비스는 systemctl, 공유 폴더는 mount로 다뤄요' ;;
+    powercfg)            printf '%s' 'powerprofilesctl|전원 모드를 보여 주고 바꿔요 (빠른 설정의 전원 모드와 같아요)' ;;
+    ncpa.cpl)            printf '%s' 'nmtui|네트워크 연결을 설정해요 (빠른 설정의 네트워크도 돼요)' ;;
+    appwiz.cpl)          printf '%s' 'pacman -Q|설치된 프로그램 목록이에요 (지우기는 sudo pacman -Rs 이름, 앱은 소프트웨어 앱)' ;;
+    taskschd.msc)        printf '%s' 'systemctl list-timers|예약된 작업(타이머)을 보여 줘요' ;;
+    perfmon|resmon)      printf '%s' 'missioncenter|CPU, 메모리, 디스크 사용량을 보여 주는 앱이에요 (터미널에서는 top)' ;;
+    msinfo32|wmic)       printf '%s' 'hostnamectl|시스템 정보를 보여 줘요 (하드웨어는 lscpu, lsblk, lspci)' ;;
+    snippingtool)        printf '%s' 'Win+Shift+S|화면 일부를 캡처해요 (전체 화면은 Shift+Print)' ;;
+    mspaint)             printf '%s' 'loupe 그림|사진 보기는 loupe예요. 그림판은 없어서 앱 스토어에서 그리기 앱을 받아요' ;;
+    doskey)              printf '%s' "alias 이름='명령'|명령에 짧은 이름을 붙여요 (~/.bashrc에 적으면 계속 써요)" ;;
+    bcdedit)             printf '%s' 'efibootmgr|부팅 항목을 보여 줘요 (부팅 메뉴는 GRUB이 맡아요)' ;;
   esac
 }
 

@@ -19,7 +19,7 @@ RobinOS는 윈도우에서 넘어와 매일 쓰면서 리눅스와 보안을 배
 - `Win+V` 클립보드 기록(최근 50개, 로그아웃하면 지워지고 비밀번호 관리자가 숨긴 복사는 남기지 않아요)
 - `Win+Shift+S` 화면 캡처, 바의 시계를 누르면 달력(`Win+Alt+D`)
 - `Ctrl+Shift+Esc` 작업 관리자, `Win+I` 설정(빠른 설정), `Win+R` 실행(런처)
-- 윈도우 명령 힌트 40개쯤(`calc`, `eventvwr`, `services.msc`, `diskmgmt.msc` ...)
+- 윈도우 명령 힌트 55개쯤(`calc`, `start`, `clip`, `powercfg`, `eventvwr`, `services.msc`, `diskmgmt.msc`, `ncpa.cpl` ...)
 - 독에는 설치된 앱만 고정돼요(설치 안 된 Wireshark가 눌러도 반응 없던 문제를 고쳤어요)
 
 ### RobinOS다운 모습
