@@ -51,7 +51,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - **집 PC의 VMware 서비스 켜기(T-025)**: 집 PC(Blitz)에서 VM을 만들어 켜려 했더니 VMware의 윈도우 서비스(Authorization, DHCP, NAT, USB Arbitration)가 모두 "사용 안 함"이라 VM이 켜지지 않아요. 관리자 권한이 필요해서 직접 하지 않아요. 쓰려면 관리자 PowerShell에서 `Set-Service VMAuthdService,VMnetDHCP,'VMware NAT Service',VMUSBArbService -StartupType Manual`, `Start-Service VMAuthdService,VMnetDHCP,'VMware NAT Service'`. VM(`문서\Virtual Machines\RobinOS`)과 스크립트(`build\vmware\vmware-test.py`)는 준비돼 있어요 (`막힘`)
 - **작업 브랜치 `work/t025-vmware` 지우기**: 내용은 모두 main에 들어갔어요. GitHub에서 지워도 되는지 알려 주세요
 - **RobinOS 파일 업데이트 배포 방식(T-026)**: 2026-10-08 사용자가 중앙 서버가 필요한지 묻고 추천을 원함. 추천: 따로 서버 없이 깃허브 릴리스를 pacman 저장소로 쓰고, RobinOS 파일을 pacman 패키지로 만들어 서명해요. `robinctl update` 한 번에 함께 올라가고 snap-pac 스냅샷도 그대로 생겨요. 서명 열쇠(GPG)를 이 PC에 만들어야 해서 사용자 답을 기다려요
-- **v0.2 프리뷰 공개**: v0.1 뒤로 오피스·앱 스토어·프린터·NVIDIA·업데이트 알림·Win+V 등과 미션 25개, 입문 CTF가 들어갔어요. 발표문 초안은 `docs/release-notes-v0.2.md`. 공개하기로 하면 릴리스용 xz ISO(2GiB 안)를 빌드하고 부팅 테스트한 뒤 깃허브 릴리스로 올려요(태그 `v0.2.0`, 프리릴리스)
+- **v0.2 프리뷰 공개**: v0.1 뒤로 오피스·앱 스토어·프린터·NVIDIA·업데이트 알림이 들어갔고, 윈도우처럼 쓰는 기능(Win+V, Alt+Tab 미리보기, Win+Tab, Win+←/→, Win+., 트레이, 독 미리보기, 연결·소리 창, 알림 센터, 달력 공휴일)과 학습 미션 40개, 입문 CTF 10문제, 학습 센터가 생겼어요. 발표문 초안은 `docs/release-notes-v0.2.md`, README 앞에 화면 사진도 있어요. 2026-10-10에 xz ISO가 2,101,510,144바이트로 깃허브 한도 안인 것을 확인했어요. 공개하기로 하면 릴리스용 xz ISO를 빌드하고 부팅 테스트한 뒤 깃허브 릴리스로 올려요(태그 `v0.2.0`, 프리릴리스)
 
 ## 진행 중
 
