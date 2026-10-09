@@ -47,7 +47,7 @@ robinctl - RobinOS 관리 도구
   robinctl packages core                기본 패키지 목록
   robinctl packages <프로필>            보안 실습 프로필의 패키지 목록
   robinctl packages optional            선택 패키지 목록
-  robinctl learn                        학습 미션(리눅스·네트워크·포렌식·리버싱·웹·셸)과 진행도
+  robinctl learn                        학습 미션(리눅스·네트워크·포렌식·리버싱·웹·셸·시스템)과 진행도
   robinctl learn show [번호]            미션 설명 보기
   robinctl learn check [번호]           미션 결과 확인
   robinctl learn reset                  미션 진행도 초기화
@@ -738,7 +738,7 @@ packages_print() {
 }
 
 # ---- Learning missions: Linux basics (1-5), network basics (6-10), forensics basics (11-15),
-# reversing basics (16-20), web basics (21-25), shell basics (26-30) ----
+# reversing basics (16-20), web basics (21-25), shell basics (26-30), system basics (31-35) ----
 #
 # Missions are solved in a real terminal. `robinctl learn check N` looks at the
 # result (files under ~/practice) and records progress in the user's state dir.
@@ -750,14 +750,16 @@ packages_print() {
 # the reversing profile, or pacman -S on their own). The web basics missions talk to a
 # practice server (practice/web/server.py) that only listens on 127.0.0.1:8000.
 # The shell basics missions need nothing but bash; their files go to ~/practice/shell.
+# The system basics missions (processes, disk, services, logs) write to ~/practice/system.
 
-readonly LEARN_COUNT=30
+readonly LEARN_COUNT=35
 LEARN_DIR="${HOME:-/root}/practice"
 LEARN_NET="${HOME:-/root}/practice/net"
 LEARN_FOR="${HOME:-/root}/practice/forensics"
 LEARN_REV="${HOME:-/root}/practice/reversing"
 LEARN_WEB="${HOME:-/root}/practice/web"
 LEARN_SHELL="${HOME:-/root}/practice/shell"
+LEARN_SYSTEM="${HOME:-/root}/practice/system"
 LEARN_STATE="${XDG_STATE_HOME:-${HOME:-/root}/.local/state}/robinos/learn"
 LEARN_FAILS=0
 
@@ -793,6 +795,11 @@ learn_title() {
     28) printf '명령에 별명 붙이기' ;;
     29) printf '스크립트에 값 넘기기' ;;
     30) printf '종료 코드와 && ||' ;;
+    31) printf '실행 중인 프로그램 보기' ;;
+    32) printf '프로그램 끝내기' ;;
+    33) printf '디스크 공간 보기' ;;
+    34) printf '서비스 상태 보기' ;;
+    35) printf '시스템 기록 읽기' ;;
   esac
 }
 
@@ -805,6 +812,7 @@ learn_group() {
     16) printf '리버싱 기초' ;;
     21) printf '웹 기초' ;;
     26) printf '셸 기초' ;;
+    31) printf '시스템 기초' ;;
   esac
 }
 
@@ -840,6 +848,11 @@ learn_tools() {
     28) printf 'alias ~/.bashrc' ;;
     29) printf '$1 chmod +x' ;;
     30) printf 'echo $? && ||' ;;
+    31) printf 'ps pgrep &' ;;
+    32) printf 'kill' ;;
+    33) printf 'df -h du -sh' ;;
+    34) printf 'systemctl status' ;;
+    35) printf 'journalctl uname -r' ;;
   esac
 }
 
@@ -881,7 +894,7 @@ learn_mission_arg() {
     n="$(learn_next)"
     [[ -n "${n}" ]] || n="${LEARN_COUNT}"
   fi
-  [[ "${n}" =~ ^([1-9]|[12][0-9]|30)$ ]] || die "미션 번호는 1부터 ${LEARN_COUNT}까지예요"
+  [[ "${n}" =~ ^([1-9]|[12][0-9]|3[0-5])$ ]] || die "미션 번호는 1부터 ${LEARN_COUNT}까지예요"
   printf '%s' "${n}"
 }
 
@@ -1617,6 +1630,103 @@ EOF
 EOF
 }
 
+learn_show_31() {
+  cat <<'EOF'
+윈도우의 작업 관리자(Ctrl+Shift+Esc)에 나오는 프로그램 목록을 터미널에서도 볼 수 있어요.
+실행 중인 프로그램 하나하나를 프로세스라고 하고, 저마다 번호(PID)가 있어요.
+명령 뒤에 &를 붙이면 그 명령은 뒤에서 돌고 터미널은 바로 다음 명령을 받아요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  sleep 600(600초 동안 기다리기만 하는 프로그램)을 뒤에서 실행하고,
+  그 PID를 ~/practice/system/sleep.pid에 저장하세요. 프로그램은 다음 미션까지 켜 둬요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  sleep 600 &                              뒤에서 실행 (번호가 PID예요)
+  jobs -l                                  이 터미널이 뒤에서 돌리는 것
+  ps aux | grep sleep                      모든 프로세스에서 찾기
+  pgrep -a sleep                           이름으로 PID 찾기
+  echo $! > ~/practice/system/sleep.pid    $!는 방금 뒤에서 실행한 프로그램의 PID
+  top                                      실시간으로 보기 (q로 나가요)
+EOF
+}
+
+learn_show_32() {
+  cat <<'EOF'
+작업 관리자의 "작업 끝내기"는 터미널에서 kill이에요. kill은 프로그램에 끝내라는
+신호를 보내요. 그래도 안 끝나면 kill -9로 강제로 끝내요(저장하지 않은 것은 사라져요).
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  미션 31에서 실행한 sleep을 끝내세요(~/practice/system/sleep.pid의 번호).
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  cat ~/practice/system/sleep.pid          끝낼 PID
+  kill $(cat ~/practice/system/sleep.pid)  그 프로세스 끝내기
+  ps -p $(cat ~/practice/system/sleep.pid) 아직 있는지 보기 (없으면 제목 줄만 나와요)
+  pkill sleep                              이름으로 끝내기도 돼요
+EOF
+}
+
+learn_show_33() {
+  cat <<'EOF'
+윈도우 탐색기의 "내 PC"에서 보는 드라이브 남은 공간은 df로, 폴더 크기는 du로 봐요.
+리눅스에는 C: 같은 드라이브 글자가 없고, 모든 디스크가 /(루트) 아래 어딘가에 붙어요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  /(루트)가 몇 % 차 있는지 ~/practice/system/disk.txt에 저장하세요(예: 23%).
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  df -h                                    모든 디스크 (-h: GB처럼 읽기 쉽게)
+  df -h /                                  루트만 (Use%가 쓴 양)
+  du -sh ~/practice                        폴더 크기
+  df --output=pcent / | tail -n 1 > ~/practice/system/disk.txt
+  cat ~/practice/system/disk.txt
+EOF
+}
+
+learn_show_34() {
+  cat <<'EOF'
+윈도우의 서비스(services.msc)처럼, 리눅스에도 뒤에서 늘 도는 프로그램이 있어요.
+systemd가 이 서비스들을 켜고 끄고 지켜봐요. 인터넷 연결은 NetworkManager 서비스가 맡아요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  NetworkManager 서비스가 지금 어떤 상태인지 한 단어로 ~/practice/system/service.txt에 저장하세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  systemctl status NetworkManager          자세한 상태 (q로 나가요)
+  systemctl is-active NetworkManager       한 단어로 (active면 켜져 있어요)
+  systemctl list-units --type=service      켜져 있는 서비스 목록
+  systemctl is-active NetworkManager > ~/practice/system/service.txt
+EOF
+}
+
+learn_show_35() {
+  cat <<'EOF'
+윈도우의 이벤트 뷰어에 해당하는 것이 journalctl이에요. 부팅부터 지금까지
+시스템과 서비스가 남긴 기록을 모두 볼 수 있어요. 문제가 생기면 여기부터 봐요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  이번 부팅의 커널 기록에서 리눅스 커널 버전을 찾아 ~/practice/system/kernel.txt에 저장하세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  journalctl -b                            이번 부팅의 기록 (q로 나가요, /로 검색)
+  journalctl -b -p err                     오류만
+  journalctl -u NetworkManager             한 서비스의 기록
+  journalctl -k -b | grep "Linux version"  커널이 처음 남긴 줄
+  uname -r                                 지금 커널 버전
+  uname -r > ~/practice/system/kernel.txt
+EOF
+}
+
 # The practice web server for missions 21-25 (practice/web/server.py), kept here
 # as gzip + base64 by practice/web/build.sh
 LEARN_WEB_SERVER_B64="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"
@@ -1673,6 +1783,8 @@ learn_show() {
   "learn_show_${n}"
   if [[ "${n}" == "3" ]]; then
     learn_prepare_3
+  elif ((n >= 31)); then
+    mkdir -p "${LEARN_SYSTEM}"
   elif ((n >= 26)); then
     mkdir -p "${LEARN_SHELL}"
   elif ((n >= 21)); then
@@ -2221,6 +2333,85 @@ learn_check_30() {
   fi
 }
 
+# ---- System basics (31-35) ----
+
+# The PID written for mission 31, or nothing
+learn_sleep_pid() {
+  local pid
+  pid="$(head -n 1 "${LEARN_SYSTEM}/sleep.pid" 2>/dev/null | tr -d '\r[:space:]')"
+  [[ "${pid}" =~ ^[0-9]+$ ]] && printf '%s' "${pid}"
+}
+
+learn_check_31() {
+  local pid
+  pid="$(learn_sleep_pid)"
+  if [[ -z "${pid}" ]]; then
+    learn_bad "~/practice/system/sleep.pid에 PID(숫자)가 없어요" 'sleep 600 & 다음에 echo $! > ~/practice/system/sleep.pid'
+    return
+  fi
+  if [[ ! -r "/proc/${pid}/comm" ]]; then
+    learn_bad "PID ${pid}인 프로세스가 지금 없어요" "sleep 600 & 로 다시 실행하고 새 PID를 저장해요"
+  elif [[ "$(<"/proc/${pid}/comm")" != "sleep" ]]; then
+    learn_bad "PID ${pid}는 sleep이 아니라 $(<"/proc/${pid}/comm")이에요" "pgrep -a sleep 으로 sleep의 PID를 찾아요"
+  else
+    learn_ok "PID ${pid}가 실행 중인 sleep이에요"
+  fi
+}
+
+learn_check_32() {
+  local pid
+  pid="$(learn_sleep_pid)"
+  if [[ -z "${pid}" ]]; then
+    learn_bad "~/practice/system/sleep.pid가 없어요" "미션 31을 먼저 해요: robinctl learn show 31"
+  elif [[ -r "/proc/${pid}/comm" && "$(<"/proc/${pid}/comm")" == "sleep" ]]; then
+    learn_bad "PID ${pid}인 sleep이 아직 돌고 있어요" "kill ${pid}"
+  else
+    learn_ok "PID ${pid}인 sleep을 끝냈어요"
+  fi
+}
+
+learn_check_33() {
+  local file="${LEARN_SYSTEM}/disk.txt" written actual
+  written="$(grep -oE '[0-9]+' "${file}" 2>/dev/null | head -n 1 || true)"
+  if [[ -z "${written}" ]]; then
+    learn_bad "~/practice/system/disk.txt에 %가 없어요" "df --output=pcent / | tail -n 1 > ~/practice/system/disk.txt"
+    return
+  fi
+  actual="$(df --output=pcent / | tail -n 1 | tr -dc '0-9')"
+  # The disk keeps changing a little while you work
+  if ((written >= actual - 2 && written <= actual + 2)); then
+    learn_ok "/(루트)가 ${actual}% 차 있어요"
+  else
+    learn_bad "${written}%라고 적었는데 지금 /는 ${actual}%예요" "df -h / 의 Use% 칸을 봐요"
+  fi
+}
+
+learn_check_34() {
+  local file="${LEARN_SYSTEM}/service.txt" written actual
+  written="$(head -n 1 "${file}" 2>/dev/null | tr -d '\r[:space:]' || true)"
+  if [[ -z "${written}" ]]; then
+    learn_bad "~/practice/system/service.txt가 없거나 비어 있어요" "systemctl is-active NetworkManager > ~/practice/system/service.txt"
+    return
+  fi
+  actual="$(systemctl is-active NetworkManager 2>/dev/null || true)"
+  if [[ "${written}" == "${actual}" ]]; then
+    learn_ok "NetworkManager는 지금 ${actual}이에요"
+  else
+    learn_bad "'${written}'이라고 적었는데 지금은 '${actual}'이에요" "systemctl is-active NetworkManager 의 결과를 그대로 저장해요"
+  fi
+}
+
+learn_check_35() {
+  local file="${LEARN_SYSTEM}/kernel.txt"
+  if [[ ! -s "${file}" ]]; then
+    learn_bad "~/practice/system/kernel.txt가 없거나 비어 있어요" "journalctl -k -b | grep \"Linux version\" 또는 uname -r"
+  elif grep -qF "$(uname -r)" "${file}"; then
+    learn_ok "커널 버전 $(uname -r)을 찾았어요"
+  else
+    learn_bad "지금 커널 버전($(uname -r))이 들어 있지 않아요" "uname -r > ~/practice/system/kernel.txt"
+  fi
+}
+
 learn_check() {
   local n next
   n="$(learn_mission_arg "${1:-}")"
@@ -2248,6 +2439,8 @@ learn_check() {
     printf '리버싱 기초를 끝냈어요. 21번부터는 웹 기초예요.\n'
   elif [[ "${n}" == "25" ]]; then
     printf '웹 기초를 끝냈어요. 26번부터는 셸 기초예요.\n'
+  elif [[ "${n}" == "30" ]]; then
+    printf '셸 기초를 끝냈어요. 31번부터는 시스템 기초예요.\n'
   fi
   next="$(learn_next)"
   if [[ -n "${next}" ]]; then

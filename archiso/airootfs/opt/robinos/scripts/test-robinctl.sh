@@ -96,14 +96,14 @@ check "5 fails with a made-up line" fail learn check 5
 in_home "grep bash /etc/passwd > practice/bash-users.txt"
 check "5 passes with grep's output" 0 learn check 5
 check "list after the first five" 0 learn
-said "list counts 5 of 30" "5/30"
+said "list counts 5 of 35" "5/35"
 said "list shows the network group" "네트워크 기초"
 said "list points to mission 6" "robinctl learn show 6"
 # The shell's learning center (LearnCenter.qml) reads this
 check "tsv for the learning center" 0 learn tsv
-if [[ "$(grep -c '^mission	' "${WORK}/out")" == "30" && "$(awk -F'\t' '$1 == "mission" && $6 == 1' "${WORK}/out" | wc -l)" == "5" ]] \
+if [[ "$(grep -c '^mission	' "${WORK}/out")" == "35" && "$(awk -F'\t' '$1 == "mission" && $6 == 1' "${WORK}/out" | wc -l)" == "5" ]] \
     && grep -qx 'mission	6	네트워크 기초	내 IP 주소 보기	ip a	0' "${WORK}/out" && grep -qx 'ctf	0	5' "${WORK}/out"; then
-  ok "tsv: 30 missions, 5 done, groups, then the CTF"
+  ok "tsv: 35 missions, 5 done, groups, then the CTF"
 else
   bad "tsv: $(head -n 7 "${WORK}/out" | tr '\t' '|')"
 fi
@@ -152,7 +152,7 @@ in_home "printf '# Nmap 7.95 scan\nNmap scan report for localhost (127.0.0.1)\nP
 check "10 passes with 9000 open on 127.0.0.1" 0 learn check 10
 
 check "list after the first ten" 0 learn
-said "list counts 10 of 30" "10/30"
+said "list counts 10 of 35" "10/35"
 said "list shows the forensics group" "포렌식 기초"
 said "list points to mission 11" "robinctl learn show 11"
 
@@ -196,7 +196,7 @@ check "15 passes with the pipeline from the mission" 0 learn check 15
 in_home "bsdtar -xOf practice/forensics/logo.png secret.txt > practice/forensics/found.txt"
 check "14 passes again" 0 learn check 14
 check "list after the first fifteen" 0 learn
-said "list counts 15 of 30" "15/30"
+said "list counts 15 of 35" "15/35"
 said "list shows the reversing group" "리버싱 기초"
 said "list points to mission 16" "robinctl learn show 16"
 
@@ -249,7 +249,7 @@ in_home "cd ${REV} && ./count 1337 | grep -q ROBIN-COUNT-1337 && echo \$((0x539)
 check "20 passes with 1337" 0 learn check 20
 
 check "list after the first twenty" 0 learn
-said "list counts 20 of 30" "20/30"
+said "list counts 20 of 35" "20/35"
 said "list shows the web group" "웹 기초"
 said "list points to mission 21" "robinctl learn show 21"
 
@@ -288,7 +288,7 @@ in_home "kill \$(cat ${WEB}/.test-server)"
 if ss -Htln 2>/dev/null | grep -q ":${WEB_PORT} "; then bad "the practice server is still listening"; fi
 
 check "list after twenty-five" 0 learn
-said "list counts 25 of 30" "25/30"
+said "list counts 25 of 35" "25/35"
 said "list shows the shell group" "셸 기초"
 
 # Shell basics: answers written the way the missions ask
@@ -315,11 +315,41 @@ check "30 fails when both codes are 0" fail learn check 30
 in_home "{ ls ~ > /dev/null; echo \$?; ls /no-such-dir 2> /dev/null; echo \$?; } > practice/shell/exit-codes.txt; true"
 check "30 passes with 0 and a failure code" 0 learn check 30
 
-check "list after all thirty" 0 learn
-said "list says all thirty are done" "30/30"
+check "list after thirty" 0 learn
+said "list counts 30 of 35" "30/35"
+said "list shows the system group" "시스템 기초"
+
+# System basics: a real background process, the disk, a service and the journal
+check "show 31 makes ~/practice/system" 0 learn show 31
+check "31 fails without a PID" fail learn check 31
+# Started inside the learner's shell the way the mission says, with its output
+# sent away so it doesn't hold this script's pipe open for 600 seconds
+# (braces: in_home runs "cd ~ && ...", and a bare & would send the cd along too)
+in_home "{ sleep 600 > /dev/null 2>&1 & } ; echo \$! > practice/system/sleep.pid"
+sleep 0.5
+check "31 passes with the running sleep's PID" 0 learn check 31
+check "32 fails while the sleep still runs" fail learn check 32
+kill "$(cat "${LEARNER_HOME}/practice/system/sleep.pid")" 2>/dev/null
+sleep 0.5
+check "32 passes once the sleep is gone" 0 learn check 32
+in_home "echo 999% > practice/system/disk.txt"
+check "33 fails with a made-up percentage" fail learn check 33
+in_home "df --output=pcent / | tail -n 1 > practice/system/disk.txt"
+check "33 passes with df's percentage" 0 learn check 33
+in_home "echo nonsense > practice/system/service.txt"
+check "34 fails with a made-up state" fail learn check 34
+in_home "systemctl is-active NetworkManager > practice/system/service.txt; true"
+check "34 passes with systemctl's answer" 0 learn check 34
+in_home "echo 1.0.0 > practice/system/kernel.txt"
+check "35 fails with another kernel version" fail learn check 35
+in_home "uname -r > practice/system/kernel.txt"
+check "35 passes with the running kernel" 0 learn check 35
+
+check "list after all thirty-five" 0 learn
+said "list says all thirty-five are done" "35/35"
 said "list points to the CTF" "robinctl ctf"
-check "show 30" 0 learn show 30
-check "mission 31 doesn't exist" fail learn show 31
+check "show 35" 0 learn show 35
+check "mission 36 doesn't exist" fail learn show 36
 
 printf '%s\n' "Local CTF (robinctl ctf): each challenge solved the way its hints say"
 CTF="practice/ctf"
