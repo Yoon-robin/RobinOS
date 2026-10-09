@@ -412,7 +412,7 @@ PanelWindow {
                     Layout.preferredWidth: 1
                     icon: "sunset"
                     title: "야간 모드"
-                    subtitle: ShellState.nightLight ? "켜짐 · 따뜻한 색" : "꺼짐"
+                    subtitle: ShellState.inVm ? "VM에서는 안 돼요" : ShellState.nightLight ? "켜짐 · 따뜻한 색" : "꺼짐"
                     checked: ShellState.nightLight
                     onToggled: ShellState.toggleNightLight()
                 }

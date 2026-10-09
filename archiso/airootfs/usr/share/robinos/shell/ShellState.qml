@@ -481,6 +481,15 @@ Singleton {
     // ---- Night light, like Windows' 야간 모드: hyprsunset warms the screen ----
 
     readonly property bool nightLight: desktopSettings.nightLight
+    // Hyprland changes the colors through the graphics driver (KMS CTM), which VM
+    // graphics (QEMU, VMware, Hyper-V) don't offer; the tile says so there
+    property bool inVm: false
+
+    Process {
+        command: ["systemd-detect-virt", "--vm", "--quiet"]
+        running: true
+        onExited: (exitCode, exitStatus) => root.inVm = exitCode === 0
+    }
 
     // Stopping hyprsunset gives the screen its normal colors back
     Process {
@@ -702,10 +711,14 @@ Singleton {
     function checkBattery() {
         if (!battery.ready || !battery.isLaptopBattery)
             return;
-        if (battery.state !== UPowerDeviceState.Discharging) {
+        // Only real charging starts the warnings over; UPower briefly reports
+        // "unknown" now and then, which would repeat the same warning
+        if (battery.state === UPowerDeviceState.Charging || battery.state === UPowerDeviceState.FullyCharged) {
             batteryWarned = 100;
             return;
         }
+        if (battery.state !== UPowerDeviceState.Discharging)
+            return;
         const percent = Math.round(battery.percentage * 100);
         for (const level of [5, 10]) {
             if (percent <= level && batteryWarned > level) {
