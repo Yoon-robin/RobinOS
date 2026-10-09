@@ -15,6 +15,8 @@ FloatingWindow {
 
     // { number, group, groupStart, title, tools, done } from `robinctl learn tsv`
     property var missions: []
+    // The CTF challenges, shown as a last group: { number, title, tools (the skill), done, ctf: true }
+    property var ctfItems: []
     property int ctfSolved: 0
     property int ctfCount: 10
     property bool loaded: false
@@ -30,6 +32,8 @@ FloatingWindow {
                 out.push({ name: m.group, missions: [] });
             out[out.length - 1].missions.push(m);
         }
+        if (ctfItems.length > 0)
+            out.push({ name: "입문 CTF", missions: ctfItems });
         return out;
     }
 
@@ -65,6 +69,13 @@ FloatingWindow {
         ShellState.openTerminal("robinctl ctf");
     }
 
+    function openItem(item) {
+        if (item.ctf)
+            ShellState.openTerminal("robinctl ctf show " + item.number);
+        else
+            openMission(item.number);
+    }
+
     Connections {
         target: ShellState
 
@@ -94,6 +105,7 @@ FloatingWindow {
 
             onStreamFinished: {
                 const missions = [];
+                const ctfItems = [];
                 let group = "";
                 for (const line of listOut.text.split("\n")) {
                     const f = line.split("\t");
@@ -102,12 +114,15 @@ FloatingWindow {
                         if (f[2] !== "")
                             group = f[2];
                         missions.push({ number: parseInt(f[1]), group: group, groupStart: f[2] !== "", title: f[3], tools: f[4], done: f[5] === "1" });
+                    } else if (f[0] === "ctfitem" && f.length >= 5) {
+                        ctfItems.push({ number: parseInt(f[1]), title: f[2], tools: f[3], done: f[4] === "1", ctf: true });
                     } else if (f[0] === "ctf" && f.length >= 3) {
                         root.ctfSolved = parseInt(f[1]);
                         root.ctfCount = parseInt(f[2]);
                     }
                 }
                 root.missions = missions;
+                root.ctfItems = ctfItems;
                 root.loaded = true;
             }
         }
@@ -342,7 +357,7 @@ FloatingWindow {
                                     id: row
 
                                     required property var modelData
-                                    readonly property bool isNext: root.nextMission !== null && root.nextMission.number === modelData.number
+                                    readonly property bool isNext: !modelData.ctf && root.nextMission !== null && root.nextMission.number === modelData.number
 
                                     Layout.fillWidth: true
                                     implicitHeight: 40
@@ -350,12 +365,12 @@ FloatingWindow {
                                     color: mouse.containsMouse ? Theme.hover : "transparent"
 
                                     Accessible.role: Accessible.Button
-                                    Accessible.name: "미션 " + modelData.number + ". " + modelData.title + (modelData.done ? ", 완료" : "")
+                                    Accessible.name: (modelData.ctf ? "CTF " : "미션 ") + modelData.number + ". " + modelData.title + (modelData.done ? ", 완료" : "")
 
                                     activeFocusOnTab: true
                                     Keys.onPressed: event => {
                                         if (Keyboard.activates(event)) {
-                                            root.openMission(row.modelData.number);
+                                            root.openItem(row.modelData);
                                             event.accepted = true;
                                         }
                                     }
@@ -438,7 +453,7 @@ FloatingWindow {
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: root.openMission(row.modelData.number)
+                                        onClicked: root.openItem(row.modelData)
                                     }
                                 }
                             }

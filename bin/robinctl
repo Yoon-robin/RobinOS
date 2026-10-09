@@ -957,6 +957,11 @@ learn_tsv() {
       "$(learn_tools "${i}")" "${done}"
   done
   printf 'ctf\t%s\t%s\n' "$(ctf_solved_count)" "${CTF_COUNT}"
+  for ((i = 1; i <= CTF_COUNT; i++)); do
+    done=0
+    ctf_is_solved "${i}" && done=1
+    printf 'ctfitem\t%s\t%s\t%s\t%s\n' "${i}" "$(ctf_title "${i}")" "$(ctf_skill "${i}")" "${done}"
+  done
 }
 
 learn_heading() {

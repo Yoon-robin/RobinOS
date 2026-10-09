@@ -460,6 +460,11 @@ def main():
     shot(qmp, "learn-center-mission")
     keys(qmp, "alt", "f4")  # the new terminal has the focus
     wait(2)
+    # At the end of the list, the ten CTF challenges as one more group
+    for _ in range(40):
+        click(qmp, 800, 500, "wheel-down")
+    wait(1)
+    shot(qmp, "learn-center-ctf")
     # The learning center's own close button (its title bar, top right)
     click(qmp, 1156, 102)
     wait(2)

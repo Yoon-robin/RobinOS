@@ -102,7 +102,8 @@ said "list points to mission 6" "robinctl learn show 6"
 # The shell's learning center (LearnCenter.qml) reads this
 check "tsv for the learning center" 0 learn tsv
 if [[ "$(grep -c '^mission	' "${WORK}/out")" == "40" && "$(awk -F'\t' '$1 == "mission" && $6 == 1' "${WORK}/out" | wc -l)" == "5" ]] \
-    && grep -qx 'mission	6	네트워크 기초	내 IP 주소 보기	ip a	0' "${WORK}/out" && grep -qx 'ctf	0	10' "${WORK}/out"; then
+    && grep -qx 'mission	6	네트워크 기초	내 IP 주소 보기	ip a	0' "${WORK}/out" && grep -qx 'ctf	0	10' "${WORK}/out" \
+    && [[ "$(grep -c '^ctfitem	' "${WORK}/out")" == "10" ]] && grep -qx 'ctfitem	9	포트 뒤의 목소리	네트워크	0' "${WORK}/out"; then
   ok "tsv: 40 missions, 5 done, groups, then the CTF"
 else
   bad "tsv: $(head -n 7 "${WORK}/out" | tr '\t' '|')"
