@@ -66,6 +66,8 @@ Singleton {
             property bool nightLight: false
             // Desktop entry ids pinned to the dock with a right click (Dock.qml)
             property list<string> dockPins: []
+            // Apps opened from the launcher, newest first (Launcher.qml's 최근에 연 앱)
+            property list<string> recentApps: []
         }
     }
     property string hostName: "robinos"
@@ -500,6 +502,17 @@ Singleton {
     // ---- Night light, like Windows' 야간 모드: hyprsunset warms the screen ----
 
     readonly property bool nightLight: desktopSettings.nightLight
+
+    // ---- Apps opened from the launcher lately ----
+
+    readonly property var recentApps: desktopSettings.recentApps
+
+    function noteRecentApp(id) {
+        if (!id)
+            return;
+        desktopSettings.recentApps = [id].concat(recentApps.filter(app => app !== id)).slice(0, 8);
+        desktopStore.writeAdapter();
+    }
 
     // ---- Apps pinned to the dock, like pinning to the Windows taskbar ----
 

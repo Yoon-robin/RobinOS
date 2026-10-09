@@ -340,6 +340,15 @@ PanelWindow {
             }
             out.push(commandItem(command("learn")));
 
+            // Apps opened from here lately, like the Start menu's recent list
+            const recent = ShellState.recentApps.filter(id => pinnedApps.indexOf(id) === -1)
+                .map(id => DesktopEntries.byId(id)).filter(entry => !!entry).slice(0, 4);
+            if (recent.length > 0) {
+                out.push({ kind: "header", title: "최근에 연 앱" });
+                for (const entry of recent)
+                    out.push(appItem(entry));
+            }
+
             out.push({ kind: "header", title: "보안 랩" });
             out.push(commandItem(command("ctf")));
             out.push(commandItem(command("lab-start")));
@@ -474,6 +483,7 @@ PanelWindow {
         }
 
         if (item.kind === "app") {
+            ShellState.noteRecentApp(item.entry.id);
             if (item.entry.runInTerminal)
                 Quickshell.execDetached(["foot"].concat(ShellState.toArray(item.entry.command)));
             else
