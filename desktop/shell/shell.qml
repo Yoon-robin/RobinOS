@@ -127,6 +127,15 @@ ShellRoot {
             ShellState.toggleShortcuts();
         }
 
+        // The dock's right click: pin or unpin an app by its desktop entry id
+        function pinToDock(id: string): void {
+            ShellState.pinToDock(id, "");
+        }
+
+        function unpinFromDock(id: string): void {
+            ShellState.unpinFromDock(id, "");
+        }
+
         // The quick settings' 야간 모드 tile
         function toggleNightLight(): void {
             ShellState.toggleNightLight();

@@ -15,6 +15,8 @@ Rectangle {
     readonly property bool hovered: mouse.containsMouse
 
     signal clicked()
+    // Pin to or unpin from the dock (Dock.qml)
+    signal rightClicked()
 
     implicitWidth: 44
     implicitHeight: 44
@@ -70,6 +72,12 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.clicked()
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: event => {
+            if (event.button === Qt.RightButton)
+                root.rightClicked();
+            else
+                root.clicked();
+        }
     }
 }

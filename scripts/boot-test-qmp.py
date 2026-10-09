@@ -256,6 +256,14 @@ def main():
     keys(qmp, "meta_l", "d")
     wait(2)
 
+    # Pinning to the dock like the Windows taskbar: the same shell function as a
+    # right click on a running app. The calculator joins the dock, then leaves it.
+    type_text(qmp, "clear; " + "qs ipc -p /usr/share/robinos/shell call shell " + "pinToDock org.gnome.Calculator\n")
+    wait(3)
+    shot(qmp, "dock-pinned")
+    type_text(qmp, "clear; " + "qs ipc -p /usr/share/robinos/shell call shell " + "unpinFromDock org.gnome.Calculator\n")
+    wait(2)
+
     # robinos-shell starts the shell again when it dies
     type_text(qmp, "clear; pkill -x qs; sleep 4; grep -a robinos-shell .local/state/robinos/shell.log\n")
     wait(7)

@@ -64,6 +64,8 @@ Singleton {
 
             property bool tiling: false
             property bool nightLight: false
+            // Desktop entry ids pinned to the dock with a right click (Dock.qml)
+            property list<string> dockPins: []
         }
     }
     property string hostName: "robinos"
@@ -498,6 +500,26 @@ Singleton {
     // ---- Night light, like Windows' 야간 모드: hyprsunset warms the screen ----
 
     readonly property bool nightLight: desktopSettings.nightLight
+
+    // ---- Apps pinned to the dock, like pinning to the Windows taskbar ----
+
+    readonly property var dockPins: desktopSettings.dockPins
+
+    function pinToDock(id, name) {
+        if (!id || dockPins.indexOf(id) !== -1)
+            return;
+        desktopSettings.dockPins = dockPins.concat([id]);
+        desktopStore.writeAdapter();
+        Quickshell.execDetached(["notify-send", "-a", "RobinOS", "독에 고정했어요", (name || id) + " · 다시 오른쪽 클릭하면 고정을 풀어요"]);
+    }
+
+    function unpinFromDock(id, name) {
+        if (dockPins.indexOf(id) === -1)
+            return;
+        desktopSettings.dockPins = dockPins.filter(pin => pin !== id);
+        desktopStore.writeAdapter();
+        Quickshell.execDetached(["notify-send", "-a", "RobinOS", "독에서 뺐어요", name || id]);
+    }
     // Hyprland changes the colors through the graphics driver (KMS CTM), which VM
     // graphics (QEMU, VMware, Hyper-V) don't offer; the tile says so there
     property bool inVm: false

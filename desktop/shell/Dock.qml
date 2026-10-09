@@ -44,6 +44,26 @@ PanelWindow {
         ]).filter(app => !app.desktopId || !!DesktopEntries.byId(app.desktopId));
     }
 
+    // Apps pinned with a right click (ShellState.dockPins), after the built-in ones
+    readonly property var userPins: {
+        DesktopEntries.applications.values; // re-evaluate after the background scan
+        const out = [];
+        for (const id of ShellState.dockPins) {
+            const entry = DesktopEntries.byId(id);
+            if (!entry)
+                continue;
+            out.push({
+                id: id,
+                entry: entry,
+                label: entry.name,
+                icon: Quickshell.iconPath(entry.icon, "application-x-executable"),
+                // Windows report the desktop id or the StartupWMClass as their app id
+                appIds: [id, id.toLowerCase(), entry.startupClass ?? ""].filter(appId => appId !== "")
+            });
+        }
+        return out;
+    }
+
     // Minimized windows are still in this list, so they keep their "running" dot
     function windowsFor(appIds) {
         return ShellState.windowsOf(appIds);
@@ -52,6 +72,10 @@ PanelWindow {
     function isPinned(appId) {
         for (let i = 0; i < pinned.length; i++) {
             if (pinned[i].appIds.indexOf(appId) !== -1)
+                return true;
+        }
+        for (let i = 0; i < userPins.length; i++) {
+            if (userPins[i].appIds.indexOf(appId) !== -1)
                 return true;
         }
         return false;
@@ -193,6 +217,29 @@ PanelWindow {
             }
 
             Repeater {
+                model: dock.userPins
+
+                DockItem {
+                    id: userPinItem
+
+                    required property var modelData
+
+                    appIcon: modelData.icon
+                    label: modelData.label
+                    running: dock.windowsFor(modelData.appIds).length > 0
+                    focused: dock.isFocused(modelData.appIds)
+                    onClicked: {
+                        if (dock.windowsFor(modelData.appIds).length === 0)
+                            modelData.entry.execute();
+                        else
+                            dock.activateOrLaunch(modelData.appIds, null);
+                    }
+                    onRightClicked: ShellState.unpinFromDock(modelData.id, modelData.label)
+                    onHoveredChanged: dock.showTip(userPinItem, hovered ? label + " · 오른쪽 클릭: 고정 풀기" : "")
+                }
+            }
+
+            Repeater {
                 model: dock.extras
 
                 DockItem {
@@ -206,7 +253,13 @@ PanelWindow {
                     running: true
                     focused: dock.isFocused([modelData.appId])
                     onClicked: dock.activateOrLaunch([modelData.appId], null)
-                    onHoveredChanged: dock.showTip(extraItem, hovered ? label : "")
+                    // Only apps with a desktop entry can come back after closing
+                    onRightClicked: {
+                        const entry = DesktopEntries.heuristicLookup(modelData.appId);
+                        if (entry)
+                            ShellState.pinToDock(entry.id, entry.name);
+                    }
+                    onHoveredChanged: dock.showTip(extraItem, hovered ? label + " · 오른쪽 클릭: 독에 고정" : "")
                 }
             }
 
