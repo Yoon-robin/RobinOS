@@ -235,7 +235,7 @@ echo 'WSL 빌드 환경이 준비됐어요.'
 }
 
 if ($Task -eq "check") {
-    Invoke-Wsl "cd '$wslRoot' && bash scripts/check-desktop.sh && bash scripts/qmllint.sh && bash scripts/test-robinctl.sh && python3 scripts/test-robin-install.py"
+    Invoke-Wsl "cd '$wslRoot' && bash scripts/check-desktop.sh && bash scripts/qmllint.sh && bash scripts/check-sync.sh && bash scripts/test-robinctl.sh && python3 scripts/test-robin-install.py"
     exit 0
 }
 

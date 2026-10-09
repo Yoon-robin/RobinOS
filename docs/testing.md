@@ -47,7 +47,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 check
 
 Arch Linux에서는 `scripts/check-desktop.sh`와 `scripts/qmllint.sh`를 직접 실행해요.
 
-`check`는 VM 없이 도는 빠른 테스트 두 개도 함께 돌려요. `scripts/test-robinctl.sh`는 미션 채점, 보안 프로필, 랩, 윈도우 명령 힌트를 보고, `scripts/test-robin-install.py`는 설치기가 그래픽 카드에 맞는 드라이버를 고르는지(가짜 `/sys/bus/pci/devices`로), initramfs 훅, fstab 정리를 봐요. 실제 NVIDIA 카드에서 드라이버가 뜨는지는 실기기에서만 확인할 수 있어요.
+`check`는 ISO 빌드가 WSL에서 하는 오버레이 동기화(`scripts/sync-archiso-files.sh`)를 작업 트리의 임시 복사본에서 미리 돌려 보고(`scripts/check-sync.sh`, 2초쯤), VM 없이 도는 빠른 테스트 두 개도 함께 돌려요. `scripts/test-robinctl.sh`는 미션 채점, 보안 프로필, 랩, 윈도우 명령 힌트를 보고, `scripts/test-robin-install.py`는 설치기가 그래픽 카드에 맞는 드라이버를 고르는지(가짜 `/sys/bus/pci/devices`로), initramfs 훅, fstab 정리를 봐요. 실제 NVIDIA 카드에서 드라이버가 뜨는지는 실기기에서만 확인할 수 있어요.
 
 ## 패키지 검사
 
