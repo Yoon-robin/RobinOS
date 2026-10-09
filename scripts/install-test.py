@@ -572,7 +572,7 @@ def phase_installed(con, qmp):
             " && gio mime audio/mpeg | grep -q '^[^[:space:]].*org.gnome.Decibels.desktop'"
             " && gio mime application/pdf | grep -q '^[^[:space:]].*org.gnome.Evince.desktop'")
     # App store (packages/apps.txt): GNOME Software with Flathub, without PackageKit
-    con.run("test -f /usr/share/applications/org.gnome.Software.desktop && ! pacman -Q packagekit && command -v gnome-disks"
+    con.run("test -f /usr/share/applications/org.gnome.Software.desktop && ! pacman -Q packagekit && command -v gnome-disks && command -v baobab"
             " && grep -q DisableTelemetry /etc/firefox/policies/policies.json")
     # The shell's update dot asks checkupdates: 0 = updates, 2 = none, 1 = it failed
     con.run("checkupdates | tail -n 3; rc=${PIPESTATUS[0]}; echo checkupdates=$rc; [ $rc -ne 1 ]")

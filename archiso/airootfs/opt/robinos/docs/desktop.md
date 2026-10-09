@@ -202,6 +202,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 | 캡처 도구, `snipping tool` | 영역 스크린샷 명령 (`Super+Shift+S`) |
 | 계산기, `calc` | 계산기 |
 | 디스크 관리, USB 포맷 | 디스크 (GNOME 디스크, 설치본에만 있어요) |
+| 저장소, 디스크 정리, `cleanmgr` | 디스크 사용량 분석 (baobab, 설치본에만 있어요) |
 | 워드, 엑셀, 파워포인트, 오피스 | LibreOffice Writer, Calc, Impress (설치본에만 있어요) |
 | Microsoft Store, 스토어, 앱 설치 | GNOME 소프트웨어 (설치본에만 있어요) |
 | 장치 및 프린터, 프린터, `printer` | 프린터 설정 (설치본에만 있어요) |
@@ -214,6 +215,8 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 ## 런처의 최근에 연 앱
 
 런처를 열면 추천 아래에 "최근에 연 앱"이 4개까지 나와요(윈도우 시작 메뉴의 최근 항목처럼). 런처에서 연 앱만 세고, 독에 기본으로 있는 터미널·파일·브라우저는 빼요. 기록은 셸 상태 폴더의 `desktop.json`에 8개까지 남아요.
+
+그 아래 "최근 파일"에는 파일, 텍스트 편집기, 이미지 보기 같은 GTK 앱으로 최근에 연 파일이 3개까지 나와요(윈도우 시작 메뉴의 추천 파일처럼). 앱들이 `~/.local/share/recently-used.xbel`에 남기는 기록을 읽어요. 고르면 그 파일을 기본 앱으로 열어요.
 
 ## 런처에서 파일 찾기
 

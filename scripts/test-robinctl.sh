@@ -623,7 +623,7 @@ out="$(hint "surely-not-a-command-xyz")"
 if [[ "${out}" == *"명령을 찾을 수 없어요"* ]]; then ok "unknown commands say so"; else bad "unknown command: ${out}"; fi
 # Apps the hints send people to must be installed by RobinOS
 for app in gnome-text-editor nautilus mission-center fastfetch traceroute gnome-calculator gnome-disk-utility \
-    wl-clipboard xdg-utils power-profiles-daemon networkmanager loupe efibootmgr which; do
+    wl-clipboard xdg-utils power-profiles-daemon networkmanager loupe efibootmgr which baobab; do
   if grep -qx "${app}" "${ROOT_DIR}/packages/core.txt" "${ROOT_DIR}/packages/desktop.txt" "${ROOT_DIR}/packages/apps.txt" "${ROOT_DIR}/packages/security-baseline.txt"; then
     ok "hinted app ${app} is in a package list"
   else

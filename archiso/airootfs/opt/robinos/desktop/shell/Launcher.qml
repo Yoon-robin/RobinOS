@@ -46,6 +46,7 @@ PanelWindow {
                 clipList.running = true;
             }
             ShellState.refreshLearn();
+            recentXbel.reload();
             refresh();
             mapped = true;
             Qt.callLater(() => {
@@ -150,6 +151,38 @@ PanelWindow {
             fileDelay.restart();
         else
             fileDelay.stop();
+    }
+
+    // ---- Recent files, like the Start menu's recommended list ----
+    // GTK apps (Files, Text Editor, Image Viewer ...) note what they open in
+    // recently-used.xbel; the newest local files show when the search is empty.
+
+    property var recentFiles: []
+
+    FileView {
+        id: recentXbel
+
+        path: (Quickshell.env("XDG_DATA_HOME") || root.home + "/.local/share") + "/recently-used.xbel"
+        printErrors: false
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: root.recentFiles = root.parseRecent(text())
+    }
+
+    function parseRecent(xml) {
+        const out = [];
+        const re = /<bookmark\s+href="file:\/\/([^"]+)"[^>]*?modified="([^"]+)"/g;
+        let m;
+        while ((m = re.exec(xml)) !== null) {
+            let path = m[1];
+            try {
+                path = decodeURIComponent(path);
+            } catch (e) {
+                continue;
+            }
+            out.push({ path: path, modified: m[2] });
+        }
+        return out.sort((a, b) => (a.modified < b.modified) - (a.modified > b.modified)).slice(0, 3);
     }
 
     function fileItem(hit) {
@@ -277,6 +310,7 @@ PanelWindow {
         { win: "Acrobat Reader", words: "acrobat 아크로뱃 adobe reader pdf 뷰어", app: "org.gnome.Evince" },
         { win: "캡처 도구", words: "캡처 도구 snipping tool 캡처 스크린샷 screenshot", cmd: "screenshot" },
         { win: "계산기", words: "계산기 calc calculator", app: "org.gnome.Calculator" },
+        { win: "저장소", words: "저장소 저장 공간 storage 디스크 정리 disk cleanup cleanmgr 용량 디스크 사용량 disk usage 공간 확보", app: "org.gnome.baobab" },
         { win: "디스크 관리", words: "디스크 관리 disk management diskmgmt 포맷 format usb 파티션 partition", app: "org.gnome.DiskUtility" },
         { win: "Word", words: "워드 word 문서 작성 docx 오피스 office", app: "libreoffice-writer" },
         { win: "Excel", words: "엑셀 excel 스프레드시트 spreadsheet xlsx 오피스 office", app: "libreoffice-calc" },
@@ -382,6 +416,12 @@ PanelWindow {
                 out.push({ kind: "header", title: "최근에 연 앱" });
                 for (const entry of recent)
                     out.push(appItem(entry));
+            }
+
+            if (root.recentFiles.length > 0) {
+                out.push({ kind: "header", title: "최근 파일" });
+                for (const hit of root.recentFiles)
+                    out.push(fileItem(hit));
             }
 
             out.push({ kind: "header", title: "보안 랩" });

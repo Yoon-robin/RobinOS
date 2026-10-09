@@ -68,6 +68,7 @@ __robinos_windows_hint() {
     sc)                  printf '%s' 'systemctl status 서비스|서비스 상태를 보고 켜고 꺼요 (미션 34)' ;;
     schtasks)            printf '%s' 'systemctl list-timers|예약된 작업을 보여 줘요' ;;
     pathping)            printf '%s' 'tracepath 주소|목적지까지의 경로와 지연을 함께 봐요' ;;
+    cleanmgr)            printf '%s' 'baobab|디스크를 무엇이 차지하는지 봐요 (패키지 캐시는 sudo pacman -Sc로 비워요)' ;;
     assoc|ftype)         printf '%s' 'xdg-mime query default 형식|파일 형식을 여는 기본 앱을 봐요' ;;
   esac
 }
