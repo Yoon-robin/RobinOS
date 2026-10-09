@@ -32,7 +32,9 @@ PanelWindow {
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "robinos-taskview"
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+    // Only while open: during the fade-out the keyboard already goes back, so a window
+    // started from here (a terminal, an app) gets the focus (boot test, 2026-10-10)
+    WlrLayershell.keyboardFocus: root.open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     onOpenChanged: {
         if (open) {

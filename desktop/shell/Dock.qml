@@ -190,6 +190,26 @@ PanelWindow {
         previewWins = [];
     }
 
+    // A window closed while its picture shows: drop it. Its dock button may go away
+    // with it, and then no "pointer left" ever comes, so the card closes here too
+    // (a closed calculator's empty card stayed up in the boot test, 2026-10-10)
+    Connections {
+        target: ShellState
+
+        function onWindowsChanged() {
+            if (!dock.previewShown)
+                return;
+            const alive = dock.previewWins.filter(w => w && ShellState.toArray(ShellState.windows).indexOf(w) !== -1);
+            if (alive.length !== dock.previewWins.length)
+                dock.previewWins = alive;
+        }
+    }
+
+    onPreviewItemChanged: {
+        if (previewShown && !previewItem)
+            closePreview();
+    }
+
     Timer {
         id: showPreview
         interval: 500

@@ -70,7 +70,9 @@ PanelWindow {
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "robinos-shortcuts"
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+    // Only while open: during the fade-out the keyboard already goes back, so a window
+    // started from here (a terminal, an app) gets the focus (boot test, 2026-10-10)
+    WlrLayershell.keyboardFocus: root.open ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
     onOpenChanged: {
         if (open) {
