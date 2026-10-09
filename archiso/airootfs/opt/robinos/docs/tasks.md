@@ -40,9 +40,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| 묶음 42 | T-110 동기화 검사, T-111 바탕 화면 Alt+F4 전원 메뉴, T-112 Win+PrtSc | `verify -Installer robinos` (부팅 테스트 65장: `power-menu`) |
+| (없음) | | |
 
-`25c84b2`까지 2026-10-10 묶음 40 검증(`verify`: 빌드 3.5분 + 테스트 11.9분)을 마치고 푸시했어요.
+`d7b3a14`까지 2026-10-10 묶음 42 검증(`verify`: 빌드 3.2분 + 테스트 12.0분)을 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -54,24 +54,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - **v0.2 프리뷰 공개**: v0.1 뒤로 오피스·앱 스토어·프린터·NVIDIA·업데이트 알림·Win+V 등과 미션 25개, 입문 CTF가 들어갔어요. 발표문 초안은 `docs/release-notes-v0.2.md`. 공개하기로 하면 릴리스용 xz ISO(2GiB 안)를 빌드하고 부팅 테스트한 뒤 깃허브 릴리스로 올려요(태그 `v0.2.0`, 프리릴리스)
 
 ## 진행 중
-
-### T-112 Win+PrtSc 전체 화면 캡처
-- 상태: 검증 대기 (묶음 42)
-- 출처: 백로그 채우기 3. 윈도우의 `Win+PrtSc`(전체 화면을 사진 폴더에 저장)가 없었어요
-- 한 것: `robinos.lua`에 `Super+Print` → `robinos-screenshot screen`(Shift+Print와 같음). 문서 단축키 표
-- 완료 기준: Hyprland 설정 검사, 단축키 표
-
-### T-111 바탕 화면에서 Alt+F4로 전원 메뉴
-- 상태: 검증 대기 (묶음 42)
-- 출처: 백로그 채우기 3(윈도우에서 넘어온 사람의 불편). 윈도우는 바탕 화면에서 Alt+F4를 누르면 "Windows 종료" 창이 뜨는데, 창이 없으면 아무 일도 없었어요
-- 한 것: `robinos.lua`의 Alt+F4가 창이 있으면 닫고, 없으면 `robinos:power`를 보내요. 셸은 빠른 설정을 전원 메뉴가 펼쳐진 채로 열어요(`ShellState.openPowerMenu`). 단축키 보기 문구
-- 완료 기준: 부팅 테스트 `power-menu`(처음 바탕 화면)에 로그아웃·다시 시작·전원 끄기
-
-### T-110 정적 검사에서 ISO 동기화 미리 돌리기
-- 상태: 검증 대기 (묶음 42)
-- 출처: 묶음 40 첫 검증 실패(T-109). 윈도우의 `ready.ps1`은 PowerShell 동기화만 돌려서, WSL 빌드의 셸 동기화 실수는 빌드가 몇 분 돈 뒤에야 보였어요
-- 한 것: `scripts/check-sync.sh`(작업 트리를 임시 폴더로 rsync해 `sync-archiso-files.sh`를 돌림). `wsl-build.ps1 check`가 돌려요
-- 완료 기준: `ready.ps1 -Check`에 "ISO sync ... ok"
 
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
@@ -117,6 +99,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 최근 것이 위에 있어요. 더 오래된 기록은 [done.md](done.md)에 있어요.
 
+- 2026-10-10 묶음 42 검증(`d7b3a14`, verify 빌드 3.2분 + 테스트 12.0분, 설치 테스트 다섯 단계 통과, 부팅 테스트 65장)
+  - T-111 바탕 화면 Alt+F4 전원 메뉴(`d7b3a14`): `11-power-menu`에 빠른 설정이 로그아웃·다시 시작·전원 끄기가 펼쳐진 채로, Esc 뒤 `12-launcher`도 그대로
+  - T-110 동기화 검사(`91c3a2e`): `ready.ps1 -Check`에 "ISO sync (sync-archiso-files.sh): ok". T-112 Win+PrtSc(`d7b3a14`): Hyprland 설정 검사
 - 2026-10-10 묶음 40 검증(`25c84b2`, 두 번째 verify 빌드 3.5분 + 테스트 11.9분, 설치 테스트 다섯 단계 통과, 부팅 테스트 64장)
   - T-108 윈도우 명령 힌트(`143361b`): robinctl 테스트가 certutil·cipher·runas·netsh·sc 힌트 확인, 부팅 테스트 `ipconfig` 힌트 그대로
   - T-109 README 화면 사진(`143361b`, `25c84b2`): 첫 verify는 WSL 동기화의 `install docs/*`가 `docs/screenshots` 폴더에서 멈춰 빌드 실패 → `docs/*.md`만 복사하게 고쳐 통과. ISO에는 사진이 없음
