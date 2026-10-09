@@ -78,4 +78,11 @@ PanelWindow {
             NumberAnimation { duration: Theme.dur }
         }
     }
+
+    // A right click on the desktop opens its menu (DesktopMenu.qml), like Windows
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.RightButton
+        onClicked: mouse => ShellState.openDesktopMenu(root.screen, mouse.x, mouse.y)
+    }
 }

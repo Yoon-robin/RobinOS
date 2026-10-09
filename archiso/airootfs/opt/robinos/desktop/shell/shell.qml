@@ -47,6 +47,8 @@ ShellRoot {
 
     QuickLinks {}
 
+    DesktopMenu {}
+
     SoundPanel {}
 
     Toasts {}

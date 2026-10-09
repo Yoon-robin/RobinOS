@@ -315,6 +315,13 @@ def main():
     keys(qmp, "meta_l", "d")
     wait(2)
     shot(qmp, "show-desktop")
+    # A right click on the empty desktop opens its menu (terminal, wallpaper,
+    # display settings), like Windows; Esc closes it
+    click(qmp, 400, 500, "right")
+    wait(2)
+    shot(qmp, "desktop-menu")
+    keys(qmp, "esc")
+    wait(1)
     keys(qmp, "meta_l", "d")
     wait(2)
     shot(qmp, "desktop-back")

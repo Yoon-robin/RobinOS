@@ -191,6 +191,24 @@ Singleton {
         quickLinksOpen = true;
     }
 
+    // The desktop's right-click menu (DesktopMenu.qml) at the clicked point
+    property bool desktopMenuOpen: false
+    property point desktopMenuAt: Qt.point(0, 0)
+
+    function openDesktopMenu(screen, x, y) {
+        if (welcomeOpen)
+            return;
+        launcherOpen = false;
+        quickSettingsOpen = false;
+        calendarOpen = false;
+        notifCenterOpen = false;
+        detailPanel = "";
+        quickLinksOpen = false;
+        overlayScreen = screen;
+        desktopMenuAt = Qt.point(x, y);
+        desktopMenuOpen = true;
+    }
+
     // Alt+F4 on the desktop (robinos.lua): the quick settings open on their power menu
     property bool powerMenuRequested: false
 
