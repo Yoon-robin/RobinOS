@@ -141,6 +141,13 @@ PanelWindow {
         tipText = text;
     }
 
+    // Where the launcher button starts on screen, for the Win+X menu above it
+    Binding {
+        target: ShellState
+        property: "quickLinksX"
+        value: (dock.screen.width - body.width) / 2 + 8
+    }
+
     // ---- Window previews, like the Windows taskbar ----
     // Half a second on a running app shows its windows above the dock. The card is
     // part of this surface, so moving onto it keeps it open; a click on a picture
@@ -285,9 +292,14 @@ PanelWindow {
                 id: launcherItem
                 icon: "grid"
                 label: "앱 런처"
-                active: ShellState.launcherOpen
+                active: ShellState.launcherOpen || ShellState.quickLinksOpen
                 onClicked: ShellState.toggleLauncher()
-                onHoveredChanged: dock.showTip(launcherItem, hovered ? label : "")
+                // Like the Windows Start button: a right click opens the quick link menu (Win+X)
+                onRightClicked: {
+                    dock.showTip(launcherItem, "");
+                    ShellState.toggleQuickLinks();
+                }
+                onHoveredChanged: dock.showTip(launcherItem, hovered ? label + " · 오른쪽 클릭: 빠른 메뉴" : "")
             }
 
             Rectangle {

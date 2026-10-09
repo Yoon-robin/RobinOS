@@ -166,6 +166,12 @@ def main():
     shot(qmp, "power-menu")
     keys(qmp, "esc")
     wait(1)
+    # Win+X like Windows' quick link menu: the system tools above the launcher button
+    keys(qmp, "meta_l", "x")
+    wait(2)
+    shot(qmp, "quick-links")
+    keys(qmp, "esc")
+    wait(1)
 
     keys(qmp, "meta_l", "spc")
     wait(3)

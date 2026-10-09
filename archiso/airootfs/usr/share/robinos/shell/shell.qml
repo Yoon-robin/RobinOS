@@ -45,6 +45,8 @@ ShellRoot {
 
     TaskView {}
 
+    QuickLinks {}
+
     SoundPanel {}
 
     Toasts {}
@@ -143,6 +145,13 @@ ShellRoot {
         name: "power"
         description: "전원 메뉴 (바탕 화면에서 Alt+F4)"
         onPressed: ShellState.openPowerMenu()
+    }
+
+    GlobalShortcut {
+        appid: "robinos"
+        name: "quicklinks"
+        description: "빠른 메뉴 (윈도우의 Win+X)"
+        onPressed: ShellState.toggleQuickLinks()
     }
 
     GlobalShortcut {

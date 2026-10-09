@@ -169,6 +169,28 @@ Singleton {
         quickSettingsOpen = true;
     }
 
+    // Win+X: the quick link menu (QuickLinks.qml) above the dock's launcher button,
+    // whose left edge on screen the dock keeps here
+    property bool quickLinksOpen: false
+    property real quickLinksX: 0
+
+    function toggleQuickLinks() {
+        if (welcomeOpen)
+            return;
+        if (quickLinksOpen) {
+            quickLinksOpen = false;
+            return;
+        }
+        launcherOpen = false;
+        quickSettingsOpen = false;
+        calendarOpen = false;
+        notifCenterOpen = false;
+        detailPanel = "";
+        taskViewOpen = false;
+        overlayScreen = focusedScreen;
+        quickLinksOpen = true;
+    }
+
     // Alt+F4 on the desktop (robinos.lua): the quick settings open on their power menu
     property bool powerMenuRequested: false
 

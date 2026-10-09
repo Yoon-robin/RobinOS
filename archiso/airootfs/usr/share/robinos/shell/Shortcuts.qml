@@ -36,6 +36,7 @@ PanelWindow {
             { keys: ["Win", "B"], title: "브라우저" },
             { keys: ["Win", "S"], title: "빠른 설정 (Win+I도 돼요)" },
             { keys: ["Win", "V"], title: "클립보드 기록" },
+            { keys: ["Win", "X"], title: "빠른 메뉴: 작업 관리자, 디스크, 종료" },
             { keys: ["Win", "."], title: "이모지 넣기" },
             { keys: ["Win", "Shift", "S"], title: "화면 일부 캡처 (전체는 Print)" },
             { keys: ["Ctrl", "Shift", "Esc"], title: "작업 관리자" },

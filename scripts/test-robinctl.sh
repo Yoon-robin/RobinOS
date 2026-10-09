@@ -265,6 +265,16 @@ said "list points to mission 21" "robinctl learn show 21"
 # Web basics: show 21 writes the practice server; curl against it solves 21-25
 WEB="practice/web"
 WEB_PORT=18$((RANDOM % 900 + 100))
+# Until the practice server answers (up to 10 s): a fixed second wasn't enough while
+# an install test VM ran next to it (2026-10-10)
+wait_web() {
+  local i
+  for i in $(seq 50); do
+    curl -s -o /dev/null "http://127.0.0.1:${WEB_PORT}/" && return 0
+    sleep 0.2
+  done
+  return 1
+}
 check "21 fails before the server exists" fail learn check 21
 check "show 21 writes the practice server" 0 learn show 21
 said "show 21 says how to start it" "python3 ~/practice/web/server.py"
@@ -276,7 +286,8 @@ else
 fi
 # in_home runs "cd ~ && ...", so the server line gets its own cd: with "&" the whole
 # "cd ~ && python3 ..." list would go to the background and $! would land elsewhere
-in_home "true; cd ~ && { ROBIN_WEB_PORT=${WEB_PORT} python3 ${WEB}/server.py >/dev/null 2>&1 & echo \$! > ${WEB}/.test-server; }; sleep 1"
+in_home "true; cd ~ && { ROBIN_WEB_PORT=${WEB_PORT} python3 ${WEB}/server.py >/dev/null 2>&1 & echo \$! > ${WEB}/.test-server; }"
+wait_web
 URL="http://127.0.0.1:${WEB_PORT}"
 in_home "curl -s ${URL}/ | grep -o 'ROBIN-[A-Z-]*' > ${WEB}/hello.txt"
 check "21 passes with the code on the first page" 0 learn check 21
@@ -430,7 +441,8 @@ chmod 644 "${WORK}/brute.py"
 pin="$(in_home "python3 ${WORK}/brute.py ${CTF}/4/lock.py")"
 in_home "python3 ${CTF}/4/lock.py 0000; true" | grep -q "틀렸어요" && ok "4: a wrong PIN stays locked" || bad "4: a wrong PIN opened the lock"
 check "4: the PIN found from its hash" 0 ctf_submit 4 "$(in_home "python3 ${CTF}/4/lock.py ${pin}" | grep -o 'ROBIN{[^}]*}')"
-in_home "true; cd ~ && { ROBIN_WEB_PORT=${WEB_PORT} python3 ${WEB}/server.py >/dev/null 2>&1 & echo \$! > ${WEB}/.test-server; }; sleep 1"
+in_home "true; cd ~ && { ROBIN_WEB_PORT=${WEB_PORT} python3 ${WEB}/server.py >/dev/null 2>&1 & echo \$! > ${WEB}/.test-server; }"
+wait_web
 [[ "$(in_home "curl -s -o /dev/null -w '%{http_code}' ${URL}/ctf/admin")" == "403" ]] && ok "5: /ctf/admin is 403 for a guest" || bad "5: /ctf/admin isn't 403 for a guest"
 in_home "curl -si ${URL}/ctf" | grep -q "Set-Cookie: role=guest" && ok "5: /ctf hands out role=guest" || bad "5: /ctf gives no role cookie"
 check "5: role=admin in the cookie" 0 ctf_submit 5 "$(in_home "curl -s -b 'role=admin' ${URL}/ctf/admin" | grep -o 'ROBIN{[^}]*}')"
