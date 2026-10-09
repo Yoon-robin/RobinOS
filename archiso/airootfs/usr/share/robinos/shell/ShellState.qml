@@ -1154,9 +1154,12 @@ Singleton {
         })
 
     // The Linux command behind a Windows tool (이벤트 뷰어 → journalctl), printed
-    // before it runs so the terminal teaches it. Fixed commands only, no quotes.
+    // before it runs so the terminal teaches it, and again after it: a long output
+    // pushes the first line off the screen (boot test, 2026-10-10). Fixed commands
+    // only, no quotes.
     function showCommand(command) {
-        openTerminal("printf '\\033[2m$ %s\\033[0m\\n' '" + command + "'; " + command);
+        openTerminal("printf '\\033[2m$ %s\\033[0m\\n' '" + command + "'; " + command
+                     + "; printf '\\n\\033[2m이 명령의 결과예요. 다시 보려면: %s\\033[0m\\n' '" + command + "'");
     }
 
     function openUrl(url) {

@@ -26,6 +26,7 @@ pipewire
 pipewire-alsa
 pipewire-pulse
 wireplumber
+rtkit
 noto-fonts
 noto-fonts-cjk
 noto-fonts-emoji

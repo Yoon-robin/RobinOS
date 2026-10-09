@@ -67,6 +67,12 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 한 것: `DockMenu.qml`(`PopupMenu.qml`을 써요). 앱마다 새 창, 독에 고정(실행 중인 다른 앱) 또는 독에서 고정 풀기(내가 고정한 앱), 창 닫기·모두 닫기(`Toplevel.close()`로 앱에 닫기를 부탁해요). 기본 앱(터미널, 파일, 브라우저)은 새 창과 창 닫기만. 아이콘 `plus`, `pin`
 - 완료 기준: 부팅 테스트 `dock-menu`(계산기의 메뉴), `dock-pinned`(아래 화살표·Enter로 고정)
 
+### T-133 이벤트 뷰어에서 명령이 밀려나지 않게, RTKit 경고 없애기
+- 상태: 진행 중 (묶음 58)
+- 출처: 묶음 57 검증 `27-event-viewer`. 시스템 기록이 길어서 맨 위에 찍은 `journalctl` 명령이 화면 밖으로 밀려났어요. 그 기록의 대부분은 PipeWire와 WirePlumber의 `RTKit error: ServiceUnknown`이었어요(`rtkit`이 없어서 소리 서버가 실시간 우선순위를 못 받아요)
+- 한 것: `ShellState.showCommand`가 결과 끝에도 "이 명령의 결과예요. 다시 보려면: ..."을 보여 줘요. `rtkit`을 라이브 ISO와 설치본(`packages/core.txt`)에 넣고 설치 테스트가 확인해요
+- 완료 기준: 부팅 테스트 `event-viewer` 끝에 명령 안내가 보이고, RTKit 오류 줄이 없음
+
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
 - 출처: 사용자 요청("vmware로 깔아줘"). VMware Workstation Pro 26H1, VM은 `문서\Virtual Machines\RobinOS\RobinOS.vmx`(EFI, 8GB, NVMe 64GB, 3D 가속 켬)

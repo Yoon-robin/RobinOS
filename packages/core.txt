@@ -33,6 +33,8 @@ pipewire
 pipewire-alsa
 pipewire-pulse
 wireplumber
+# Realtime priority for PipeWire; without it the system log fills with RTKit errors
+rtkit
 noto-fonts
 noto-fonts-cjk
 noto-fonts-emoji
