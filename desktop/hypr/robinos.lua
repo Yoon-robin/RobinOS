@@ -260,6 +260,8 @@ hl.bind(mainMod .. " + R",     hl.dsp.global("robinos:launcher"),      { descrip
 hl.bind(mainMod .. " + N",     hl.dsp.global("robinos:notifications"), { description = "알림 센터" })
 hl.bind(mainMod .. " + D",     hl.dsp.global("robinos:desktop"),       { description = "바탕 화면 보기" })
 hl.bind(mainMod .. " + V",     hl.dsp.global("robinos:clipboard"),     { description = "클립보드 기록" })
+hl.bind(mainMod .. " + period",    hl.dsp.global("robinos:emoji"),     { description = "이모지 (윈도우의 Win+.)" })
+hl.bind(mainMod .. " + semicolon", hl.dsp.global("robinos:emoji"),     { description = "이모지 (윈도우의 Win+;)" })
 hl.bind(mainMod .. " + ALT + D", hl.dsp.global("robinos:calendar"),   { description = "달력" })
 hl.bind(mainMod .. " + F1",    hl.dsp.global("robinos:shortcuts"),     { description = "단축키 보기" })
 -- Apps

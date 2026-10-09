@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Widgets
+import "emoji.js" as Emoji
 
 // Command palette launcher (Super+Space): apps, RobinOS lab commands and system actions.
 PanelWindow {
@@ -161,6 +162,21 @@ PanelWindow {
             subtitle: folder === root.home ? "~" : folder.startsWith(root.home + "/") ? "~" + folder.slice(root.home.length) : folder,
             path: hit.path
         };
+    }
+
+    // ---- Emoji (Win+.) ----
+    // The chosen emoji is typed into the window that had the focus (wtype, once the
+    // launcher has let go of the keyboard) and copied, so Ctrl+V works too.
+
+    readonly property bool emojiMode: ShellState.launcherEmoji
+
+    function emojiItems(q) {
+        const out = [];
+        const shown = Emoji.list.filter(e => q === "" || matches(e[1] + " " + e[2], q));
+        out.push({ kind: "header", title: shown.length > 0 ? "이모지 · Enter로 넣어요" : "찾는 이모지가 없어요" });
+        for (const e of shown)
+            out.push({ kind: "emoji", glyph: e[0], title: e[1], subtitle: "" });
+        return out;
     }
 
     function clipItems(q) {
@@ -325,7 +341,14 @@ PanelWindow {
     function refresh() {
         const q = search.text.trim().toLowerCase();
         const out = [];
-        searchFiles(clipboardMode ? "" : q);
+        searchFiles(clipboardMode || emojiMode ? "" : q);
+
+        if (emojiMode) {
+            results = emojiItems(q);
+            current = nextSelectable(-1, 1);
+            list.positionViewAtBeginning();
+            return;
+        }
 
         if (clipboardMode) {
             results = clipItems(q);
@@ -479,6 +502,11 @@ PanelWindow {
 
         if (item.kind === "clip") {
             Quickshell.execDetached(["sh", "-c", root.cliphist + " decode " + item.id + " | wl-copy"]);
+            return;
+        }
+
+        if (item.kind === "emoji") {
+            Quickshell.execDetached(["sh", "-c", "printf %s \"$1\" | wl-copy; sleep 0.3; command -v wtype >/dev/null && wtype \"$1\"", "sh", item.glyph]);
             return;
         }
 
@@ -685,7 +713,7 @@ PanelWindow {
                         anchors.fill: parent
                         verticalAlignment: Text.AlignVCenter
                         visible: search.text === "" && search.preeditText === ""
-                        text: root.clipboardMode ? "클립보드 기록 검색…" : "앱, 명령, 파일 검색…"
+                        text: root.clipboardMode ? "클립보드 기록 검색…" : root.emojiMode ? "이모지 검색… (하트, 웃음, ok)" : "앱, 명령, 파일 검색…"
                         color: Theme.muted
                         font: search.font
                     }
@@ -782,6 +810,13 @@ PanelWindow {
                                     anchors.centerIn: parent
                                     implicitSize: 20
                                     source: row.modelData.appIcon ?? ""
+                                }
+
+                                Text {
+                                    visible: row.modelData.kind === "emoji"
+                                    anchors.centerIn: parent
+                                    text: row.modelData.glyph ?? ""
+                                    font.pixelSize: 17
                                 }
                             }
 

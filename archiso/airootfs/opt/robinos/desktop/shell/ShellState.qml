@@ -98,8 +98,9 @@ Singleton {
         return findIn(Quickshell.screens, s => s.name === name) ?? Quickshell.screens[0];
     }
 
-    // The launcher also shows the clipboard history (Win+V, Launcher.qml)
+    // The launcher also shows the clipboard history (Win+V) and emoji (Win+.)
     property bool launcherClipboard: false
+    property bool launcherEmoji: false
 
     function toggleLauncher() {
         if (welcomeOpen)
@@ -113,6 +114,7 @@ Singleton {
         calendarOpen = false;
         overlayScreen = focusedScreen;
         launcherClipboard = false;
+        launcherEmoji = false;
         launcherOpen = true;
     }
 
@@ -128,6 +130,24 @@ Singleton {
         calendarOpen = false;
         overlayScreen = focusedScreen;
         launcherClipboard = true;
+        launcherEmoji = false;
+        launcherOpen = true;
+    }
+
+    // Win+. like Windows' emoji panel: pick one and it is typed where you were
+    function toggleEmoji() {
+        if (welcomeOpen)
+            return;
+        if (launcherOpen) {
+            launcherOpen = false;
+            return;
+        }
+        detailPanel = "";
+        quickSettingsOpen = false;
+        calendarOpen = false;
+        overlayScreen = focusedScreen;
+        launcherClipboard = false;
+        launcherEmoji = true;
         launcherOpen = true;
     }
 

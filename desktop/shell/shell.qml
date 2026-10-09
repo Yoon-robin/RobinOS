@@ -86,6 +86,13 @@ ShellRoot {
 
     GlobalShortcut {
         appid: "robinos"
+        name: "emoji"
+        description: "이모지 고르기"
+        onPressed: ShellState.toggleEmoji()
+    }
+
+    GlobalShortcut {
+        appid: "robinos"
         name: "quicksettings"
         description: "빠른 설정 열기/닫기"
         onPressed: ShellState.toggleQuickSettings(null)

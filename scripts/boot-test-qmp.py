@@ -284,6 +284,18 @@ def main():
     shot(qmp, "clipboard")
     keys(qmp, "esc")
     wait(1)
+    # Win+. like Windows' emoji panel: "heart" finds the hearts, Enter types the
+    # first one into the terminal (wtype); Ctrl+U clears the line again
+    type_text(qmp, "clear\n")
+    keys(qmp, "meta_l", "dot")
+    wait(2)
+    type_text(qmp, "heart")
+    wait(1)
+    shot(qmp, "emoji")
+    keys(qmp, "ret")
+    wait(2)
+    shot(qmp, "emoji-typed")
+    keys(qmp, "ctrl", "u")
     # A notification toast bottom right ("알림" / "오른쪽 아래에 떠요": QMP only types
     # ASCII, so bash's \u escapes spell the Korean)
     type_text(qmp, "clear; notify-send -a RobinOS $'\\uc54c\\ub9bc'"

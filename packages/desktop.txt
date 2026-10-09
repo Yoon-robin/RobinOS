@@ -58,6 +58,8 @@ mission-center
 # The terminal hint for systeminfo (desktop/bash/robinos-hints.sh)
 fastfetch
 pavucontrol
+# Types the emoji picked with Win+. into the focused window (Launcher.qml)
+wtype
 flatpak
 ntfs-3g
 exfatprogs
