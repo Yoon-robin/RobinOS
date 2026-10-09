@@ -10,7 +10,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 작업 | 시작 | 대상 | 결과 위치 | 상태 |
 |---|---|---|---|---|
-| (없음) | | | | |
+| 묶음 30 `verify -Installer robinos` | 2026-10-09 | (이 커밋) | `build\boot-test`, `build\install-test` | 도는 중 |
 
 ## 정기 점검
 
@@ -18,8 +18,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-10-09 (저녁) | `a39b6b8` 테스트 ISO | 설치 테스트 archinstall | 다섯 단계 통과. 오늘 바뀐 post-install(사용자 `.bashrc`의 RobinOS 설정, os-release와 pacman 훅, 기본 앱, 동영상·음악 앱, `which`)이 archinstall 경로에서도 문제없음 |
 | 2026-10-09 | `ba358cb` 테스트 ISO | 설치 테스트 windows(6.7분), archinstall(10.1분) | 둘 다 다섯 단계 통과. 오늘 고친 설치 코드(`apps.txt`, 서비스, nsswitch, NVIDIA 감지, 전원 모드)가 윈도우 옆 설치와 archinstall+post-install 경로에서도 문제없음 |
-| 2026-10-08 | `968795d` ISO | 집 PC(Blitz)에서 ISO 빌드, 부팅 테스트(WHPX, 30장, 새 장면 `button-layout`), 설치 테스트 robinos(다섯 단계) | 통과. 설치기에 Qt 제목 표시줄(최대화, 닫기), 라이브 독에 Wireshark 없음, 설치본 독은 터미널·파일·브라우저 |
 
 ## 품질 점검 기록
 
@@ -40,7 +40,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (없음) | | |
+| `52ec050` | T-088 알림 센터(Win+N, 종 아이콘) | 묶음 30 `verify`: `notification-center`에 "알림" 항목과 방해 금지 |
 
 `85b8e82`까지 2026-10-09 묶음 29 검증(`verify`: 빌드 3.1분 + 테스트 9.9분)을 마치고 푸시했어요.
 
