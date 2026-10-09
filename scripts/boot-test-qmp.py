@@ -178,6 +178,12 @@ def main():
         keys(qmp, "tab")
         wait(0.5)
     shot(qmp, "quick-settings-keyboard")
+    # A mouse click on the 방해 금지 tile (left column, second row): on, then off
+    click(qmp, 1337, 197)
+    wait(1)
+    shot(qmp, "quick-settings-dnd")
+    click(qmp, 1337, 197)
+    wait(1)
     keys(qmp, "meta_l", "s")
     wait(2)
     # Super+Alt+D opens the clock's month calendar (a click on the clock does too)
