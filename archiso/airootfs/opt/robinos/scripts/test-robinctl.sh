@@ -94,7 +94,15 @@ check "4 passes with chmod +x" 0 learn check 4
 in_home "echo 'root:x:0:0::/root:/bin/bash' > practice/bash-users.txt; echo 'made up line with bash' >> practice/bash-users.txt"
 check "5 fails with a made-up line" fail learn check 5
 in_home "grep bash /etc/passwd > practice/bash-users.txt"
-check "5 passes with grep's output" 0 learn check 5
+# Mission 5 finishes the Linux basics group: a desktop notification too, when there is a desktop
+mkdir -p "${WORK}/fakebin"
+printf '#!/bin/sh\nprintf "%%s|" "$@" >> "%s/notified"\n' "${WORK}" >"${WORK}/fakebin/notify-send"
+chmod 755 "${WORK}/fakebin" "${WORK}/fakebin/notify-send"
+check "5 passes with grep's output" 0 learner env WAYLAND_DISPLAY=wayland-test PATH="${WORK}/fakebin:${PATH}" bash "${ROBINCTL}" learn check 5
+said "5 says the Linux basics group is done" "리눅스 기초를 끝냈어요"
+grep -q '리눅스 기초를 끝냈어요|다음은 네트워크 기초예요' "${WORK}/notified" 2>/dev/null && ok "5 sends a desktop notification for the group" || bad "5 sent no group notification"
+check "checking 5 again" 0 learner env WAYLAND_DISPLAY=wayland-test PATH="${WORK}/fakebin:${PATH}" bash "${ROBINCTL}" learn check 5
+[[ "$(grep -o '끝냈어요' "${WORK}/notified" | wc -l)" == "1" ]] && ok "a mission already done doesn't notify again" || bad "the group notification came twice"
 check "list after the first five" 0 learn
 said "list counts 5 of 40" "5/40"
 said "list shows the network group" "네트워크 기초"

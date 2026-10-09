@@ -2643,8 +2643,41 @@ learn_check_40() {
   fi
 }
 
+# The first mission of n's group, and the first of the next group (or one past the last)
+learn_group_first() {
+  local i="$1"
+  while [[ -z "$(learn_group "${i}")" ]]; do
+    i=$((i - 1))
+  done
+  printf '%s' "${i}"
+}
+
+learn_group_end() {
+  local i=$(($1 + 1))
+  while ((i <= LEARN_COUNT)) && [[ -z "$(learn_group "${i}")" ]]; do
+    i=$((i + 1))
+  done
+  printf '%s' "${i}"
+}
+
+learn_group_complete() {
+  local first end i
+  first="$(learn_group_first "$1")"
+  end="$(learn_group_end "${first}")"
+  for ((i = first; i < end; i++)); do
+    learn_is_done "${i}" || return 1
+  done
+}
+
+# A desktop notification as well, when there is a desktop (the shell's toasts)
+learn_notify() {
+  if [[ -n "${WAYLAND_DISPLAY:-}" ]] && command -v notify-send >/dev/null 2>&1; then
+    notify-send --app-name=RobinOS "$1" "$2" >/dev/null 2>&1 || true
+  fi
+}
+
 learn_check() {
-  local n next
+  local n next was_done=0 first end title body
   n="$(learn_mission_arg "${1:-}")"
 
   printf '%s미션 %s 확인%s · %s\n\n' "${C_BOLD}" "${n}" "${C_RESET}" "$(learn_title "${n}")"
@@ -2658,22 +2691,25 @@ learn_check() {
     return 1
   fi
 
+  learn_is_done "${n}" && was_done=1
   learn_mark_done "${n}"
   printf '%s%s통과했어요!%s %s/%s 완료\n' "${C_GREEN}" "${C_BOLD}" "${C_RESET}" "$(learn_done_count)" "${LEARN_COUNT}"
-  if [[ "${n}" == "5" ]]; then
-    printf '리눅스 기초를 끝냈어요. 6번부터는 네트워크 기초예요.\n'
-  elif [[ "${n}" == "10" ]]; then
-    printf '네트워크 기초를 끝냈어요. 11번부터는 포렌식 기초예요.\n'
-  elif [[ "${n}" == "15" ]]; then
-    printf '포렌식 기초를 끝냈어요. 16번부터는 리버싱 기초예요.\n'
-  elif [[ "${n}" == "20" ]]; then
-    printf '리버싱 기초를 끝냈어요. 21번부터는 웹 기초예요.\n'
-  elif [[ "${n}" == "25" ]]; then
-    printf '웹 기초를 끝냈어요. 26번부터는 셸 기초예요.\n'
-  elif [[ "${n}" == "30" ]]; then
-    printf '셸 기초를 끝냈어요. 31번부터는 시스템 기초예요.\n'
-  elif [[ "${n}" == "35" ]]; then
-    printf '시스템 기초를 끝냈어요. 36번부터는 보안 기초예요.\n'
+  # The mission that finished a whole group, in whatever order it was solved
+  if ((was_done == 0)) && learn_group_complete "${n}"; then
+    first="$(learn_group_first "${n}")"
+    end="$(learn_group_end "${first}")"
+    title="$(learn_group "${first}")를 끝냈어요"
+    if ((end <= LEARN_COUNT)); then
+      body="다음은 $(learn_group "${end}")예요: robinctl learn show ${end}"
+    else
+      body="마지막 묶음이에요."
+    fi
+    printf '%s. %s\n' "${title}" "${body}"
+    if [[ "$(learn_done_count)" == "${LEARN_COUNT}" ]]; then
+      learn_notify "학습 미션 ${LEARN_COUNT}개를 모두 끝냈어요" "이제 입문 CTF에 도전해요: robinctl ctf"
+    else
+      learn_notify "${title}" "${body}"
+    fi
   fi
   next="$(learn_next)"
   if [[ -n "${next}" ]]; then
@@ -3051,7 +3087,7 @@ EOF
 }
 
 ctf_submit() {
-  local n="${1:-}" flag="${2:-}" given
+  local n="${1:-}" flag="${2:-}" given new=0
   [[ "${n}" =~ ^([1-9]|10)$ ]] || die "사용법: robinctl ctf submit 번호 'ROBIN{...}'"
   [[ -n "${flag}" ]] || die "플래그를 함께 적어요: robinctl ctf submit ${n} 'ROBIN{...}'"
   flag="$(printf '%s' "${flag}" | tr -d '\r\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
@@ -3060,11 +3096,13 @@ ctf_submit() {
     mkdir -p "${CTF_STATE}"
     if ! ctf_is_solved "${n}"; then
       printf '%s\n' "${n}" >>"${CTF_STATE}/solved"
+      new=1
     fi
     printf '%s%s맞았어요!%s CTF %s · %s  %s/%s 풀었어요\n' "${C_GREEN}" "${C_BOLD}" "${C_RESET}" \
       "${n}" "$(ctf_title "${n}")" "$(ctf_solved_count)" "${CTF_COUNT}"
     if [[ "$(ctf_solved_count)" == "${CTF_COUNT}" ]]; then
       printf '입문 CTF를 다 풀었어요. 다음은 진짜 취약한 앱이에요: %srobinctl lab info web%s\n' "${C_BOLD}" "${C_RESET}"
+      ((new == 0)) || learn_notify "입문 CTF ${CTF_COUNT}문제를 다 풀었어요" "다음은 진짜 취약한 앱이에요: robinctl lab info web"
     fi
   else
     if [[ "${flag}" != ROBIN\{*\} ]]; then

@@ -513,7 +513,7 @@ PanelWindow {
         }
 
         if (item.kind === "emoji") {
-            Quickshell.execDetached(["sh", "-c", "printf %s \"$1\" | wl-copy; sleep 0.3; command -v wtype >/dev/null && wtype \"$1\"", "sh", item.glyph]);
+            Quickshell.execDetached(["sh", "-c", "printf %s \"$1\" | wl-copy; sleep 0.4; command -v wtype >/dev/null && wtype \"$1\"", "sh", item.glyph]);
             return;
         }
 
