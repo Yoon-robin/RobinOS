@@ -63,6 +63,7 @@ Singleton {
             id: desktopSettings
 
             property bool tiling: false
+            property bool nightLight: false
         }
     }
     property string hostName: "robinos"
@@ -464,6 +465,32 @@ Singleton {
     function toggleBluetooth() {
         if (btAdapter)
             btAdapter.enabled = !btAdapter.enabled;
+    }
+
+    // Windows' 비행기 모드: the Wi-Fi and Bluetooth radios off (a cable stays connected).
+    // NetworkManager and BlueZ remember the radios, so it lasts across reboots.
+    readonly property bool airplane: !wifiEnabled && !btEnabled
+
+    function toggleAirplane() {
+        const on = !airplane;
+        Networking.wifiEnabled = !on;
+        if (btAdapter)
+            btAdapter.enabled = !on;
+    }
+
+    // ---- Night light, like Windows' 야간 모드: hyprsunset warms the screen ----
+
+    readonly property bool nightLight: desktopSettings.nightLight
+
+    // Stopping hyprsunset gives the screen its normal colors back
+    Process {
+        running: desktopSettings.nightLight
+        command: ["hyprsunset", "--temperature", "4500"]
+    }
+
+    function toggleNightLight() {
+        desktopSettings.nightLight = !desktopSettings.nightLight;
+        desktopStore.writeAdapter();
     }
 
     // ---- Korean input method (fcitx5-remote prints 2 when Hangul is active) ----

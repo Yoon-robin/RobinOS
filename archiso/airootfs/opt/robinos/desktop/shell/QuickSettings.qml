@@ -406,6 +406,26 @@ PanelWindow {
                     checked: ShellState.keepAwake
                     onToggled: ShellState.keepAwake = !ShellState.keepAwake
                 }
+
+                ToggleTile {
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1
+                    icon: "sunset"
+                    title: "야간 모드"
+                    subtitle: ShellState.nightLight ? "켜짐 · 따뜻한 색" : "꺼짐"
+                    checked: ShellState.nightLight
+                    onToggled: ShellState.toggleNightLight()
+                }
+
+                ToggleTile {
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1
+                    icon: "plane"
+                    title: "비행기 모드"
+                    subtitle: ShellState.airplane ? "켜짐 · Wi-Fi, 블루투스 끔" : "꺼짐"
+                    checked: ShellState.airplane
+                    onToggled: ShellState.toggleAirplane()
+                }
             }
 
             // ---- Power mode (power-profiles-daemon), like Windows' power mode ----

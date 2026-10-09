@@ -9,6 +9,8 @@ xdg-desktop-portal-gtk
 python-gobject
 hyprlock
 hypridle
+# Night light in quick settings (야간 모드)
+hyprsunset
 hyprpolkitagent
 qt6-wayland
 qt6-svg

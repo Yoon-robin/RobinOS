@@ -284,6 +284,12 @@ def main():
     shot(qmp, "scale-125")
     type_text(qmp, "clear; " + ipc + "setScale 1\n")
     wait(3)
+    # 야간 모드 (hyprsunset at 4500 K) warms the whole screen; the second call ends it
+    type_text(qmp, "clear; " + ipc + "toggleNightLight\n")
+    wait(3)
+    shot(qmp, "night-light")
+    type_text(qmp, "clear; " + ipc + "toggleNightLight\n")
+    wait(2)
     type_text(qmp, "qs ipc -p /usr/share/robinos/shell call shell setDark true\n")
     wait(3)
 

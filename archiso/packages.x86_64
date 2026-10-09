@@ -38,6 +38,7 @@ xdg-desktop-portal-gtk
 python-gobject
 hyprlock
 hypridle
+hyprsunset
 hyprpolkitagent
 qt6-wayland
 qt6-svg
