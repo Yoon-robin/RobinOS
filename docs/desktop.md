@@ -120,7 +120,7 @@ robin@robinos ~/practice >
 - 흐린 글자는 사용자 이름과 컴퓨터 이름, 굵은 글자는 지금 있는 폴더예요(`~`는 내 홈 폴더). 경로가 길면 마지막 세 단계만 보여요
 - `>`는 RobinOS의 빨간 강조색이에요. 관리자(root) 셸에서는 리눅스의 관례대로 `#`가 돼요
 - 바로 앞 명령이 실패하면 `>` 앞에 종료 코드가 빨갛게 나와요. `robin@robinos ~ 127 >`는 명령을 찾지 못했다는 뜻이에요. 0이 아닌 종료 코드는 실패예요
-- 창 제목도 `robin@robinos: ~/practice`처럼 지금 있는 곳으로 바뀌어요(셸의 바는 창 제목 대신 앱 이름 "Foot"을 보여 줘요)
+- 창 제목도 `robin@robinos: ~/practice`처럼 지금 있는 곳으로 바뀌어요(셸의 바는 창 제목 대신 앱 이름 "터미널"을 보여 줘요)
 
 프롬프트, 윈도우 명령 힌트, 첫 인사(fastfetch)는 `desktop/bash/robinos-bashrc.sh`(설치 위치 `/usr/share/robinos/bash/robinos-bashrc.sh`)에 모여 있고, `~/.bashrc`는 이 파일을 불러오기만 해요. 그래서 RobinOS가 업데이트되면 이미 있는 사용자에게도 바뀐 것이 들어가요. 내 설정은 `~/.bashrc`의 그 줄 아래에 적어요. 새로 만드는 사용자는 `/etc/skel/.bashrc`로 바로 쓸 수 있고, 설치하는 사용자의 `~/.bashrc`에는 `scripts/post-install.sh`가 그 줄을 넣어 줘요.
 
@@ -217,9 +217,11 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 파일을 어떤 앱으로 여는지는 `desktop/mime/mimeapps.list`(설치 위치 `/etc/xdg/mimeapps.list`)가 정해요. 폴더는 파일, 글 파일은 텍스트 편집기, PDF는 문서 보기, 사진은 이미지 보기, 동영상과 음악은 위 두 앱, 웹 주소는 Firefox예요. 파일 앱에서 "다른 앱으로 열기"로 바꾸면 내 설정(`~/.config/mimeapps.list`)이 먼저예요.
 
-## 전원 모드
+## 전원 모드와 배터리
 
 빠른 설정의 "전원 모드"에서 절전, 균형, 최고 성능을 골라요(윈도우의 전원 모드와 같아요). `power-profiles-daemon`이 CPU와 화면 설정을 바꿔요. 최고 성능은 지원하는 CPU에서만 보여요(VM에는 보통 없어요).
+
+노트북에서는 바에 배터리 아이콘과 남은 양이 보이고, 20% 아래로 내려가면 빨갛게 바뀌어요. 전원 없이 쓰다가 10%와 5%가 되면 윈도우처럼 "배터리가 10% 남았어요" 알림이 떠요(`ShellState.qml`). 이 알림은 닫을 때까지 남아 있어요. 거의 다 떨어지면 UPower가 컴퓨터를 잠재우거나 꺼서 작업을 지켜요. 전원을 연결하면 다음 방전 때 다시 알려 줘요.
 
 ## 업데이트 알림
 

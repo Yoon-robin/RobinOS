@@ -31,7 +31,9 @@
 - [install.md](install.md): 설치하기
 - [recovery.md](recovery.md): 스냅샷으로 되돌리기
 - [desktop.md](desktop.md): 데스크톱 쓰기와 바꾸기
+- [ctf.md](ctf.md): CTF 시작하기
 - [../labs/web/README.md](../labs/web/README.md): 웹 보안 랩
+- [../labs/net/README.md](../labs/net/README.md): 네트워크 스캔 랩
 
 개발
 - [build-environment.md](build-environment.md): 빌드 환경 준비
@@ -41,11 +43,13 @@
 - [ci.md](ci.md): GitHub Actions (수동 실행만)
 - [boot-branding.md](boot-branding.md): 부팅 메뉴와 로그인 화면 브랜딩
 - [release.md](release.md): 릴리스 체크리스트
-- [release-notes-v0.1.md](release-notes-v0.1.md): v0.1 프리뷰 릴리스 노트 (공개 전 초안)
+- [release-notes-v0.1.md](release-notes-v0.1.md): v0.1 프리뷰 릴리스 노트
+- [release-notes-v0.2.md](release-notes-v0.2.md): v0.2 프리뷰 발표문 (공개 전 초안)
 - [../themes/README.md](../themes/README.md): 테마 파일
 
 작업 관리
 - [tasks.md](tasks.md): 작업 목록
+- [done.md](done.md): 오래된 완료 기록
 - [roadmap.md](roadmap.md): 장기 로드맵
 - [loop.md](loop.md): 루프 작업 절차
 - [../CLAUDE.md](../CLAUDE.md): Claude가 이 저장소에서 지키는 규칙
@@ -58,8 +62,9 @@
 | 바꾼 것 | 같이 고칠 문서 |
 |---|---|
 | `robinctl` 명령 | `README.md`의 초기 명령, 해당 기능 문서(`recovery.md`, `desktop.md` 등) |
-| 셸 기능, 단축키 | `desktop.md` |
-| 학습 미션 (`robinctl learn`) | `README.md`의 학습 미션 표, `desktop.md`, 런처의 학습 미션 설명(`Launcher.qml`), `robinctl help` |
+| 셸 기능, 단축키 | `desktop.md`, 환영 마법사의 단축키 안내(`Welcome.qml`), `README.md`의 핵심 아이디어 |
+| 기본 앱 연결 (`desktop/mime/mimeapps.list`) | `desktop.md`의 "동영상과 음악, 기본 앱" |
+| 학습 미션 (`robinctl learn`) | `README.md`의 학습 미션 표, `desktop.md`, 런처의 학습 미션 설명(`Launcher.qml`), `robinctl help`. 학습 센터(`LearnCenter.qml`)는 `robinctl learn tsv`를 읽으니 그 형식을 바꾸면 같이 고쳐요 |
 | 패키지 목록 (`packages/*.txt`) | `install.md`(설치본에 들어가는 것), `desktop.md`(라이브 세션에 없는 것) |
 | 설치 과정 (`post-install.sh`, `robin-install`) | `install.md`, `testing.md` |
 | 테스트 스크립트 | `testing.md` |

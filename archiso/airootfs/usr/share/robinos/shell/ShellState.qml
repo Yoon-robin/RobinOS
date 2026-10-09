@@ -7,6 +7,7 @@ import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
 import Quickshell.Networking
 import Quickshell.Bluetooth
+import Quickshell.Services.UPower
 
 // Shared shell state: which overlay is open, clock, audio, network, input method,
 // brightness, lab status and the actions the bar, dock and launcher call.
@@ -541,6 +542,50 @@ Singleton {
         pendingBrightness = brightness;
         if (!brightWrite.running)
             brightWrite.start();
+    }
+
+    // ---- Low battery warning, like Windows at 10% and 5% ----
+    // A critical notification stays until dismissed. Near empty, UPower's own
+    // CriticalPowerAction puts the laptop to sleep or turns it off.
+
+    readonly property var battery: UPower.displayDevice
+    // The lowest level already warned about since the battery last charged
+    property int batteryWarned: 100
+
+    function checkBattery() {
+        if (!battery.ready || !battery.isLaptopBattery)
+            return;
+        if (battery.state !== UPowerDeviceState.Discharging) {
+            batteryWarned = 100;
+            return;
+        }
+        const percent = Math.round(battery.percentage * 100);
+        for (const level of [5, 10]) {
+            if (percent <= level && batteryWarned > level) {
+                batteryWarned = level;
+                Quickshell.execDetached(["notify-send", "-a", "RobinOS", "-u", "critical", "-i", "battery-caution",
+                                         "배터리가 " + percent + "% 남았어요",
+                                         level === 5 ? "지금 전원을 연결하세요. 곧 컴퓨터가 잠들거나 꺼져요."
+                                                     : "전원을 연결하세요. 빠른 설정에서 전원 모드를 절전으로 바꾸면 더 오래 써요."]);
+                break;
+            }
+        }
+    }
+
+    Connections {
+        target: root.battery
+
+        function onPercentageChanged() {
+            root.checkBattery();
+        }
+
+        function onStateChanged() {
+            root.checkBattery();
+        }
+
+        function onReadyChanged() {
+            root.checkBattery();
+        }
     }
 
     // ---- Local web lab (labs/web/docker-compose.yml) ----
