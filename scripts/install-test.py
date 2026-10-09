@@ -425,6 +425,10 @@ def phase_live(con, qmp):
     # (archiso/airootfs/etc/systemd/resolved.conf.d/robinos.conf)
     # (-l: UDP services wait in UNCONN, which plain -u leaves out)
     con.run("ss -Huln | awk '{print $4}' | sort -u; ! ss -Huln | awk '{print $4}' | grep -Eq ':5355$'")
+    # What the live system takes the test VM for, and the VMware tools that start
+    # only in VMware (T-137: they started and failed in this QEMU VM)
+    con.run("systemd-detect-virt; systemctl show -p ConditionResult,ActiveState vmtoolsd.service;"
+            " systemctl --failed --no-legend", check=False)
 
     con.run("mkdir -p /share && (mount -o ro /dev/vdb1 /share 2>/dev/null || mount -o ro /dev/vdb /share)"
             " && test -f /share/robinos/bin/robinctl")
@@ -599,6 +603,9 @@ def phase_installed(con, qmp):
     # rtkit for PipeWire's realtime priority
     con.run("command -v which && command -v ssh-keygen && command -v gpg && command -v wtype"
             " && command -v lspci && command -v lsusb && pacman -Q rtkit")
+    # The guest tools robin-install picked for this VM (systemd-detect-virt, T-137)
+    con.run("systemd-detect-virt; pacman -Q open-vm-tools qemu-guest-agent; systemctl --failed --no-legend",
+            check=False)
 
     # QEMU's WHPX can't reset a VM that reboots itself ("Unexpected VP exit code 4"),
     # so every boot is its own QEMU run: power off here, the next phase boots again.

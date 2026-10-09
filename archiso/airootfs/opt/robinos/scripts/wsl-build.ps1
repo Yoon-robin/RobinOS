@@ -90,7 +90,7 @@ function Invoke-WhpxBootTest {
         $kernelArgs = "archisobasedir=$base archisolabel=$label console=tty0 console=ttyS0,115200 systemd.journald.forward_to_console=1 robinos.debug"
         # Start-Process joins the arguments with spaces, so quote the ones that have them
         $qemuArgs = @(
-            "-machine", "q35,vmport=off", "-accel", "whpx", "-m", "6144", "-smp", "4",
+            "-machine", "q35", "-accel", "whpx", "-m", "6144", "-smp", "4",
             "-kernel", "`"vm\$base\boot\x86_64\vmlinuz-linux`"",
             "-initrd", "`"vm\$base\boot\x86_64\initramfs-linux.img`"",
             "-append", "`"$kernelArgs`"",
@@ -165,7 +165,7 @@ function Invoke-WhpxInstallTest {
     $env:ROBINOS_SERIAL = "tcp:127.0.0.1:47021"
     $env:ROBINOS_QMP = "tcp:127.0.0.1:47022"
     $common = @(
-        "-machine", "q35,vmport=off", "-accel", "whpx", "-m", "6144", "-smp", "4",
+        "-machine", "q35", "-accel", "whpx", "-m", "6144", "-smp", "4",
         "-drive", "`"if=pflash,format=raw,readonly=on,file=install-test\OVMF_CODE.fd`"",
         "-drive", "`"if=pflash,format=raw,file=install-test\OVMF_VARS.fd`"",
         "-drive", "`"file=install-test\disk.qcow2,format=qcow2,if=virtio`"",

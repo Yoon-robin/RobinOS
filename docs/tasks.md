@@ -69,11 +69,11 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ## 할 일 (위에서부터)
 
 ### T-137 테스트 VM에서 실패하는 vmtoolsd
-- 상태: 진행 중 (묶음 60은 원인을 못 찾음, 다음 묶음에서 이어서)
-- 출처: 묶음 59 `30-failed-units`. `vmtoolsd.service`는 원래 `ConditionVirtualization=vmware`가 있는데도 QEMU(WHPX) 테스트 VM에서 시작해서 실패해요(설치 테스트의 라이브 단계에서도 "Started ... VMware Tools"). 테스트 VM이 VMware로 감지되는 것 같아요(QEMU q35의 VMware 백도어 포트 `vmport`가 기본으로 켜져 있어요)
-- 할 것: 부팅 테스트에서 `systemd-detect-virt`를 찍어 무엇으로 감지되는지 확인. VMware로 나오면 테스트 VM에 `vmport=off`를 줘서 실제 QEMU/KVM처럼 만들고(설치기도 VMware 도구 대신 QEMU 도구를 깔아야 맞아요), T-136에서 넣은 vmtoolsd·vmblock drop-in은 원래 유닛에 같은 조건이 있으니 지워요
-- 한 것: 테스트 VM(부팅·설치 테스트, WHPX와 TCG 모두)에 `-machine q35,vmport=off`. `vmtoolsd`·`vmware-vmblock-fuse` 유닛은 원래 `ConditionVirtualization=vmware`가 있어서 T-136의 drop-in을 지웠어요. `failed-units` 장면이 `systemd-detect-virt`도 찍어요
-- 완료 기준: 부팅 테스트 `failed-units`에 `systemd-detect-virt`가 vmware가 아니고 실패한 서비스 0개
+- 상태: 진행 중 (묶음 61)
+- 출처: 묶음 59 `30-failed-units`. `vmtoolsd.service`는 원래 `ConditionVirtualization=vmware`가 있는데도 QEMU(WHPX) 테스트 VM의 라이브 세션에서 시작해서 실패해요(설치 테스트의 라이브 단계에서도 "Started ... VMware Tools"). 그런데 설치한 시스템에서는 VMware 도구가 돌지 않아서, 설치기의 `systemd-detect-virt`는 VMware로 보지 않은 것 같아요
+- 해 본 것(묶음 60): QEMU의 VMware 백도어 포트를 끄는 `vmport=off`를 줘 봤지만 그대로 시작해서 원인이 아니었어요(되돌림). T-136의 drop-in은 원래 유닛과 같은 조건이라 지웠어요. 부팅 테스트 장면은 결과가 나오기 전에 찍혀서(명령이 길어 입력이 늦음) `systemd-detect-virt` 값을 못 봤어요
+- 할 것: 설치 테스트의 라이브·설치본 단계 로그에 `systemd-detect-virt`, vmtoolsd의 `ConditionResult`, 설치기가 깐 게스트 도구를 남겨서 원인을 가려요. 부팅 테스트 장면은 5초 기다려요
+- 완료 기준: 원인을 알고 라이브 ISO가 실제 PC와 QEMU/KVM에서 실패한 서비스 없이 떠요
 
 ### T-104 2029년 공휴일 넣기
 - 상태: 할 일 (2028년 가을에 해요)

@@ -269,11 +269,12 @@ def main():
     shot(qmp, "event-viewer")
     keys(qmp, "alt", "f4")  # the new terminal has the focus
     wait(2)
-    # A clean live boot: no failed units (the VMware tools only start in VMware, and
-    # the test VM has QEMU's VMware port off, so it isn't one) and NetworkManager
-    # alone, without systemd-networkd fighting it over the interface
+    # A clean live boot: what the VM is taken for, no failed units (the VMware tools
+    # are meant to start only in VMware, T-137) and NetworkManager alone, without
+    # systemd-networkd fighting it over the interface
     type_text(qmp, "clear; systemd-detect-virt; systemctl --failed; systemctl is-active systemd-networkd NetworkManager\n")
-    wait(2)
+    # The guest is still taking the typed keys for a while after QMP sent them
+    wait(5)
     shot(qmp, "failed-units")
     # Solve mission 1, so the launcher's learning entry shows "1/40" in light-launcher
     type_text(qmp, "mkdir -p ~/practice/notes && robinctl learn check 1 >/dev/null\n")
