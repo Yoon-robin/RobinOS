@@ -577,6 +577,54 @@ Singleton {
                                  "사진을 오른쪽 버튼으로 누르고 \"배경으로 설정\"을 골라요. 이미지 보기에서는 메뉴의 \"백그라운드로 설정\"이에요."]);
     }
 
+    // ---- Display scale, like Windows' "배율" (quick settings) ----
+    // Applied right away through hyprctl and saved as "output scale" lines that
+    // robinos.lua (and robinos-vm-display in VMs) apply at the next login.
+
+    readonly property var scaleOptions: [1, 1.25, 1.5, 1.75, 2]
+    readonly property real displayScale: Hyprland.focusedMonitor?.scale ?? 1
+    property var savedScales: ({})
+
+    FileView {
+        id: scaleFile
+
+        path: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state") + "/robinos/display-scale"
+        printErrors: false
+        onLoaded: {
+            const scales = {};
+            for (const line of scaleFile.text().split("\n")) {
+                const m = line.match(/^([A-Za-z0-9-]+)\s+([0-9.]+)$/);
+                if (m)
+                    scales[m[1]] = parseFloat(m[2]);
+            }
+            root.savedScales = scales;
+        }
+    }
+
+    // Hyprland only reports the new scale on the next monitor query
+    Timer {
+        id: monitorRefresh
+        interval: 500
+        onTriggered: Hyprland.refreshMonitors()
+    }
+
+    function setScale(scale) {
+        const monitor = Hyprland.focusedMonitor;
+        // Output names come from the kernel (eDP-1, HDMI-A-1, Virtual-1); anything
+        // else stays out of the Lua that hyprctl runs
+        if (!monitor || !/^[A-Za-z0-9-]+$/.test(monitor.name) || scaleOptions.indexOf(scale) === -1)
+            return;
+        // A VM screen keeps the size robinos-vm-display gave it
+        const mode = monitor.name.startsWith("Virtual-") ? monitor.width + "x" + monitor.height : "preferred";
+        Quickshell.execDetached(["hyprctl", "eval", "hl.monitor({ output = \"" + monitor.name + "\", mode = \"" + mode
+                                 + "\", position = \"auto\", scale = " + scale + " })"]);
+        const scales = Object.assign({}, savedScales);
+        scales[monitor.name] = scale;
+        savedScales = scales;
+        scaleFile.setText(Object.keys(scales).map(name => name + " " + scales[name]).join("\n") + "\n");
+        monitorRefresh.restart();
+    }
+
     // ---- Low battery warning, like Windows at 10% and 5% ----
     // A critical notification stays until dismissed. Near empty, UPower's own
     // CriticalPowerAction puts the laptop to sleep or turns it off.

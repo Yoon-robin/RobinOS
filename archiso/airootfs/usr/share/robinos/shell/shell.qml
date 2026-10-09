@@ -114,6 +114,11 @@ ShellRoot {
             ShellState.openLearnCenter();
         }
 
+        // The quick settings' 화면 배율 for the focused screen: 1, 1.25, 1.5, 1.75 or 2
+        function setScale(scale: real): void {
+            ShellState.setScale(scale);
+        }
+
         // The dock's click on an app: open, bring to front, minimize or restore
         function toggleApp(appId: string): void {
             ShellState.toggleApp([appId], null);
