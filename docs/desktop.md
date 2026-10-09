@@ -7,14 +7,21 @@ RobinOS는 Hyprland 위에 직접 만든 Quickshell 셸을 얹어 써요. 디자
 | 부분 | 프로그램 | 저장소 안 위치 |
 |---|---|---|
 | 컴포지터 | Hyprland 0.56+ (Lua 설정) | `desktop/hypr/robinos.lua` |
-| 셸: 상단 바, 독, 런처, 빠른 설정, 알림, 볼륨 표시, 배경화면, 환영 마법사 | Quickshell 0.3 | `desktop/shell/` |
+| 셸: 상단 바, 독, 런처, 빠른 설정, 알림, 볼륨 표시, 배경화면, 환영 마법사, 달력, 학습 센터, 단축키 보기, 설치기 | Quickshell 0.3 | `desktop/shell/` |
 | 세션 시작, 렌더링 자동 전환 | `robinos-session` | `desktop/bin/robinos-session` |
 | 셸 다시 띄우기, 셸 렌더링 전환 | `robinos-shell` | `desktop/bin/robinos-shell` |
 | VM 화면을 창 크기에 맞추기 | `robinos-vm-display` | `desktop/bin/robinos-vm-display` |
+| 화면 캡처 | `robinos-screenshot` (grim, slurp) | `desktop/bin/robinos-screenshot` |
+| "배경으로 설정" (Wallpaper 포털) | `robinos-wallpaper-portal` | `desktop/bin/robinos-wallpaper-portal`, `desktop/portal/` |
+| 시스템 이름 (os-release) | `robinos-os-release`, pacman 훅 | `desktop/bin/robinos-os-release`, `desktop/pacman/` |
+| 터미널 프롬프트와 윈도우 명령 힌트 | bash | `desktop/bash/` |
+| 야간 모드 | hyprsunset | - |
 | 로그인 화면 | SDDM (Qt 6 테마) | `themes/sddm/robinos/` |
 | 잠금 화면과 대기 | hyprlock, hypridle | `desktop/hypr/hyprlock.conf`, `hypridle.conf` |
 | 터미널 | foot | `desktop/foot/foot.ini` |
-| 파일, 브라우저 | Nautilus, Firefox (원격 측정과 실험 기능은 꺼 둬요: `/etc/firefox/policies/policies.json`) | - |
+| 파일, 브라우저 | Nautilus, Firefox (원격 측정과 실험 기능은 꺼 둬요: `/etc/firefox/policies/policies.json`) | `desktop/firefox/` |
+| 파일을 여는 기본 앱 | `/etc/xdg/mimeapps.list` | `desktop/mime/` |
+| fastfetch 요약과 울새 그림 | fastfetch | `desktop/fastfetch/` |
 | GTK, libadwaita 앱 | adw-gtk3, dconf 기본값 | `desktop/dconf/` |
 | Qt 앱 | qt6ct 팔레트 | `desktop/qt6ct/` |
 | 한글 입력 | fcitx5-hangul | `desktop/fcitx5/` |
@@ -39,6 +46,12 @@ RobinOS는 Hyprland 위에 직접 만든 Quickshell 셸을 얹어 써요. 디자
 /usr/share/robinos/bin/robinos-session
 /usr/share/robinos/bin/robinos-shell
 /usr/share/robinos/bin/robinos-vm-display
+/usr/share/robinos/bin/robinos-screenshot
+/usr/share/robinos/bin/robinos-wallpaper-portal
+/usr/share/robinos/bin/robinos-os-release
+/usr/share/robinos/bash/robinos-bashrc.sh   Prompt, Windows command hints, greeting (~/.bashrc sources it)
+/etc/xdg/xdg-desktop-portal/hyprland-portals.conf
+/etc/xdg/mimeapps.list
 ```
 
 Geist와 Pretendard는 Arch 저장소에 없어요. `scripts/fetch-fonts.sh`가 버전을 고정해 둔 릴리스를 내려받아 SHA-256 체크섬을 확인하고 `/usr/share/fonts/robinos`에 설치해요. ISO를 만들 때는 `scripts/prepare-archiso.sh`가, 설치된 시스템에서는 `scripts/post-install.sh`가 이 스크립트를 실행해요.

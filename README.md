@@ -81,6 +81,7 @@ bin/robinctl snapshot list
 bin/robinctl learn
 bin/robinctl learn show 1
 bin/robinctl learn check 1
+bin/robinctl ctf
 bin/robinctl lab list
 bin/robinctl lab info web
 bin/robinctl lab info net

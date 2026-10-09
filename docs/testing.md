@@ -69,7 +69,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 
 ## 자동 부팅 테스트
 
-`scripts/boot-test.sh`가 QEMU에서 ISO를 부팅하고, `scripts/boot-test-qmp.py`가 화면을 조작하면서 스크린샷을 찍어요.
+`scripts/boot-test.sh`가 QEMU에서 ISO를 부팅하고, `scripts/boot-test-qmp.py`가 화면을 조작하면서 스크린샷을 찍어요(2026-10-09 기준 41장).
 
 1. 부팅과 첫 로그인
 2. 환영 마법사의 모든 단계, 마지막에 열리는 학습 센터(0/35)
@@ -117,11 +117,11 @@ WHPX가 필요해요. TCG에서는 `build`, `boot-test`, `install-test`를 차�
 
 설치한 뒤 확인하는 것:
 
-1. `robinctl doctor`, 스냅샷 설정, `/etc/fstab`의 `@snapshots`, grub-btrfs 항목, 부팅 메뉴 이름, 보안 프로필 목록, 설치본 전용 앱(`packages/apps.txt`: 인쇄 서비스가 응답하는지, LibreOffice 한국어판, 앱 스토어와 Flathub 저장소)
+1. `robinctl doctor`, 스냅샷 설정, `/etc/fstab`의 `@snapshots`, grub-btrfs 항목, 부팅 메뉴 이름, 보안 프로필 목록, 설치본 전용 앱(`packages/apps.txt`: 인쇄 서비스가 응답하는지, LibreOffice 한국어판, 앱 스토어와 Flathub 저장소, 동영상·음악 재생 앱과 `gio`로 본 기본 앱), 배경화면 포털 백엔드와 포털 설정, `filesystem`을 다시 설치한 뒤에도 RobinOS인 os-release, 사용자 `~/.bashrc`의 RobinOS 설정, `which`, 열린 포트
 2. 재부팅해서 GRUB 메뉴와 스냅샷 하위 메뉴 스크린샷
 3. `pacman -S cowsay`로 snap-pac의 전후 스냅샷이 생기는지
 4. 다시 켜서 GRUB의 스냅샷 하위 메뉴로 cowsay 설치 전 스냅샷을 골라 부팅하고([recovery.md](recovery.md)의 비상 경로), 그 안에서 `robinctl snapshot rollback`
-5. 다시 켜서 cowsay가 사라졌는지 확인하고, SDDM에서 로그인한 데스크톱 스크린샷
+5. 다시 켜서 cowsay가 사라졌는지 확인하고, SDDM에서 로그인한 데스크톱 스크린샷과 런처 장면(`word`, `store`, `printer`, `steam`, `video`)
 6. `-Lab`을 붙이면 마지막에 웹 랩을 실제로 띄워요: `robinctl profile web`으로 Docker를 설치하고 `robinctl lab start web`으로 고정한 이미지를 받아 켠 뒤, Juice Shop과 DVWA가 `127.0.0.1`에서만 응답하는지, 셸의 랩 상태 확인(docker-proxy)이 보는지 확인하고 꺼요. 이어서 네트워크 스캔 랩(`robinctl lab start net`)을 켜고, 172.30.66.0/24의 네 대(웹 페이지, Redis 포트, 31337 배너, 포트 없는 컴퓨터의 ping)가 응답하는지, 호스트 포트에는 아무것도 열리지 않는지 확인하고 꺼요. 이미지를 내려받아서 몇 분 더 걸려요
 
 ```powershell
