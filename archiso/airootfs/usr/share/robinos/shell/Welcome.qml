@@ -719,7 +719,9 @@ PanelWindow {
                                 { keys: ["오른쪽 Alt"], title: "한/영 전환" },
                                 { keys: ["Win", "L"], title: "화면 잠금" },
                                 { keys: ["Ctrl", "Shift", "Esc"], title: "작업 관리자" },
-                                { keys: ["Win", "V"], title: "클립보드 기록" }
+                                { keys: ["Win", "V"], title: "클립보드 기록" },
+                                { keys: ["Win", "←", "→"], title: "창을 화면 반쪽에" },
+                                { keys: ["Win", "."], title: "이모지" }
                             ]
 
                             RowLayout {

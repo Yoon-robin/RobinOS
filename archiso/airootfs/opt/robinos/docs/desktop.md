@@ -16,6 +16,8 @@ RobinOS는 Hyprland 위에 직접 만든 Quickshell 셸을 얹어 써요. 디자
 | 시스템 이름 (os-release) | `robinos-os-release`, pacman 훅 | `desktop/bin/robinos-os-release`, `desktop/pacman/` |
 | 터미널 프롬프트와 윈도우 명령 힌트 | bash | `desktop/bash/` |
 | 야간 모드 | hyprsunset | - |
+| 이모지 넣기 (`Win+.`) | 런처의 이모지 모드, wtype | `desktop/shell/emoji.js` |
+| 트레이 아이콘 | StatusNotifierItem (Quickshell `SystemTray`) | `desktop/shell/Bar.qml` |
 | 로그인 화면 | SDDM (Qt 6 테마) | `themes/sddm/robinos/` |
 | 잠금 화면과 대기 | hyprlock, hypridle | `desktop/hypr/hyprlock.conf`, `hypridle.conf` |
 | 터미널 | foot | `desktop/foot/foot.ini` |
@@ -163,7 +165,7 @@ ipconfig 명령은 윈도우용이에요. 리눅스에서는
 2. 다크/라이트와 강조 색상. 고르는 즉시 화면에 적용돼요.
 3. 한/영 전환 단축키. 한/영 키와 오른쪽 Alt는 항상 되고, Ctrl+Space(기본), Shift+Space, 없음 중에서 하나를 더 골라요. `~/.config/fcitx5/config`를 다시 쓰고 `fcitx5-remote -r`로 바로 적용해요. 입력 칸에서 직접 바꿔 볼 수 있어요.
 4. 학습 목표: 리눅스 기초, 웹 보안, 먼저 둘러보기
-5. 단축키 안내(런처, 빠른 설정, 창 전환·닫기, 파일, 터미널, 바탕 화면 보기, 화면 캡처, 한/영, 잠금, 작업 관리자, 클립보드 기록). 마지막 단추를 누르면 고른 목표가 열려요. 리눅스 기초는 학습 센터, 웹 보안은 터미널의 웹 랩 안내예요.
+5. 단축키 안내(런처, 빠른 설정, 창 전환·닫기, 파일, 터미널, 바탕 화면 보기, 화면 캡처, 한/영, 잠금, 작업 관리자, 클립보드 기록, 창 반쪽 붙이기, 이모지). 마지막 단추를 누르면 고른 목표가 열려요. 리눅스 기초는 학습 센터, 웹 보안은 터미널의 웹 랩 안내예요.
 
 Enter는 다음, Esc는 건너뛰기예요. 끝내거나 건너뛰면 `~/.local/state/quickshell/` 아래 `welcome.json`에 기록돼서 다시 뜨지 않아요. 라이브 ISO는 부팅할 때마다 새로 시작하니 매번 떠요. 다시 보려면 런처에서 "환영 마법사"를 고르거나 이렇게 실행하세요.
 
