@@ -386,6 +386,9 @@ end
 -- Win+Ctrl+Left/Right like Windows' virtual desktops
 hl.bind(mainMod .. " + CTRL + left",  hl.dsp.focus({ workspace = "r-1" }), { description = "이전 작업 공간" })
 hl.bind(mainMod .. " + CTRL + right", hl.dsp.focus({ workspace = "r+1" }), { description = "다음 작업 공간" })
+-- Windows' Win+Ctrl+D and Win+Ctrl+F4 for virtual desktops (ShellState.newWorkspace)
+hl.bind(mainMod .. " + CTRL + D",  hl.dsp.global("robinos:newworkspace"),   { description = "새 작업 공간 (윈도우의 Win+Ctrl+D)" })
+hl.bind(mainMod .. " + CTRL + F4", hl.dsp.global("robinos:closeworkspace"), { description = "작업 공간 닫기, 창은 왼쪽 작업 공간으로 (윈도우의 Win+Ctrl+F4)" })
 
 -- Workspaces 1-9
 for i = 1, 9 do

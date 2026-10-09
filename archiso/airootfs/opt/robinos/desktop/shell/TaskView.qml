@@ -85,12 +85,8 @@ PanelWindow {
     }
 
     function newWorkspace() {
-        const used = ShellState.toArray(Hyprland.workspaces.values).map(w => w.id);
-        let id = 1;
-        while (used.indexOf(id) !== -1)
-            id++;
         close();
-        ShellState.focusWorkspace(id);
+        ShellState.newWorkspace();
     }
 
     // Dim the desktop; a click on it closes

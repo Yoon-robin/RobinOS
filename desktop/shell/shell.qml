@@ -161,6 +161,20 @@ ShellRoot {
         onPressed: ShellState.toggleTaskView()
     }
 
+    GlobalShortcut {
+        appid: "robinos"
+        name: "newworkspace"
+        description: "새 작업 공간 (윈도우의 새 가상 데스크톱)"
+        onPressed: ShellState.newWorkspace()
+    }
+
+    GlobalShortcut {
+        appid: "robinos"
+        name: "closeworkspace"
+        description: "작업 공간 닫기 (창은 왼쪽 작업 공간으로)"
+        onPressed: ShellState.closeWorkspace()
+    }
+
     // Win+Down on a window that is neither maximized nor snapped (robinos.lua)
     GlobalShortcut {
         appid: "robinos"

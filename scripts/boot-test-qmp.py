@@ -296,6 +296,21 @@ def main():
     shot(qmp, "workspace-next")
     keys(qmp, "meta_l", "ctrl", "left")
     wait(2)
+    # Win+Ctrl+D like Windows' new virtual desktop goes to the first empty workspace
+    # (2); Win+Ctrl+F4 closes it and brings the terminal opened there to workspace 1.
+    # Alt+F4 then closes one of the two terminals, so one is left as before.
+    keys(qmp, "meta_l", "ctrl", "d")
+    wait(2)
+    keys(qmp, "meta_l", "ret")
+    wait(4)
+    type_text(qmp, "echo moved-from-workspace-2\n")
+    wait(1)
+    shot(qmp, "workspace-new")
+    keys(qmp, "meta_l", "ctrl", "f4")
+    wait(2)
+    shot(qmp, "workspace-closed")
+    keys(qmp, "alt", "f4")
+    wait(2)
     # Super+D hides every window on the workspace; pressed again, they come back
     keys(qmp, "meta_l", "d")
     wait(2)

@@ -407,6 +407,31 @@ Singleton {
         Hyprland.dispatch(Hyprland.usingLua ? "hl.dsp.focus({ workspace = " + id + " })" : "workspace " + id);
     }
 
+    // Windows' virtual desktops: Win+Ctrl+D (and the task view's "새 작업 공간") goes
+    // to the first empty workspace, Win+Ctrl+F4 closes this one by moving its windows
+    // to the workspace on the left (on the right for the first one), like Windows.
+    function newWorkspace() {
+        const used = toArray(Hyprland.workspaces.values).map(w => w.id);
+        let id = 1;
+        while (used.indexOf(id) !== -1)
+            id++;
+        focusWorkspace(id);
+    }
+
+    function closeWorkspace() {
+        const current = Hyprland.focusedMonitor?.activeWorkspace?.id ?? 0;
+        const others = toArray(Hyprland.workspaces.values).map(w => w.id).filter(id => id > 0 && id !== current);
+        if (current <= 0 || others.length === 0)
+            return;
+        const left = others.filter(id => id < current);
+        const target = left.length > 0 ? Math.max(...left) : Math.min(...others);
+        for (const win of toArray(windows)) {
+            if (win.workspace?.id === current)
+                moveWindow(win, target);
+        }
+        focusWorkspace(target);
+    }
+
     // ---- Windows-style minimize and show desktop ----
     // A minimized window moves to a hidden special workspace. The dock keeps showing
     // it as running, and a click on the app (or Super+D again) brings it back.

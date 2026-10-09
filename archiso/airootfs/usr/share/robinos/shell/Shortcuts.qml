@@ -27,6 +27,7 @@ PanelWindow {
             { keys: ["Win", "←", "→"], title: "창을 화면 왼쪽·오른쪽 절반에" },
             { keys: ["Win", "↓"], title: "원래 크기로, 다시 누르면 최소화" },
             { keys: ["Win", "Ctrl", "←", "→"], title: "이전·다음 작업 공간" },
+            { keys: ["Win", "Ctrl", "D"], title: "새 작업 공간 (Win+Ctrl+F4는 닫기)" },
             { keys: ["Win", "Tab"], title: "작업 보기: 모든 창과 작업 공간" }
         ] },
         { title: "앱과 시스템", items: [
