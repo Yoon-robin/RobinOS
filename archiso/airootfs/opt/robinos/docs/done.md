@@ -124,4 +124,5 @@
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-10-09 | `ba358cb` 테스트 ISO | 설치 테스트 windows(6.7분), archinstall(10.1분) | 둘 다 다섯 단계 통과. 오늘 고친 설치 코드(`apps.txt`, 서비스, nsswitch, NVIDIA 감지, 전원 모드)가 윈도우 옆 설치와 archinstall+post-install 경로에서도 문제없음 |
 | 2026-10-08 | `968795d` ISO | 집 PC(Blitz)에서 ISO 빌드, 부팅 테스트(WHPX, 30장, 새 장면 `button-layout`), 설치 테스트 robinos(다섯 단계) | 통과. 설치기에 Qt 제목 표시줄(최대화, 닫기), 라이브 독에 Wireshark 없음, 설치본 독은 터미널·파일·브라우저 |
