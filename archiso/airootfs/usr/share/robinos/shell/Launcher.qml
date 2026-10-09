@@ -150,6 +150,7 @@ PanelWindow {
         { key: "wallpaper-reset", group: "wallpaper", icon: "rotate-ccw", title: "기본 배경화면으로", subtitle: "RobinOS 배경화면으로 되돌려요", words: "wallpaper background reset default 배경 배경화면 바탕 화면 기본 되돌리기" },
         { key: "steam", group: "store", icon: "download", title: "Steam 설치하기", subtitle: "앱 스토어에서 Flathub의 Steam을 받아요", words: "steam 스팀 게임 game games valve 게임 설치" },
         { key: "install", group: "live", icon: "download", title: "RobinOS 설치", subtitle: "이 컴퓨터에 설치해요", words: "install installer setup 설치 설치기 하드 디스크 윈도우 옆" },
+        { key: "shortcuts", group: "system", icon: "keyboard", title: "단축키 보기", subtitle: "Win + F1", words: "shortcut shortcuts keyboard hotkey 단축키 키보드 단축 도움말 help 복사 붙여넣기" },
         { key: "welcome", group: "system", icon: "sparkles", title: "환영 마법사", subtitle: "테마, 한/영 키, 단축키 안내", words: "welcome tour setup 환영 마법사 처음 시작 안내 투어 한영" },
         { key: "lock", group: "power", icon: "lock", title: "화면 잠금", subtitle: "Win + L", words: "lock 잠금" },
         { key: "logout", group: "power", icon: "log-out", title: "로그아웃", subtitle: "", words: "logout exit 로그아웃" },
@@ -399,6 +400,9 @@ PanelWindow {
             break;
         case "welcome":
             ShellState.openWelcome();
+            break;
+        case "shortcuts":
+            ShellState.toggleShortcuts();
             break;
         case "install":
             ShellState.openInstaller();

@@ -76,7 +76,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 3. 데스크톱
 4. 런처: 추천 목록, `term` 검색, 윈도우 이름 `notepad` 검색
 5. 설치기 첫 두 단계(테스트 VM에는 빈 64GB 디스크가 있어요)
-6. 빠른 설정, Tab으로 옮긴 키보드 포커스, `Super+Alt+D`로 연 달력
+6. 빠른 설정, Tab으로 옮긴 키보드 포커스, `Super+Alt+D`로 연 달력, `Super+F1`로 연 단축키 보기
 7. 터미널: `ipconfig` 힌트, `robinctl learn show 1`과 미션 1 풀기(라이트 모드 런처에 "1/30 완료"), 포털이 알려 주는 제목 표시줄 단추 배치(`button-layout`)
 8. 독처럼 최소화하고 되돌리기, `Super+D` 두 번(바탕 화면 보기와 되돌리기), `Super+Shift+S`(영역 고르기 화면, Esc로 취소), `Super+V`(복사한 글이 클립보드 기록에), `notify-send`로 띄운 한국어 알림(오른쪽 아래)과 `Super+N`으로 지우기, Wallpaper 포털로 바꾼 배경화면과 런처의 "기본 배경화면으로"
 9. 셸을 끄면 `robinos-shell`이 다시 띄우는지

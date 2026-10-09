@@ -154,6 +154,23 @@ Singleton {
         calendarOpen = true;
     }
 
+    // Every shortcut on one card (Shortcuts.qml, Super+F1)
+    property bool shortcutsOpen: false
+
+    function toggleShortcuts() {
+        if (welcomeOpen)
+            return;
+        if (shortcutsOpen) {
+            shortcutsOpen = false;
+            return;
+        }
+        launcherOpen = false;
+        quickSettingsOpen = false;
+        calendarOpen = false;
+        overlayScreen = focusedScreen;
+        shortcutsOpen = true;
+    }
+
     // ---- Installer (Installer.qml), only offered in the live session ----
 
     property bool installerOpen: false

@@ -756,7 +756,7 @@ PanelWindow {
                     Text {
                         Layout.fillWidth: true
                         Layout.topMargin: 4
-                        text: "런처에서는 \"메모장\", \"제어판\"처럼 윈도우 이름으로 찾아도 돼요. 이 안내는 런처의 \"환영 마법사\"로 다시 볼 수 있어요."
+                        text: "런처에서는 \"메모장\", \"제어판\"처럼 윈도우 이름으로 찾아도 돼요. 단축키 전체는 Win+F1로 언제든 볼 수 있어요."
                         color: Theme.muted
                         font.family: Theme.font
                         font.pixelSize: 13

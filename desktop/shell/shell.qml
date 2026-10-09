@@ -33,6 +33,8 @@ ShellRoot {
 
     Calendar {}
 
+    Shortcuts {}
+
     Toasts {}
 
     Osd {}
@@ -56,6 +58,13 @@ ShellRoot {
         name: "calendar"
         description: "달력 열기/닫기"
         onPressed: ShellState.toggleCalendar(null)
+    }
+
+    GlobalShortcut {
+        appid: "robinos"
+        name: "shortcuts"
+        description: "단축키 보기"
+        onPressed: ShellState.toggleShortcuts()
     }
 
     GlobalShortcut {
@@ -112,6 +121,10 @@ ShellRoot {
 
         function learnCenter(): void {
             ShellState.openLearnCenter();
+        }
+
+        function shortcuts(): void {
+            ShellState.toggleShortcuts();
         }
 
         // The quick settings' 야간 모드 tile

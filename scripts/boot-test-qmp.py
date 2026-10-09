@@ -171,6 +171,12 @@ def main():
     shot(qmp, "calendar")
     keys(qmp, "esc")
     wait(1)
+    # Super+F1: every shortcut on one card, with the terminal's copy and paste keys
+    keys(qmp, "meta_l", "f1")
+    wait(2)
+    shot(qmp, "shortcuts")
+    keys(qmp, "esc")
+    wait(1)
 
     keys(qmp, "meta_l", "ret")
     wait(6)

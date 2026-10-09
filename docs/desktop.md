@@ -98,6 +98,7 @@ VM 창 크기를 바꾸면 VMware(`vmtoolsd`)나 QEMU(`virtio-gpu`)가 새 크�
 | `Super+Shift+S` | 영역 스크린샷 (윈도우의 캡처 도구 `Win+Shift+S`와 같아요) |
 | `Super+V` | 클립보드 기록 (윈도우의 `Win+V`처럼 복사한 것 50개, 로그아웃하면 지워져요) |
 | `Super+Alt+D` 또는 바의 시계 클릭 | 달력 (←, → 로 달 바꾸기, Home은 이번 달) |
+| `Super+F1` 또는 런처의 "단축키 보기" | 모든 단축키를 한 화면에 (터미널의 복사 `Ctrl+Shift+C`, 붙여 넣기 `Ctrl+Shift+V`, 멈추기 `Ctrl+C`도 있어요) |
 | `Right Alt` | 한/영 전환 (`Right Ctrl`은 한자) |
 | `Super+Shift+Escape` | 로그아웃 |
 
