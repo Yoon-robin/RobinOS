@@ -40,7 +40,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (없음) | | |
+| 묶음 62 | T-137 VMware가 아닌 VM에서 VMware 도구 건너뛰기 | `verify -Installer robinos` (설치 테스트 로그의 `systemctl --failed`가 비고 설치본에 `open-vm-tools` 없음, 부팅 테스트 `failed-units`) |
 
 `b1319d5`까지 2026-10-10 묶음 61 검증(`verify`: 빌드 3.6분 + 테스트 14.3분)을 마치고 푸시했어요.
 
@@ -69,7 +69,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ## 할 일 (위에서부터)
 
 ### T-137 테스트 VM에서 실패하는 vmtoolsd
-- 상태: 진행 중 (묶음 62)
+- 상태: 검증 대기 (묶음 62)
 - 출처: 묶음 59 `30-failed-units`. `vmtoolsd.service`는 원래 `ConditionVirtualization=vmware`가 있는데도 QEMU(WHPX) 테스트 VM에서 시작해서 실패해요
 - 찾은 것(묶음 61 설치 테스트 로그): 이 VM을 systemd가 라이브와 설치본 모두에서 `vmware`로 감지해요(`ConditionResult=yes`). 그래서 설치기도 `open-vm-tools`를 깔고 설치본에서도 vmtoolsd가 실패했어요. QEMU의 VMware 백도어 포트를 꺼도(`vmport=off`, 묶음 60) 그대로라 CPU 정보 쪽에서 오는 것 같아요. 실제 PC와 리눅스 KVM에서는 생기지 않고, 윈도우의 QEMU(WHPX)에서만 생겨요
 - 한 것: 라이브 ISO의 vmtoolsd·vmware-vmblock-fuse에 `ExecCondition=/usr/bin/vmware-checkvm`(VMware에 직접 물어서 아니면 실패 대신 건너뛰어요). 설치기는 `systemd-detect-virt`가 vmware라고 해도 `vmware-checkvm`이 아니라고 하면 VMware 도구를 깔지 않아요(`scripts/test-robin-install.py`에 네 경우)
