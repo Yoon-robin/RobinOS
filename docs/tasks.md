@@ -40,7 +40,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (없음) | | |
+| 묶음 64 | T-139 라이브 ISO 부팅이 NTP를 기다리지 않게 | `verify -Installer robinos` (부팅 테스트 시리얼 로그의 `Startup finished`) |
 
 `a31a8f8`까지 2026-10-10 묶음 63 검증(`verify`: 빌드 3.4분 + 테스트 14.4분)을 마치고 푸시했어요.
 
@@ -69,7 +69,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ## 할 일 (위에서부터)
 
 ### T-139 라이브 ISO 부팅이 NTP를 기다리지 않게
-- 상태: 진행 중 (묶음 64)
+- 상태: 검증 대기 (묶음 64)
 - 출처: 백로그 채우기 6 (품질 점검: 성능). 묶음 63 부팅 테스트 시리얼 로그에서 부팅 끝이 83.7초(묶음 38은 13.9초). 데스크톱은 11초에 뜨지만, releng가 켜 둔 `systemd-time-wait-sync`가 시계 동기화를 78초까지 기다렸고 pacman-init(열쇠 준비), multi-user.target, 전원 모드 데몬이 그 뒤로 밀렸어요. timesyncd가 IPv6 NTP 서버마다 10초씩 기다린 뒤에야 IPv4 서버로 맞췄어요(QEMU NAT에는 IPv6 바깥 연결이 없어요. IPv6가 안 되는 집 네트워크도 같아요)
 - 한 것: `scripts/prepare-archiso.sh`가 releng의 `sysinit.target.wants/systemd-time-wait-sync.service` 링크를 빼요. 시계 동기화는 그대로 하고 부팅만 기다리지 않아요
 - 완료 기준: 부팅 테스트 시리얼 로그의 `Startup finished`가 20초 안쪽, `Wait Until Kernel Time Synchronized`가 없음
