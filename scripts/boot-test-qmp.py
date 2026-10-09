@@ -272,11 +272,17 @@ def main():
     shot(qmp, "connect-bluetooth")
     click(qmp, 400, 400)
     wait(1)
-    # The arrow after the volume slider opens the sound panel: the VM's sound card
-    # as output and microphone, and pw-play (30 s of silence) under the app volumes
+    # The sound panel (also the arrow after the volume slider), found in the launcher
+    # by Windows' "volume mixer": the VM's sound card as output and microphone, and
+    # pw-play (30 s of silence) under the app volumes
     type_text(qmp, "clear; python -c \"import wave;w=wave.open('/tmp/s.wav','wb');w.setnchannels(2);"
-              "w.setsampwidth(2);w.setframerate(48000);w.writeframes(bytes(5760000))\"; pw-play /tmp/s.wav & "
-              + ipc + "sound\n")
+              "w.setsampwidth(2);w.setframerate(48000);w.writeframes(bytes(5760000))\"; pw-play /tmp/s.wav &\n")
+    wait(2)
+    keys(qmp, "meta_l", "spc")
+    wait(2)
+    type_text(qmp, "mixer")
+    wait(2)
+    keys(qmp, "ret")
     wait(3)
     shot(qmp, "sound")
     keys(qmp, "esc")
