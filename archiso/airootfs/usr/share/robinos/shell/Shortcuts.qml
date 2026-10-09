@@ -38,7 +38,7 @@ PanelWindow {
             { keys: ["Win", "V"], title: "클립보드 기록" },
             { keys: ["Win", "X"], title: "빠른 메뉴: 작업 관리자, 디스크, 종료" },
             { keys: ["Win", "."], title: "이모지 넣기" },
-            { keys: ["Win", "Shift", "S"], title: "화면 일부 캡처 (전체는 Print)" },
+            { keys: ["Win", "Shift", "S"], title: "화면 일부 캡처 (전체는 Shift+Print)" },
             { keys: ["Ctrl", "Shift", "Esc"], title: "작업 관리자" },
             { keys: ["Win", "Alt", "D"], title: "달력" },
             { keys: ["Win", "N"], title: "알림 센터 (지난 알림, 방해 금지)" },

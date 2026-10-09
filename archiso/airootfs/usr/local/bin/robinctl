@@ -3111,14 +3111,19 @@ ctf_door() {
   fi
   mkdir -p "${CTF_STATE}"
   cat >"${CTF_STATE}/ctf-door.py" <<'EOF'
-import socket, sys
+import socket, sys, time
 flag = sys.stdin.read().strip()
 server = socket.socket()
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server.bind(("127.0.0.1", int(sys.argv[1])))
 server.listen(5)
-server.settimeout(3600)
+# An hour after it started, visitors or not (docs/ethics.md); the tests pass seconds
+deadline = time.monotonic() + (int(sys.argv[2]) if len(sys.argv) > 2 else 3600)
 while True:
+    left = deadline - time.monotonic()
+    if left <= 0:
+        break
+    server.settimeout(left)
     try:
         conn, _ = server.accept()
     except socket.timeout:

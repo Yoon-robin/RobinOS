@@ -490,6 +490,14 @@ check "9: the flag from the port on 127.0.0.1" 0 ctf_submit 9 "$(printf '%s' "${
 check "show 9 again keeps the same server" 0 learner bash "${ROBINCTL}" ctf show 9
 [[ "$(in_home "pgrep -c -f 'ctf-[d]oor.py'")" == "1" ]] && ok "9: one server, not two" || bad "9: the server was started twice"
 in_home "kill \$(cut -d' ' -f2 ~/.local/state/robinos/ctf/door)"
+# It goes away on its own after its time (an hour; 2 seconds here), visitors or not
+in_home "echo 'ROBIN{t}' | python3 ~/.local/state/robinos/ctf/ctf-door.py 4999 2 & echo \$! > ~/door-pid"
+sleep 1
+in_home "python3 -c 'import socket; print(socket.create_connection((\"127.0.0.1\", 4999), 1).recv(200).decode())'" \
+  | grep -q 'ROBIN{t}' && ok "9: the server answers while it's up" || bad "9: the short-lived server didn't answer"
+sleep 2.5
+in_home "kill -0 \$(cat ~/door-pid) 2>/dev/null" && bad "9: the server outlived its time" || ok "9: the server stops after its time"
+in_home "kill \$(cat ~/door-pid) 2>/dev/null; rm -f ~/door-pid"
 in_home "file -b ${CTF}/10/photo.png" | grep -q '^PNG image data' && ok "10: photo.png is a PNG" || bad "10: photo.png isn't a PNG"
 check "10: the zip glued to the photo" 0 ctf_submit 10 "$(in_home "python3 -m zipfile -e ${CTF}/10/photo.png ${CTF}/10/out && cat ${CTF}/10/out/secret.txt")"
 check "ctf list after all ten" 0 learner bash "${ROBINCTL}" ctf
