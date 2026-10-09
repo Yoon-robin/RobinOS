@@ -275,7 +275,19 @@ def guest_tools():
         virt = output("systemd-detect-virt", "--vm").strip()
     except (subprocess.CalledProcessError, FileNotFoundError):
         return [], []
+    # QEMU on Windows (WHPX) also says "vmware", and VMware's tools then fail at
+    # every boot; vmware-checkvm (open-vm-tools, on the live ISO) asks VMware itself
+    if virt == "vmware" and not is_vmware():
+        return [], []
     return GUEST_TOOLS.get(virt, ([], []))
+
+
+def is_vmware():
+    try:
+        return subprocess.run(["vmware-checkvm"], stdout=subprocess.DEVNULL,
+                              stderr=subprocess.DEVNULL).returncode == 0
+    except OSError:
+        return False
 
 
 def nvidia_gpus(devices=PCI_DEVICES):

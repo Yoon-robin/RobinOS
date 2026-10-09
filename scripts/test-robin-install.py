@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Fast checks for installer/robin-install, no VM or root needed: the graphics
-driver choice on a stand-in /sys/bus/pci/devices, the initramfs hooks and the
-fstab rewrite. wsl-build.ps1 check runs it; the install tests cover the rest.
+driver choice on a stand-in /sys/bus/pci/devices, the initramfs hooks, the
+fstab rewrite and the guest tools for the VM. wsl-build.ps1 check runs it; the
+install tests cover the rest.
 
     python3 scripts/test-robin-install.py
 """
@@ -71,6 +72,15 @@ fstab = ("UUID=1 / btrfs rw,noatime,compress=zstd:1,subvolid=256,subvol=/@ 0 0\n
          "UUID=2 /efi vfat rw,relatime 0 2\n")
 check("subvolid= goes, subvol= stays", robin.without_subvolid(fstab),
       "UUID=1 / btrfs rw,noatime,compress=zstd:1,subvol=/@ 0 0\nUUID=2 /efi vfat rw,relatime 0 2\n")
+
+print("Guest tools")
+for virt, vmware, want in (("vmware", True, (["open-vm-tools"], ["vmtoolsd.service"])),
+                           ("vmware", False, ([], [])),  # QEMU on Windows (WHPX), T-137
+                           ("kvm", False, (["qemu-guest-agent"], [])),
+                           ("none", False, ([], []))):
+    robin.output = lambda *args, virt=virt: virt + "\n"
+    robin.is_vmware = lambda vmware=vmware: vmware
+    check(f"{virt}, VMware answers: {vmware}", robin.guest_tools(), want)
 
 if failures:
     print(f"{failures} robin-install check(s) failed.")

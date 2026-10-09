@@ -69,11 +69,11 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ## 할 일 (위에서부터)
 
 ### T-137 테스트 VM에서 실패하는 vmtoolsd
-- 상태: 진행 중 (원인을 찾음, 고침은 다음 묶음)
-- 출처: 묶음 59 `30-failed-units`. `vmtoolsd.service`는 원래 `ConditionVirtualization=vmware`가 있는데도 QEMU(WHPX) 테스트 VM의 라이브 세션에서 시작해서 실패해요(설치 테스트의 라이브 단계에서도 "Started ... VMware Tools"). 그런데 설치한 시스템에서는 VMware 도구가 돌지 않아서, 설치기의 `systemd-detect-virt`는 VMware로 보지 않은 것 같아요
-- 해 본 것(묶음 60): QEMU의 VMware 백도어 포트를 끄는 `vmport=off`를 줘 봤지만 그대로 시작해서 원인이 아니었어요(되돌림). T-136의 drop-in은 원래 유닛과 같은 조건이라 지웠어요. 부팅 테스트 장면은 결과가 나오기 전에 찍혀서(명령이 길어 입력이 늦음) `systemd-detect-virt` 값을 못 봤어요
-- 할 것: 설치 테스트의 라이브·설치본 단계 로그에 `systemd-detect-virt`, vmtoolsd의 `ConditionResult`, 설치기가 깐 게스트 도구를 남겨서 원인을 가려요. 부팅 테스트 장면은 5초 기다려요
-- 완료 기준: 원인을 알고 라이브 ISO가 실제 PC와 QEMU/KVM에서 실패한 서비스 없이 떠요
+- 상태: 진행 중 (묶음 62)
+- 출처: 묶음 59 `30-failed-units`. `vmtoolsd.service`는 원래 `ConditionVirtualization=vmware`가 있는데도 QEMU(WHPX) 테스트 VM에서 시작해서 실패해요
+- 찾은 것(묶음 61 설치 테스트 로그): 이 VM을 systemd가 라이브와 설치본 모두에서 `vmware`로 감지해요(`ConditionResult=yes`). 그래서 설치기도 `open-vm-tools`를 깔고 설치본에서도 vmtoolsd가 실패했어요. QEMU의 VMware 백도어 포트를 꺼도(`vmport=off`, 묶음 60) 그대로라 CPU 정보 쪽에서 오는 것 같아요. 실제 PC와 리눅스 KVM에서는 생기지 않고, 윈도우의 QEMU(WHPX)에서만 생겨요
+- 한 것: 라이브 ISO의 vmtoolsd·vmware-vmblock-fuse에 `ExecCondition=/usr/bin/vmware-checkvm`(VMware에 직접 물어서 아니면 실패 대신 건너뛰어요). 설치기는 `systemd-detect-virt`가 vmware라고 해도 `vmware-checkvm`이 아니라고 하면 VMware 도구를 깔지 않아요(`scripts/test-robin-install.py`에 네 경우)
+- 완료 기준: 설치 테스트 로그의 라이브·설치본 `systemctl --failed`가 비어 있고, 설치본에 `open-vm-tools`가 없음. 부팅 테스트 `failed-units`에 실패한 서비스 0개
 
 ### T-104 2029년 공휴일 넣기
 - 상태: 할 일 (2028년 가을에 해요)
