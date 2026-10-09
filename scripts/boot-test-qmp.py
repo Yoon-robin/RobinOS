@@ -270,6 +270,10 @@ def main():
     keys(qmp, "meta_l", "spc")
     wait(3)
     shot(qmp, "light-launcher")
+    # Files by name, like the Start menu: mission 1 made ~/practice/notes
+    type_text(qmp, "notes")
+    wait(3)
+    shot(qmp, "launcher-files")
     keys(qmp, "esc")
     wait(2)
     # The learning center opened again after Alt+F4 closed it: mission 1 is ticked off

@@ -188,6 +188,10 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 목록은 `desktop/shell/Launcher.qml`의 `windowsNames`에 있어요.
 
+## 런처에서 파일 찾기
+
+런처(`Win+Space`)에 두 글자 이상 치면 앱과 명령 아래에 "파일"이 나와요. 윈도우 시작 메뉴처럼 홈 폴더에서 이름에 그 글자가 들어간 파일과 폴더를 6개까지 찾아요(5단계 아래까지, `.config` 같은 숨김 폴더는 빼요). 고르면 알맞은 앱으로 열려요(폴더는 파일 앱). 치기를 멈추고 잠깐 뒤에 `find`로 찾고, 검색어는 셸을 거치지 않아요.
+
 ## 학습 미션
 
 런처의 "학습 미션"을 고르면 학습 센터가 열려요(`desktop/shell/LearnCenter.qml`). 맨 위에 진행도 막대와 다음 미션이 있고, 그 아래에 여섯 묶음의 미션 30개가 끝낸 것은 초록 체크, 다음 것은 강조색 동그라미로 보여요. 미션을 고르면(마우스나 `Tab`과 `Enter`) 터미널이 열리고 `robinctl learn show <번호>`가 설명을 보여 줘요. 미션은 그 터미널에서 직접 풀고, `robinctl learn check`로 확인해요. 통과하면 학습 센터의 체크가 바로 바뀌어요. 맨 아래에는 입문 CTF의 진행도와 "CTF 열기"가 있어요. 환영 마법사에서 "리눅스 기초"를 고르고 끝내도 학습 센터가 열려요. 미션 목록은 `robinctl learn tsv`에서 읽어요. 리눅스, 네트워크, 포렌식, 리버싱, 웹, 셸 기초가 5개씩 있고(연습 파일은 `~/practice/forensics`, 연습 프로그램은 `~/practice/reversing`, 웹 연습 서버는 `~/practice/web`에 만들어요), 자세한 내용은 [README](../README.md#학습-미션)에 있어요. 미션을 하나라도 끝내면 런처의 "학습 미션"에 "3/30 완료"처럼 진행도가 보여요(`~/.local/state/robinos/learn/done`을 셸이 읽어요).

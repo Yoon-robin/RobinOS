@@ -86,6 +86,83 @@ PanelWindow {
         }
     }
 
+    // ---- Files, like the Windows Start menu finding documents ----
+    // Names in the home folder (5 levels deep, hidden folders skipped). The query
+    // goes to find as one argument, never through a shell; glob characters in it
+    // are escaped so "[1]" matches literally.
+
+    readonly property string home: Quickshell.env("HOME") || "/"
+    property var fileHits: []
+    // The query fileHits belong to; refresh() starts a search when it changes
+    property string fileQuery: ""
+    property string pendingFileQuery: ""
+
+    Timer {
+        id: fileDelay
+        interval: 250
+        onTriggered: {
+            fileFind.running = false;
+            const q = root.pendingFileQuery;
+            const pattern = "*" + q.replace(/[\\*?\[\]]/g, "\\$&") + "*";
+            fileFind.query = q;
+            fileFind.command = ["find", root.home, "-mindepth", "1", "-maxdepth", "5",
+                                "-name", ".*", "-prune", "-o", "-iname", pattern, "-printf", "%y\t%p\n"];
+            fileFind.running = true;
+        }
+    }
+
+    Process {
+        id: fileFind
+
+        property string query: ""
+
+        stdout: StdioCollector {
+            id: fileOut
+
+            onStreamFinished: {
+                if (fileFind.query !== root.pendingFileQuery)
+                    return;
+                const hits = [];
+                for (const line of fileOut.text.split("\n")) {
+                    const tab = line.indexOf("\t");
+                    if (tab !== 1)
+                        continue;
+                    hits.push({ dir: line[0] === "d", path: line.slice(tab + 1) });
+                    if (hits.length === 6)
+                        break;
+                }
+                root.fileHits = hits;
+                root.fileQuery = fileFind.query;
+                if (root.open)
+                    root.refresh();
+            }
+        }
+    }
+
+    function searchFiles(q) {
+        if (q === fileQuery || q === pendingFileQuery)
+            return;
+        pendingFileQuery = q;
+        fileHits = [];
+        fileQuery = "";
+        if (q.length >= 2)
+            fileDelay.restart();
+        else
+            fileDelay.stop();
+    }
+
+    function fileItem(hit) {
+        const slash = hit.path.lastIndexOf("/");
+        const folder = hit.path.slice(0, slash);
+        return {
+            kind: "file",
+            icon: hit.dir ? "folder" : "file",
+            title: hit.path.slice(slash + 1),
+            subtitle: folder === root.home ? "~" : folder.startsWith(root.home + "/") ? "~" + folder.slice(root.home.length) : folder,
+            path: hit.path
+        };
+    }
+
     function clipItems(q) {
         const out = [];
         const shown = root.clips.filter(clip => q === "" || matches(clip.text, q));
@@ -243,6 +320,7 @@ PanelWindow {
     function refresh() {
         const q = search.text.trim().toLowerCase();
         const out = [];
+        searchFiles(clipboardMode ? "" : q);
 
         if (clipboardMode) {
             results = clipItems(q);
@@ -335,6 +413,12 @@ PanelWindow {
                 for (const cmd of cmds)
                     out.push(commandItem(cmd));
             }
+
+            if (fileQuery === q && fileHits.length > 0) {
+                out.push({ kind: "header", title: "파일" });
+                for (const hit of fileHits)
+                    out.push(fileItem(hit));
+            }
         }
 
         results = out;
@@ -370,6 +454,11 @@ PanelWindow {
 
         if (item.kind === "clip") {
             Quickshell.execDetached(["sh", "-c", root.cliphist + " decode " + item.id + " | wl-copy"]);
+            return;
+        }
+
+        if (item.kind === "file") {
+            Quickshell.execDetached(["xdg-open", item.path]);
             return;
         }
 
@@ -565,7 +654,7 @@ PanelWindow {
                         anchors.fill: parent
                         verticalAlignment: Text.AlignVCenter
                         visible: search.text === "" && search.preeditText === ""
-                        text: root.clipboardMode ? "클립보드 기록 검색…" : "앱, 명령, 랩 검색…"
+                        text: root.clipboardMode ? "클립보드 기록 검색…" : "앱, 명령, 파일 검색…"
                         color: Theme.muted
                         font: search.font
                     }
@@ -650,7 +739,7 @@ PanelWindow {
                                 border.color: Theme.border
 
                                 Icon {
-                                    visible: row.modelData.kind === "cmd" || row.modelData.kind === "clip"
+                                    visible: row.modelData.kind === "cmd" || row.modelData.kind === "clip" || row.modelData.kind === "file"
                                     anchors.centerIn: parent
                                     name: row.modelData.icon ?? ""
                                     size: 15

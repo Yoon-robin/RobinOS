@@ -80,7 +80,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 7. 터미널: `ipconfig` 힌트, `robinctl learn show 1`과 미션 1 풀기(라이트 모드 런처에 "1/30 완료"), 포털이 알려 주는 제목 표시줄 단추 배치(`button-layout`)
 8. 독처럼 최소화하고 되돌리기, `Super+D` 두 번(바탕 화면 보기와 되돌리기), `Super+Shift+S`(영역 고르기 화면, Esc로 취소), `Super+V`(복사한 글이 클립보드 기록에), `notify-send`로 띄운 한국어 알림(오른쪽 아래)과 `Super+N`으로 지우기, Wallpaper 포털로 바꾼 배경화면과 런처의 "기본 배경화면으로"
 9. 셸을 끄면 `robinos-shell`이 다시 띄우는지
-10. 라이트 모드(셸 IPC `setDark false`): 터미널(`robinctl learn` 목록), 런처, Alt+F4로 닫았다가 IPC로 다시 연 학습 센터(미션 1에 체크), 빠른 설정, 화면 배율 125%(저장된 파일 내용과 함께), 야간 모드(VM 그래픽에는 색 변환이 없어 `hyprsunset`이 켜지는지만 봐요). 찍은 뒤 다크로 돌려요
+10. 라이트 모드(셸 IPC `setDark false`): 터미널(`robinctl learn` 목록), 런처와 파일 찾기(`notes`), Alt+F4로 닫았다가 IPC로 다시 연 학습 센터(미션 1에 체크), 빠른 설정, 화면 배율 125%(저장된 파일 내용과 함께), 야간 모드(VM 그래픽에는 색 변환이 없어 `hyprsunset`이 켜지는지만 봐요). 찍은 뒤 다크로 돌려요
 11. 잠금 화면과 잠금 해제
 
 ```powershell
