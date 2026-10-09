@@ -25,9 +25,10 @@ LIVE_PASSWORD = "robin"
 
 # Characters we can type, mapped to QEMU key codes (qcode)
 QCODES = {" ": "spc", "\n": "ret", "-": "minus", ".": "dot", "/": "slash", ";": "semicolon",
-          "'": "apostrophe", "\\": "backslash"}
+          "'": "apostrophe", "\\": "backslash", ",": "comma", "=": "equal"}
 # Characters typed with Shift on a US keyboard
-SHIFTED = {"(": "9", ")": "0", "&": "7", "~": "grave_accent", ">": "dot", "$": "4"}
+SHIFTED = {"(": "9", ")": "0", "&": "7", "~": "grave_accent", ">": "dot", "$": "4",
+           '"': "apostrophe", "{": "bracket_left", "}": "bracket_right", ":": "semicolon", "_": "minus"}
 
 
 class Qmp:
@@ -228,6 +229,26 @@ def main():
     shot(qmp, "notification")
     keys(qmp, "meta_l", "n")
     wait(1)
+    # "배경으로 설정" in Files and Image Viewer goes through the Wallpaper portal to
+    # robinos-wallpaper-portal; the same call here sets the RobinOS logo as the
+    # wallpaper. Then the launcher's "기본 배경화면으로" brings the drawn one back.
+    type_text(qmp, "clear; gdbus call --session --dest org.freedesktop.portal.Desktop"
+              " --object-path /org/freedesktop/portal/desktop --method org.freedesktop.portal.Wallpaper.SetWallpaperURI"
+              ' "" file:///opt/robinos/assets/brand/robinos-logo.svg {}\n')
+    wait(4)
+    keys(qmp, "meta_l", "d")
+    wait(2)
+    shot(qmp, "wallpaper")
+    keys(qmp, "meta_l", "spc")
+    wait(2)
+    type_text(qmp, "wallpaper")
+    wait(2)
+    keys(qmp, "down")
+    keys(qmp, "ret")
+    wait(3)
+    shot(qmp, "wallpaper-reset")
+    keys(qmp, "meta_l", "d")
+    wait(2)
 
     # robinos-shell starts the shell again when it dies
     type_text(qmp, "clear; pkill -x qs; sleep 4; grep -a robinos-shell .local/state/robinos/shell.log\n")

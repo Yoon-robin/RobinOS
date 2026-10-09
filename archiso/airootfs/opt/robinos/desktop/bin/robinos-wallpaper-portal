@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+"""RobinOS backend for the Wallpaper portal (org.freedesktop.impl.portal.Wallpaper).
+
+"배경으로 설정" in Files (Nautilus) and Image Viewer (Loupe) asks the Wallpaper
+portal, and neither the Hyprland nor the GTK portal implements it. This one
+copies the picture to ~/.local/share/robinos/wallpaper/ and writes its path to
+~/.local/state/robinos/wallpaper, which the shell (desktop/shell/Wallpaper.qml)
+watches and draws. Removing that file brings the RobinOS wallpaper back.
+
+D-Bus starts it on demand (org.freedesktop.impl.portal.desktop.robinos.service),
+and /etc/xdg/xdg-desktop-portal/hyprland-portals.conf sends the interface here.
+It quits after a minute without requests.
+"""
+import os
+import shutil
+import sys
+
+from gi.repository import Gio, GLib
+
+BUS_NAME = "org.freedesktop.impl.portal.desktop.robinos"
+OBJECT_PATH = "/org/freedesktop/portal/desktop"
+INTERFACE = """
+<node>
+  <interface name="org.freedesktop.impl.portal.Wallpaper">
+    <method name="SetWallpaperURI">
+      <arg type="o" name="handle" direction="in"/>
+      <arg type="s" name="app_id" direction="in"/>
+      <arg type="s" name="parent_window" direction="in"/>
+      <arg type="s" name="uri" direction="in"/>
+      <arg type="a{sv}" name="options" direction="in"/>
+      <arg type="u" name="response" direction="out"/>
+    </method>
+  </interface>
+</node>
+"""
+# Portal responses: 0 success, 1 cancelled by the user, 2 other error
+SUCCESS, FAILED = 0, 2
+IDLE_SECONDS = 60
+
+HOME = os.path.expanduser("~")
+DATA_DIR = os.path.join(os.environ.get("XDG_DATA_HOME") or os.path.join(HOME, ".local/share"), "robinos/wallpaper")
+STATE_FILE = os.path.join(os.environ.get("XDG_STATE_HOME") or os.path.join(HOME, ".local/state"), "robinos/wallpaper")
+
+loop = GLib.MainLoop()
+idle_timer = 0
+
+
+def log(message):
+    print(f"robinos-wallpaper-portal: {message}", file=sys.stderr, flush=True)
+
+
+def set_wallpaper(uri):
+    """Keeps a copy of the picture (the original may be moved or deleted later)
+    and points the shell at it."""
+    path = Gio.File.new_for_uri(uri).get_path()
+    if not path or not os.path.isfile(path):
+        log(f"not a local file: {uri}")
+        return FAILED
+    os.makedirs(DATA_DIR, exist_ok=True)
+    name = "current" + os.path.splitext(path)[1].lower()
+    for old in os.listdir(DATA_DIR):
+        if old != name:
+            os.remove(os.path.join(DATA_DIR, old))
+    copy = os.path.join(DATA_DIR, name)
+    tmp = copy + ".tmp"
+    shutil.copyfile(path, tmp)
+    os.replace(tmp, copy)
+    os.makedirs(os.path.dirname(STATE_FILE), exist_ok=True)
+    with open(STATE_FILE + ".tmp", "w", encoding="utf-8") as f:
+        f.write(copy + "\n")
+    os.replace(STATE_FILE + ".tmp", STATE_FILE)
+    log(f"wallpaper: {path}")
+    return SUCCESS
+
+
+def restart_idle_timer():
+    global idle_timer
+    if idle_timer:
+        GLib.source_remove(idle_timer)
+    idle_timer = GLib.timeout_add_seconds(IDLE_SECONDS, lambda: loop.quit() or False)
+
+
+def on_call(connection, sender, path, interface, method, params, invocation):
+    restart_idle_timer()
+    if method != "SetWallpaperURI":
+        invocation.return_dbus_error("org.freedesktop.DBus.Error.UnknownMethod", method)
+        return
+    _handle, _app_id, _parent, uri, options = params.unpack()
+    # "lockscreen" alone is left to hyprlock's own picture
+    if options.get("set-on", "both") == "lockscreen":
+        invocation.return_value(GLib.Variant("(u)", (SUCCESS,)))
+        return
+    try:
+        response = set_wallpaper(uri)
+    except OSError as error:
+        log(f"failed: {error}")
+        response = FAILED
+    invocation.return_value(GLib.Variant("(u)", (response,)))
+
+
+def on_bus(connection, _name):
+    info = Gio.DBusNodeInfo.new_for_xml(INTERFACE)
+    connection.register_object(OBJECT_PATH, info.interfaces[0], on_call, None, None)
+
+
+def main():
+    Gio.bus_own_name(Gio.BusType.SESSION, BUS_NAME, Gio.BusNameOwnerFlags.NONE,
+                     on_bus, None, lambda *_: loop.quit())
+    restart_idle_timer()
+    loop.run()
+
+
+if __name__ == "__main__":
+    main()

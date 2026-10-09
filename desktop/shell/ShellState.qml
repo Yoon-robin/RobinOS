@@ -544,6 +544,39 @@ Singleton {
             brightWrite.start();
     }
 
+    // ---- Wallpaper picture ("배경으로 설정", desktop/bin/robinos-wallpaper-portal) ----
+
+    // Empty for the RobinOS wallpaper that Wallpaper.qml draws
+    property string wallpaperPath: ""
+    // Bumped on every change: the portal keeps the copy under one name
+    property int wallpaperVersion: 0
+
+    FileView {
+        id: wallpaperFile
+
+        path: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state") + "/robinos/wallpaper"
+        printErrors: false
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            root.wallpaperPath = wallpaperFile.text().trim();
+            root.wallpaperVersion++;
+        }
+        onLoadFailed: root.wallpaperPath = ""
+    }
+
+    function resetWallpaper() {
+        wallpaperPath = "";
+        Quickshell.execDetached(["rm", "-f", wallpaperFile.path]);
+    }
+
+    // Files opens on the Pictures folder; right-click a picture for "배경으로 설정"
+    function chooseWallpaper() {
+        Quickshell.execDetached(["sh", "-c", "exec nautilus --new-window \"$(xdg-user-dir PICTURES)\""]);
+        Quickshell.execDetached(["notify-send", "-a", "RobinOS", "배경화면 바꾸기",
+                                 "사진을 오른쪽 버튼으로 누르고 \"배경으로 설정\"을 골라요. 이미지 보기에서는 메뉴의 \"백그라운드로 설정\"이에요."]);
+    }
+
     // ---- Low battery warning, like Windows at 10% and 5% ----
     // A critical notification stays until dismissed. Near empty, UPower's own
     // CriticalPowerAction puts the laptop to sleep or turns it off.

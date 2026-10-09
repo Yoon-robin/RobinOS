@@ -11,6 +11,10 @@ desktop/bin/robinos-shell                 /usr/share/robinos/bin/robinos-shell  
 desktop/bin/robinos-vm-display            /usr/share/robinos/bin/robinos-vm-display        755
 desktop/bin/robinos-screenshot            /usr/share/robinos/bin/robinos-screenshot        755
 desktop/bin/robinos-os-release            /usr/share/robinos/bin/robinos-os-release        755
+desktop/bin/robinos-wallpaper-portal      /usr/share/robinos/bin/robinos-wallpaper-portal  755
+desktop/portal/robinos.portal             /usr/share/xdg-desktop-portal/portals/robinos.portal 644
+desktop/portal/org.freedesktop.impl.portal.desktop.robinos.service /usr/share/dbus-1/services/org.freedesktop.impl.portal.desktop.robinos.service 644
+desktop/portal/hyprland-portals.conf      /etc/xdg/xdg-desktop-portal/hyprland-portals.conf 644
 desktop/pacman/robinos-os-release.hook    /etc/pacman.d/hooks/robinos-os-release.hook      644
 assets/brand/robinos-mark.svg             /usr/share/icons/hicolor/scalable/apps/robinos.svg 644
 desktop/bash/robinos-hints.sh             /usr/share/robinos/bash/robinos-hints.sh         644
