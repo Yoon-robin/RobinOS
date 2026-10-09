@@ -234,7 +234,11 @@ PanelWindow {
                         else
                             dock.activateOrLaunch(modelData.appIds, null);
                     }
-                    onRightClicked: ShellState.unpinFromDock(modelData.id, modelData.label)
+                    onRightClicked: {
+                        // The tile under the pointer changes, and so would its tip
+                        dock.showTip(userPinItem, "");
+                        ShellState.unpinFromDock(modelData.id, modelData.label);
+                    }
                     onHoveredChanged: dock.showTip(userPinItem, hovered ? label + " · 오른쪽 클릭: 고정 풀기" : "")
                 }
             }
@@ -256,8 +260,10 @@ PanelWindow {
                     // Only apps with a desktop entry can come back after closing
                     onRightClicked: {
                         const entry = DesktopEntries.heuristicLookup(modelData.appId);
-                        if (entry)
+                        if (entry) {
+                            dock.showTip(extraItem, "");
                             ShellState.pinToDock(entry.id, entry.name);
+                        }
                     }
                     onHoveredChanged: dock.showTip(extraItem, hovered ? label + " · 오른쪽 클릭: 독에 고정" : "")
                 }
