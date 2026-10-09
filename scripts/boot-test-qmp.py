@@ -27,7 +27,7 @@ LIVE_PASSWORD = "robin"
 QCODES = {" ": "spc", "\n": "ret", "-": "minus", ".": "dot", "/": "slash", ";": "semicolon",
           "'": "apostrophe", "\\": "backslash", ",": "comma", "=": "equal"}
 # Characters typed with Shift on a US keyboard
-SHIFTED = {"(": "9", ")": "0", "&": "7", "~": "grave_accent", ">": "dot", "<": "comma", "?": "slash", "$": "4",
+SHIFTED = {"(": "9", ")": "0", "&": "7", "~": "grave_accent", ">": "dot", "<": "comma", "?": "slash", "$": "4", "%": "5",
            '"': "apostrophe", "{": "bracket_left", "}": "bracket_right", ":": "semicolon", "_": "minus"}
 
 
@@ -112,6 +112,11 @@ def click(qmp, x, y, button="left"):
 
 
 def type_text(qmp, text):
+    # A character missing from the tables used to vanish silently ("printf '%s'" went
+    # in as "printf 's'", 2026-10-10), so fail before typing anything instead
+    missing = sorted(set(ch for ch in text if not (ch.isascii() and ch.isalnum()) and ch not in QCODES and ch not in SHIFTED))
+    if missing:
+        raise ValueError(f"type_text can't type {missing}: add them to QCODES or SHIFTED")
     for ch in text:
         if ch.isupper():
             keys(qmp, "shift", ch.lower())
@@ -443,10 +448,10 @@ def main():
 
     # A file GTK apps noted as opened (recently-used.xbel): the empty launcher lists it
     # under "최근 파일" in light-launcher, like the Start menu's recommended files
-    type_text(qmp, "clear; mkdir -p ~/.local/share; printf '%s' '<?xml version=\"1.0\"?><xbel version=\"1.0\">"
-              "<bookmark href=\"file://' \"$HOME\" '/practice/hello.txt\" modified=\"2026-10-10T00:00:00Z\"/></xbel>'"
-              " > ~/.local/share/recently-used.xbel; cat ~/.local/share/recently-used.xbel; echo\n")
-    wait(1)
+    type_text(qmp, "clear; mkdir -p ~/.local/share; echo '<?xml version=\"1.0\"?><xbel version=\"1.0\">"
+              "<bookmark href=\"file://'\"$HOME\"'/practice/hello.txt\" modified=\"2026-10-10T00:00:00Z\"/></xbel>'"
+              " > ~/.local/share/recently-used.xbel; cat ~/.local/share/recently-used.xbel\n")
+    wait(3)
     shot(qmp, "recent-file-written")
     # Light mode, through the shell's IPC (the same as the quick settings tile)
     type_text(qmp, "clear; qs ipc -p /usr/share/robinos/shell call shell setDark false\n")
