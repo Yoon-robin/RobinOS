@@ -40,7 +40,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (없음) | | |
+| 묶음 61 | T-137 vmport=off 되돌리기, 설치 테스트에 가상화 감지 기록 | `verify -Installer robinos` (설치 테스트 로그의 `systemd-detect-virt`, 부팅 테스트 `failed-units`) |
 
 `0d7c3bf`까지 2026-10-10 묶음 60 검증(`verify`: 빌드 3.3분 + 테스트 14.2분)을 마치고 푸시했어요.
 
@@ -69,7 +69,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ## 할 일 (위에서부터)
 
 ### T-137 테스트 VM에서 실패하는 vmtoolsd
-- 상태: 진행 중 (묶음 61)
+- 상태: 검증 대기 (묶음 61)
 - 출처: 묶음 59 `30-failed-units`. `vmtoolsd.service`는 원래 `ConditionVirtualization=vmware`가 있는데도 QEMU(WHPX) 테스트 VM의 라이브 세션에서 시작해서 실패해요(설치 테스트의 라이브 단계에서도 "Started ... VMware Tools"). 그런데 설치한 시스템에서는 VMware 도구가 돌지 않아서, 설치기의 `systemd-detect-virt`는 VMware로 보지 않은 것 같아요
 - 해 본 것(묶음 60): QEMU의 VMware 백도어 포트를 끄는 `vmport=off`를 줘 봤지만 그대로 시작해서 원인이 아니었어요(되돌림). T-136의 drop-in은 원래 유닛과 같은 조건이라 지웠어요. 부팅 테스트 장면은 결과가 나오기 전에 찍혀서(명령이 길어 입력이 늦음) `systemd-detect-virt` 값을 못 봤어요
 - 할 것: 설치 테스트의 라이브·설치본 단계 로그에 `systemd-detect-virt`, vmtoolsd의 `ConditionResult`, 설치기가 깐 게스트 도구를 남겨서 원인을 가려요. 부팅 테스트 장면은 5초 기다려요
