@@ -223,6 +223,9 @@ PanelWindow {
         { key: "wifi", group: "system", icon: "wifi", title: "Wi-Fi 연결", subtitle: "nmtui", mono: true, words: "wifi network 네트워크 인터넷" },
         { key: "screenshot", group: "system", icon: "scan", title: "영역 스크린샷", subtitle: "Win + Shift + S", words: "screenshot capture 스크린샷 캡처 화면 캡처" },
         { key: "settings", group: "system", icon: "sliders", title: "빠른 설정", subtitle: "Win + S", words: "settings quick 설정 빠른 설정 테마 다크 모드" },
+        { key: "sound", group: "system", icon: "volume", title: "소리 설정", subtitle: "출력 장치, 마이크, 앱별 음량", words: "sound audio volume mixer speaker headphones microphone mic 소리 음량 볼륨 믹서 스피커 이어폰 헤드폰 마이크 출력" },
+        { key: "wifi", group: "system", icon: "wifi", title: "Wi-Fi 연결", subtitle: "주변 네트워크에 연결해요", words: "wifi wi-fi wireless network internet 와이파이 무선 네트워크 인터넷 연결" },
+        { key: "bluetooth", group: "system", icon: "bluetooth", title: "블루투스 장치", subtitle: "이어폰, 마우스, 키보드를 연결해요", words: "bluetooth 블루투스 이어폰 에어팟 airpods 버즈 buds 헤드셋 무선 마우스 키보드 장치 페어링 pairing" },
         { key: "wallpaper", group: "system", icon: "image", title: "배경화면 바꾸기", subtitle: "사진 폴더에서 사진을 오른쪽 버튼으로 누르고 \"배경으로 설정\"", words: "wallpaper background 배경 배경화면 바탕 화면 바탕화면 사진 개인 설정 personalize" },
         { key: "wallpaper-reset", group: "wallpaper", icon: "rotate-ccw", title: "기본 배경화면으로", subtitle: "RobinOS 배경화면으로 되돌려요", words: "wallpaper background reset default 배경 배경화면 바탕 화면 기본 되돌리기" },
         { key: "steam", group: "store", icon: "download", title: "Steam 설치하기", subtitle: "앱 스토어에서 Flathub의 Steam을 받아요", words: "steam 스팀 게임 game games valve 게임 설치" },
@@ -245,7 +248,9 @@ PanelWindow {
         { win: "Edge", words: "edge 엣지 internet explorer 인터넷 익스플로러 chrome 크롬", app: "firefox" },
         { win: "사진 앱", words: "사진 photos 사진 보기 image viewer", app: "org.gnome.Loupe" },
         { win: "반디집", words: "반디집 bandizip 알집 7-zip 7zip winrar 압축 풀기", app: "org.gnome.FileRoller" },
-        { win: "볼륨 믹서", words: "볼륨 믹서 volume mixer 소리 설정 sound settings", app: "org.pulseaudio.pavucontrol" },
+        { win: "볼륨 믹서", words: "볼륨 믹서 volume mixer 소리 설정 sound settings 사운드", cmd: "sound" },
+        { win: "네트워크 및 인터넷", words: "네트워크 및 인터넷 network and internet 네트워크 연결 network connections ncpa.cpl ncpa", cmd: "wifi" },
+        { win: "블루투스 및 장치", words: "블루투스 및 장치 bluetooth and devices 장치 추가 add device", cmd: "bluetooth" },
         { win: "Acrobat Reader", words: "acrobat 아크로뱃 adobe reader pdf 뷰어", app: "org.gnome.Evince" },
         { win: "캡처 도구", words: "캡처 도구 snipping tool 캡처 스크린샷 screenshot", cmd: "screenshot" },
         { win: "계산기", words: "계산기 calc calculator", app: "org.gnome.Calculator" },
@@ -501,6 +506,11 @@ PanelWindow {
             break;
         case "settings":
             ShellState.toggleQuickSettings();
+            break;
+        case "sound":
+        case "wifi":
+        case "bluetooth":
+            ShellState.openDetail(item.key);
             break;
         case "wallpaper":
             ShellState.chooseWallpaper();

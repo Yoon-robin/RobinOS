@@ -49,7 +49,7 @@ __robinos_windows_hint() {
     clip)                printf '%s' 'wl-copy|글을 클립보드에 넣어요 (예: echo 안녕 | wl-copy, 붙여 넣기는 wl-paste)' ;;
     net)                 printf '%s' 'id|사용자 정보는 id, 서비스는 systemctl, 공유 폴더는 mount로 다뤄요' ;;
     powercfg)            printf '%s' 'powerprofilesctl|전원 모드를 보여 주고 바꿔요 (빠른 설정의 전원 모드와 같아요)' ;;
-    ncpa.cpl)            printf '%s' 'nmtui|네트워크 연결을 설정해요 (빠른 설정의 네트워크도 돼요)' ;;
+    ncpa.cpl)            printf '%s' 'nmtui|네트워크 연결을 설정해요 (런처에서 "와이파이"를 찾아도 돼요)' ;;
     appwiz.cpl)          printf '%s' 'pacman -Q|설치된 프로그램 목록이에요 (지우기는 sudo pacman -Rs 이름, 앱은 소프트웨어 앱)' ;;
     taskschd.msc)        printf '%s' 'systemctl list-timers|예약된 작업(타이머)을 보여 줘요' ;;
     perfmon|resmon)      printf '%s' 'missioncenter|CPU, 메모리, 디스크 사용량을 보여 주는 앱이에요 (터미널에서는 top)' ;;

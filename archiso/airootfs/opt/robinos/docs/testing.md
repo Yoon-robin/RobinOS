@@ -69,16 +69,16 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 
 ## 자동 부팅 테스트
 
-`scripts/boot-test.sh`가 QEMU에서 ISO를 부팅하고, `scripts/boot-test-qmp.py`가 화면을 조작하면서 스크린샷을 찍어요(2026-10-09 기준 45장). 키는 QMP `send-key`로, 마우스는 VM에 붙인 `usb-tablet`에 QMP `input-send-event`로 화면 좌표(1600×900)를 찍어 눌러요(`click()`).
+`scripts/boot-test.sh`가 QEMU에서 ISO를 부팅하고, `scripts/boot-test-qmp.py`가 화면을 조작하면서 스크린샷을 찍어요(2026-10-09 기준 48장). 키는 QMP `send-key`로, 마우스는 VM에 붙인 `usb-tablet`에 QMP `input-send-event`로 화면 좌표(1600×900)를 찍어 눌러요(`click()`). 소리 창을 보려고 소리를 버리는 사운드 카드(`-audiodev none`, `hda-duplex`)도 붙여요.
 
 1. 부팅과 첫 로그인
 2. 환영 마법사의 모든 단계, 마지막에 열리는 학습 센터(0/35)
 3. 데스크톱
 4. 런처: 추천 목록, `term` 검색, 윈도우 이름 `notepad` 검색
 5. 설치기 첫 두 단계(테스트 VM에는 빈 64GB 디스크가 있어요)
-6. 빠른 설정, Tab으로 옮긴 키보드 포커스, 마우스로 누른 방해 금지 타일, `Super+Alt+D`로 연 달력, `Super+F1`로 연 단축키 보기
+6. 빠른 설정, Tab으로 옮긴 키보드 포커스, 마우스로 누른 방해 금지 타일, Wi-Fi 타일 화살표로 연 연결 창(VM에는 Wi-Fi 장치가 없다는 안내), `Super+Alt+D`로 연 달력, `Super+F1`로 연 단축키 보기
 7. 터미널: `ipconfig` 힌트, `robinctl learn show 1`과 미션 1 풀기(라이트 모드 런처에 "1/35 완료"), 포털이 알려 주는 제목 표시줄 단추 배치(`button-layout`)
-8. 독처럼 최소화하고 되돌리기, `Super+D` 두 번(바탕 화면 보기와 되돌리기), `Super+Shift+S`(영역 고르기 화면, Esc로 취소), `Super+V`(복사한 글이 클립보드 기록에), `notify-send`로 띄운 한국어 알림(오른쪽 아래)과 `Super+N`으로 연 알림 센터, Wallpaper 포털로 바꾼 배경화면과 런처의 "기본 배경화면으로", 독과 런처에서 오른쪽 클릭으로 계산기 고정하기
+8. 독처럼 최소화하고 되돌리기, `Super+D` 두 번(바탕 화면 보기와 되돌리기), `Super+Shift+S`(영역 고르기 화면, Esc로 취소), `Super+V`(복사한 글이 클립보드 기록에), `notify-send`로 띄운 한국어 알림(오른쪽 아래)과 `Super+N`으로 연 알림 센터, IPC로 연 블루투스 연결 창(창 밖을 눌러 닫기), 런처에서 윈도우 이름 `mixer`로 연 소리 창(VM 사운드 카드가 출력·입력 장치로, `pw-play`가 앱별 음량에), Wallpaper 포털로 바꾼 배경화면과 런처의 "기본 배경화면으로", 독과 런처에서 오른쪽 클릭으로 계산기 고정하기
 9. 셸을 끄면 `robinos-shell`이 다시 띄우는지
 10. 라이트 모드(셸 IPC `setDark false`): 터미널(`robinctl learn` 목록), 런처(최근에 연 앱)와 파일 찾기(`notes`), Alt+F4로 닫았다가 IPC로 다시 연 학습 센터(미션 1에 체크, 미션 2 줄을 눌러 터미널에 열기, 닫기 단추), 빠른 설정, 화면 배율 125%(저장된 파일 내용과 함께), 야간 모드(VM 그래픽에는 색 변환이 없어 `hyprsunset`이 켜지는지만 봐요). 찍은 뒤 다크로 돌려요
 11. 잠금 화면과 잠금 해제

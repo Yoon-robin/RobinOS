@@ -108,6 +108,7 @@ Singleton {
             launcherOpen = false;
             return;
         }
+        detailPanel = "";
         quickSettingsOpen = false;
         calendarOpen = false;
         overlayScreen = focusedScreen;
@@ -122,6 +123,7 @@ Singleton {
             launcherOpen = false;
             return;
         }
+        detailPanel = "";
         quickSettingsOpen = false;
         calendarOpen = false;
         overlayScreen = focusedScreen;
@@ -136,6 +138,7 @@ Singleton {
             quickSettingsOpen = false;
             return;
         }
+        detailPanel = "";
         launcherOpen = false;
         calendarOpen = false;
         overlayScreen = screen ?? focusedScreen;
@@ -152,6 +155,7 @@ Singleton {
             calendarOpen = false;
             return;
         }
+        detailPanel = "";
         launcherOpen = false;
         quickSettingsOpen = false;
         overlayScreen = screen ?? focusedScreen;
@@ -171,9 +175,28 @@ Singleton {
         launcherOpen = false;
         quickSettingsOpen = false;
         calendarOpen = false;
+        detailPanel = "";
         shortcutsOpen = false;
         overlayScreen = focusedScreen;
         notifCenterOpen = true;
+    }
+
+    // The list behind a quick settings arrow: "wifi" or "bluetooth"
+    // (ConnectPanel.qml), "sound" (SoundPanel.qml) or "" when closed
+    property string detailPanel: ""
+
+    function openDetail(name) {
+        if (welcomeOpen)
+            return;
+        // From a tile: stay on the screen the quick settings were on
+        if (!quickSettingsOpen)
+            overlayScreen = focusedScreen;
+        launcherOpen = false;
+        quickSettingsOpen = false;
+        calendarOpen = false;
+        notifCenterOpen = false;
+        shortcutsOpen = false;
+        detailPanel = ["wifi", "bluetooth", "sound"].includes(name) ? name : "wifi";
     }
 
     // Every shortcut on one card (Shortcuts.qml, Super+F1)
@@ -189,6 +212,7 @@ Singleton {
         launcherOpen = false;
         quickSettingsOpen = false;
         calendarOpen = false;
+        detailPanel = "";
         overlayScreen = focusedScreen;
         shortcutsOpen = true;
     }
