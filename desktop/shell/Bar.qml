@@ -289,12 +289,10 @@ PanelWindow {
             spacing: 10
             active: ShellState.quickSettingsOpen && ShellState.overlayScreen === bar.screen
             onClicked: ShellState.toggleQuickSettings(bar.screen)
+            // The wheel over the status icons changes the volume, like Windows' speaker
+            // icon (a WheelHandler on the icons never got the events in the boot test)
+            onWheeled: delta => ShellState.setVolume(ShellState.volume + delta / 120 * 0.05)
 
-            // The wheel over the status icons changes the volume, like Windows'
-            // speaker icon; a touchpad's small steps add up the same way
-            WheelHandler {
-                onWheel: event => ShellState.setVolume(ShellState.volume + event.angleDelta.y / 120 * 0.05)
-            }
 
             Icon {
                 name: ShellState.netIcon

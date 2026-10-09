@@ -278,11 +278,28 @@ hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd(bin_dir .. "/robinos-screensh
 hl.bind(mainMod .. " + Q", hl.dsp.window.close(), { description = "창 닫기" })
 hl.bind("ALT + F4",        hl.dsp.window.close(), { description = "창 닫기" })
 -- Alt+Tab like Windows: the shell shows the windows while Alt is held (AltTab.qml)
--- and switches when Alt is let go. A global bind sends "pressed" and, when its key
--- comes up, "released"; the shell waits for Alt_L's release, whatever else is held.
-hl.bind("ALT + Tab",         hl.dsp.global("robinos:alttab"),      { description = "창 전환 (Alt를 누른 채 Tab으로 고르고, 놓으면 바뀌어요)" })
-hl.bind("ALT + SHIFT + Tab", hl.dsp.global("robinos:alttab-back"), { description = "창 전환, 거꾸로" })
-hl.bind("Alt_L", hl.dsp.global("robinos:alttab-done"), { ignore_mods = true, non_consuming = true })
+-- and switches when Alt is let go. A release bind on Alt_L never fires once Alt+Tab
+-- has taken the key (boot test, 2026-10-09), so a short timer watches Alt instead
+-- and sends robinos:alttab-done when it comes up.
+local alttab_watch = nil
+
+local function alttab(signal)
+    hl.dispatch(hl.dsp.global("robinos:" .. signal))
+    if alttab_watch then
+        return
+    end
+    alttab_watch = hl.timer(function()
+        if hl.is_key_down("Alt_L") or hl.is_key_down("Alt_R") then
+            return
+        end
+        alttab_watch:set_enabled(false)
+        alttab_watch = nil
+        hl.dispatch(hl.dsp.global("robinos:alttab-done"))
+    end, { timeout = 50, type = "repeat" })
+end
+
+hl.bind("ALT + Tab",         function() alttab("alttab") end,      { description = "창 전환 (Alt를 누른 채 Tab으로 고르고, 놓으면 바뀌어요)" })
+hl.bind("ALT + SHIFT + Tab", function() alttab("alttab-back") end, { description = "창 전환, 거꾸로" })
 hl.bind(mainMod .. " + T", hl.dsp.window.float({ action = "toggle" }), { description = "창 정렬/띄우기 전환" })
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({ mode = "fullscreen" }), { description = "전체 화면" })
 hl.bind(mainMod .. " + M", hl.dsp.window.fullscreen({ mode = "maximized" }),  { description = "최대화" })

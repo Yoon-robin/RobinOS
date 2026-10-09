@@ -131,6 +131,8 @@ ShellRoot {
         appid: "robinos"
         name: "alttab-done"
         description: "창 전환: Alt를 놓으면 고른 창으로"
+        // Sent from a timer in robinos.lua, so it may arrive as either event
+        onPressed: altTab.finish()
         onReleased: altTab.finish()
     }
 

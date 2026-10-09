@@ -12,6 +12,8 @@ Rectangle {
     property int spacing: 8
 
     signal clicked()
+    // Wheel steps over the button, in eighths of a degree (120 per notch)
+    signal wheeled(real delta)
 
     implicitWidth: row.implicitWidth + padding * 2
     implicitHeight: 28
@@ -31,6 +33,7 @@ Rectangle {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: root.clicked()
+        onWheel: wheel => root.wheeled(wheel.angleDelta.y)
     }
 
     RowLayout {
