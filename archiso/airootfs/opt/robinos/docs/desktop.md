@@ -7,7 +7,7 @@ RobinOS는 Hyprland 위에 직접 만든 Quickshell 셸을 얹어 써요. 디자
 | 부분 | 프로그램 | 저장소 안 위치 |
 |---|---|---|
 | 컴포지터 | Hyprland 0.56+ (Lua 설정) | `desktop/hypr/robinos.lua` |
-| 셸: 상단 바, 독, 런처, 빠른 설정, Wi-Fi·블루투스 연결 창, 소리 창, 알림, 볼륨 표시, 배경화면, 환영 마법사, 달력, 학습 센터, 단축키 보기, 설치기 | Quickshell 0.3 | `desktop/shell/` |
+| 셸: 상단 바(트레이 포함), 독, 런처, 빠른 설정, Wi-Fi·블루투스 연결 창, 소리 창, 알림, 볼륨 표시, 배경화면, 환영 마법사, 달력, 학습 센터, 단축키 보기, 설치기 | Quickshell 0.3 | `desktop/shell/` |
 | 세션 시작, 렌더링 자동 전환 | `robinos-session` | `desktop/bin/robinos-session` |
 | 셸 다시 띄우기, 셸 렌더링 전환 | `robinos-shell` | `desktop/bin/robinos-shell` |
 | VM 화면을 창 크기에 맞추기 | `robinos-vm-display` | `desktop/bin/robinos-vm-display` |
@@ -102,9 +102,12 @@ VM 창 크기를 바꾸면 VMware(`vmtoolsd`)나 QEMU(`virtio-gpu`)가 새 크�
 | `Alt+F4` 또는 `Super+Q` | 창 닫기 |
 | `Super+D` | 바탕 화면 보기 (지금 작업 공간의 창을 모두 숨기고, 다시 누르면 돌아와요) |
 | `Super+T` | 창을 자유 배치와 타일 배치 사이에서 전환 |
-| `Super+F`, `Super+M` | 전체 화면, 최대화 |
+| `Super+F`, `Super+M` 또는 `Super+↑` | 전체 화면, 최대화 |
 | `Super+1`...`Super+9` | 작업 공간 전환 (`Shift`를 같이 누르면 창을 옮겨요) |
-| `Super+방향키` | 그쪽 창으로 포커스 이동 (`Shift`를 같이 누르면 창을 옮겨요) |
+| `Super+←`, `Super+→` | 창을 화면 왼쪽·오른쪽 절반에 붙여요 (윈도우의 창 끌어 놓기와 같아요). 타일 배치에서는 그쪽 창과 자리를 바꿔요 |
+| `Super+↓` | 최대화나 반쪽에 붙인 창을 원래 크기와 자리로 되돌리고, 다시 누르면 최소화 (독에서 다시 열어요) |
+| `Super+Ctrl+←`, `Super+Ctrl+→` | 이전·다음 작업 공간 (윈도우의 가상 데스크톱 전환과 같아요) |
+| `Super+Shift+방향키` | 창을 그쪽으로 옮겨요 |
 | `Super+마우스 휠` | 이웃 작업 공간으로 |
 | `Super+drag` | 창 이동(왼쪽 버튼), 크기 조절(오른쪽 버튼) |
 | `Print`, `Shift+Print` | 영역 또는 전체 화면을 찍어 `~/Pictures/Screenshots`와 클립보드에 저장 |
@@ -274,6 +277,10 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 ## 알림 센터
 
 알림은 오른쪽 아래에 잠깐 떴다가 사라지지만, 바의 종 아이콘이나 `Win+N`으로 여는 알림 센터에 로그인한 뒤 온 알림이 남아 있어요(최근 8개를 보여 주고 30개까지 기억해요). 새 알림이 오면 종 아이콘에 점이 생기고, 알림 센터를 열면 사라져요. "모두 지우기"로 비우고, 맨 아래에서 방해 금지를 켜고 꺼요. 방해 금지가 켜져 있으면 알림이 뜨지 않고 알림 센터에만 쌓여요. 로그아웃하면 기록은 사라져요.
+
+## 트레이 아이콘
+
+Steam, Discord처럼 백그라운드에서 도는 앱의 아이콘이 바 오른쪽(한/A 표시 왼쪽)에 나와요. 윈도우 작업 표시줄의 알림 영역과 같아요. 누르면 앱이 열리고, 오른쪽 버튼은 앱의 메뉴, 가운데 버튼은 앱이 정한 두 번째 동작이에요. 앱은 StatusNotifierItem(SNI) 방식으로 아이콘을 보내요. 입력기(fcitx5)의 아이콘은 한/A 표시와 같은 일을 해서 숨겨요.
 
 ## 배경화면
 

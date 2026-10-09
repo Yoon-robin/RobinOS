@@ -290,10 +290,75 @@ hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))
 hl.bind(mainMod .. " + SHIFT + Escape", hl.dsp.exit(), { description = "로그아웃" })
 
+-- Windows' snap: Win+Left/Right put the window on half of the screen, Win+Up
+-- maximizes, Win+Down restores and then minimizes. Tiled windows (창 자동 정렬)
+-- swap places instead. snapped keeps where a window was, for Win+Down.
+local snapped = {}
+local snap_gap = 10  -- general.gaps_out
+
+-- The free part of a monitor (without the bar and the dock), in layout coordinates
+local function work_area(m)
+    local w, h = m.width / m.scale, m.height / m.scale
+    if m.transform % 2 == 1 then
+        w, h = h, w
+    end
+    local r = m.reserved
+    return m.x + r.left + snap_gap, m.y + r.top + snap_gap,
+        w - r.left - r.right - 2 * snap_gap, h - r.top - r.bottom - 2 * snap_gap
+end
+
+local function snap(side)
+    local w = hl.get_active_window()
+    if not w or not w.monitor then
+        return
+    end
+    if not w.floating then
+        hl.dispatch(hl.dsp.window.move({ direction = side }))
+        return
+    end
+    -- A maximized window can't move; it comes back to its own size first
+    if w.fullscreen ~= 0 then
+        hl.dispatch(hl.dsp.window.fullscreen({ mode = "maximized", action = "unset" }))
+    end
+    if not snapped[w.address] then
+        snapped[w.address] = { x = w.at.x, y = w.at.y, w = w.size.x, h = w.size.y }
+    end
+    local x, y, aw, ah = work_area(w.monitor)
+    local half = math.floor((aw - snap_gap) / 2)
+    hl.dispatch(hl.dsp.window.resize({ x = half, y = math.floor(ah) }))
+    hl.dispatch(hl.dsp.window.move({ x = math.floor(side == "left" and x or x + aw - half), y = math.floor(y) }))
+end
+
+local function snap_down()
+    local w = hl.get_active_window()
+    if not w then
+        return
+    end
+    if w.fullscreen ~= 0 then
+        hl.dispatch(hl.dsp.window.fullscreen({ mode = "maximized", action = "unset" }))
+        return
+    end
+    local old = snapped[w.address]
+    if old and w.floating then
+        snapped[w.address] = nil
+        hl.dispatch(hl.dsp.window.resize({ x = old.w, y = old.h }))
+        hl.dispatch(hl.dsp.window.move({ x = old.x, y = old.y }))
+        return
+    end
+    -- Minimized by the shell, so the dock can bring it back
+    hl.dispatch(hl.dsp.global("robinos:minimize"))
+end
+
+hl.bind(mainMod .. " + left",  function() snap("left") end,  { description = "창을 화면 왼쪽 절반에" })
+hl.bind(mainMod .. " + right", function() snap("right") end, { description = "창을 화면 오른쪽 절반에" })
+hl.bind(mainMod .. " + up",    hl.dsp.window.fullscreen({ mode = "maximized", action = "set" }), { description = "최대화" })
+hl.bind(mainMod .. " + down",  snap_down, { description = "원래 크기로, 다시 누르면 최소화" })
 for _, dir in ipairs({ "left", "right", "up", "down" }) do
-    hl.bind(mainMod .. " + " .. dir,             hl.dsp.focus({ direction = dir }))
     hl.bind(mainMod .. " + SHIFT + " .. dir,     hl.dsp.window.move({ direction = dir }))
 end
+-- Win+Ctrl+Left/Right like Windows' virtual desktops
+hl.bind(mainMod .. " + CTRL + left",  hl.dsp.focus({ workspace = "r-1" }), { description = "이전 작업 공간" })
+hl.bind(mainMod .. " + CTRL + right", hl.dsp.focus({ workspace = "r+1" }), { description = "다음 작업 공간" })
 
 -- Workspaces 1-9
 for i = 1, 9 do

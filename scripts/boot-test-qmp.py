@@ -12,11 +12,14 @@ it come back -> light mode (terminal,
 launcher, quick settings) -> lock screen -> unlock with the live password.
 """
 
+import ast
+import base64
 import json
 import os
 import socket
 import sys
 import time
+import zlib
 
 SOCK = sys.argv[1]
 OUT = sys.argv[2]
@@ -27,7 +30,7 @@ LIVE_PASSWORD = "robin"
 QCODES = {" ": "spc", "\n": "ret", "-": "minus", ".": "dot", "/": "slash", ";": "semicolon",
           "'": "apostrophe", "\\": "backslash", ",": "comma", "=": "equal"}
 # Characters typed with Shift on a US keyboard
-SHIFTED = {"(": "9", ")": "0", "&": "7", "~": "grave_accent", ">": "dot", "$": "4",
+SHIFTED = {"(": "9", ")": "0", "&": "7", "~": "grave_accent", ">": "dot", "$": "4", "+": "equal",
            '"': "apostrophe", "{": "bracket_left", "}": "bracket_right", ":": "semicolon", "_": "minus"}
 
 
@@ -76,12 +79,12 @@ def wait(seconds):
     time.sleep(seconds * SPEED)
 
 
-def keys(qmp, *names):
+def keys(qmp, *names, hold=80, pause=0.15):
     """Press a key combination, e.g. keys(qmp, "meta_l", "spc")."""
-    qmp.execute("send-key", keys=[{"type": "qcode", "data": n} for n in names], **{"hold-time": 80})
+    qmp.execute("send-key", keys=[{"type": "qcode", "data": n} for n in names], **{"hold-time": hold})
     # A slow (TCG) guest that falls behind sees the release late and auto-repeats
     # the key, so give it time to catch up between keys.
-    time.sleep(0.15 * SPEED)
+    time.sleep(pause * SPEED)
 
 
 SCREEN = (1600, 900)  # the VGA mode in boot-test.sh and wsl-build.ps1
@@ -99,14 +102,31 @@ def click(qmp, x, y, button="left"):
         time.sleep(0.1 * SPEED)
 
 
-def type_text(qmp, text):
+def type_text(qmp, text, fast=False):
+    """Type ASCII text. fast is for long machine-made text, at about 20 ms a key."""
+    timing = {"hold": 15, "pause": 0.03} if fast else {}
     for ch in text:
         if ch.isupper():
-            keys(qmp, "shift", ch.lower())
+            keys(qmp, "shift", ch.lower(), **timing)
         elif ch in SHIFTED:
-            keys(qmp, "shift", SHIFTED[ch])
+            keys(qmp, "shift", SHIFTED[ch], **timing)
         else:
-            keys(qmp, QCODES.get(ch, ch))
+            keys(qmp, QCODES.get(ch, ch), **timing)
+
+
+def run_python(qmp, name):
+    """Start a Python helper from this directory in the VM's terminal, in the background.
+
+    The VM only gets what we type, so the script goes in compressed: without its
+    docstring and comments, zlib, then base64 (letters, digits, + / =).
+    """
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), name), encoding="utf-8") as f:
+        tree = ast.parse(f.read())
+    if tree.body and isinstance(tree.body[0], ast.Expr) and isinstance(tree.body[0].value, ast.Constant):
+        tree.body = tree.body[1:]
+    payload = base64.b64encode(zlib.compress(ast.unparse(tree).encode(), 9)).decode()
+    type_text(qmp, "python -c \"import zlib,base64;exec(zlib.decompress(base64.b64decode('"
+              + payload + "')))\" &\n", fast=True)
 
 
 shot_number = 0
@@ -232,6 +252,25 @@ def main():
     shot(qmp, "minimized")
     wait(7)
     shot(qmp, "restored")
+    # Windows' snap: Win+Left puts the terminal on the left half, Win+Up maximizes it,
+    # Win+Down twice brings back the half and then the size it had before
+    keys(qmp, "meta_l", "left")
+    wait(2)
+    shot(qmp, "snap-left")
+    keys(qmp, "meta_l", "up")
+    wait(2)
+    shot(qmp, "snap-maximized")
+    keys(qmp, "meta_l", "down")
+    wait(1)
+    keys(qmp, "meta_l", "down")
+    wait(2)
+    shot(qmp, "snap-restored")
+    # Win+Ctrl+Right/Left like Windows' virtual desktops: an empty workspace 2, and back
+    keys(qmp, "meta_l", "ctrl", "right")
+    wait(2)
+    shot(qmp, "workspace-next")
+    keys(qmp, "meta_l", "ctrl", "left")
+    wait(2)
     # Super+D hides every window on the workspace; pressed again, they come back
     keys(qmp, "meta_l", "d")
     wait(2)
@@ -287,6 +326,16 @@ def main():
     shot(qmp, "sound")
     keys(qmp, "esc")
     wait(1)
+    # Apps' tray icons in the bar, like the Windows notification area: a test item
+    # (sni-test-item.py) shows up left of 한/A, and a click on it reaches the app
+    type_text(qmp, "clear; ")
+    run_python(qmp, "sni-test-item.py")
+    wait(4)
+    click(qmp, 1454, 18)
+    wait(1)
+    type_text(qmp, "cat /tmp/sni-activated\n")
+    wait(1)
+    shot(qmp, "tray")
     # "배경으로 설정" in Files and Image Viewer goes through the Wallpaper portal to
     # robinos-wallpaper-portal; the same call here sets the RobinOS logo as the
     # wallpaper. Then the launcher's "기본 배경화면으로" brings the drawn one back.

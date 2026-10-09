@@ -20,11 +20,13 @@ PanelWindow {
             { keys: ["Alt", "Tab"], title: "다음 창 (Shift를 같이 누르면 이전 창)" },
             { keys: ["Alt", "F4"], title: "창 닫기 (Win+Q도 돼요)" },
             { keys: ["Win", "D"], title: "바탕 화면 보기, 다시 누르면 되돌리기" },
-            { keys: ["Win", "M"], title: "최대화" },
+            { keys: ["Win", "↑"], title: "최대화 (Win+M도 돼요)" },
             { keys: ["Win", "F"], title: "전체 화면" },
             { keys: ["Win", "T"], title: "자유 배치와 타일 배치 바꾸기" },
             { keys: ["Win", "1~9"], title: "작업 공간 바꾸기 (Shift: 창 옮기기)" },
-            { keys: ["Win", "방향키"], title: "그쪽 창으로 이동" }
+            { keys: ["Win", "←", "→"], title: "창을 화면 왼쪽·오른쪽 절반에" },
+            { keys: ["Win", "↓"], title: "원래 크기로, 다시 누르면 최소화" },
+            { keys: ["Win", "Ctrl", "←", "→"], title: "이전·다음 작업 공간" }
         ] },
         { title: "앱과 시스템", items: [
             { keys: ["Win", "Space"], title: "런처: 앱과 명령 찾기" },
