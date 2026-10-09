@@ -97,6 +97,8 @@ function Invoke-WhpxBootTest {
             "-cdrom", "`"vm\robinos.iso`"",
             "-drive", "`"file=boot-test\disk.qcow2,format=qcow2,if=virtio`"",
             "-vga", "none", "-device", "VGA,edid=on,xres=1600,yres=900", "-display", "none",
+            # An absolute pointer, so boot-test-qmp.py can click at screen coordinates
+            "-device", "qemu-xhci", "-device", "usb-tablet",
             "-netdev", "user,id=net0", "-device", "virtio-net-pci,netdev=net0",
             "-qmp", "tcp:127.0.0.1:$port,server,nowait",
             "-serial", "`"file:boot-test\serial.log`""

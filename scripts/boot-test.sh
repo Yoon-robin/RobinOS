@@ -66,6 +66,7 @@ qemu-system-x86_64 \
   -drive "file=${OUT_DIR}/disk.qcow2,format=qcow2,if=virtio" \
   -vga none -device VGA,edid=on,xres=1600,yres=900 \
   -display none \
+  -device qemu-xhci -device usb-tablet \
   -netdev user,id=net0 -device virtio-net-pci,netdev=net0 \
   -qmp "unix:${OUT_DIR}/qmp.sock,server,nowait" \
   -serial "file:${OUT_DIR}/serial.log" &

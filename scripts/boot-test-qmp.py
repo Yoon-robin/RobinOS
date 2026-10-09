@@ -84,6 +84,21 @@ def keys(qmp, *names):
     time.sleep(0.15 * SPEED)
 
 
+SCREEN = (1600, 900)  # the VGA mode in boot-test.sh and wsl-build.ps1
+
+
+def click(qmp, x, y, button="left"):
+    """Click at screen pixel (x, y) through the usb-tablet (absolute 0..32767)."""
+    qmp.execute("input-send-event", events=[
+        {"type": "abs", "data": {"axis": "x", "value": round(x * 32767 / (SCREEN[0] - 1))}},
+        {"type": "abs", "data": {"axis": "y", "value": round(y * 32767 / (SCREEN[1] - 1))}},
+    ])
+    time.sleep(0.2 * SPEED)
+    for down in (True, False):
+        qmp.execute("input-send-event", events=[{"type": "btn", "data": {"down": down, "button": button}}])
+        time.sleep(0.1 * SPEED)
+
+
 def type_text(qmp, text):
     for ch in text:
         if ch.isupper():
@@ -256,11 +271,29 @@ def main():
     keys(qmp, "meta_l", "d")
     wait(2)
 
-    # Pinning to the dock like the Windows taskbar: the same shell function as a
-    # right click on a running app. The calculator joins the dock, then leaves it.
-    type_text(qmp, "clear; " + "qs ipc -p /usr/share/robinos/shell call shell " + "pinToDock org.gnome.Calculator\n")
-    wait(3)
+    # Pinning to the dock like the Windows taskbar, with real right clicks. The
+    # running calculator shows up after the browser (x 900 on the 1600 px screen);
+    # a right click pins it, a second one unpins it.
+    type_text(qmp, "clear; gnome-calculator > /dev/null 2>&1 &\n")
+    wait(5)
+    click(qmp, 900, 860, "right")
+    wait(2)
     shot(qmp, "dock-pinned")
+    click(qmp, 900, 860, "right")
+    wait(1)
+    keys(qmp, "alt", "f4")  # the calculator has the focus
+    wait(2)
+    # The launcher's right click pins an app too, like "작업 표시줄에 고정":
+    # "calc" puts the calculator first, under "윈도우에서 쓰던 이름"
+    keys(qmp, "meta_l", "spc")
+    wait(3)
+    type_text(qmp, "calc")
+    wait(2)
+    click(qmp, 800, 267, "right")
+    wait(2)
+    shot(qmp, "launcher-pin")
+    keys(qmp, "esc")
+    wait(1)
     type_text(qmp, "clear; " + "qs ipc -p /usr/share/robinos/shell call shell " + "unpinFromDock org.gnome.Calculator\n")
     wait(2)
 
