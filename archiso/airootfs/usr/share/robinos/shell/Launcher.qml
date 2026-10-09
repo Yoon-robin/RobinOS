@@ -146,6 +146,8 @@ PanelWindow {
         { key: "wifi", group: "system", icon: "wifi", title: "Wi-Fi 연결", subtitle: "nmtui", mono: true, words: "wifi network 네트워크 인터넷" },
         { key: "screenshot", group: "system", icon: "scan", title: "영역 스크린샷", subtitle: "Win + Shift + S", words: "screenshot capture 스크린샷 캡처 화면 캡처" },
         { key: "settings", group: "system", icon: "sliders", title: "빠른 설정", subtitle: "Win + S", words: "settings quick 설정 빠른 설정 테마 다크 모드" },
+        { key: "wallpaper", group: "system", icon: "image", title: "배경화면 바꾸기", subtitle: "사진 폴더에서 사진을 오른쪽 버튼으로 누르고 \"배경으로 설정\"", words: "wallpaper background 배경 배경화면 바탕 화면 바탕화면 사진 개인 설정 personalize" },
+        { key: "wallpaper-reset", group: "wallpaper", icon: "rotate-ccw", title: "기본 배경화면으로", subtitle: "RobinOS 배경화면으로 되돌려요", words: "wallpaper background reset default 배경 배경화면 바탕 화면 기본 되돌리기" },
         { key: "steam", group: "store", icon: "download", title: "Steam 설치하기", subtitle: "앱 스토어에서 Flathub의 Steam을 받아요", words: "steam 스팀 게임 game games valve 게임 설치" },
         { key: "install", group: "live", icon: "download", title: "RobinOS 설치", subtitle: "이 컴퓨터에 설치해요", words: "install installer setup 설치 설치기 하드 디스크 윈도우 옆" },
         { key: "welcome", group: "system", icon: "sparkles", title: "환영 마법사", subtitle: "테마, 한/영 키, 단축키 안내", words: "welcome tour setup 환영 마법사 처음 시작 안내 투어 한영" },
@@ -177,6 +179,7 @@ PanelWindow {
         { win: "미디어 플레이어", words: "미디어 플레이어 media player windows media player wmp 영화 및 tv movies tv 동영상 비디오 video mp4 영상", app: "org.gnome.Showtime" },
         { win: "그루브 음악", words: "그루브 음악 groove music 음악 노래 music audio 오디오 mp3", app: "org.gnome.Decibels" },
         { win: "장치 및 프린터", words: "장치 및 프린터 devices and printers 프린터 printer 인쇄 print", app: "system-config-printer" },
+        { win: "배경 화면", words: "배경 화면 바탕 화면 바탕화면 desktop background 개인 설정 personalization", cmd: "wallpaper" },
         { win: "제어판", words: "제어판 control panel 윈도우 설정 windows settings", cmd: "settings" }
     ]
 
@@ -324,6 +327,7 @@ PanelWindow {
 
             const cmds = commands.filter(c => !shownCmds[c.key] && (c.group !== "live" || ShellState.isLive)
                                          && (c.group !== "store" || storeOffers(c.key))
+                                         && (c.group !== "wallpaper" || ShellState.wallpaperPath !== "")
                                          && (matches(c.title, q) || matches(c.subtitle, q) || matches(c.words, q)));
             if (cmds.length > 0) {
                 out.push({ kind: "header", title: "명령" });
@@ -386,6 +390,12 @@ PanelWindow {
             break;
         case "settings":
             ShellState.toggleQuickSettings();
+            break;
+        case "wallpaper":
+            ShellState.chooseWallpaper();
+            break;
+        case "wallpaper-reset":
+            ShellState.resetWallpaper();
             break;
         case "welcome":
             ShellState.openWelcome();

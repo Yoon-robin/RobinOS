@@ -35,6 +35,7 @@ hyprland
 quickshell
 xdg-desktop-portal-hyprland
 xdg-desktop-portal-gtk
+python-gobject
 hyprlock
 hypridle
 hyprpolkitagent

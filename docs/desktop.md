@@ -217,6 +217,12 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 파일을 어떤 앱으로 여는지는 `desktop/mime/mimeapps.list`(설치 위치 `/etc/xdg/mimeapps.list`)가 정해요. 폴더는 파일, 글 파일은 텍스트 편집기, PDF는 문서 보기, 사진은 이미지 보기, 동영상과 음악은 위 두 앱, 웹 주소는 Firefox예요. 파일 앱에서 "다른 앱으로 열기"로 바꾸면 내 설정(`~/.config/mimeapps.list`)이 먼저예요.
 
+## 배경화면
+
+기본 배경화면은 셸이 직접 그려요(점 무늬와 위에서 비치는 빛, 다크·라이트를 따라가요). 내 사진으로 바꾸려면 파일 앱에서 사진을 오른쪽 버튼으로 누르고 "배경으로 설정…"을 골라요. 이미지 보기 앱에서는 메뉴의 "백그라운드로 설정"이에요. 런처에서 "배경화면"이나 "배경 화면"(윈도우 이름)을 찾으면 사진 폴더를 열고 방법을 알려 줘요. 되돌리려면 런처의 "기본 배경화면으로"를 골라요.
+
+두 앱은 Wallpaper 포털에 부탁하는데, Hyprland와 GTK 포털에는 이 기능이 없어서 RobinOS가 작은 포털 백엔드(`desktop/bin/robinos-wallpaper-portal`)를 넣었어요. 고른 사진을 `~/.local/share/robinos/wallpaper/`에 복사하고 그 경로를 `~/.local/state/robinos/wallpaper`에 적으면 셸이 바로 그려요. 어떤 포털이 어떤 일을 맡는지는 `/etc/xdg/xdg-desktop-portal/hyprland-portals.conf`에 있어요.
+
 ## 전원 모드와 배터리
 
 빠른 설정의 "전원 모드"에서 절전, 균형, 최고 성능을 골라요(윈도우의 전원 모드와 같아요). `power-profiles-daemon`이 CPU와 화면 설정을 바꿔요. 최고 성능은 지원하는 CPU에서만 보여요(VM에는 보통 없어요).

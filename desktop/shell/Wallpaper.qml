@@ -62,4 +62,20 @@ PanelWindow {
             ctx.fill();
         }
     }
+
+    // A picture set with "배경으로 설정" (ShellState.wallpaperPath) covers the
+    // drawn wallpaper once it has loaded; a missing file leaves the drawn one
+    Image {
+        anchors.fill: parent
+        source: ShellState.wallpaperPath !== "" ? "file://" + ShellState.wallpaperPath + "?v=" + ShellState.wallpaperVersion : ""
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+        cache: false
+        sourceSize: Qt.size(root.width, root.height)
+        opacity: status === Image.Ready ? 1 : 0
+
+        Behavior on opacity {
+            NumberAnimation { duration: Theme.dur }
+        }
+    }
 }

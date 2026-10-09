@@ -6,7 +6,7 @@ set -euo pipefail
 #   - Lua syntax of the Hyprland config      (luac -p)
 #   - Hyprland config validation             (Hyprland --verify-config)
 #   - QML syntax of the shell and SDDM theme (qmlformat)
-#   - Bash syntax of desktop scripts         (bash -n)
+#   - Syntax of desktop scripts              (bash -n, Python ast)
 #   - JSON syntax of the Firefox policies    (python3 -m json.tool)
 #   - fastfetch logo size matches its config (python3)
 #
@@ -78,9 +78,17 @@ else
   skip "qmlformat not found (pacman -S qt6-declarative)"
 fi
 
-printf 'Bash syntax\n'
+printf 'Script syntax\n'
 for file in "${ROOT_DIR}"/desktop/bin/*; do
-  if bash -n "${file}"; then ok "${file#"${ROOT_DIR}/"}"; else fail "${file#"${ROOT_DIR}/"}"; fi
+  if head -n 1 "${file}" | grep -q python; then
+    if ! command -v python3 >/dev/null 2>&1; then
+      skip "python3 not found (${file#"${ROOT_DIR}/"})"
+    elif python3 -c 'import ast, sys; ast.parse(open(sys.argv[1]).read())' "${file}"; then
+      ok "${file#"${ROOT_DIR}/"}"
+    else
+      fail "${file#"${ROOT_DIR}/"}"
+    fi
+  elif bash -n "${file}"; then ok "${file#"${ROOT_DIR}/"}"; else fail "${file#"${ROOT_DIR}/"}"; fi
 done
 
 # Firefox ignores a policies.json it can't parse, without telling anyone

@@ -5,6 +5,8 @@ hyprland
 quickshell
 xdg-desktop-portal-hyprland
 xdg-desktop-portal-gtk
+# "배경으로 설정" (desktop/bin/robinos-wallpaper-portal is Python with GLib)
+python-gobject
 hyprlock
 hypridle
 hyprpolkitagent

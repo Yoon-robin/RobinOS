@@ -561,6 +561,11 @@ def phase_installed(con, qmp):
             " /usr/share/applications/libreoffice-impress.desktop && pacman -Q libreoffice-still-ko")
     # Video and music (packages/apps.txt), and the default apps that open them
     # (desktop/mime/mimeapps.list): double-clicking an MP4 or MP3 in Files plays it
+    # "배경으로 설정": the Wallpaper portal backend, its Python bindings and the portal choice
+    con.run("test -x /usr/share/robinos/bin/robinos-wallpaper-portal"
+            " && test -f /usr/share/xdg-desktop-portal/portals/robinos.portal"
+            " && grep -q 'Wallpaper=robinos' /etc/xdg/xdg-desktop-portal/hyprland-portals.conf"
+            " && python3 -c 'from gi.repository import Gio'")
     # (gio's first line names the default; the registered apps below are indented)
     con.run("pacman -Q showtime decibels gst-libav"
             " && gio mime video/mp4 | grep -q '^[^[:space:]].*org.gnome.Showtime.desktop'"
