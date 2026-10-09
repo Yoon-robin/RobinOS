@@ -444,15 +444,23 @@ def main():
     keys(qmp, "meta_l", "d")
     wait(2)
 
-    # Pinning to the dock like the Windows taskbar, with real right clicks. The
-    # running calculator shows up after the browser (x 900 on the 1600 px screen);
-    # a right click pins it, a second one unpins it.
+    # Pinning to the dock like the Windows taskbar's jump list, with real right
+    # clicks. The running calculator shows up after the browser (x 900 on the 1600 px
+    # screen); its menu has 새 창, 독에 고정 and 창 닫기, and Down + Enter pins it.
+    # The same menu on the pinned app has 독에서 고정 풀기 second, so it unpins too.
     type_text(qmp, "clear; gnome-calculator > /dev/null 2>&1 &\n")
     wait(5)
     click(qmp, 900, 860, "right")
     wait(2)
+    shot(qmp, "dock-menu")
+    keys(qmp, "down")
+    keys(qmp, "ret")
+    wait(2)
     shot(qmp, "dock-pinned")
     click(qmp, 900, 860, "right")
+    wait(2)
+    keys(qmp, "down")
+    keys(qmp, "ret")
     wait(1)
     # Alt+Tab like Windows: with Alt held, the two windows with their pictures, the
     # terminal (used before) chosen; letting go switches to it. A quick Alt+Tab

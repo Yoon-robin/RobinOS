@@ -190,6 +190,31 @@ PanelWindow {
         previewWins = [];
     }
 
+    // A right click on an app, like the Windows taskbar's jump list (DockMenu.qml):
+    // a new window, pin or unpin, close its windows. Each action is optional.
+    function openAppMenu(item, label, appIds, actions) {
+        const wins = windowsFor(appIds);
+        const items = [];
+        if (actions.launch)
+            items.push({ icon: "plus", title: "새 창 · " + label, run: actions.launch });
+        if (actions.pin)
+            items.push({ icon: "pin", title: "독에 고정", run: actions.pin });
+        if (actions.unpin)
+            items.push({ icon: "pin", title: "독에서 고정 풀기", run: actions.unpin });
+        if (wins.length > 0) {
+            if (items.length > 0)
+                items.push({ separator: true });
+            items.push({ icon: "x", title: wins.length > 1 ? "창 " + wins.length + "개 모두 닫기" : "창 닫기", run: () => ShellState.closeWindows(wins) });
+        }
+        if (items.length === 0)
+            return;
+        closePreview();
+        showTip(item, "");
+        // The body is centered on the screen, 10 px above its bottom edge
+        const left = (dock.screen.width - body.width) / 2 + item.mapToItem(body, 0, 0).x;
+        ShellState.openDockMenu(dock.screen, left, dock.screen.height - 10 - body.height - 8, items);
+    }
+
     // A window closed while its picture shows: drop it. Its dock button may go away
     // with it, and then no "pointer left" ever comes, so the card closes here too
     // (a closed calculator's empty card stayed up in the boot test, 2026-10-10)
@@ -349,6 +374,10 @@ PanelWindow {
                         else
                             dock.activateOrLaunch(modelData.appIds, modelData.command);
                     }
+                    // RobinOS's own apps stay pinned; the installer runs once
+                    onRightClicked: dock.openAppMenu(pinnedItem, label, modelData.appIds, {
+                        launch: modelData.key === "installer" ? null : () => Quickshell.execDetached(modelData.command)
+                    })
                     onHoveredChanged: {
                         dock.showTip(pinnedItem, hovered ? label : "");
                         dock.hoverApp(pinnedItem, modelData.appIds, hovered);
@@ -375,13 +404,12 @@ PanelWindow {
                         else
                             dock.activateOrLaunch(modelData.appIds, null);
                     }
-                    onRightClicked: {
-                        // The tile under the pointer changes, and so would its tip
-                        dock.showTip(userPinItem, "");
-                        ShellState.unpinFromDock(modelData.id, modelData.label);
-                    }
+                    onRightClicked: dock.openAppMenu(userPinItem, label, modelData.appIds, {
+                        launch: () => modelData.entry.execute(),
+                        unpin: () => ShellState.unpinFromDock(modelData.id, modelData.label)
+                    })
                     onHoveredChanged: {
-                        dock.showTip(userPinItem, hovered ? label + " · 오른쪽 클릭: 고정 풀기" : "");
+                        dock.showTip(userPinItem, hovered ? label : "");
                         dock.hoverApp(userPinItem, modelData.appIds, hovered);
                     }
                 }
@@ -404,16 +432,16 @@ PanelWindow {
                         dock.closePreview();
                         dock.activateOrLaunch([modelData.appId], null);
                     }
-                    // Only apps with a desktop entry can come back after closing
+                    // Only apps with a desktop entry can start again or stay pinned
                     onRightClicked: {
                         const entry = DesktopEntries.heuristicLookup(modelData.appId);
-                        if (entry) {
-                            dock.showTip(extraItem, "");
-                            ShellState.pinToDock(entry.id, entry.name);
-                        }
+                        dock.openAppMenu(extraItem, label, [modelData.appId], {
+                            launch: entry ? () => entry.execute() : null,
+                            pin: entry ? () => ShellState.pinToDock(entry.id, entry.name) : null
+                        });
                     }
                     onHoveredChanged: {
-                        dock.showTip(extraItem, hovered ? label + " · 오른쪽 클릭: 독에 고정" : "");
+                        dock.showTip(extraItem, hovered ? label : "");
                         dock.hoverApp(extraItem, [modelData.appId], hovered);
                     }
                 }

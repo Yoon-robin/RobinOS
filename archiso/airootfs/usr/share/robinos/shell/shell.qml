@@ -49,6 +49,8 @@ ShellRoot {
 
     DesktopMenu {}
 
+    DockMenu {}
+
     SoundPanel {}
 
     Toasts {}

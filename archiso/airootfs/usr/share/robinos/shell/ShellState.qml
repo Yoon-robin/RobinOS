@@ -209,6 +209,33 @@ Singleton {
         desktopMenuOpen = true;
     }
 
+    // A dock app's right-click menu (DockMenu.qml) above it, like the Windows
+    // taskbar's jump list; the dock builds the items for the app
+    property bool dockMenuOpen: false
+    property point dockMenuAt: Qt.point(0, 0)
+    property var dockMenuItems: []
+
+    function openDockMenu(screen, x, y, items) {
+        if (welcomeOpen)
+            return;
+        launcherOpen = false;
+        quickSettingsOpen = false;
+        calendarOpen = false;
+        notifCenterOpen = false;
+        detailPanel = "";
+        quickLinksOpen = false;
+        overlayScreen = screen;
+        dockMenuAt = Qt.point(x, y);
+        dockMenuItems = items;
+        dockMenuOpen = true;
+    }
+
+    // Asks the app to close, like the window's own close button
+    function closeWindows(wins) {
+        for (const win of wins)
+            win?.wayland?.close();
+    }
+
     // Alt+F4 on the desktop (robinos.lua): the quick settings open on their power menu
     property bool powerMenuRequested: false
 
@@ -727,7 +754,7 @@ Singleton {
             return;
         desktopSettings.dockPins = dockPins.concat([id]);
         desktopStore.writeAdapter();
-        Quickshell.execDetached(["notify-send", "-a", "RobinOS", "독에 고정했어요", appName(id, name) + " · 다시 오른쪽 클릭하면 고정을 풀어요"]);
+        Quickshell.execDetached(["notify-send", "-a", "RobinOS", "독에 고정했어요", appName(id, name) + " · 독에서 오른쪽 클릭하면 고정을 풀 수 있어요"]);
     }
 
     function unpinFromDock(id, name) {
