@@ -55,6 +55,17 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 ## 진행 중
 
+### T-116 설치 테스트: 미션과 이모지에 필요한 명령
+- 상태: 진행 중
+- 출처: 백로그 채우기 2(검증이 빠진 기능). 미션 38(ssh-keygen), 40·CTF 8(gpg), Win+.(wtype)이 설치본에 실제로 있는지 설치 테스트가 보지 않았어요(robinctl 테스트는 WSL에서 돌아서 ssh-keygen이 없을 때 가짜 파일로 대신했어요)
+- 한 것: `install-test.py`가 설치본에서 `command -v which ssh-keygen gpg wtype`
+- 완료 기준: 묶음 검증의 설치 테스트 통과
+
+### T-115 공개용 ISO가 2GiB 안인지
+- 상태: 진행 중
+- 출처: 백로그 채우기 5(공개 프리뷰 준비). v0.1 공개용 ISO가 2,097,446,912바이트로 깃허브 한도(2GiB)까지 50MB쯤 남았는데, 그 뒤로 라이브 ISO에 패키지가 늘었어요(wtype, 사운드·트레이 관련 등). v0.2를 공개하기로 하면 올리지 못할 수 있어요
+- 할 것: `wsl-build.ps1 build`(xz)로 크기 확인. 넘으면 줄일 후보를 정리해요
+
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
 - 출처: 사용자 요청("vmware로 깔아줘"). VMware Workstation Pro 26H1, VM은 `문서\Virtual Machines\RobinOS\RobinOS.vmx`(EFI, 8GB, NVMe 64GB, 3D 가속 켬)

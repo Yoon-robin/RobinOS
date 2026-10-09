@@ -589,8 +589,10 @@ def phase_installed(con, qmp):
             " && (. /etc/os-release && [ \"$ID\" = robinos ] && [ \"$ID_LIKE\" = arch ] && echo \"$PRETTY_NAME\")",
             timeout=600)
     con.run("grep -q robinos-bashrc.sh /etc/skel/.bashrc && grep -l robinos-bashrc.sh /home/*/.bashrc")
-    # which isn't in Arch's base; the where hint and learning mission 27 need it
-    con.run("command -v which")
+    # which isn't in Arch's base; the where hint and learning mission 27 need it.
+    # ssh-keygen (mission 38) and gpg (mission 40, CTF 8) for the security missions,
+    # wtype for the Win+. emoji picker
+    con.run("command -v which && command -v ssh-keygen && command -v gpg && command -v wtype")
 
     # QEMU's WHPX can't reset a VM that reboots itself ("Unexpected VP exit code 4"),
     # so every boot is its own QEMU run: power off here, the next phase boots again.
