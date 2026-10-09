@@ -273,11 +273,19 @@ hl.bind(mainMod .. " + L",      hl.dsp.exec_cmd("loginctl lock-session"), { desc
 hl.bind("CTRL + SHIFT + Escape", hl.dsp.exec_cmd("missioncenter"), { description = "작업 관리자 (Mission Center)" })
 hl.bind("Print",                hl.dsp.exec_cmd(bin_dir .. "/robinos-screenshot region"), { description = "영역 스크린샷" })
 hl.bind("SHIFT + Print",        hl.dsp.exec_cmd(bin_dir .. "/robinos-screenshot screen"), { description = "전체 스크린샷" })
+hl.bind(mainMod .. " + Print",  hl.dsp.exec_cmd(bin_dir .. "/robinos-screenshot screen"), { description = "전체 스크린샷 (윈도우의 Win+PrtSc)" })
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd(bin_dir .. "/robinos-screenshot region"), { description = "영역 스크린샷 (윈도우의 캡처 도구)" })
 
 -- Windows (Windows-style shortcuts work too)
 hl.bind(mainMod .. " + Q", hl.dsp.window.close(), { description = "창 닫기" })
-hl.bind("ALT + F4",        hl.dsp.window.close(), { description = "창 닫기" })
+hl.bind("ALT + F4", function()
+    if hl.get_active_window() then
+        hl.dispatch(hl.dsp.window.close())
+    else
+        -- Like Windows on the desktop: the shutdown choices (the quick settings' power menu)
+        hl.dispatch(hl.dsp.global("robinos:power"))
+    end
+end, { description = "창 닫기 (창이 없으면 전원 메뉴)" })
 -- Alt+Tab like Windows: the shell shows the windows while Alt is held (AltTab.qml)
 -- and switches when Alt is let go. A release bind on Alt_L never fires once Alt+Tab
 -- has taken the key (boot test, 2026-10-09), so a short timer watches Alt instead

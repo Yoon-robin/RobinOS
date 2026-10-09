@@ -155,6 +155,12 @@ def main():
     keys(qmp, "alt", "f4")
     wait(2)
     shot(qmp, "desktop")
+    # Alt+F4 with no window left asks for the power menu, like Windows' shutdown dialog
+    keys(qmp, "alt", "f4")
+    wait(2)
+    shot(qmp, "power-menu")
+    keys(qmp, "esc")
+    wait(1)
 
     keys(qmp, "meta_l", "spc")
     wait(3)

@@ -169,6 +169,18 @@ Singleton {
         quickSettingsOpen = true;
     }
 
+    // Alt+F4 on the desktop (robinos.lua): the quick settings open on their power menu
+    property bool powerMenuRequested: false
+
+    function openPowerMenu() {
+        if (welcomeOpen)
+            return;
+        powerMenuRequested = true;
+        if (quickSettingsOpen)
+            quickSettingsOpen = false;
+        toggleQuickSettings(null);
+    }
+
     // Month calendar under the bar's clock (Calendar.qml), like Windows' clock flyout
     property bool calendarOpen: false
 

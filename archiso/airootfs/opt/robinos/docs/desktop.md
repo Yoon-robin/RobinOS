@@ -102,7 +102,7 @@ VM 창 크기를 바꾸면 VMware(`vmtoolsd`)나 QEMU(`virtio-gpu`)가 새 크�
 | `Super+L` | 화면 잠금 |
 | `Ctrl+Shift+Escape` | 작업 관리자 (Mission Center) |
 | `Alt+Tab`, `Alt+Shift+Tab` | 창 전환: `Alt`를 누르고 있는 동안 지금 작업 공간의 창이 미리보기 그림과 함께 최근에 쓴 순서로 나와요(최소화한 창도). `Tab`으로 다음, `Shift+Tab`으로 이전 창을 고르고, `Alt`를 놓으면 그 창으로 가요. 마우스로 눌러도 돼요 (윈도우와 같아요) |
-| `Alt+F4` 또는 `Super+Q` | 창 닫기 |
+| `Alt+F4` 또는 `Super+Q` | 창 닫기. 창이 없는 바탕 화면에서 `Alt+F4`를 누르면 전원 메뉴(로그아웃, 다시 시작, 전원 끄기)가 떠요 (윈도우의 "Windows 종료"와 같아요) |
 | `Super+D` | 바탕 화면 보기 (지금 작업 공간의 창을 모두 숨기고, 다시 누르면 돌아와요) |
 | `Super+T` | 창을 자유 배치와 타일 배치 사이에서 전환 |
 | `Super+F`, `Super+M` 또는 `Super+↑` | 전체 화면, 최대화 |
@@ -114,7 +114,7 @@ VM 창 크기를 바꾸면 VMware(`vmtoolsd`)나 QEMU(`virtio-gpu`)가 새 크�
 | `Super+Shift+방향키` | 창을 그쪽으로 옮겨요 |
 | `Super+마우스 휠` | 이웃 작업 공간으로 |
 | `Super+drag` | 창 이동(왼쪽 버튼), 크기 조절(오른쪽 버튼) |
-| `Print`, `Shift+Print` | 영역 또는 전체 화면을 찍어 `~/Pictures/Screenshots`와 클립보드에 저장. 알림을 누르면 사진이 열리고, "폴더 열기" 단추로 폴더를 열어요 |
+| `Print`, `Shift+Print` 또는 `Super+Print` | 영역 또는 전체 화면을 찍어 `~/Pictures/Screenshots`와 클립보드에 저장. 알림을 누르면 사진이 열리고, "폴더 열기" 단추로 폴더를 열어요 |
 | `Super+Shift+S` | 영역 스크린샷 (윈도우의 캡처 도구 `Win+Shift+S`와 같아요) |
 | `Super+.` 또는 `Super+;` | 이모지: 런처에서 이모지를 찾아(하트, 웃음, ok처럼 한국어·영어로) `Enter`를 누르면 원래 창에 들어가고 클립보드에도 복사돼요 (윈도우의 `Win+.`와 같아요) |
 | `Super+V` | 클립보드 기록 (윈도우의 `Win+V`처럼 복사한 것 50개, 로그아웃하면 지워져요) |

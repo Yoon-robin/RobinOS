@@ -140,6 +140,13 @@ ShellRoot {
 
     GlobalShortcut {
         appid: "robinos"
+        name: "power"
+        description: "전원 메뉴 (바탕 화면에서 Alt+F4)"
+        onPressed: ShellState.openPowerMenu()
+    }
+
+    GlobalShortcut {
+        appid: "robinos"
         name: "taskview"
         description: "작업 보기 (모든 작업 공간의 창)"
         onPressed: ShellState.toggleTaskView()

@@ -32,7 +32,9 @@ PanelWindow {
 
     onOpenChanged: {
         if (open) {
-            confirmPower = false;
+            // Alt+F4 with no window asks for the power menu, like Windows' shutdown dialog
+            confirmPower = ShellState.powerMenuRequested;
+            ShellState.powerMenuRequested = false;
             ShellState.refreshBrightness();
             ShellState.refreshLab();
             ShellState.checkUpdates(false);
