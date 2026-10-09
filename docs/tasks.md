@@ -40,7 +40,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (없음) | | |
+| 묶음 59 | T-134 런처 계산·웹 검색, T-135 런처 오른쪽 클릭 메뉴(MenuCard), T-136 라이브 ISO의 networkd·실패 서비스 | `verify -Installer robinos` (부팅 테스트 79장: `launcher-calc`, `launcher-web`, `launcher-menu`, `failed-units`; 메뉴 장면 `quick-links`, `desktop-menu`, `dock-menu`) |
 
 `d335d16`까지 2026-10-10 묶음 58 검증(`verify`: 빌드 3.7분 + 테스트 13.7분)을 마치고 푸시했어요.
 
@@ -56,19 +56,19 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ## 진행 중
 
 ### T-134 런처에서 계산하고 웹에서 찾기
-- 상태: 진행 중 (묶음 59)
+- 상태: 검증 대기 (묶음 59)
 - 출처: 백로그 채우기 1 (윈도우와 다른 점). 윈도우 시작 메뉴 검색은 `12*3`을 치면 계산 결과를, 맞는 앱이 없으면 웹 검색을 보여 주는데, RobinOS 런처는 둘 다 없었어요
 - 한 것: `desktop/shell/calc.js`(eval 없이 직접 파싱하는 계산기: `+ - * / ^`, `× ÷`, 괄호). 수식이면 맨 위 "계산"에 결과, `Enter`로 복사(`wl-copy`). 두 글자 이상이면 맨 아래 "웹에서 ... 찾기"(`firefox --search`, 고르기 전에는 아무것도 보내지 않아요). `check-desktop.sh`가 `qml6`로 계산 18가지를 시험해요(틀린 기대값이면 실패하는 것도 확인). 아이콘 `calculator`
 - 완료 기준: 부팅 테스트 `launcher-calc`(= 60), `launcher-web`
 
 ### T-135 런처 앱 오른쪽 클릭 메뉴
-- 상태: 진행 중 (묶음 59)
+- 상태: 검증 대기 (묶음 59)
 - 출처: T-132(독 메뉴)와 맞추기. 시작 메뉴는 앱을 오른쪽 클릭하면 메뉴가 뜨는데, 런처는 오른쪽 클릭이 바로 고정을 바꿨어요
 - 한 것: 런처 안에 메뉴(열기, 독에 고정·고정 풀기, 제거). 런처가 키보드를 독점하는 창이라 따로 창을 띄우지 않고 같은 창 안에 그려요. 메뉴 카드를 `MenuCard.qml`로 떼어 `PopupMenu.qml`(Win+X, 바탕 화면, 독)과 함께 써요. 메뉴 키와 `Shift+F10`으로도 열어요
 - 완료 기준: 부팅 테스트 `launcher-menu`, `launcher-pin`(아래 화살표·Enter로 고정, 런처는 열린 채), 그 뒤 장면(계산기 열기, 앱 제거 안내)이 전과 같음
 
 ### T-136 라이브 ISO의 네트워크 관리자 다툼과 실패하는 서비스
-- 상태: 진행 중 (묶음 59)
+- 상태: 검증 대기 (묶음 59)
 - 출처: 묶음 58 `27-event-viewer`의 경고. ① systemd-networkd가 NetworkManager와 같은 장치를 관리하려 다퉜어요(`conflicting with our setting`, resolved `LinkBusy`). 라이브 ISO의 machine-id가 "uninitialized"라 부팅할 때마다 systemd가 preset을 적용하고, systemd의 `90-systemd.preset`이 `prepare-archiso.sh`가 뺀 networkd를 다시 켰어요. ② releng가 켜 둔 ModemManager, hv_fcopy_daemon 링크가 RobinOS에 없는 패키지를 가리켜서 preset 적용이 `unresolvable alias`로 실패했어요. ③ releng가 켠 `vmtoolsd`가 QEMU와 실제 PC에서 실패해 `systemctl --failed`에 남았어요
 - 한 것: `/etc/systemd/system-preset/10-robinos.preset`(`disable systemd-networkd*`, 처음 맞는 줄이 이겨요), `customize_airootfs.sh`가 깨진 서비스 링크를 지워요, `vmtoolsd`·`vmware-vmblock-fuse`에 `ConditionVirtualization=vmware`
 - 완료 기준: 부팅 테스트 `failed-units`에 실패한 서비스 0개, `systemd-networkd` inactive, `NetworkManager` active. `event-viewer`에 networkd·vmtoolsd·preset 경고가 없음
