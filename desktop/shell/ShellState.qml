@@ -618,7 +618,33 @@ Singleton {
     Timer {
         id: monitorRefresh
         interval: 500
-        onTriggered: Hyprland.refreshMonitors()
+        onTriggered: {
+            Hyprland.refreshMonitors();
+            Hyprland.refreshToplevels();
+            floatingFit.restart();
+        }
+    }
+
+    // Floating windows keep their place and size when the scale changes, so a
+    // bigger scale can push them partly off the screen; those get centered
+    Timer {
+        id: floatingFit
+        interval: 300
+        onTriggered: {
+            const screen = Hyprland.focusedMonitor?.lastIpcObject;
+            if (!screen || !screen.scale)
+                return;
+            const right = screen.x + screen.width / screen.scale;
+            const bottom = screen.y + screen.height / screen.scale;
+            for (const win of root.windows) {
+                const w = win.lastIpcObject;
+                if (!w || !w.floating || w.monitor !== screen.id || root.isMinimized(win) || !w.at || !w.size)
+                    continue;
+                if (w.at[0] < screen.x || w.at[1] < screen.y || w.at[0] + w.size[0] > right || w.at[1] + w.size[1] > bottom)
+                    Hyprland.dispatch(Hyprland.usingLua ? "hl.dsp.window.center({ window = \"" + root.selector(win) + "\" })"
+                                                        : "centerwindow");
+            }
+        }
     }
 
     function setScale(scale) {
