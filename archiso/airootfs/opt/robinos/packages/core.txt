@@ -7,6 +7,8 @@ sudo
 git
 vim
 nano
+# Not in Arch's base; the where hint and learning mission 27 use it
+which
 curl
 python
 wget

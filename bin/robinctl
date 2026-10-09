@@ -47,7 +47,7 @@ robinctl - RobinOS 관리 도구
   robinctl packages core                기본 패키지 목록
   robinctl packages <프로필>            보안 실습 프로필의 패키지 목록
   robinctl packages optional            선택 패키지 목록
-  robinctl learn                        학습 미션(리눅스·네트워크·포렌식·리버싱·웹)과 진행도
+  robinctl learn                        학습 미션(리눅스·네트워크·포렌식·리버싱·웹·셸)과 진행도
   robinctl learn show [번호]            미션 설명 보기
   robinctl learn check [번호]           미션 결과 확인
   robinctl learn reset                  미션 진행도 초기화
@@ -738,7 +738,7 @@ packages_print() {
 }
 
 # ---- Learning missions: Linux basics (1-5), network basics (6-10), forensics basics (11-15),
-# reversing basics (16-20), web basics (21-25) ----
+# reversing basics (16-20), web basics (21-25), shell basics (26-30) ----
 #
 # Missions are solved in a real terminal. `robinctl learn check N` looks at the
 # result (files under ~/practice) and records progress in the user's state dir.
@@ -749,13 +749,15 @@ packages_print() {
 # put in ~/practice/reversing; 18 and 19 need ltrace and strace (in the live ISO and
 # the reversing profile, or pacman -S on their own). The web basics missions talk to a
 # practice server (practice/web/server.py) that only listens on 127.0.0.1:8000.
+# The shell basics missions need nothing but bash; their files go to ~/practice/shell.
 
-readonly LEARN_COUNT=25
+readonly LEARN_COUNT=30
 LEARN_DIR="${HOME:-/root}/practice"
 LEARN_NET="${HOME:-/root}/practice/net"
 LEARN_FOR="${HOME:-/root}/practice/forensics"
 LEARN_REV="${HOME:-/root}/practice/reversing"
 LEARN_WEB="${HOME:-/root}/practice/web"
+LEARN_SHELL="${HOME:-/root}/practice/shell"
 LEARN_STATE="${XDG_STATE_HOME:-${HOME:-/root}/.local/state}/robinos/learn"
 LEARN_FAILS=0
 
@@ -786,6 +788,11 @@ learn_title() {
     23) printf 'robots.txt 읽기' ;;
     24) printf '쿠키 주고받기' ;;
     25) printf '상태 코드와 리다이렉트' ;;
+    26) printf '환경 변수 보기' ;;
+    27) printf '명령은 어디에 있을까 (PATH)' ;;
+    28) printf '명령에 별명 붙이기' ;;
+    29) printf '스크립트에 값 넘기기' ;;
+    30) printf '종료 코드와 && ||' ;;
   esac
 }
 
@@ -797,6 +804,7 @@ learn_group() {
     11) printf '포렌식 기초' ;;
     16) printf '리버싱 기초' ;;
     21) printf '웹 기초' ;;
+    26) printf '셸 기초' ;;
   esac
 }
 
@@ -827,6 +835,11 @@ learn_tools() {
     23) printf 'robots.txt' ;;
     24) printf 'curl -c -b' ;;
     25) printf 'curl -i -L' ;;
+    26) printf 'echo $HOME env' ;;
+    27) printf 'echo $PATH which' ;;
+    28) printf 'alias ~/.bashrc' ;;
+    29) printf '$1 chmod +x' ;;
+    30) printf 'echo $? && ||' ;;
   esac
 }
 
@@ -868,7 +881,7 @@ learn_mission_arg() {
     n="$(learn_next)"
     [[ -n "${n}" ]] || n="${LEARN_COUNT}"
   fi
-  [[ "${n}" =~ ^([1-9]|1[0-9]|2[0-5])$ ]] || die "미션 번호는 1부터 ${LEARN_COUNT}까지예요"
+  [[ "${n}" =~ ^([1-9]|[12][0-9]|30)$ ]] || die "미션 번호는 1부터 ${LEARN_COUNT}까지예요"
   printf '%s' "${n}"
 }
 
@@ -1497,6 +1510,113 @@ EOF
 EOF
 }
 
+learn_show_26() {
+  cat <<'EOF'
+윈도우에서는 %USERPROFILE%나 %USERNAME% 같은 환경 변수를 써요(명령 프롬프트의 set).
+리눅스에서는 $HOME, $USER처럼 앞에 $를 붙여 읽어요. 프로그램은 이 값을 보고
+내 폴더와 이름을 알아요. 프롬프트에 보이는 ~도 $HOME을 줄여 쓴 거예요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  ~/practice/shell/home.txt에 첫 줄은 내 홈 폴더($HOME), 둘째 줄은 내 사용자 이름($USER)을 저장하세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  echo $HOME                              내 홈 폴더
+  echo $USER                              내 사용자 이름
+  env | less                              모든 환경 변수 (q로 나가요)
+  echo $HOME > ~/practice/shell/home.txt
+  echo $USER >> ~/practice/shell/home.txt
+  cat ~/practice/shell/home.txt
+EOF
+}
+
+learn_show_27() {
+  cat <<'EOF'
+ls를 치면 셸은 PATH 환경 변수에 적힌 폴더들을 차례로 뒤져 ls라는 실행 파일을 찾아요.
+윈도우의 PATH와 where 명령과 같아요. 리눅스에서는 폴더를 :(콜론)으로 나눠 적어요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  ls 명령의 실행 파일이 있는 전체 경로를 ~/practice/shell/ls-path.txt에 저장하세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  echo $PATH                              셸이 명령을 찾는 폴더들
+  echo $PATH | tr ':' '\n'                한 줄에 하나씩
+  which ls                                ls가 있는 곳
+  which ls > ~/practice/shell/ls-path.txt
+  ls -l $(which ls)                       그 파일 자세히 보기
+EOF
+}
+
+learn_show_28() {
+  cat <<'EOF'
+자주 치는 긴 명령에는 짧은 별명(alias)을 붙여요. 윈도우의 doskey와 비슷해요.
+터미널에서 만든 별명은 그 창을 닫으면 사라져요. ~/.bashrc에 적어 두면
+터미널을 열 때마다 다시 만들어져요. ~/.bashrc는 bash가 시작할 때 읽는 설정 파일이에요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  practice를 치면 ~/practice로 가는 별명을 ~/.bashrc에 적으세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  alias                                    지금 있는 별명 목록 (ll, la도 별명이에요)
+  alias practice='cd ~/practice'           이 터미널에서만 쓰는 별명
+  practice && pwd
+  echo "alias practice='cd ~/practice'" >> ~/.bashrc
+  tail -n 2 ~/.bashrc                      잘 적혔는지 보기
+  source ~/.bashrc                         지금 터미널에도 다시 읽기
+EOF
+}
+
+learn_show_29() {
+  cat <<'EOF'
+스크립트를 실행할 때 뒤에 붙인 값은 스크립트 안에서 $1, $2로 받아요.
+윈도우 배치 파일(.bat)의 %1, %2와 같아요. 변수는 큰따옴표(" ") 안에서는
+값으로 바뀌고, 작은따옴표(' ') 안에서는 글자 그대로 남아요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  ~/practice/shell/greet.sh를 만들어서, ./greet.sh 로빈 이라고 실행하면
+  "안녕, 로빈"처럼 넘긴 값이 들어간 인사가 나오게 하세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  cd ~/practice/shell
+  nano greet.sh             아래 두 줄을 쓰고 Ctrl+O, Enter, Ctrl+X
+      #!/bin/bash
+      echo "안녕, $1"
+  chmod +x greet.sh
+  ./greet.sh 로빈
+  ./greet.sh                값을 안 넘기면 $1은 비어 있어요
+EOF
+}
+
+learn_show_30() {
+  cat <<'EOF'
+명령이 끝나면 숫자 하나를 남겨요. 이걸 종료 코드라고 하고, 0은 성공, 그 밖의 숫자는
+실패예요. 바로 앞 명령의 종료 코드는 $?에 들어 있어요. RobinOS 프롬프트에서
+> 앞에 빨갛게 나오는 숫자가 바로 이 종료 코드예요(127은 명령을 찾지 못했다는 뜻).
+&&는 앞 명령이 성공했을 때만, ||는 실패했을 때만 뒤 명령을 실행해요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  성공하는 명령과 실패하는 명령의 종료 코드를 ~/practice/shell/exit-codes.txt에
+  한 줄씩 저장하세요(첫 줄은 성공, 둘째 줄은 실패).
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  ls ~; echo $?                            성공: 0
+  ls /없는폴더; echo $?                    실패: 0이 아닌 숫자
+  ls /없는폴더 || echo "실패했어요"
+  mkdir -p ~/practice/shell && echo "만들었어요"
+  { ls ~ > /dev/null; echo $?; ls /없는폴더 2> /dev/null; echo $?; } > ~/practice/shell/exit-codes.txt
+  cat ~/practice/shell/exit-codes.txt
+EOF
+}
+
 # The practice web server for missions 21-25 (practice/web/server.py), kept here
 # as gzip + base64 by practice/web/build.sh
 LEARN_WEB_SERVER_B64="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"
@@ -1553,6 +1673,8 @@ learn_show() {
   "learn_show_${n}"
   if [[ "${n}" == "3" ]]; then
     learn_prepare_3
+  elif ((n >= 26)); then
+    mkdir -p "${LEARN_SHELL}"
   elif ((n >= 21)); then
     learn_prepare_web
   elif ((n >= 16)); then
@@ -2005,6 +2127,100 @@ learn_check_25() {
     "curl -L http://127.0.0.1:8000/old-page"
 }
 
+# ---- Shell basics (26-30) ----
+
+learn_check_26() {
+  local file="${LEARN_SHELL}/home.txt" first
+  if [[ ! -s "${file}" ]]; then
+    learn_bad "~/practice/shell/home.txt가 없거나 비어 있어요" 'mkdir -p ~/practice/shell 후 echo $HOME > ~/practice/shell/home.txt'
+    return
+  fi
+  first="$(head -n 1 "${file}" | tr -d '\r')"
+  if [[ "${first}" == "${HOME}" ]]; then
+    learn_ok "첫 줄이 내 홈 폴더(${HOME})예요"
+  else
+    learn_bad "첫 줄이 내 홈 폴더가 아니에요 (지금: '${first}')" '직접 쓰지 말고 echo $HOME 의 결과를 > 로 저장해 보세요'
+  fi
+  if grep -qx "$(id -un)" "${file}"; then
+    learn_ok "내 사용자 이름($(id -un))도 있어요"
+  else
+    learn_bad "내 사용자 이름이 한 줄로 들어 있지 않아요" 'echo $USER >> ~/practice/shell/home.txt'
+  fi
+}
+
+learn_check_27() {
+  local file="${LEARN_SHELL}/ls-path.txt" written real
+  if [[ ! -s "${file}" ]]; then
+    learn_bad "~/practice/shell/ls-path.txt가 없거나 비어 있어요" "which ls > ~/practice/shell/ls-path.txt"
+    return
+  fi
+  written="$(head -n 1 "${file}" | tr -d '\r' | sed 's/[[:space:]]*$//')"
+  real="$(command -v ls)"
+  if [[ "${written}" != /* ]]; then
+    learn_bad "전체 경로가 아니에요 (지금: '${written}')" "경로는 /로 시작해요. which ls가 알려 주는 그대로 저장해요"
+  elif [[ -x "${written}" && "$(realpath "${written}" 2>/dev/null)" == "$(realpath "${real}")" ]]; then
+    learn_ok "ls 명령은 ${written}에 있어요"
+  else
+    learn_bad "ls가 있는 곳이 아니에요 (지금: '${written}')" "which ls 를 다시 실행해 보세요"
+  fi
+}
+
+learn_check_28() {
+  local rc="${HOME}/.bashrc" line
+  line="$(grep -E "^[[:space:]]*alias[[:space:]]+practice=" "${rc}" 2>/dev/null | tail -n 1 || true)"
+  if [[ -z "${line}" ]]; then
+    learn_bad "~/.bashrc에 practice 별명이 없어요" "echo \"alias practice='cd ~/practice'\" >> ~/.bashrc"
+    return
+  fi
+  learn_ok "~/.bashrc에 practice 별명이 있어요"
+  if [[ "${line}" == *cd* && "${line}" == *practice* ]]; then
+    learn_ok "practice를 치면 연습 폴더로 가요"
+  else
+    learn_bad "별명이 연습 폴더로 가는 명령이 아니에요 (지금: ${line})" "alias practice='cd ~/practice' 처럼 써요"
+  fi
+}
+
+learn_check_29() {
+  local script="${LEARN_SHELL}/greet.sh" output
+  if [[ ! -f "${script}" ]]; then
+    learn_bad "~/practice/shell/greet.sh가 없어요" "cd ~/practice/shell 후 nano greet.sh"
+    return
+  fi
+  if [[ ! -x "${script}" ]]; then
+    learn_bad "실행 권한(x)이 없어요" "chmod +x ~/practice/shell/greet.sh"
+    return
+  fi
+  learn_ok "greet.sh에 실행 권한이 있어요"
+  output="$(cd "${LEARN_SHELL}" && timeout 5 ./greet.sh robin-check-29 2>&1 </dev/null || true)"
+  if [[ "${output}" == *robin-check-29* ]]; then
+    learn_ok "./greet.sh robin-check-29 를 실행하면 '${output%%$'\n'*}'라고 나와요"
+  elif [[ "${output}" == *'$1'* ]]; then
+    learn_bad "\$1이 글자 그대로 나와요" "작은따옴표(' ') 안에서는 변수가 바뀌지 않아요. 큰따옴표(\" \")로 감싸요"
+  else
+    learn_bad "넘긴 값이 출력에 없어요 (지금: '${output%%$'\n'*}')" 'echo "안녕, $1" 줄이 있는지 확인해 보세요'
+  fi
+}
+
+learn_check_30() {
+  local file="${LEARN_SHELL}/exit-codes.txt" first second
+  if [[ ! -s "${file}" ]]; then
+    learn_bad "~/practice/shell/exit-codes.txt가 없거나 비어 있어요" "robinctl learn show 30의 마지막 명령을 따라 해 보세요"
+    return
+  fi
+  first="$(sed -n 1p "${file}" | tr -d '\r[:space:]')"
+  second="$(sed -n 2p "${file}" | tr -d '\r[:space:]')"
+  if [[ "${first}" == "0" ]]; then
+    learn_ok "성공한 ls의 종료 코드는 0이에요"
+  else
+    learn_bad "첫 줄이 0이 아니에요 (지금: '${first}')" "성공한 명령 바로 뒤에 echo \$? 를 해요"
+  fi
+  if [[ "${second}" =~ ^[1-9][0-9]*$ ]]; then
+    learn_ok "실패한 ls의 종료 코드는 ${second}예요 (0이 아니면 실패)"
+  else
+    learn_bad "둘째 줄이 0이 아닌 숫자가 아니에요 (지금: '${second}')" "없는 폴더를 ls 한 바로 뒤에 echo \$? 를 해요"
+  fi
+}
+
 learn_check() {
   local n next
   n="$(learn_mission_arg "${1:-}")"
@@ -2030,6 +2246,8 @@ learn_check() {
     printf '포렌식 기초를 끝냈어요. 16번부터는 리버싱 기초예요.\n'
   elif [[ "${n}" == "20" ]]; then
     printf '리버싱 기초를 끝냈어요. 21번부터는 웹 기초예요.\n'
+  elif [[ "${n}" == "25" ]]; then
+    printf '웹 기초를 끝냈어요. 26번부터는 셸 기초예요.\n'
   fi
   next="$(learn_next)"
   if [[ -n "${next}" ]]; then

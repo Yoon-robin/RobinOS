@@ -96,14 +96,14 @@ check "5 fails with a made-up line" fail learn check 5
 in_home "grep bash /etc/passwd > practice/bash-users.txt"
 check "5 passes with grep's output" 0 learn check 5
 check "list after the first five" 0 learn
-said "list counts 5 of 25" "5/25"
+said "list counts 5 of 30" "5/30"
 said "list shows the network group" "네트워크 기초"
 said "list points to mission 6" "robinctl learn show 6"
 # The shell's learning center (LearnCenter.qml) reads this
 check "tsv for the learning center" 0 learn tsv
-if [[ "$(grep -c '^mission	' "${WORK}/out")" == "25" && "$(awk -F'\t' '$1 == "mission" && $6 == 1' "${WORK}/out" | wc -l)" == "5" ]] \
+if [[ "$(grep -c '^mission	' "${WORK}/out")" == "30" && "$(awk -F'\t' '$1 == "mission" && $6 == 1' "${WORK}/out" | wc -l)" == "5" ]] \
     && grep -qx 'mission	6	네트워크 기초	내 IP 주소 보기	ip a	0' "${WORK}/out" && grep -qx 'ctf	0	5' "${WORK}/out"; then
-  ok "tsv: 25 missions, 5 done, groups, then the CTF"
+  ok "tsv: 30 missions, 5 done, groups, then the CTF"
 else
   bad "tsv: $(head -n 7 "${WORK}/out" | tr '\t' '|')"
 fi
@@ -152,7 +152,7 @@ in_home "printf '# Nmap 7.95 scan\nNmap scan report for localhost (127.0.0.1)\nP
 check "10 passes with 9000 open on 127.0.0.1" 0 learn check 10
 
 check "list after the first ten" 0 learn
-said "list counts 10 of 25" "10/25"
+said "list counts 10 of 30" "10/30"
 said "list shows the forensics group" "포렌식 기초"
 said "list points to mission 11" "robinctl learn show 11"
 
@@ -196,7 +196,7 @@ check "15 passes with the pipeline from the mission" 0 learn check 15
 in_home "bsdtar -xOf practice/forensics/logo.png secret.txt > practice/forensics/found.txt"
 check "14 passes again" 0 learn check 14
 check "list after the first fifteen" 0 learn
-said "list counts 15 of 25" "15/25"
+said "list counts 15 of 30" "15/30"
 said "list shows the reversing group" "리버싱 기초"
 said "list points to mission 16" "robinctl learn show 16"
 
@@ -249,7 +249,7 @@ in_home "cd ${REV} && ./count 1337 | grep -q ROBIN-COUNT-1337 && echo \$((0x539)
 check "20 passes with 1337" 0 learn check 20
 
 check "list after the first twenty" 0 learn
-said "list counts 20 of 25" "20/25"
+said "list counts 20 of 30" "20/30"
 said "list shows the web group" "웹 기초"
 said "list points to mission 21" "robinctl learn show 21"
 
@@ -287,11 +287,39 @@ check "25 passes after following the redirect" 0 learn check 25
 in_home "kill \$(cat ${WEB}/.test-server)"
 if ss -Htln 2>/dev/null | grep -q ":${WEB_PORT} "; then bad "the practice server is still listening"; fi
 
-check "list after all twenty-five" 0 learn
-said "list says all twenty-five are done" "25/25"
+check "list after twenty-five" 0 learn
+said "list counts 25 of 30" "25/30"
+said "list shows the shell group" "셸 기초"
+
+# Shell basics: answers written the way the missions ask
+check "show 26 makes ~/practice/shell" 0 learn show 26
+in_home "test -d practice/shell" && ok "practice/shell was made" || bad "practice/shell was not made"
+in_home "echo /home/someone-else > practice/shell/home.txt"
+check "26 fails with somebody else's home" fail learn check 26
+in_home 'echo $HOME > practice/shell/home.txt; echo $(id -un) >> practice/shell/home.txt'
+check "26 passes with \$HOME and the user name" 0 learn check 26
+in_home "echo ls > practice/shell/ls-path.txt"
+check "27 fails without a full path" fail learn check 27
+in_home "which ls > practice/shell/ls-path.txt"
+check "27 passes with which's answer" 0 learn check 27
+check "28 fails without the alias" fail learn check 28
+in_home "echo \"alias practice='cd ~/practice'\" >> .bashrc"
+check "28 passes with the alias in ~/.bashrc" 0 learn check 28
+in_home "printf '%s\n' '#!/bin/bash' 'echo '\''hi \$1'\''' > practice/shell/greet.sh && chmod +x practice/shell/greet.sh"
+check "29 fails when single quotes keep \$1 as text" fail learn check 29
+said "29 explains the quotes" "큰따옴표"
+in_home "printf '%s\n' '#!/bin/bash' 'echo \"안녕, \$1\"' > practice/shell/greet.sh"
+check "29 passes when the argument is printed" 0 learn check 29
+in_home "printf '%s\n' 0 0 > practice/shell/exit-codes.txt"
+check "30 fails when both codes are 0" fail learn check 30
+in_home "{ ls ~ > /dev/null; echo \$?; ls /no-such-dir 2> /dev/null; echo \$?; } > practice/shell/exit-codes.txt; true"
+check "30 passes with 0 and a failure code" 0 learn check 30
+
+check "list after all thirty" 0 learn
+said "list says all thirty are done" "30/30"
 said "list points to the CTF" "robinctl ctf"
-check "show 25" 0 learn show 25
-check "mission 26 doesn't exist" fail learn show 26
+check "show 30" 0 learn show 30
+check "mission 31 doesn't exist" fail learn show 31
 
 printf '%s\n' "Local CTF (robinctl ctf): each challenge solved the way its hints say"
 CTF="practice/ctf"
@@ -465,7 +493,7 @@ out="$(hint "surely-not-a-command-xyz")"
 if [[ "${out}" == *"명령을 찾을 수 없어요"* ]]; then ok "unknown commands say so"; else bad "unknown command: ${out}"; fi
 # Apps the hints send people to must be installed by RobinOS
 for app in gnome-text-editor nautilus mission-center fastfetch traceroute gnome-calculator gnome-disk-utility \
-    wl-clipboard xdg-utils power-profiles-daemon networkmanager loupe efibootmgr; do
+    wl-clipboard xdg-utils power-profiles-daemon networkmanager loupe efibootmgr which; do
   if grep -qx "${app}" "${ROOT_DIR}/packages/core.txt" "${ROOT_DIR}/packages/desktop.txt" "${ROOT_DIR}/packages/apps.txt" "${ROOT_DIR}/packages/security-baseline.txt"; then
     ok "hinted app ${app} is in a package list"
   else
