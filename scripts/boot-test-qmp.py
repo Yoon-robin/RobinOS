@@ -94,13 +94,18 @@ def hold(qmp, key, down):
 SCREEN = (1600, 900)  # the VGA mode in boot-test.sh and wsl-build.ps1
 
 
-def click(qmp, x, y, button="left"):
-    """Click at screen pixel (x, y) through the usb-tablet (absolute 0..32767)."""
+def move(qmp, x, y):
+    """Move the pointer to screen pixel (x, y) through the usb-tablet (absolute 0..32767)."""
     qmp.execute("input-send-event", events=[
         {"type": "abs", "data": {"axis": "x", "value": round(x * 32767 / (SCREEN[0] - 1))}},
         {"type": "abs", "data": {"axis": "y", "value": round(y * 32767 / (SCREEN[1] - 1))}},
     ])
     time.sleep(0.2 * SPEED)
+
+
+def click(qmp, x, y, button="left"):
+    """Click at screen pixel (x, y)."""
+    move(qmp, x, y)
     for down in (True, False):
         qmp.execute("input-send-event", events=[{"type": "btn", "data": {"down": down, "button": button}}])
         time.sleep(0.1 * SPEED)
@@ -328,6 +333,10 @@ def main():
     keys(qmp, "ret")
     wait(3)
     shot(qmp, "sound")
+    # Tab reaches the device rows, like the other buttons (a focus ring)
+    keys(qmp, "tab")
+    wait(1)
+    shot(qmp, "sound-keyboard")
     keys(qmp, "esc")
     wait(1)
     # Apps' tray icons in the bar, like the Windows notification area: a test item
@@ -346,6 +355,13 @@ def main():
         click(qmp, 1528, 18, "wheel-down")
     wait(0.5)
     shot(qmp, "volume-wheel")
+    # Resting on the terminal in the dock shows its window above it, like the
+    # Windows taskbar (x 775 on the 1600 px screen)
+    move(qmp, 775, 860)
+    wait(2)
+    shot(qmp, "dock-preview")
+    move(qmp, 800, 400)
+    wait(1)
     # "배경으로 설정" in Files and Image Viewer goes through the Wallpaper portal to
     # robinos-wallpaper-portal; the same call here sets the RobinOS logo as the
     # wallpaper. Then the launcher's "기본 배경화면으로" brings the drawn one back.

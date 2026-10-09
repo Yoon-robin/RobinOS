@@ -12,13 +12,18 @@ PanelWindow {
     screen: modelData
     anchors.bottom: true
     margins.bottom: 10
-    implicitWidth: Math.max(body.implicitWidth, 320)
-    implicitHeight: body.implicitHeight + 40
+    implicitWidth: Math.max(body.implicitWidth, previewShown ? previewCard.width : 0, 320)
+    implicitHeight: body.implicitHeight + (previewShown ? previewCard.height + 16 : 40)
     exclusiveZone: body.implicitHeight
     color: "transparent"
-    // Only the dock body takes input; the tooltip strip above it is click-through.
+    // Only the dock body (and the window previews) take input; the tooltip strip
+    // above it is click-through.
     mask: Region {
         item: body
+
+        Region {
+            item: dock.previewShown ? previewCard : null
+        }
     }
 
     WlrLayershell.layer: WlrLayer.Top
@@ -133,8 +138,104 @@ PanelWindow {
         tipText = text;
     }
 
+    // ---- Window previews, like the Windows taskbar ----
+    // Half a second on a running app shows its windows above the dock. The card is
+    // part of this surface, so moving onto it keeps it open; a click on a picture
+    // goes to that window.
+
+    property var previewWins: []
+    property Item previewItem: null
+    property var pendingPreview: null
+    readonly property bool previewShown: previewWins.length > 0
+    readonly property real previewCenter: {
+        dock.width; // read again when the dock grows for the card
+        body.x;
+        return previewItem ? previewItem.mapToItem(dock.contentItem, previewItem.width / 2, 0).x : dock.width / 2;
+    }
+
+    function hoverApp(item, appIds, hovered) {
+        if (hovered) {
+            hidePreview.stop();
+            pendingPreview = { item: item, appIds: appIds };
+            if (previewShown)
+                openPreview();
+            else
+                showPreview.restart();
+        } else {
+            showPreview.stop();
+            hidePreview.restart();
+        }
+    }
+
+    function openPreview() {
+        const wanted = pendingPreview;
+        const wins = wanted ? windowsFor(wanted.appIds).slice(0, 4) : [];
+        previewItem = wins.length > 0 ? wanted.item : null;
+        previewWins = wins;
+    }
+
+    function closePreview() {
+        showPreview.stop();
+        hidePreview.stop();
+        previewWins = [];
+    }
+
+    Timer {
+        id: showPreview
+        interval: 500
+        onTriggered: dock.openPreview()
+    }
+
+    Timer {
+        id: hidePreview
+        interval: 300
+        onTriggered: dock.previewWins = []
+    }
+
     Rectangle {
-        visible: dock.tipText !== ""
+        id: previewCard
+
+        visible: dock.previewShown
+        anchors.bottom: body.top
+        anchors.bottomMargin: 8
+        x: Math.max(0, Math.min(dock.width - width, dock.previewCenter - width / 2))
+        width: previewRow.implicitWidth + 16
+        height: previewRow.implicitHeight + 16
+        radius: Theme.radiusLg
+        color: Theme.surface
+        border.width: 1
+        border.color: Theme.border
+
+        HoverHandler {
+            onHoveredChanged: hovered ? hidePreview.stop() : hidePreview.restart()
+        }
+
+        Row {
+            id: previewRow
+
+            anchors.centerIn: parent
+            spacing: 8
+
+            Repeater {
+                model: dock.previewWins
+
+                WindowTile {
+                    required property var modelData
+
+                    win: modelData
+                    width: 176
+                    height: 136
+                    onPicked: {
+                        dock.closePreview();
+                        ShellState.switchTo(modelData);
+                    }
+                }
+            }
+        }
+    }
+
+    Rectangle {
+        visible: dock.tipText !== "" && !dock.previewShown
         anchors.bottom: body.top
         anchors.bottomMargin: 8
         x: Math.max(0, Math.min(dock.width - width, dock.tipX - width / 2))
@@ -207,12 +308,16 @@ PanelWindow {
                     running: dock.windowsFor(modelData.appIds).length > 0
                     focused: dock.isFocused(modelData.appIds)
                     onClicked: {
+                        dock.closePreview();
                         if (modelData.key === "installer" && dock.windowsFor(modelData.appIds).length === 0)
                             ShellState.openInstaller();
                         else
                             dock.activateOrLaunch(modelData.appIds, modelData.command);
                     }
-                    onHoveredChanged: dock.showTip(pinnedItem, hovered ? label : "")
+                    onHoveredChanged: {
+                        dock.showTip(pinnedItem, hovered ? label : "");
+                        dock.hoverApp(pinnedItem, modelData.appIds, hovered);
+                    }
                 }
             }
 
@@ -229,6 +334,7 @@ PanelWindow {
                     running: dock.windowsFor(modelData.appIds).length > 0
                     focused: dock.isFocused(modelData.appIds)
                     onClicked: {
+                        dock.closePreview();
                         if (dock.windowsFor(modelData.appIds).length === 0)
                             modelData.entry.execute();
                         else
@@ -239,7 +345,10 @@ PanelWindow {
                         dock.showTip(userPinItem, "");
                         ShellState.unpinFromDock(modelData.id, modelData.label);
                     }
-                    onHoveredChanged: dock.showTip(userPinItem, hovered ? label + " · 오른쪽 클릭: 고정 풀기" : "")
+                    onHoveredChanged: {
+                        dock.showTip(userPinItem, hovered ? label + " · 오른쪽 클릭: 고정 풀기" : "");
+                        dock.hoverApp(userPinItem, modelData.appIds, hovered);
+                    }
                 }
             }
 
@@ -256,7 +365,10 @@ PanelWindow {
                     label: modelData.label
                     running: true
                     focused: dock.isFocused([modelData.appId])
-                    onClicked: dock.activateOrLaunch([modelData.appId], null)
+                    onClicked: {
+                        dock.closePreview();
+                        dock.activateOrLaunch([modelData.appId], null);
+                    }
                     // Only apps with a desktop entry can come back after closing
                     onRightClicked: {
                         const entry = DesktopEntries.heuristicLookup(modelData.appId);
@@ -265,7 +377,10 @@ PanelWindow {
                             ShellState.pinToDock(entry.id, entry.name);
                         }
                     }
-                    onHoveredChanged: dock.showTip(extraItem, hovered ? label + " · 오른쪽 클릭: 독에 고정" : "")
+                    onHoveredChanged: {
+                        dock.showTip(extraItem, hovered ? label + " · 오른쪽 클릭: 독에 고정" : "");
+                        dock.hoverApp(extraItem, [modelData.appId], hovered);
+                    }
                 }
             }
 

@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Services.Pipewire
+import "keys.js" as Keyboard
 
 // Where the sound goes and comes from, and each app's volume: the arrow next to
 // Windows 11's volume slider plus its volume mixer. Opened from the arrow at the
@@ -128,6 +129,19 @@ PanelWindow {
         Accessible.role: Accessible.RadioButton
         Accessible.name: root.nodeName(node)
         Accessible.checked: chosen
+
+        // Tab reaches each device; Enter or Space picks it
+        activeFocusOnTab: true
+        Keys.onPressed: event => {
+            if (Keyboard.activates(event)) {
+                row.picked();
+                event.accepted = true;
+            }
+        }
+
+        FocusRing {
+            baseRadius: Theme.radiusMd
+        }
 
         RowLayout {
             anchors.fill: parent

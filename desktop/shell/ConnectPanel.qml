@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Networking
 import Quickshell.Bluetooth
+import "keys.js" as Keyboard
 
 // Wi-Fi networks or Bluetooth devices to connect to, like the lists behind the
 // arrows of Windows' quick settings. Opened from the quick settings tiles' detail
@@ -262,6 +263,19 @@ PanelWindow {
                         Accessible.role: Accessible.Button
                         Accessible.name: netItem.modelData.name + (netItem.modelData.connected ? ", 연결됨" : "")
 
+                        // Tab reaches each network; Enter or Space picks it
+                        activeFocusOnTab: true
+                        Keys.onPressed: event => {
+                            if (Keyboard.activates(event)) {
+                                root.chooseNetwork(netItem.modelData);
+                                event.accepted = true;
+                            }
+                        }
+
+                        FocusRing {
+                            baseRadius: Theme.radiusMd
+                        }
+
                         RowLayout {
                             anchors.fill: parent
                             anchors.leftMargin: 10
@@ -362,6 +376,18 @@ PanelWindow {
 
                     Accessible.role: Accessible.Button
                     Accessible.name: (devItem.modelData.name || devItem.modelData.address) + ", " + root.deviceStatus(devItem.modelData)
+
+                    activeFocusOnTab: true
+                    Keys.onPressed: event => {
+                        if (Keyboard.activates(event)) {
+                            root.chooseDevice(devItem.modelData);
+                            event.accepted = true;
+                        }
+                    }
+
+                    FocusRing {
+                        baseRadius: Theme.radiusMd
+                    }
 
                     RowLayout {
                         anchors.fill: parent
