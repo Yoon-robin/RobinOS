@@ -40,6 +40,7 @@ PanelWindow {
     WlrLayershell.keyboardFocus: root.open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     onOpenChanged: {
+        appMenuItems = [];
         if (open) {
             search.text = "";
             pointer = Qt.point(-1, -1);
@@ -567,15 +568,34 @@ PanelWindow {
         ShellState.launcherOpen = false;
     }
 
-    // Right click on an app, like "작업 표시줄에 고정" in the Start menu
-    function togglePin(index) {
+    // Right click (or the Menu key, Shift+F10) on an app, like the Start menu's:
+    // 열기, 독에 고정 or 독에서 고정 풀기, 제거. The menu lives in this window, which
+    // holds the keyboard, and pinning keeps the launcher open like Windows does.
+    property var appMenuItems: []
+    property point appMenuAt: Qt.point(0, 0)
+    readonly property bool appMenuOpen: appMenuItems.length > 0
+
+    function openAppMenu(index, at) {
         const item = results[index];
         if (!item || item.kind !== "app")
             return;
-        if (ShellState.dockPins.indexOf(item.entry.id) === -1)
-            ShellState.pinToDock(item.entry.id, item.entry.name);
-        else
-            ShellState.unpinFromDock(item.entry.id, item.entry.name);
+        const entry = item.entry;
+        const pinned = ShellState.dockPins.indexOf(entry.id) !== -1;
+        current = index;
+        appMenuAt = at;
+        appMenuItems = [
+            { icon: "external", title: "열기", hint: "Enter", run: () => root.activate(index) },
+            pinned ? { icon: "pin", title: "독에서 고정 풀기", run: () => ShellState.unpinFromDock(entry.id, entry.name) }
+                   : { icon: "pin", title: "독에 고정", run: () => ShellState.pinToDock(entry.id, entry.name) },
+            { icon: "trash", title: "제거", hint: "Shift+Delete", run: () => root.removeApp(index) }
+        ];
+        appMenuCard.selected = 0;
+        appMenuCard.forceActiveFocus();
+    }
+
+    function closeAppMenu() {
+        appMenuItems = [];
+        search.forceActiveFocus();
     }
 
     // Shift+Delete on an app, like the Start menu's "제거": robinctl finds its package
@@ -820,6 +840,11 @@ PanelWindow {
                         } else if (event.key === Qt.Key_Delete && (event.modifiers & Qt.ShiftModifier)) {
                             root.removeApp(root.current);
                             event.accepted = true;
+                        } else if (event.key === Qt.Key_Menu || (event.key === Qt.Key_F10 && (event.modifiers & Qt.ShiftModifier))) {
+                            const row = list.itemAtIndex(root.current);
+                            if (row)
+                                root.openAppMenu(root.current, row.mapToItem(root.contentItem, 48, row.height));
+                            event.accepted = true;
                         }
                     }
 
@@ -1008,7 +1033,7 @@ PanelWindow {
                             acceptedButtons: Qt.LeftButton | Qt.RightButton
                             onClicked: mouse => {
                                 if (mouse.button === Qt.RightButton)
-                                    root.togglePin(row.index);
+                                    root.openAppMenu(row.index, mapToItem(root.contentItem, mouse.x, mouse.y));
                                 else
                                     root.activate(row.index);
                             }
@@ -1079,6 +1104,29 @@ PanelWindow {
                     }
                 }
             }
+        }
+    }
+
+    // An app's right-click menu (openAppMenu), over the list; a click elsewhere closes it
+    MouseArea {
+        anchors.fill: parent
+        visible: root.appMenuOpen
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: root.closeAppMenu()
+    }
+
+    MenuCard {
+        id: appMenuCard
+
+        visible: root.appMenuOpen
+        x: Math.max(8, Math.min(parent.width - width - 8, root.appMenuAt.x))
+        y: Math.max(8, Math.min(parent.height - height - 8, root.appMenuAt.y))
+        items: root.appMenuItems
+
+        onDismissed: root.closeAppMenu()
+        onPicked: item => {
+            root.closeAppMenu();
+            item.run();
         }
     }
 }

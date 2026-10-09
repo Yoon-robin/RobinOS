@@ -493,13 +493,18 @@ def main():
     wait(1)
     keys(qmp, "alt", "f4")  # the calculator has the focus
     wait(2)
-    # The launcher's right click pins an app too, like "작업 표시줄에 고정":
-    # "calc" puts the calculator first, under "윈도우에서 쓰던 이름"
+    # The launcher's right click opens a menu like the Start menu's: 열기, 독에 고정,
+    # 제거. "calc" puts the calculator first, under "윈도우에서 쓰던 이름"; Down +
+    # Enter pins it, and the launcher stays open like the Start menu does
     keys(qmp, "meta_l", "spc")
     wait(3)
     type_text(qmp, "calc")
     wait(2)
     click(qmp, 800, 267, "right")
+    wait(2)
+    shot(qmp, "launcher-menu")
+    keys(qmp, "down")
+    keys(qmp, "ret")
     wait(2)
     shot(qmp, "launcher-pin")
     # Opening it from the launcher puts it under "최근에 연 앱" (light-launcher)
