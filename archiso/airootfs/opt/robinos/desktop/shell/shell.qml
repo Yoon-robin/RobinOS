@@ -39,6 +39,8 @@ ShellRoot {
 
     ConnectPanel {}
 
+    SoundPanel {}
+
     Toasts {}
 
     Osd {}
@@ -137,7 +139,12 @@ ShellRoot {
 
         // "wifi" or "bluetooth": the network or device list behind the tiles
         function connect(mode: string): void {
-            ShellState.openConnect(mode);
+            ShellState.openDetail(mode);
+        }
+
+        // Output and input devices and each app's volume (SoundPanel.qml)
+        function sound(): void {
+            ShellState.openDetail("sound");
         }
 
         // The dock's right click: pin or unpin an app by its desktop entry id

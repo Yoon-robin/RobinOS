@@ -8,12 +8,12 @@ import Quickshell.Bluetooth
 
 // Wi-Fi networks or Bluetooth devices to connect to, like the lists behind the
 // arrows of Windows' quick settings. Opened from the quick settings tiles' detail
-// arrow (ShellState.openConnect("wifi" | "bluetooth")). A secured network asks for
+// arrow (ShellState.openDetail("wifi" | "bluetooth")). A secured network asks for
 // its password inline; nmtui stays one click away for anything else.
 PanelWindow {
     id: root
 
-    readonly property bool open: ShellState.connectMode !== ""
+    readonly property bool open: ShellState.detailPanel === "wifi" || ShellState.detailPanel === "bluetooth"
     readonly property bool wifi: shownMode === "wifi"
     // Kept while the card fades out, so the content doesn't jump
     property string shownMode: "wifi"
@@ -56,8 +56,6 @@ PanelWindow {
 
     onOpenChanged: {
         if (open) {
-            shownMode = ShellState.connectMode;
-            pskNetwork = null;
             mapped = true;
             Qt.callLater(() => {
                 root.revealed = true;
@@ -67,11 +65,25 @@ PanelWindow {
             revealed = false;
             hideTimer.restart();
         }
-        // Look for networks and devices only while the list is on screen
-        if (wifiDevice)
-            wifiDevice.scannerEnabled = open && wifi;
-        if (adapter && adapter.enabled)
-            adapter.discovering = open && !wifi;
+    }
+
+    // Also runs on a switch straight from Wi-Fi to Bluetooth, which keeps open true
+    Connections {
+        target: ShellState
+
+        function onDetailPanelChanged() {
+            // Read the new value directly: root.open may not have caught up yet
+            const panel = ShellState.detailPanel;
+            if (panel === "wifi" || panel === "bluetooth") {
+                root.shownMode = panel;
+                root.pskNetwork = null;
+            }
+            // Look for networks and devices only while the list is on screen
+            if (root.wifiDevice)
+                root.wifiDevice.scannerEnabled = panel === "wifi";
+            if (root.adapter && root.adapter.enabled)
+                root.adapter.discovering = panel === "bluetooth";
+        }
     }
 
     // Turned on from the panel's own button: start looking right away
@@ -80,7 +92,7 @@ PanelWindow {
 
         function onEnabledChanged() {
             if (root.adapter.enabled)
-                root.adapter.discovering = root.open && !root.wifi;
+                root.adapter.discovering = ShellState.detailPanel === "bluetooth";
         }
     }
 
@@ -94,7 +106,7 @@ PanelWindow {
     }
 
     function close() {
-        ShellState.connectMode = "";
+        ShellState.detailPanel = "";
     }
 
     function chooseNetwork(n) {

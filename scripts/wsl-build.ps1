@@ -99,6 +99,8 @@ function Invoke-WhpxBootTest {
             "-vga", "none", "-device", "VGA,edid=on,xres=1600,yres=900", "-display", "none",
             # An absolute pointer, so boot-test-qmp.py can click at screen coordinates
             "-device", "qemu-xhci", "-device", "usb-tablet",
+            # A sound card that plays into nothing, so the shell has real output and input devices
+            "-audiodev", "none,id=snd0", "-device", "ich9-intel-hda", "-device", "hda-duplex,audiodev=snd0",
             "-netdev", "user,id=net0", "-device", "virtio-net-pci,netdev=net0",
             "-qmp", "tcp:127.0.0.1:$port,server,nowait",
             "-serial", "`"file:boot-test\serial.log`""

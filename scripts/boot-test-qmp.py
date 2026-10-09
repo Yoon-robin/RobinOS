@@ -272,6 +272,15 @@ def main():
     shot(qmp, "connect-bluetooth")
     click(qmp, 400, 400)
     wait(1)
+    # The arrow after the volume slider opens the sound panel: the VM's sound card
+    # as output and microphone, and pw-play (30 s of silence) under the app volumes
+    type_text(qmp, "clear; python -c \"import wave;w=wave.open('/tmp/s.wav','wb');w.setnchannels(2);"
+              "w.setsampwidth(2);w.setframerate(48000);w.writeframes(bytes(5760000))\"; pw-play /tmp/s.wav & "
+              + ipc + "sound\n")
+    wait(3)
+    shot(qmp, "sound")
+    keys(qmp, "esc")
+    wait(1)
     # "배경으로 설정" in Files and Image Viewer goes through the Wallpaper portal to
     # robinos-wallpaper-portal; the same call here sets the RobinOS logo as the
     # wallpaper. Then the launcher's "기본 배경화면으로" brings the drawn one back.

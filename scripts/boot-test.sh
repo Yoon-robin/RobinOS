@@ -67,6 +67,7 @@ qemu-system-x86_64 \
   -vga none -device VGA,edid=on,xres=1600,yres=900 \
   -display none \
   -device qemu-xhci -device usb-tablet \
+  -audiodev none,id=snd0 -device ich9-intel-hda -device hda-duplex,audiodev=snd0 \
   -netdev user,id=net0 -device virtio-net-pci,netdev=net0 \
   -qmp "unix:${OUT_DIR}/qmp.sock,server,nowait" \
   -serial "file:${OUT_DIR}/serial.log" &

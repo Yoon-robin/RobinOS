@@ -350,7 +350,7 @@ PanelWindow {
                         if (ShellState.wifiDevice)
                             ShellState.toggleWifi();
                     }
-                    onDetailRequested: ShellState.openConnect("wifi")
+                    onDetailRequested: ShellState.openDetail("wifi")
                 }
 
                 ToggleTile {
@@ -363,7 +363,7 @@ PanelWindow {
                     enabled: ShellState.btAdapter !== null
                     hasDetail: true
                     onToggled: ShellState.toggleBluetooth()
-                    onDetailRequested: ShellState.openConnect("bluetooth")
+                    onDetailRequested: ShellState.openDetail("bluetooth")
                 }
 
                 ToggleTile {
@@ -612,6 +612,17 @@ PanelWindow {
                         enabled: ShellState.audioReady
                         value: ShellState.muted ? 0 : ShellState.volume
                         onMoved: value => ShellState.setVolume(value)
+                    }
+
+                    // Output and input devices and each app's volume (SoundPanel.qml)
+                    IconButton {
+                        implicitWidth: 24
+                        implicitHeight: 24
+                        icon: "chevron-right"
+                        iconSize: 14
+                        iconColor: Theme.muted
+                        label: "소리 설정"
+                        onClicked: ShellState.openDetail("sound")
                     }
                 }
             }

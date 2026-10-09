@@ -108,7 +108,7 @@ Singleton {
             launcherOpen = false;
             return;
         }
-        connectMode = "";
+        detailPanel = "";
         quickSettingsOpen = false;
         calendarOpen = false;
         overlayScreen = focusedScreen;
@@ -123,7 +123,7 @@ Singleton {
             launcherOpen = false;
             return;
         }
-        connectMode = "";
+        detailPanel = "";
         quickSettingsOpen = false;
         calendarOpen = false;
         overlayScreen = focusedScreen;
@@ -138,7 +138,7 @@ Singleton {
             quickSettingsOpen = false;
             return;
         }
-        connectMode = "";
+        detailPanel = "";
         launcherOpen = false;
         calendarOpen = false;
         overlayScreen = screen ?? focusedScreen;
@@ -155,7 +155,7 @@ Singleton {
             calendarOpen = false;
             return;
         }
-        connectMode = "";
+        detailPanel = "";
         launcherOpen = false;
         quickSettingsOpen = false;
         overlayScreen = screen ?? focusedScreen;
@@ -175,17 +175,17 @@ Singleton {
         launcherOpen = false;
         quickSettingsOpen = false;
         calendarOpen = false;
-        connectMode = "";
+        detailPanel = "";
         shortcutsOpen = false;
         overlayScreen = focusedScreen;
         notifCenterOpen = true;
     }
 
-    // Wi-Fi networks or Bluetooth devices under the quick settings tiles'
-    // arrows (ConnectPanel.qml): "wifi", "bluetooth" or "" when closed
-    property string connectMode: ""
+    // The list behind a quick settings arrow: "wifi" or "bluetooth"
+    // (ConnectPanel.qml), "sound" (SoundPanel.qml) or "" when closed
+    property string detailPanel: ""
 
-    function openConnect(mode) {
+    function openDetail(name) {
         if (welcomeOpen)
             return;
         // From a tile: stay on the screen the quick settings were on
@@ -196,7 +196,7 @@ Singleton {
         calendarOpen = false;
         notifCenterOpen = false;
         shortcutsOpen = false;
-        connectMode = mode === "bluetooth" ? "bluetooth" : "wifi";
+        detailPanel = ["wifi", "bluetooth", "sound"].includes(name) ? name : "wifi";
     }
 
     // Every shortcut on one card (Shortcuts.qml, Super+F1)
@@ -212,7 +212,7 @@ Singleton {
         launcherOpen = false;
         quickSettingsOpen = false;
         calendarOpen = false;
-        connectMode = "";
+        detailPanel = "";
         overlayScreen = focusedScreen;
         shortcutsOpen = true;
     }
