@@ -18,8 +18,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-10-10 (새벽) | `857383b` 테스트 ISO | 설치 테스트 archinstall(11.4분) | 다섯 단계 통과. 어제 저녁 뒤로 바뀐 설치 코드(openssh, baobab, wtype, 힌트)가 archinstall+post-install 경로에서도 문제없음(`ssh-keygen`, `baobab` 확인) |
 | 2026-10-09 (밤) | `71333c8` 테스트 ISO | 설치 테스트 windows(9.1분) | 다섯 단계 통과. 윈도우 파티션, EFI 파일, C: 그대로. 오늘 바뀐 post-install이 윈도우 옆 설치 경로에서도 문제없음 |
-| 2026-10-09 (저녁) | `a39b6b8` 테스트 ISO | 설치 테스트 archinstall | 다섯 단계 통과. 오늘 바뀐 post-install(사용자 `.bashrc`의 RobinOS 설정, os-release와 pacman 훅, 기본 앱, 동영상·음악 앱, `which`)이 archinstall 경로에서도 문제없음 |
 
 ## 품질 점검 기록
 
