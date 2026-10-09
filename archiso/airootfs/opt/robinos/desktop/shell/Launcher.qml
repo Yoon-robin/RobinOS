@@ -46,7 +46,7 @@ PanelWindow {
                 clipList.running = true;
             }
             ShellState.refreshLearn();
-            recentXbel.reload();
+            recentRead.running = true;
             refresh();
             mapped = true;
             Qt.callLater(() => {
@@ -159,20 +159,21 @@ PanelWindow {
 
     property var recentFiles: []
 
-    FileView {
-        id: recentXbel
+    // Read when the launcher opens, like the clipboard history (a FileView missed
+    // the file that GTK creates only after the shell starts, boot test 2026-10-10)
+    Process {
+        id: recentRead
 
-        path: (Quickshell.env("XDG_DATA_HOME") || root.home + "/.local/share") + "/recently-used.xbel"
-        printErrors: false
-        watchChanges: true
-        onFileChanged: reload()
-        // Loading is asynchronous, so the list the launcher just built gets redone
-        onLoaded: {
-            root.recentFiles = root.parseRecent(text());
-            if (root.open)
-                root.refresh();
+        command: ["sh", "-c", "cat \"${XDG_DATA_HOME:-$HOME/.local/share}/recently-used.xbel\" 2>/dev/null"]
+        stdout: StdioCollector {
+            id: recentOut
+
+            onStreamFinished: {
+                root.recentFiles = root.parseRecent(recentOut.text);
+                if (root.open)
+                    root.refresh();
+            }
         }
-        onLoadFailed: root.recentFiles = []
     }
 
     function parseRecent(xml) {

@@ -445,8 +445,9 @@ def main():
     # under "최근 파일" in light-launcher, like the Start menu's recommended files
     type_text(qmp, "clear; mkdir -p ~/.local/share; printf '%s' '<?xml version=\"1.0\"?><xbel version=\"1.0\">"
               "<bookmark href=\"file://' \"$HOME\" '/practice/hello.txt\" modified=\"2026-10-10T00:00:00Z\"/></xbel>'"
-              " > ~/.local/share/recently-used.xbel\n")
+              " > ~/.local/share/recently-used.xbel; cat ~/.local/share/recently-used.xbel; echo\n")
     wait(1)
+    shot(qmp, "recent-file-written")
     # Light mode, through the shell's IPC (the same as the quick settings tile)
     type_text(qmp, "clear; qs ipc -p /usr/share/robinos/shell call shell setDark false\n")
     wait(4)
