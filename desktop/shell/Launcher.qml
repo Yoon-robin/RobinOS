@@ -166,7 +166,13 @@ PanelWindow {
         printErrors: false
         watchChanges: true
         onFileChanged: reload()
-        onLoaded: root.recentFiles = root.parseRecent(text())
+        // Loading is asynchronous, so the list the launcher just built gets redone
+        onLoaded: {
+            root.recentFiles = root.parseRecent(text());
+            if (root.open)
+                root.refresh();
+        }
+        onLoadFailed: root.recentFiles = []
     }
 
     function parseRecent(xml) {
