@@ -3,6 +3,7 @@ import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
+import "holidays.js" as Holidays
 
 // Month calendar under the bar's clock (click the clock or Super+Alt+D), like the
 // Windows taskbar clock. Left/Right or the arrow buttons change the month, Home
@@ -79,6 +80,10 @@ PanelWindow {
             out.push(new Date(first.getFullYear(), first.getMonth(), 1 - first.getDay() + i));
         return out;
     }
+
+    // This month's public holidays, listed under the days
+    readonly property var monthHolidays: days.filter(d => d.getMonth() === month.getMonth() && Holidays.name(d) !== "")
+        .map(d => (d.getMonth() + 1) + "월 " + d.getDate() + "일 " + "일월화수목금토"[d.getDay()] + "요일 · " + Holidays.name(d))
 
     // Click anywhere outside the card to close
     MouseArea {
@@ -216,6 +221,7 @@ PanelWindow {
 
                         readonly property bool inMonth: modelData.getMonth() === root.month.getMonth()
                         readonly property bool today: root.sameDay(modelData, ShellState.now)
+                        readonly property string holiday: Holidays.name(modelData)
 
                         Layout.fillWidth: true
                         Layout.preferredHeight: 32
@@ -223,17 +229,50 @@ PanelWindow {
                         color: today ? Theme.primary : "transparent"
 
                         Accessible.role: Accessible.StaticText
-                        Accessible.name: (modelData.getMonth() + 1) + "월 " + modelData.getDate() + "일" + (today ? ", 오늘" : "")
+                        Accessible.name: (modelData.getMonth() + 1) + "월 " + modelData.getDate() + "일" + (today ? ", 오늘" : "") + (holiday !== "" ? ", " + holiday : "")
 
                         Text {
                             anchors.centerIn: parent
                             text: day.modelData.getDate()
                             color: day.today ? Theme.primaryFg
                                  : !day.inMonth ? Theme.subtle
-                                 : day.modelData.getDay() === 0 ? Theme.destructive : Theme.fg
+                                 : day.modelData.getDay() === 0 || day.holiday !== "" ? Theme.destructive : Theme.fg
                             font.family: Theme.font
                             font.pixelSize: 13
                             font.weight: day.today ? Font.DemiBold : Font.Normal
+                        }
+                    }
+                }
+            }
+
+            // Red days, with their names (Sundays and holidays are red above)
+            ColumnLayout {
+                visible: root.monthHolidays.length > 0
+                Layout.fillWidth: true
+                Layout.leftMargin: 4
+                Layout.topMargin: 4
+                spacing: 4
+
+                Repeater {
+                    model: root.monthHolidays
+
+                    RowLayout {
+                        required property string modelData
+
+                        spacing: 8
+
+                        Rectangle {
+                            implicitWidth: 6
+                            implicitHeight: 6
+                            radius: 3
+                            color: Theme.destructive
+                        }
+
+                        Text {
+                            text: modelData
+                            color: Theme.muted
+                            font.family: Theme.font
+                            font.pixelSize: 12
                         }
                     }
                 }
