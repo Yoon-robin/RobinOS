@@ -138,6 +138,43 @@ else
   skip "python3 not found"
 fi
 
+# The launcher's calculator (calc.js) with the QML engine that runs it
+printf 'Launcher calculator\n'
+qml_bin="$(command -v qml6 || command -v qml || true)"
+if [[ -n "${qml_bin}" ]]; then
+  calc_dir="$(mktemp -d)"
+  cp "${ROOT_DIR}/desktop/shell/calc.js" "${calc_dir}/"
+  cat >"${calc_dir}/test.qml" <<'QML'
+import QtQml
+import "calc.js" as Calc
+
+QtObject {
+    Component.onCompleted: {
+        const cases = [
+            ["2+3", "5"], ["2 + 3 * 4", "14"], ["(2+3)*4", "20"], ["2^10", "1024"],
+            ["10/4", "2.5"], ["0.1+0.2", "0.3"], ["-3+5", "2"], ["2×3÷4", "1.5"],
+            ["7-2-1", "4"], ["2^3^2", "512"], ["3", null], ["(3)", null], ["-5", null],
+            ["1/0", null], ["2+", null], ["(1+2", null], ["abc", null], ["2+x", null]
+        ];
+        let bad = 0;
+        for (const [text, want] of cases) {
+            const value = Calc.evaluate(text);
+            const got = value === null ? null : Calc.format(value);
+            if (got !== want) {
+                console.log("calc " + JSON.stringify(text) + ": " + got + ", want " + want);
+                bad++;
+            }
+        }
+        Qt.exit(bad === 0 ? 0 : 1);
+    }
+}
+QML
+  if QT_QPA_PLATFORM=offscreen "${qml_bin}" "${calc_dir}/test.qml"; then ok "desktop/shell/calc.js"; else fail "desktop/shell/calc.js"; fi
+  rm -rf "${calc_dir}"
+else
+  skip "qml6 not found (pacman -S qt6-declarative)"
+fi
+
 if [[ "${failed}" == "true" ]]; then
   printf 'Desktop check failed.\n' >&2
   exit 1

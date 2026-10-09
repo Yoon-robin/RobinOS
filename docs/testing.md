@@ -69,12 +69,12 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 
 ## 자동 부팅 테스트
 
-`scripts/boot-test.sh`가 QEMU에서 ISO를 부팅하고, `scripts/boot-test-qmp.py`가 화면을 조작하면서 스크린샷을 찍어요(2026-10-10 기준 75장). 키는 QMP `send-key`로, 마우스는 VM에 붙인 `usb-tablet`에 QMP `input-send-event`로 화면 좌표(1600×900)를 찍어 눌러요(`click()`). 소리 창을 보려고 소리를 버리는 사운드 카드(`-audiodev none`, `hda-duplex`)도 붙여요.
+`scripts/boot-test.sh`가 QEMU에서 ISO를 부팅하고, `scripts/boot-test-qmp.py`가 화면을 조작하면서 스크린샷을 찍어요(2026-10-10 기준 77장). 키는 QMP `send-key`로, 마우스는 VM에 붙인 `usb-tablet`에 QMP `input-send-event`로 화면 좌표(1600×900)를 찍어 눌러요(`click()`). 소리 창을 보려고 소리를 버리는 사운드 카드(`-audiodev none`, `hda-duplex`)도 붙여요.
 
 1. 부팅과 첫 로그인
 2. 환영 마법사의 모든 단계, 마지막에 열리는 학습 센터(0/40)
 3. 데스크톱, 창이 없을 때 `Alt+F4`로 뜨는 전원 메뉴, `Super+X` 빠른 메뉴
-4. 런처: 추천 목록, `term` 검색, 윈도우 이름 `notepad` 검색
+4. 런처: 추천 목록, `term` 검색, 윈도우 이름 `notepad` 검색, 수식 `(12+3)*4`의 계산 결과(= 60), 아무것도 맞지 않는 `arch wiki hyprland`의 웹 검색 항목
 5. 설치기 첫 두 단계(테스트 VM에는 빈 64GB 디스크가 있어요)
 6. 빠른 설정, Tab으로 옮긴 키보드 포커스, 마우스로 누른 방해 금지 타일, Wi-Fi 타일 화살표로 연 연결 창(VM에는 Wi-Fi 장치가 없다는 안내), `Super+Alt+D`로 연 달력(그달의 공휴일 목록), `Super+F1`로 연 단축키 보기
 7. 터미널: `ipconfig` 힌트, `robinctl learn show 1`, `robinctl audit` 보안 점검, 런처에서 `eventvwr`로 연 시스템 기록(새 터미널 맨 위에 `journalctl` 명령, `Alt+F4`로 닫기)과 미션 1 풀기(라이트 모드 런처에 "1/40 완료"), 포털이 알려 주는 제목 표시줄 단추 배치(`button-layout`)

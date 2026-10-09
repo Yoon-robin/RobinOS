@@ -55,6 +55,12 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 ## 진행 중
 
+### T-134 런처에서 계산하고 웹에서 찾기
+- 상태: 진행 중 (묶음 59)
+- 출처: 백로그 채우기 1 (윈도우와 다른 점). 윈도우 시작 메뉴 검색은 `12*3`을 치면 계산 결과를, 맞는 앱이 없으면 웹 검색을 보여 주는데, RobinOS 런처는 둘 다 없었어요
+- 한 것: `desktop/shell/calc.js`(eval 없이 직접 파싱하는 계산기: `+ - * / ^`, `× ÷`, 괄호). 수식이면 맨 위 "계산"에 결과, `Enter`로 복사(`wl-copy`). 두 글자 이상이면 맨 아래 "웹에서 ... 찾기"(`firefox --search`, 고르기 전에는 아무것도 보내지 않아요). `check-desktop.sh`가 `qml6`로 계산 18가지를 시험해요(틀린 기대값이면 실패하는 것도 확인). 아이콘 `calculator`
+- 완료 기준: 부팅 테스트 `launcher-calc`(= 60), `launcher-web`
+
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
 - 출처: 사용자 요청("vmware로 깔아줘"). VMware Workstation Pro 26H1, VM은 `문서\Virtual Machines\RobinOS\RobinOS.vmx`(EFI, 8GB, NVMe 64GB, 3D 가속 켬)

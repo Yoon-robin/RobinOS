@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Widgets
+import "calc.js" as Calc
 import "emoji.js" as Emoji
 
 // Command palette launcher (Super+Space): apps, RobinOS lab commands and system actions.
@@ -458,7 +459,14 @@ PanelWindow {
             for (const key of ["snapshot", "update", "doctor"])
                 out.push(commandItem(command(key)));
         } else {
-            // Windows names first. A single Latin letter would match too much.
+            // Math like the Start menu's search: "12*3" shows 36 first, Enter copies it
+            const value = Calc.evaluate(q);
+            if (value !== null) {
+                out.push({ kind: "header", title: "계산" });
+                out.push({ kind: "calc", icon: "calculator", title: "= " + Calc.format(value), subtitle: "Enter로 결과를 복사해요", value: Calc.format(value) });
+            }
+
+            // Windows names next. A single Latin letter would match too much.
             const shownApps = {};
             const shownCmds = {};
             const known = [];
@@ -523,6 +531,14 @@ PanelWindow {
                 out.push({ kind: "header", title: "파일" });
                 for (const hit of fileHits)
                     out.push(fileItem(hit));
+            }
+
+            // Last, like the Start menu's web results. Nothing leaves the PC until
+            // Enter, and then only to the browser's own search engine.
+            if (q.length >= 2 && value === null) {
+                const text = search.text.trim();
+                out.push({ kind: "header", title: "웹" });
+                out.push({ kind: "web", icon: "globe", title: "웹에서 \"" + text + "\" 찾기", subtitle: "브라우저의 기본 검색 엔진", query: text });
             }
         }
 
@@ -590,6 +606,16 @@ PanelWindow {
 
         if (item.kind === "file") {
             Quickshell.execDetached(["xdg-open", item.path]);
+            return;
+        }
+
+        if (item.kind === "calc") {
+            Quickshell.execDetached(["wl-copy", "--", item.value]);
+            return;
+        }
+
+        if (item.kind === "web") {
+            Quickshell.execDetached(["firefox", "--search", item.query]);
             return;
         }
 
@@ -886,7 +912,7 @@ PanelWindow {
                                 border.color: Theme.border
 
                                 Icon {
-                                    visible: row.modelData.kind === "cmd" || row.modelData.kind === "clip" || row.modelData.kind === "file"
+                                    visible: ["cmd", "clip", "file", "calc", "web"].indexOf(row.modelData.kind) !== -1
                                     anchors.centerIn: parent
                                     name: row.modelData.icon ?? ""
                                     size: 15

@@ -28,7 +28,8 @@ QCODES = {" ": "spc", "\n": "ret", "-": "minus", ".": "dot", "/": "slash", ";": 
           "'": "apostrophe", "\\": "backslash", ",": "comma", "=": "equal"}
 # Characters typed with Shift on a US keyboard
 SHIFTED = {"(": "9", ")": "0", "&": "7", "~": "grave_accent", ">": "dot", "<": "comma", "?": "slash", "$": "4", "%": "5",
-           '"': "apostrophe", "{": "bracket_left", "}": "bracket_right", ":": "semicolon", "_": "minus"}
+           '"': "apostrophe", "{": "bracket_left", "}": "bracket_right", ":": "semicolon", "_": "minus",
+           "*": "8", "+": "equal"}
 
 
 class Qmp:
@@ -183,6 +184,16 @@ def main():
     type_text(qmp, "notepad")
     wait(2)
     shot(qmp, "launcher-windows-name")
+    # Math like the Start menu's search: the result first, Enter copies it
+    keys(qmp, "ctrl", "a")
+    type_text(qmp, "(12+3)*4")
+    wait(2)
+    shot(qmp, "launcher-calc")
+    # Nothing on the PC matches: a web search through the browser, last in the list
+    keys(qmp, "ctrl", "a")
+    type_text(qmp, "arch wiki hyprland")
+    wait(3)
+    shot(qmp, "launcher-web")
     keys(qmp, "esc")
     wait(2)
 
