@@ -125,8 +125,9 @@ PanelWindow {
 
     readonly property var pinnedApps: ["foot", "org.gnome.Nautilus", "firefox"]
     // foot also installs a client and a server entry; the client fails without a
-    // running server, and both read as "Terminal" next to the real one
-    readonly property var hiddenApps: ["footclient", "foot-server"]
+    // running server, and both read as "Terminal" next to the real one. v4l-utils
+    // (pulled in by GStreamer) brings two webcam test tools that crowd "video".
+    readonly property var hiddenApps: ["footclient", "foot-server", "qv4l2", "qvidcap"]
     // Apps whose desktop entry has no Korean description ("Foot · Terminal")
     readonly property var koreanSubtitles: ({
             "foot": "터미널"
