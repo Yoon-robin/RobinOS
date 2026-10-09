@@ -34,6 +34,14 @@ rm -f "${systemd_dir}/multi-user.target.wants/sshd.service"
 # or a "cidata" disk. A desktop live ISO has no use for it.
 rm -rf "${systemd_dir}/cloud-init.target.wants"
 
+# releng holds the boot until the clock is synced over NTP (time-sync.target), and
+# pacman-init and multi-user.target wait for it. Where IPv6 doesn't reach out (the
+# test VM's NAT, many home networks) timesyncd spends 10 s on each IPv6 server
+# first: the boot finished at 84 s instead of 14 s, with the power mode daemon and
+# pacman's keyring waiting (boot test, 2026-10-10). The clock still syncs; the boot
+# just doesn't wait, and the PC's own clock is close enough for the keyring.
+rm -f "${systemd_dir}/sysinit.target.wants/systemd-time-wait-sync.service"
+
 "${ROOT_DIR}/scripts/sync-archiso-files.sh"
 cp -a "${ROOT_DIR}/archiso/airootfs/." "${OUT_PROFILE}/airootfs/"
 "${ROOT_DIR}/scripts/fetch-fonts.sh" "${OUT_PROFILE}/airootfs/usr/share/fonts/robinos"

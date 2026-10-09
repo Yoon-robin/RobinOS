@@ -90,7 +90,7 @@ summary() {
   printf -- '- ISO: `%s`\n' "$(basename "${ISO}")"
   printf -- '- Acceleration: `%s`\n\n' "${accel[1]}"
   printf 'Key lines from the serial log:\n\n```text\n'
-  grep -a -E 'robinos-session|Reached target .*Graphical|Started .*(SDDM|Simple Desktop)|Failed to start|hyprland.*(ERR|error|CRIT)' \
+  grep -a -E 'robinos-session|Reached target .*Graphical|Startup finished in|Started .*(SDDM|Simple Desktop)|Failed to start|hyprland.*(ERR|error|CRIT)' \
     "${OUT_DIR}/serial.log" | sed 's/\x1b\[[0-9;]*m//g' | tail -n 40
   printf '```\n'
 }

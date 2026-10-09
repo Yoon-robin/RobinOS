@@ -115,7 +115,7 @@ function Invoke-WhpxBootTest {
     }
 
     Write-Host "`n시리얼 로그의 주요 줄:"
-    Select-String -Path "$out\serial.log" -Pattern "robinos-session|Reached target .*Graphical|Failed to start|hyprland.*(ERR|error|CRIT)" |
+    Select-String -Path "$out\serial.log" -Pattern "robinos-session|Reached target .*Graphical|Startup finished in|Failed to start|hyprland.*(ERR|error|CRIT)" |
         Select-Object -Last 20 | ForEach-Object { $_.Line -replace "\x1b\[[0-9;]*m", "" }
     Write-Host "`n스크린샷:"
     Get-ChildItem "$out\*.png" | ForEach-Object { "  $($_.Name)" }
