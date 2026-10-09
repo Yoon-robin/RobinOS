@@ -940,7 +940,7 @@ Singleton {
     // ---- Learning progress (robinctl learn) ----
 
     // LEARN_COUNT in bin/robinctl (scripts/test-robinctl.sh checks they agree)
-    readonly property int learnTotal: 35
+    readonly property int learnTotal: 40
     property int learnDone: 0
 
     function refreshLearn() {

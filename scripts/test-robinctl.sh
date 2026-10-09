@@ -96,14 +96,14 @@ check "5 fails with a made-up line" fail learn check 5
 in_home "grep bash /etc/passwd > practice/bash-users.txt"
 check "5 passes with grep's output" 0 learn check 5
 check "list after the first five" 0 learn
-said "list counts 5 of 35" "5/35"
+said "list counts 5 of 40" "5/40"
 said "list shows the network group" "네트워크 기초"
 said "list points to mission 6" "robinctl learn show 6"
 # The shell's learning center (LearnCenter.qml) reads this
 check "tsv for the learning center" 0 learn tsv
-if [[ "$(grep -c '^mission	' "${WORK}/out")" == "35" && "$(awk -F'\t' '$1 == "mission" && $6 == 1' "${WORK}/out" | wc -l)" == "5" ]] \
+if [[ "$(grep -c '^mission	' "${WORK}/out")" == "40" && "$(awk -F'\t' '$1 == "mission" && $6 == 1' "${WORK}/out" | wc -l)" == "5" ]] \
     && grep -qx 'mission	6	네트워크 기초	내 IP 주소 보기	ip a	0' "${WORK}/out" && grep -qx 'ctf	0	5' "${WORK}/out"; then
-  ok "tsv: 35 missions, 5 done, groups, then the CTF"
+  ok "tsv: 40 missions, 5 done, groups, then the CTF"
 else
   bad "tsv: $(head -n 7 "${WORK}/out" | tr '\t' '|')"
 fi
@@ -152,7 +152,7 @@ in_home "printf '# Nmap 7.95 scan\nNmap scan report for localhost (127.0.0.1)\nP
 check "10 passes with 9000 open on 127.0.0.1" 0 learn check 10
 
 check "list after the first ten" 0 learn
-said "list counts 10 of 35" "10/35"
+said "list counts 10 of 40" "10/40"
 said "list shows the forensics group" "포렌식 기초"
 said "list points to mission 11" "robinctl learn show 11"
 
@@ -196,7 +196,7 @@ check "15 passes with the pipeline from the mission" 0 learn check 15
 in_home "bsdtar -xOf practice/forensics/logo.png secret.txt > practice/forensics/found.txt"
 check "14 passes again" 0 learn check 14
 check "list after the first fifteen" 0 learn
-said "list counts 15 of 35" "15/35"
+said "list counts 15 of 40" "15/40"
 said "list shows the reversing group" "리버싱 기초"
 said "list points to mission 16" "robinctl learn show 16"
 
@@ -249,7 +249,7 @@ in_home "cd ${REV} && ./count 1337 | grep -q ROBIN-COUNT-1337 && echo \$((0x539)
 check "20 passes with 1337" 0 learn check 20
 
 check "list after the first twenty" 0 learn
-said "list counts 20 of 35" "20/35"
+said "list counts 20 of 40" "20/40"
 said "list shows the web group" "웹 기초"
 said "list points to mission 21" "robinctl learn show 21"
 
@@ -288,7 +288,7 @@ in_home "kill \$(cat ${WEB}/.test-server)"
 if ss -Htln 2>/dev/null | grep -q ":${WEB_PORT} "; then bad "the practice server is still listening"; fi
 
 check "list after twenty-five" 0 learn
-said "list counts 25 of 35" "25/35"
+said "list counts 25 of 40" "25/40"
 said "list shows the shell group" "셸 기초"
 
 # Shell basics: answers written the way the missions ask
@@ -316,7 +316,7 @@ in_home "{ ls ~ > /dev/null; echo \$?; ls /no-such-dir 2> /dev/null; echo \$?; }
 check "30 passes with 0 and a failure code" 0 learn check 30
 
 check "list after thirty" 0 learn
-said "list counts 30 of 35" "30/35"
+said "list counts 30 of 40" "30/40"
 said "list shows the system group" "시스템 기초"
 
 # System basics: a real background process, the disk, a service and the journal
@@ -345,11 +345,57 @@ check "35 fails with another kernel version" fail learn check 35
 in_home "uname -r > practice/system/kernel.txt"
 check "35 passes with the running kernel" 0 learn check 35
 
-check "list after all thirty-five" 0 learn
-said "list says all thirty-five are done" "35/35"
+check "list after thirty-five" 0 learn
+said "list counts 35 of 40" "35/40"
+said "list shows the security group" "보안 기초"
+
+# Security basics: groups, a private file, an SSH key, a tampered download, encryption
+check "show 36 makes ~/practice/security" 0 learn show 36
+check "36 fails without groups.txt" fail learn check 36
+in_home "echo wheel > practice/security/groups.txt"
+check "36 fails when groups are missing" fail learn check 36
+in_home "id -Gn > practice/security/groups.txt"
+check "36 passes with id -Gn" 0 learn check 36
+check "37 fails without secret.txt" fail learn check 37
+in_home "echo memo > practice/security/secret.txt && chmod 644 practice/security/secret.txt"
+check "37 fails while others can read it" fail learn check 37
+in_home "chmod 600 practice/security/secret.txt"
+check "37 passes with 600" 0 learn check 37
+check "38 fails without a key" fail learn check 38
+# The check only looks at the files, so made-up ones stand in when ssh-keygen is missing
+if learner bash -c 'command -v ssh-keygen' >/dev/null 2>&1; then
+  in_home "ssh-keygen -q -t ed25519 -N '' -f ~/.ssh/id_ed25519"
+else
+  in_home "mkdir -p -m 700 .ssh && printf '%s\n' '-----BEGIN OPENSSH PRIVATE KEY-----' > .ssh/id_ed25519 && echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExample learner@test' > .ssh/id_ed25519.pub && chmod 600 .ssh/id_ed25519"
+fi
+in_home "chmod 644 .ssh/id_ed25519"
+check "38 fails while the private key is readable by others" fail learn check 38
+in_home "chmod 600 .ssh/id_ed25519"
+check "38 passes with the key pair" 0 learn check 38
+check "39 fails before the downloads exist" fail learn check 39
+check "show 39 makes the downloads" 0 learn show 39
+if learner bash -c 'cd ~/practice/security/downloads && ! sha256sum --quiet -c SHA256SUMS' >/dev/null 2>&1; then
+  ok "one download doesn't match SHA256SUMS"
+else
+  bad "every download matches SHA256SUMS"
+fi
+tampered="$(learner bash -c 'cd ~/practice/security/downloads && sha256sum -c SHA256SUMS 2>/dev/null | grep FAILED | cut -d: -f1')"
+good="$(learner bash -c 'cd ~/practice/security/downloads && sha256sum -c SHA256SUMS 2>/dev/null | grep ": OK" | head -n 1 | cut -d: -f1')"
+in_home "echo ${good} > practice/security/tampered.txt"
+check "39 fails with a file that matches" fail learn check 39
+in_home "echo ${tampered} > practice/security/tampered.txt"
+check "39 passes with the tampered file" 0 learn check 39
+check "40 fails without secret.txt.gpg" fail learn check 40
+in_home "cp practice/security/secret.txt practice/security/secret.txt.gpg"
+check "40 fails with a plain copy" fail learn check 40
+in_home "rm practice/security/secret.txt.gpg && GNUPGHOME=\$(mktemp -d) gpg -q --batch --passphrase test --pinentry-mode loopback -c practice/security/secret.txt"
+check "40 passes with gpg -c" 0 learn check 40
+
+check "list after all forty" 0 learn
+said "list says all forty are done" "40/40"
 said "list points to the CTF" "robinctl ctf"
-check "show 35" 0 learn show 35
-check "mission 36 doesn't exist" fail learn show 36
+check "show 40" 0 learn show 40
+check "mission 41 doesn't exist" fail learn show 41
 
 printf '%s\n' "Local CTF (robinctl ctf): each challenge solved the way its hints say"
 CTF="practice/ctf"

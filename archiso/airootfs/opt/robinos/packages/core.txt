@@ -10,6 +10,8 @@ nano
 # Not in Arch's base; the where hint and learning mission 27 use it
 which
 curl
+# ssh and ssh-keygen (learning mission 38); sshd stays off (docs/ethics.md)
+openssh
 python
 wget
 reflector

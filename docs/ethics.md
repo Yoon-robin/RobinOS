@@ -31,6 +31,6 @@ RobinOS에서는 위험한 행동보다 안전하게 배우는 쪽이 더 쉬워
 
 ## 기본 설치의 네트워크
 
-- 기본으로 켜 두는 네트워크 서비스는 인쇄(CUPS)와 같은 네트워크의 프린터 찾기(Avahi)뿐이에요. 원격 접속(sshd)은 꺼져 있어요.
+- 기본으로 켜 두는 네트워크 서비스는 인쇄(CUPS)와 같은 네트워크의 프린터 찾기(Avahi)뿐이에요. 원격 접속(sshd)은 꺼져 있어요. ssh 클라이언트와 `ssh-keygen`(학습 미션 38)을 쓰려고 openssh를 설치하지만 sshd 서비스는 켜지 않아요.
 - CUPS는 내 컴퓨터 안에서만 받아요(`localhost:631`과 소켓 파일). 다른 컴퓨터가 내 프린터를 쓰거나 프린터를 등록하게 하는 공유와 `cups-browsed`는 넣지 않았어요.
 - Avahi는 같은 네트워크에 컴퓨터 이름을 알리고 5353/udp로 답해요. 공공 와이파이에서 이름을 알리고 싶지 않으면 `sudo systemctl disable --now avahi-daemon.service avahi-daemon.socket`으로 꺼요. 그러면 네트워크 프린터를 자동으로 찾지 못해요.

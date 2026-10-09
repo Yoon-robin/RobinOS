@@ -738,7 +738,8 @@ packages_print() {
 }
 
 # ---- Learning missions: Linux basics (1-5), network basics (6-10), forensics basics (11-15),
-# reversing basics (16-20), web basics (21-25), shell basics (26-30), system basics (31-35) ----
+# reversing basics (16-20), web basics (21-25), shell basics (26-30), system basics (31-35),
+# security basics (36-40) ----
 #
 # Missions are solved in a real terminal. `robinctl learn check N` looks at the
 # result (files under ~/practice) and records progress in the user's state dir.
@@ -751,8 +752,10 @@ packages_print() {
 # practice server (practice/web/server.py) that only listens on 127.0.0.1:8000.
 # The shell basics missions need nothing but bash; their files go to ~/practice/shell.
 # The system basics missions (processes, disk, services, logs) write to ~/practice/system.
+# The security basics missions (users, permissions, SSH keys, checksums, encryption)
+# work in ~/practice/security; 38 makes a key in ~/.ssh with the user's own ssh-keygen.
 
-readonly LEARN_COUNT=35
+readonly LEARN_COUNT=40
 LEARN_DIR="${HOME:-/root}/practice"
 LEARN_NET="${HOME:-/root}/practice/net"
 LEARN_FOR="${HOME:-/root}/practice/forensics"
@@ -760,6 +763,7 @@ LEARN_REV="${HOME:-/root}/practice/reversing"
 LEARN_WEB="${HOME:-/root}/practice/web"
 LEARN_SHELL="${HOME:-/root}/practice/shell"
 LEARN_SYSTEM="${HOME:-/root}/practice/system"
+LEARN_SEC="${HOME:-/root}/practice/security"
 LEARN_STATE="${XDG_STATE_HOME:-${HOME:-/root}/.local/state}/robinos/learn"
 LEARN_FAILS=0
 
@@ -800,6 +804,11 @@ learn_title() {
     33) printf '디스크 공간 보기' ;;
     34) printf '서비스 상태 보기' ;;
     35) printf '시스템 기록 읽기' ;;
+    36) printf '사용자와 그룹 보기' ;;
+    37) printf '나만 읽는 파일 만들기' ;;
+    38) printf 'SSH 열쇠 만들기' ;;
+    39) printf '내려받은 파일 검사하기' ;;
+    40) printf '파일 암호화하기' ;;
   esac
 }
 
@@ -813,6 +822,7 @@ learn_group() {
     21) printf '웹 기초' ;;
     26) printf '셸 기초' ;;
     31) printf '시스템 기초' ;;
+    36) printf '보안 기초' ;;
   esac
 }
 
@@ -853,6 +863,11 @@ learn_tools() {
     33) printf 'df -h du -sh' ;;
     34) printf 'systemctl status' ;;
     35) printf 'journalctl uname -r' ;;
+    36) printf 'whoami id groups' ;;
+    37) printf 'chmod 600 ls -l' ;;
+    38) printf 'ssh-keygen' ;;
+    39) printf 'sha256sum -c' ;;
+    40) printf 'gpg -c' ;;
   esac
 }
 
@@ -894,7 +909,7 @@ learn_mission_arg() {
     n="$(learn_next)"
     [[ -n "${n}" ]] || n="${LEARN_COUNT}"
   fi
-  [[ "${n}" =~ ^([1-9]|[12][0-9]|3[0-5])$ ]] || die "미션 번호는 1부터 ${LEARN_COUNT}까지예요"
+  [[ "${n}" =~ ^([1-9]|[123][0-9]|40)$ ]] || die "미션 번호는 1부터 ${LEARN_COUNT}까지예요"
   printf '%s' "${n}"
 }
 
@@ -1727,6 +1742,124 @@ EOF
 EOF
 }
 
+learn_show_36() {
+  cat <<'EOF'
+리눅스는 처음부터 여러 사람이 함께 쓰는 시스템이에요. 사람마다 사용자 계정이 있고,
+계정은 그룹에 들어가요. 윈도우의 "관리자" 계정에 해당하는 것이 wheel 그룹이에요.
+wheel에 든 사용자만 sudo로 관리자(root) 권한을 빌릴 수 있어요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  내가 들어 있는 그룹 이름을 모두 ~/practice/security/groups.txt에 저장하세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  whoami                                   내 사용자 이름
+  id                                       내 번호(uid)와 그룹들
+  groups                                   그룹 이름만
+  getent group wheel                       wheel 그룹에 누가 있는지
+  id -Gn > ~/practice/security/groups.txt
+EOF
+}
+
+learn_show_37() {
+  cat <<'EOF'
+파일마다 주인(나), 그룹, 그 밖의 사람에게 읽기(r), 쓰기(w), 실행(x) 권한이 따로 있어요.
+윈도우 파일 속성의 "보안" 탭과 같은 일이에요. 비밀번호나 열쇠처럼 남이 보면 안 되는
+파일은 나만 읽고 쓸 수 있게(600) 해 둬요. 숫자는 읽기 4 + 쓰기 2 + 실행 1을 더한 값이에요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  ~/practice/security/secret.txt에 아무 글이나 쓰고, 나만 읽고 쓸 수 있게 하세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  echo "나만 보는 메모" > ~/practice/security/secret.txt
+  ls -l ~/practice/security/secret.txt     -rw-r--r-- 는 다른 사람도 읽을 수 있어요
+  chmod 600 ~/practice/security/secret.txt 주인만 읽기·쓰기 (-rw-------)
+  stat -c %a ~/practice/security/secret.txt 권한을 숫자로
+EOF
+}
+
+learn_show_38() {
+  cat <<'EOF'
+SSH 열쇠는 비밀번호 대신 쓰는 한 쌍의 파일이에요. 공개 열쇠(.pub)는 서버나 GitHub에
+등록해도 되지만, 개인 열쇠는 절대 남에게 주면 안 돼요. 서버는 공개 열쇠로 내가
+개인 열쇠를 가졌는지 확인해요. 개인 열쇠에 비밀번호(passphrase)를 걸어 두면 더 안전해요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  ed25519 방식의 SSH 열쇠를 ~/.ssh/id_ed25519에 만드세요.
+  이미 있다면 그대로 확인만 해요(덮어쓰지 마세요).
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  ssh-keygen -t ed25519                    엔터를 누르면 ~/.ssh/id_ed25519에 만들어요
+  ls -l ~/.ssh                             개인 열쇠는 -rw------- 예요
+  cat ~/.ssh/id_ed25519.pub                남에게 보여 줘도 되는 공개 열쇠
+EOF
+}
+
+learn_show_39() {
+  cat <<'EOF'
+인터넷에서 받은 파일이 중간에 바뀌지 않았는지는 해시(SHA-256)로 확인해요. 배포하는 곳이
+올려 둔 SHA256SUMS의 값과 내가 받은 파일의 해시가 같으면 똑같은 파일이에요.
+RobinOS ISO도 이렇게 확인해요. 한 글자만 바뀌어도 해시는 완전히 달라져요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  ~/practice/security/downloads의 파일 중 SHA256SUMS와 맞지 않는(바꿔치기된) 파일의
+  이름을 ~/practice/security/tampered.txt에 저장하세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  cd ~/practice/security/downloads
+  cat SHA256SUMS                           배포하는 곳이 알려 준 해시
+  sha256sum *.tar.gz *.zip *.iso           내가 받은 파일의 해시
+  sha256sum -c SHA256SUMS                  한 번에 비교 (OK / FAILED)
+  echo 파일이름 > ~/practice/security/tampered.txt
+EOF
+}
+
+learn_show_40() {
+  cat <<'EOF'
+암호화하면 비밀번호를 아는 사람만 파일을 읽을 수 있어요. USB에 넣어 다니거나
+클라우드에 올릴 파일은 암호화해 두면 잃어버려도 안전해요. gpg -c는 비밀번호 하나로
+잠그는 방식이에요. 비밀번호를 잊으면 아무도 못 열어요.
+EOF
+  learn_section "할 일"
+  cat <<'EOF'
+  미션 37의 secret.txt를 비밀번호로 암호화해서 ~/practice/security/secret.txt.gpg를 만드세요.
+EOF
+  learn_section "써 볼 명령"
+  cat <<'EOF'
+  cd ~/practice/security
+  gpg -c secret.txt                        비밀번호를 두 번 물어요 → secret.txt.gpg
+  file secret.txt.gpg                      PGP 암호화 파일이라고 나와요
+  cat secret.txt.gpg                       읽을 수 없는 글자뿐이에요
+  gpg -d secret.txt.gpg                    비밀번호를 넣으면 다시 보여요
+EOF
+}
+
+# Mission 39 needs downloads to check: three files and their SHA256SUMS, one of
+# them changed afterwards. Made the first time the mission is shown; the changed
+# file is picked at random and remembered in the state dir.
+learn_prepare_39() {
+  local dir="${LEARN_SEC}/downloads" names=(app-1.2.tar.gz driver-3.0.zip robinos-test.iso) pick name
+  if [[ -f "${LEARN_STATE}/tampered-39" ]]; then
+    return
+  fi
+  mkdir -p "${dir}" "${LEARN_STATE}"
+  for name in "${names[@]}"; do
+    printf '연습용 내려받은 파일: %s\n' "${name}" >"${dir}/${name}"
+  done
+  (cd "${dir}" && sha256sum "${names[@]}" >SHA256SUMS)
+  pick="${names[RANDOM % ${#names[@]}]}"
+  printf '누군가 중간에 몰래 바꿨어요.\n' >>"${dir}/${pick}"
+  printf '%s\n' "${pick}" >"${LEARN_STATE}/tampered-39"
+  printf '\n%s연습용 파일을 ~/practice/security/downloads에 만들어 뒀어요.%s\n' "${C_DIM}" "${C_RESET}"
+}
+
 # The practice web server for missions 21-25 (practice/web/server.py), kept here
 # as gzip + base64 by practice/web/build.sh
 LEARN_WEB_SERVER_B64="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"
@@ -1783,6 +1916,11 @@ learn_show() {
   "learn_show_${n}"
   if [[ "${n}" == "3" ]]; then
     learn_prepare_3
+  elif [[ "${n}" == "39" ]]; then
+    mkdir -p "${LEARN_SEC}"
+    learn_prepare_39
+  elif ((n >= 36)); then
+    mkdir -p "${LEARN_SEC}"
   elif ((n >= 31)); then
     mkdir -p "${LEARN_SYSTEM}"
   elif ((n >= 26)); then
@@ -2412,6 +2550,94 @@ learn_check_35() {
   fi
 }
 
+# ---- Security basics (36-40) ----
+
+learn_check_36() {
+  local file="${LEARN_SEC}/groups.txt" group missing=()
+  if [[ ! -s "${file}" ]]; then
+    learn_bad "~/practice/security/groups.txt가 없거나 비어 있어요" "id -Gn > ~/practice/security/groups.txt"
+    return
+  fi
+  for group in $(id -Gn); do
+    grep -qw -- "${group}" "${file}" || missing+=("${group}")
+  done
+  if ((${#missing[@]} > 0)); then
+    learn_bad "빠진 그룹이 있어요: ${missing[*]}" "id -Gn 이 보여 주는 그룹을 모두 저장해요"
+  elif id -Gn | grep -qw wheel; then
+    learn_ok "그룹 $(id -Gn | wc -w)개를 찾았어요. wheel에 들어 있어서 sudo를 쓸 수 있어요"
+  else
+    learn_ok "그룹 $(id -Gn | wc -w)개를 찾았어요. wheel이 없어서 이 계정은 sudo를 못 써요"
+  fi
+}
+
+learn_check_37() {
+  local file="${LEARN_SEC}/secret.txt" mode
+  if [[ ! -s "${file}" ]]; then
+    learn_bad "~/practice/security/secret.txt가 없거나 비어 있어요" "echo \"나만 보는 메모\" > ~/practice/security/secret.txt"
+    return
+  fi
+  mode="$(stat -c %a "${file}")"
+  if [[ "${mode}" == "600" ]]; then
+    learn_ok "secret.txt는 나만 읽고 쓸 수 있어요 (600, -rw-------)"
+  else
+    learn_bad "secret.txt의 권한이 ${mode}이에요. 600이어야 해요" "chmod 600 ~/practice/security/secret.txt"
+  fi
+}
+
+learn_check_38() {
+  local key="${HOME:-/root}/.ssh/id_ed25519"
+  if [[ ! -f "${key}.pub" || ! -f "${key}" ]]; then
+    learn_bad "~/.ssh/id_ed25519와 id_ed25519.pub가 없어요" "ssh-keygen -t ed25519"
+    return
+  fi
+  if grep -qE '^ssh-ed25519 [A-Za-z0-9+/=]+' "${key}.pub"; then
+    learn_ok "공개 열쇠 id_ed25519.pub가 있어요 (남에게 줘도 돼요)"
+  else
+    learn_bad "id_ed25519.pub가 ed25519 공개 열쇠 모양이 아니에요" "ssh-keygen -t ed25519 로 다시 만들어요"
+  fi
+  if [[ "$(stat -c %a "${key}")" == "600" ]]; then
+    learn_ok "개인 열쇠 id_ed25519는 나만 읽을 수 있어요 (600)"
+  else
+    learn_bad "개인 열쇠의 권한이 $(stat -c %a "${key}")이에요. 600이어야 해요" "chmod 600 ~/.ssh/id_ed25519"
+  fi
+}
+
+learn_check_39() {
+  local file="${LEARN_SEC}/tampered.txt" answer written
+  answer="$(head -n 1 "${LEARN_STATE}/tampered-39" 2>/dev/null || true)"
+  if [[ -z "${answer}" ]]; then
+    learn_bad "연습용 파일이 아직 없어요" "robinctl learn show 39"
+    return
+  fi
+  written="$(head -n 1 "${file}" 2>/dev/null | tr -d '\r[:space:]' || true)"
+  written="${written##*/}"
+  if [[ -z "${written}" ]]; then
+    learn_bad "~/practice/security/tampered.txt가 없거나 비어 있어요" "sha256sum -c SHA256SUMS 에서 FAILED인 파일 이름을 저장해요"
+  elif [[ "${written}" == "${answer}" ]]; then
+    learn_ok "${answer}가 SHA256SUMS와 맞지 않아요. 이런 파일은 열지 말고 지워요"
+  else
+    learn_bad "${written}는 SHA256SUMS와 맞아요" "sha256sum -c SHA256SUMS 의 FAILED 줄을 봐요"
+  fi
+}
+
+learn_check_40() {
+  local file="${LEARN_SEC}/secret.txt.gpg" plain="${LEARN_SEC}/secret.txt" first
+  if [[ ! -s "${file}" ]]; then
+    learn_bad "~/practice/security/secret.txt.gpg가 없어요" "cd ~/practice/security && gpg -c secret.txt"
+    return
+  fi
+  if ! file -b "${file}" | grep -q 'PGP symmetric key encrypted'; then
+    learn_bad "secret.txt.gpg가 비밀번호로 암호화한 파일이 아니에요" "gpg -c secret.txt (gpg -e는 공개 열쇠 방식이에요)"
+    return
+  fi
+  first="$(head -n 1 "${plain}" 2>/dev/null || true)"
+  if [[ -n "${first}" ]] && grep -qF -- "${first}" "${file}"; then
+    learn_bad "secret.txt.gpg 안에 원래 글이 그대로 보여요" "gpg -c secret.txt 로 다시 암호화해요"
+  else
+    learn_ok "secret.txt.gpg는 비밀번호로 잠근 파일이에요. 열 때는 gpg -d"
+  fi
+}
+
 learn_check() {
   local n next
   n="$(learn_mission_arg "${1:-}")"
@@ -2441,6 +2667,8 @@ learn_check() {
     printf '웹 기초를 끝냈어요. 26번부터는 셸 기초예요.\n'
   elif [[ "${n}" == "30" ]]; then
     printf '셸 기초를 끝냈어요. 31번부터는 시스템 기초예요.\n'
+  elif [[ "${n}" == "35" ]]; then
+    printf '시스템 기초를 끝냈어요. 36번부터는 보안 기초예요.\n'
   fi
   next="$(learn_next)"
   if [[ -n "${next}" ]]; then

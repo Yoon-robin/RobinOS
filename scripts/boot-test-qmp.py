@@ -239,7 +239,7 @@ def main():
     type_text(qmp, "robinctl learn show 1\n")
     wait(2)
     shot(qmp, "terminal-learn")
-    # Solve mission 1, so the launcher's learning entry shows "1/35" in light-launcher
+    # Solve mission 1, so the launcher's learning entry shows "1/40" in light-launcher
     type_text(qmp, "mkdir -p ~/practice/notes && robinctl learn check 1 >/dev/null\n")
     wait(1)
     # Title bar buttons (desktop/dconf) as GTK, Firefox and Qt apps read them
