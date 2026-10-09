@@ -40,9 +40,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| 묶음 59 | T-134 런처 계산·웹 검색, T-135 런처 오른쪽 클릭 메뉴(MenuCard), T-136 라이브 ISO의 networkd·실패 서비스 | `verify -Installer robinos` (부팅 테스트 79장: `launcher-calc`, `launcher-web`, `launcher-menu`, `failed-units`; 메뉴 장면 `quick-links`, `desktop-menu`, `dock-menu`) |
+| (없음) | | |
 
-`d335d16`까지 2026-10-10 묶음 58 검증(`verify`: 빌드 3.7분 + 테스트 13.7분)을 마치고 푸시했어요.
+`8f96fba`까지 2026-10-10 묶음 59 검증(`verify`: 빌드 3.4분 + 테스트 14.1분)을 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -54,24 +54,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - **v0.2 프리뷰 공개**: v0.1 뒤로 오피스·앱 스토어·프린터·NVIDIA·업데이트 알림이 들어갔고, 윈도우처럼 쓰는 기능(Win+V, Alt+Tab 미리보기, Win+Tab, Win+←/→, Win+., 트레이, 독 미리보기, 연결·소리 창, 알림 센터, 달력 공휴일)과 학습 미션 40개, 입문 CTF 10문제, 학습 센터가 생겼어요. 발표문 초안은 `docs/release-notes-v0.2.md`, README 앞에 화면 사진도 있어요. 2026-10-10에 xz ISO가 2,101,510,144바이트로 깃허브 한도 안인 것을 확인했어요. 공개하기로 하면 릴리스용 xz ISO를 빌드하고 부팅 테스트한 뒤 깃허브 릴리스로 올려요(태그 `v0.2.0`, 프리릴리스)
 
 ## 진행 중
-
-### T-134 런처에서 계산하고 웹에서 찾기
-- 상태: 검증 대기 (묶음 59)
-- 출처: 백로그 채우기 1 (윈도우와 다른 점). 윈도우 시작 메뉴 검색은 `12*3`을 치면 계산 결과를, 맞는 앱이 없으면 웹 검색을 보여 주는데, RobinOS 런처는 둘 다 없었어요
-- 한 것: `desktop/shell/calc.js`(eval 없이 직접 파싱하는 계산기: `+ - * / ^`, `× ÷`, 괄호). 수식이면 맨 위 "계산"에 결과, `Enter`로 복사(`wl-copy`). 두 글자 이상이면 맨 아래 "웹에서 ... 찾기"(`firefox --search`, 고르기 전에는 아무것도 보내지 않아요). `check-desktop.sh`가 `qml6`로 계산 18가지를 시험해요(틀린 기대값이면 실패하는 것도 확인). 아이콘 `calculator`
-- 완료 기준: 부팅 테스트 `launcher-calc`(= 60), `launcher-web`
-
-### T-135 런처 앱 오른쪽 클릭 메뉴
-- 상태: 검증 대기 (묶음 59)
-- 출처: T-132(독 메뉴)와 맞추기. 시작 메뉴는 앱을 오른쪽 클릭하면 메뉴가 뜨는데, 런처는 오른쪽 클릭이 바로 고정을 바꿨어요
-- 한 것: 런처 안에 메뉴(열기, 독에 고정·고정 풀기, 제거). 런처가 키보드를 독점하는 창이라 따로 창을 띄우지 않고 같은 창 안에 그려요. 메뉴 카드를 `MenuCard.qml`로 떼어 `PopupMenu.qml`(Win+X, 바탕 화면, 독)과 함께 써요. 메뉴 키와 `Shift+F10`으로도 열어요
-- 완료 기준: 부팅 테스트 `launcher-menu`, `launcher-pin`(아래 화살표·Enter로 고정, 런처는 열린 채), 그 뒤 장면(계산기 열기, 앱 제거 안내)이 전과 같음
-
-### T-136 라이브 ISO의 네트워크 관리자 다툼과 실패하는 서비스
-- 상태: 검증 대기 (묶음 59)
-- 출처: 묶음 58 `27-event-viewer`의 경고. ① systemd-networkd가 NetworkManager와 같은 장치를 관리하려 다퉜어요(`conflicting with our setting`, resolved `LinkBusy`). 라이브 ISO의 machine-id가 "uninitialized"라 부팅할 때마다 systemd가 preset을 적용하고, systemd의 `90-systemd.preset`이 `prepare-archiso.sh`가 뺀 networkd를 다시 켰어요. ② releng가 켜 둔 ModemManager, hv_fcopy_daemon 링크가 RobinOS에 없는 패키지를 가리켜서 preset 적용이 `unresolvable alias`로 실패했어요. ③ releng가 켠 `vmtoolsd`가 QEMU와 실제 PC에서 실패해 `systemctl --failed`에 남았어요
-- 한 것: `/etc/systemd/system-preset/10-robinos.preset`(`disable systemd-networkd*`, 처음 맞는 줄이 이겨요), `customize_airootfs.sh`가 깨진 서비스 링크를 지워요, `vmtoolsd`·`vmware-vmblock-fuse`에 `ConditionVirtualization=vmware`
-- 완료 기준: 부팅 테스트 `failed-units`에 실패한 서비스 0개, `systemd-networkd` inactive, `NetworkManager` active. `event-viewer`에 networkd·vmtoolsd·preset 경고가 없음
 
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
@@ -85,6 +67,12 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 남은 것 (VMware가 있는 PC: robin PC, 집 PC(Blitz, VMware Workstation 26.0)): 최종 ISO로 VMware VM에 다시 설치(`vmrun` 게스트 명령, 계획은 디스크 `/dev/nvme0n1` 전체), 로그인 뒤 셸·해상도 확인. 집 PC에는 VM이 아직 없어서 새로 만들어요(`build\vmware\guest-*.sh`는 robin PC에만 있어요). VMware가 없는 PC의 루프는 이 작업을 건너뛰어요
 
 ## 할 일 (위에서부터)
+
+### T-137 테스트 VM에서 실패하는 vmtoolsd
+- 상태: 할 일
+- 출처: 묶음 59 `30-failed-units`. `vmtoolsd.service`는 원래 `ConditionVirtualization=vmware`가 있는데도 QEMU(WHPX) 테스트 VM에서 시작해서 실패해요(설치 테스트의 라이브 단계에서도 "Started ... VMware Tools"). 테스트 VM이 VMware로 감지되는 것 같아요(QEMU q35의 VMware 백도어 포트 `vmport`가 기본으로 켜져 있어요)
+- 할 것: 부팅 테스트에서 `systemd-detect-virt`를 찍어 무엇으로 감지되는지 확인. VMware로 나오면 테스트 VM에 `vmport=off`를 줘서 실제 QEMU/KVM처럼 만들고(설치기도 VMware 도구 대신 QEMU 도구를 깔아야 맞아요), T-136에서 넣은 vmtoolsd·vmblock drop-in은 원래 유닛에 같은 조건이 있으니 지워요
+- 완료 기준: 부팅 테스트 `failed-units`에 실패한 서비스 0개
 
 ### T-104 2029년 공휴일 넣기
 - 상태: 할 일 (2028년 가을에 해요)
@@ -117,6 +105,10 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 최근 것이 위에 있어요. 더 오래된 기록은 [done.md](done.md)에 있어요.
 
+- 2026-10-10 묶음 59 검증(`8f96fba`, verify 빌드 3.4분 + 테스트 14.1분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)
+  - T-134 런처 계산·웹 검색(`cce5c5f`): `16-launcher-calc`에 `(12+3)*4` = 60, `17-launcher-web`에 "웹에서 \"arch wiki hyprland\" 찾기"만
+  - T-135 런처 오른쪽 클릭 메뉴(`27c7d29`): `64-launcher-menu`에 열기·독에 고정·제거, `65-launcher-pin`에 고정 알림과 열린 채인 런처, 그 뒤 `66-app-remove-kept`는 전과 같음. 같은 메뉴 카드를 쓰는 `quick-links`, `desktop-menu`, `dock-menu`도 전과 같음
+  - T-136 라이브 ISO 서비스(`8f96fba`): `30-failed-units`에 `systemd-networkd` inactive, `NetworkManager` active. `29-event-viewer`에서 networkd 다툼, resolved `LinkBusy`, preset `unresolvable alias` 경고가 사라짐. `vmtoolsd`는 여전히 실패해서 따로 봐요(T-137)
 - 2026-10-10 묶음 58 검증(`d335d16`, verify 빌드 3.7분 + 테스트 13.7분, 설치 테스트 다섯 단계 통과, 부팅 테스트 75장)
   - T-131 바탕 화면 오른쪽 클릭 메뉴(`3fa1f07`): `38-desktop-menu`에 클릭한 자리에서 터미널 열기, 파일 탐색기, 배경화면 바꾸기, 디스플레이 설정, 단축키 보기. `12-quick-links`(같은 메뉴 코드로 바꾼 Win+X)는 전과 같음
   - T-132 독 오른쪽 클릭 메뉴(`f2dbcba`): `56-dock-menu`에 계산기의 새 창·독에 고정·창 닫기, 아래 화살표·Enter로 `57-dock-pinned`("독에 고정했어요" 알림)
