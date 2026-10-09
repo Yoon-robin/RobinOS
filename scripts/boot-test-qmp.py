@@ -284,8 +284,10 @@ def main():
     shot(qmp, "scale-125")
     type_text(qmp, "clear; " + ipc + "setScale 1\n")
     wait(3)
-    # 야간 모드 (hyprsunset at 4500 K) warms the whole screen; the second call ends it
-    type_text(qmp, "clear; " + ipc + "toggleNightLight\n")
+    # 야간 모드 starts hyprsunset (4500 K) and the second call stops it. The colors
+    # need the driver's KMS CTM, which the test VM's bochs-drm lacks, so the shot
+    # shows the running process (and the tile's VM note) instead of a warm screen
+    type_text(qmp, "clear; " + ipc + "toggleNightLight; sleep 1; pgrep -a hyprsunset\n")
     wait(3)
     shot(qmp, "night-light")
     type_text(qmp, "clear; " + ipc + "toggleNightLight\n")

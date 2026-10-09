@@ -481,6 +481,15 @@ Singleton {
     // ---- Night light, like Windows' 야간 모드: hyprsunset warms the screen ----
 
     readonly property bool nightLight: desktopSettings.nightLight
+    // Hyprland changes the colors through the graphics driver (KMS CTM), which VM
+    // graphics (QEMU, VMware, Hyper-V) don't offer; the tile says so there
+    property bool inVm: false
+
+    Process {
+        command: ["systemd-detect-virt", "--vm", "--quiet"]
+        running: true
+        onExited: (exitCode, exitStatus) => root.inVm = exitCode === 0
+    }
 
     // Stopping hyprsunset gives the screen its normal colors back
     Process {
