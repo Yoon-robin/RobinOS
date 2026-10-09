@@ -46,6 +46,25 @@ PanelWindow {
         }
     }
 
+    // A window closed while the list is up drops out of it
+    Connections {
+        target: ShellState
+
+        function onWindowsChanged() {
+            if (!root.open)
+                return;
+            const alive = root.items.filter(w => w && ShellState.toArray(ShellState.windows).indexOf(w) !== -1);
+            if (alive.length === root.items.length)
+                return;
+            if (alive.length === 0) {
+                root.cancel();
+                return;
+            }
+            root.selected = Math.min(root.selected, alive.length - 1);
+            root.items = alive;
+        }
+    }
+
     function finish() {
         if (!open)
             return;
@@ -62,11 +81,15 @@ PanelWindow {
     }
 
     function title(win) {
+        if (!win)
+            return "";
         const entry = DesktopEntries.heuristicLookup(ShellState.appIdOf(win));
         return win.title || entry?.name || ShellState.appIdOf(win);
     }
 
     function icon(win) {
+        if (!win)
+            return "";
         const appId = ShellState.appIdOf(win);
         const entry = DesktopEntries.heuristicLookup(appId);
         return Quickshell.iconPath(entry?.icon ?? appId, "application-x-executable");

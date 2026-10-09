@@ -25,4 +25,13 @@ case "${mode}" in
 esac
 
 wl-copy --type image/png <"${file}"
-notify-send --app-name=RobinOS --icon="${file}" "스크린샷을 저장했어요" "${file/#${HOME}/\~}"
+# Like Windows' snipping tool toast: a click opens the picture, the button opens its
+# folder. notify-send waits for the choice in the background, so the key returns now.
+(
+  action="$(notify-send --app-name=RobinOS --icon="${file}" --action=default=열기 --action=folder="폴더 열기" \
+    "스크린샷을 저장했어요" "${file/#${HOME}/\~} · 클립보드에도 복사했어요" || true)"
+  case "${action}" in
+    default) xdg-open "${file}" ;;
+    folder) xdg-open "${dir}" ;;
+  esac
+) >/dev/null 2>&1 &

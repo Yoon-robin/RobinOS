@@ -271,6 +271,11 @@ def main():
     shot(qmp, "snipping")
     keys(qmp, "esc")
     wait(1)
+    # Shift+Print saves the whole screen; the toast opens the picture on a click and
+    # has a "폴더 열기" button, like Windows' snipping tool toast
+    keys(qmp, "shift", "print")
+    wait(2)
+    shot(qmp, "screenshot-toast")
     # Win+V like Windows' clipboard history: copy something, then open the list
     type_text(qmp, "clear; wl-copy clipboard-test-robinos\n")
     wait(2)
