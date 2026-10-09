@@ -47,8 +47,13 @@ FloatingWindow {
             refresh();
     }
 
+    // A mission finished while the list is being read gets a second read afterwards
+    property bool refreshAgain: false
+
     function refresh() {
-        if (!listProc.running)
+        if (listProc.running)
+            refreshAgain = true;
+        else
             listProc.running = true;
     }
 
@@ -106,7 +111,13 @@ FloatingWindow {
                 root.loaded = true;
             }
         }
-        onExited: (exitCode, exitStatus) => root.failed = exitCode !== 0
+        onExited: (exitCode, exitStatus) => {
+            root.failed = exitCode !== 0;
+            if (root.refreshAgain) {
+                root.refreshAgain = false;
+                listProc.running = true;
+            }
+        }
     }
 
     Item {

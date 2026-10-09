@@ -702,10 +702,14 @@ Singleton {
     function checkBattery() {
         if (!battery.ready || !battery.isLaptopBattery)
             return;
-        if (battery.state !== UPowerDeviceState.Discharging) {
+        // Only real charging starts the warnings over; UPower briefly reports
+        // "unknown" now and then, which would repeat the same warning
+        if (battery.state === UPowerDeviceState.Charging || battery.state === UPowerDeviceState.FullyCharged) {
             batteryWarned = 100;
             return;
         }
+        if (battery.state !== UPowerDeviceState.Discharging)
+            return;
         const percent = Math.round(battery.percentage * 100);
         for (const level of [5, 10]) {
             if (percent <= level && batteryWarned > level) {
