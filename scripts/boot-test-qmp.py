@@ -333,8 +333,14 @@ def main():
     keys(qmp, "meta_l", "n")
     wait(2)
     shot(qmp, "notification-center")
-    keys(qmp, "esc")
-    wait(1)
+    # Like Windows, a click on an old notification opens it: the Shift+Print toast
+    # (second in the list) is long gone, so its x-robinos-open hint opens the picture
+    # in the image viewer. Ctrl+W closes Loupe (in the terminal it only erases a word)
+    click(qmp, 1410, 220)
+    wait(4)
+    shot(qmp, "notification-opened")
+    keys(qmp, "ctrl", "w")
+    wait(2)
     # The Bluetooth tile's arrow, through IPC since the VM has no adapter (the tile
     # is greyed out); a click outside the card closes it
     type_text(qmp, "clear; " + ipc + "connect bluetooth\n")

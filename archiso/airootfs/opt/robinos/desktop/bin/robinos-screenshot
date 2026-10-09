@@ -27,9 +27,11 @@ esac
 wl-copy --type image/png <"${file}"
 # Like Windows' snipping tool toast: a click opens the picture, the button opens its
 # folder. notify-send waits for the choice in the background, so the key returns now.
+# The x-robinos-open hint lets the notification center open the picture later, after
+# the toast (and this notify-send) are gone.
 (
   action="$(notify-send --app-name=RobinOS --icon="${file}" --action=default=열기 --action=folder="폴더 열기" \
-    "스크린샷을 저장했어요" "${file/#${HOME}/\~} · 클립보드에도 복사했어요" || true)"
+    --hint="string:x-robinos-open:${file}" "스크린샷을 저장했어요" "${file/#${HOME}/\~} · 클립보드에도 복사했어요" || true)"
   case "${action}" in
     default) xdg-open "${file}" ;;
     folder) xdg-open "${dir}" ;;

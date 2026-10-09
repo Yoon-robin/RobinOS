@@ -7,7 +7,8 @@ import Quickshell.Widgets
 
 // Notification center under the bar's bell (Win+N or a click on the bell), like
 // Windows 11's: the notifications since login (Notifs.history), clear all, and
-// Do Not Disturb. Escape or a click outside closes it.
+// Do Not Disturb. A click (or Tab + Enter) on a notification opens what it was
+// about (Notifs.openEntry). Escape or a click outside closes it.
 PanelWindow {
     id: root
 
@@ -164,20 +165,56 @@ PanelWindow {
                 font.pixelSize: 13
             }
 
+            // By index, so an entry keeps its live notification for Notifs.openEntry
             Repeater {
-                model: Notifs.history.slice(0, 8)
+                model: Math.min(8, Notifs.history.length)
 
                 Rectangle {
                     id: item
 
-                    required property var modelData
+                    required property int index
+                    readonly property var modelData: Notifs.history[index]
+                    readonly property bool openable: Notifs.canOpen(modelData)
 
                     Layout.fillWidth: true
                     implicitHeight: row.implicitHeight + 20
                     radius: Theme.radiusMd
-                    color: Theme.raised
+                    color: openable && (area.containsMouse || item.activeFocus) ? Theme.secondary : Theme.raised
                     border.width: 1
                     border.color: Theme.border
+                    activeFocusOnTab: openable
+
+                    Accessible.role: openable ? Accessible.Button : Accessible.StaticText
+                    Accessible.name: modelData.summary
+
+                    function activate() {
+                        root.close();
+                        Notifs.openEntry(modelData);
+                    }
+
+                    Keys.onPressed: event => {
+                        if (Keyboard.activates(event)) {
+                            item.activate();
+                            event.accepted = true;
+                        }
+                    }
+
+                    Behavior on color {
+                        ColorAnimation { duration: Theme.durFast }
+                    }
+
+                    // A click opens what it was about (Windows does the same)
+                    MouseArea {
+                        id: area
+
+                        anchors.fill: parent
+                        enabled: item.openable
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: item.activate()
+                    }
+
+                    FocusRing {}
 
                     RowLayout {
                         id: row
