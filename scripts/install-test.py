@@ -589,6 +589,8 @@ def phase_installed(con, qmp):
             " && (. /etc/os-release && [ \"$ID\" = robinos ] && [ \"$ID_LIKE\" = arch ] && echo \"$PRETTY_NAME\")",
             timeout=600)
     con.run("grep -q robinos-bashrc.sh /etc/skel/.bashrc && grep -l robinos-bashrc.sh /home/*/.bashrc")
+    # which isn't in Arch's base; the where hint and learning mission 27 need it
+    con.run("command -v which")
 
     # QEMU's WHPX can't reset a VM that reboots itself ("Unexpected VP exit code 4"),
     # so every boot is its own QEMU run: power off here, the next phase boots again.
