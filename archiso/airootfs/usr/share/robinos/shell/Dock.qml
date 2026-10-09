@@ -12,8 +12,11 @@ PanelWindow {
     screen: modelData
     anchors.bottom: true
     margins.bottom: 10
-    implicitWidth: Math.max(body.implicitWidth, previewShown ? previewCard.width : 0, 320)
-    implicitHeight: body.implicitHeight + (previewShown ? previewCard.height + 16 : 40)
+    // Room for the window previews (four pictures) all the time: resizing the surface
+    // when they open made the pointer leave and enter again, which hid them, over and
+    // over (boot test, 2026-10-10). Outside the mask the strip is click-through.
+    implicitWidth: Math.max(body.implicitWidth, 760)
+    implicitHeight: body.implicitHeight + 168
     exclusiveZone: body.implicitHeight
     color: "transparent"
     // Only the dock body (and the window previews) take input; the tooltip strip
@@ -148,7 +151,7 @@ PanelWindow {
     property var pendingPreview: null
     readonly property bool previewShown: previewWins.length > 0
     readonly property real previewCenter: {
-        dock.width; // read again when the dock grows for the card
+        dock.width; // read again when the dock or its body changes size
         body.x;
         return previewItem ? previewItem.mapToItem(dock.contentItem, previewItem.width / 2, 0).x : dock.width / 2;
     }
