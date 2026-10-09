@@ -446,6 +446,17 @@ PanelWindow {
         ShellState.launcherOpen = false;
     }
 
+    // Right click on an app, like "작업 표시줄에 고정" in the Start menu
+    function togglePin(index) {
+        const item = results[index];
+        if (!item || item.kind !== "app")
+            return;
+        if (ShellState.dockPins.indexOf(item.entry.id) === -1)
+            ShellState.pinToDock(item.entry.id, item.entry.name);
+        else
+            ShellState.unpinFromDock(item.entry.id, item.entry.name);
+    }
+
     function activate(index) {
         const item = results[index];
         if (!item || item.kind === "header")
@@ -825,7 +836,13 @@ PanelWindow {
                                 if (root.pointerMoved)
                                     root.current = row.index;
                             }
-                            onClicked: root.activate(row.index)
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            onClicked: mouse => {
+                                if (mouse.button === Qt.RightButton)
+                                    root.togglePin(row.index);
+                                else
+                                    root.activate(row.index);
+                            }
                         }
                     }
                 }
