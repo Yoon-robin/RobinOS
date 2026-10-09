@@ -283,6 +283,7 @@ PanelWindow {
         { key: "snapshot", group: "system", icon: "history", title: "스냅샷 만들기", subtitle: "robinctl snapshot create", mono: true, words: "snapshot snapper btrfs 백업 복구" },
         { key: "update", group: "system", icon: "refresh", title: "시스템 업데이트", subtitle: "업데이트 전에 스냅샷을 자동으로 만들어요", words: "update upgrade pacman 업데이트" },
         { key: "doctor", group: "system", icon: "activity", title: "시스템 점검", subtitle: "robinctl doctor", mono: true, words: "doctor check 점검 진단" },
+        { key: "audit", group: "system", icon: "shield", title: "보안 점검", subtitle: "robinctl audit · 열린 포트, 원격 접속, 권한, 암호화", words: "audit security 보안 점검 보안 센터 방화벽 firewall 포트 암호화" },
         { key: "wifi", group: "system", icon: "wifi", title: "Wi-Fi 연결", subtitle: "nmtui", mono: true, words: "wifi network 네트워크 인터넷" },
         { key: "screenshot", group: "system", icon: "scan", title: "영역 스크린샷", subtitle: "Win + Shift + S", words: "screenshot capture 스크린샷 캡처 화면 캡처" },
         { key: "settings", group: "system", icon: "sliders", title: "빠른 설정", subtitle: "Win + S", words: "settings quick 설정 빠른 설정 테마 다크 모드" },
@@ -327,6 +328,7 @@ PanelWindow {
         { win: "그루브 음악", words: "그루브 음악 groove music 음악 노래 music audio 오디오 mp3", app: "org.gnome.Decibels" },
         { win: "장치 및 프린터", words: "장치 및 프린터 devices and printers 프린터 printer 인쇄 print", app: "system-config-printer" },
         { win: "배경 화면", words: "배경 화면 바탕 화면 바탕화면 desktop background 개인 설정 personalization", cmd: "wallpaper" },
+        { win: "Windows 보안", words: "windows 보안 windows security defender 디펜더 보안 센터 security center 백신 바이러스 antivirus", cmd: "audit" },
         { win: "제어판", words: "제어판 control panel 윈도우 설정 windows settings", cmd: "settings" }
     ]
 
@@ -634,6 +636,9 @@ PanelWindow {
             break;
         case "doctor":
             ShellState.runInTerminal("robinctl doctor");
+            break;
+        case "audit":
+            ShellState.runInTerminal("robinctl audit");
             break;
         case "wifi":
             ShellState.runInTerminal("nmtui");

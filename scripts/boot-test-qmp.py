@@ -242,6 +242,11 @@ def main():
     type_text(qmp, "robinctl learn show 1\n")
     wait(2)
     shot(qmp, "terminal-learn")
+    # robinctl audit, like Windows Security's overview: open ports, sshd, permissions,
+    # snapshots (none in the live session), firewall, disk encryption
+    type_text(qmp, "clear; robinctl audit\n")
+    wait(3)
+    shot(qmp, "security-audit")
     # Solve mission 1, so the launcher's learning entry shows "1/40" in light-launcher
     type_text(qmp, "mkdir -p ~/practice/notes && robinctl learn check 1 >/dev/null\n")
     wait(1)

@@ -80,6 +80,7 @@ Core에 웹 보안, 네트워크 분석, CTF, 리버싱, 포렌식, 무선 보�
 ```bash
 bin/robinctl version
 bin/robinctl doctor
+bin/robinctl audit
 bin/robinctl profile list
 bin/robinctl profile network --dry-run
 bin/robinctl profile security --dry-run
@@ -99,6 +100,8 @@ bin/robinctl lab status web
 ```
 
 `robinctl doctor`는 데스크톱(Hyprland, Quickshell, RobinOS 셸)과 브랜딩 요소(SDDM 테마, 설치된 시스템의 GRUB 테마)도 확인해요. NVIDIA 그래픽 카드가 있으면 드라이버가 떠 있는지, 설치본에서는 인쇄 서비스가 켜져 있는지도 알려 줘요.
+
+`robinctl audit`은 윈도우 보안 화면처럼 내 컴퓨터의 보안 상태를 보여 줘요. 다른 컴퓨터가 접속할 수 있는 서비스, SSH 서버, 홈 폴더와 SSH 열쇠 권한, 스냅샷, 방화벽, 디스크 암호화를 보고, 줄마다 왜 중요한지와 바꾸는 방법(관련 미션 번호)을 알려 줘요. 아무것도 바꾸지 않고 관리자 권한도 필요 없어요. 런처에서 "보안 점검"이나 "Windows 보안"으로도 열려요.
 
 ## 학습 미션
 

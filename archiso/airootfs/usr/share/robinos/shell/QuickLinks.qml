@@ -30,7 +30,8 @@ PanelWindow {
         ].concat(has("org.gnome.DiskUtility") ? [{ icon: "hard-drive", title: "디스크 관리", run: () => Quickshell.execDetached(["gnome-disks"]) }] : [])
             .concat(has("org.gnome.baobab") ? [{ icon: "hard-drive", title: "저장소", run: () => Quickshell.execDetached(["baobab"]) }] : [])
             .concat([
-                { icon: "shield", title: "시스템 점검", hint: "robinctl doctor", run: () => ShellState.runInTerminal("robinctl doctor") },
+                { icon: "activity", title: "시스템 점검", hint: "robinctl doctor", run: () => ShellState.runInTerminal("robinctl doctor") },
+                { icon: "shield", title: "보안 점검", hint: "robinctl audit", run: () => ShellState.runInTerminal("robinctl audit") },
                 { icon: "file", title: "이벤트 뷰어", hint: "journalctl", run: () => ShellState.openTerminal("journalctl -b -p warning --no-pager | tail -n 40") },
                 { separator: true },
                 { icon: "lock", title: "화면 잠금", hint: "Win+L", run: () => ShellState.lock() },

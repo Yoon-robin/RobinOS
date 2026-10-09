@@ -529,6 +529,14 @@ else
   bad "security is not every package"
 fi
 
+printf '%s\n' "audit: the security check reads without changing anything"
+check "audit runs as an ordinary user" 0 learner bash "${ROBINCTL}" audit
+said "audit looks at services other computers can reach" "밖에서 닿는 서비스"
+said "audit looks at sshd" "SSH 서버(sshd)"
+said "audit ends with a count or an all-clear" "살펴볼"
+# The test's home is chmod 777 (root owns it, so the learner can't tighten it)
+said "audit says the home folder is open to others" "홈 폴더 권한이 777"
+
 printf '%s\n' "doctor: NVIDIA cards on a stand-in /sys/bus/pci/devices"
 pci_dev() {
   mkdir -p "$1"

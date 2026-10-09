@@ -37,6 +37,7 @@ robinctl - RobinOS 관리 도구
 사용법:
   robinctl version                      버전 보기
   robinctl doctor                       시스템 점검
+  robinctl audit                        보안 점검 (윈도우 보안처럼: 열린 포트, 원격 접속, 권한, 암호화)
   robinctl update [--dry-run]           스냅샷을 만든 뒤 시스템 업데이트 (앱 스토어 앱도)
   robinctl snapshot create [이름]       스냅샷 만들기
   robinctl snapshot list                스냅샷 목록
@@ -47,11 +48,11 @@ robinctl - RobinOS 관리 도구
   robinctl packages core                기본 패키지 목록
   robinctl packages <프로필>            보안 실습 프로필의 패키지 목록
   robinctl packages optional            선택 패키지 목록
-  robinctl learn                        학습 미션(리눅스·네트워크·포렌식·리버싱·웹·셸·시스템)과 진행도
+  robinctl learn                        학습 미션(리눅스·네트워크·포렌식·리버싱·웹·셸·시스템·보안)과 진행도
   robinctl learn show [번호]            미션 설명 보기
   robinctl learn check [번호]           미션 결과 확인
   robinctl learn reset                  미션 진행도 초기화
-  robinctl ctf                          입문 CTF 문제 5개와 푼 것
+  robinctl ctf                          입문 CTF 문제 10개와 푼 것
   robinctl ctf show <번호>              CTF 문제 보기
   robinctl ctf submit <번호> <플래그>   플래그 확인
   robinctl ctf reset                    CTF 기록 지우기 (문제 파일은 그대로)
@@ -92,6 +93,116 @@ print_version() {
 }
 
 # Prints one doctor line: "  <label>: 정상" or "  <label>: 없음[ (<hint>)]".
+# ---- Security check (robinctl audit), like Windows Security's overview ----
+#
+# Read-only and without root: each line says what was found, why it matters and how
+# to change it. It teaches as much as it checks, so it explains the "good" results too.
+
+AUDIT_WARNINGS=0
+
+audit_ok() {
+  printf '  %s✓%s %s\n' "${C_GREEN}" "${C_RESET}" "$1"
+  [[ -z "${2:-}" ]] || printf '    %s%s%s\n' "${C_DIM}" "$2" "${C_RESET}"
+}
+
+audit_warn() {
+  AUDIT_WARNINGS=$((AUDIT_WARNINGS + 1))
+  printf '  %s!%s %s\n' "${C_YELLOW}" "${C_RESET}" "$1"
+  [[ -z "${2:-}" ]] || printf '    %s%s%s\n' "${C_DIM}" "$2" "${C_RESET}"
+}
+
+audit_section() {
+  printf '\n%s%s%s\n' "${C_BOLD}" "$1" "${C_RESET}"
+}
+
+audit() {
+  local listeners outside mode key keys=0 bad_keys=() fw="" crypt unit
+  AUDIT_WARNINGS=0
+  printf '%sRobinOS 보안 점검%s  %s바꾸는 것 없이 살펴보기만 해요%s\n' "${C_BOLD}" "${C_RESET}" "${C_DIM}" "${C_RESET}"
+
+  audit_section "밖에서 닿는 서비스"
+  if command -v ss >/dev/null 2>&1; then
+    listeners="$(ss -Htuln 2>/dev/null | awk '{print $1 " " $5}' | sort -u)"
+    # Loopback (127.0.0.1, ::1, systemd-resolved's 127.0.0.53%lo) is this computer only;
+    # mDNS (Avahi, 5353/udp) finds printers; 68 and 546/udp are the DHCP client
+    outside="$(printf '%s\n' "${listeners}" | grep -v -E ' (127\.[0-9.]+|\[::1\]|::1)(%[a-z0-9]+)?:[0-9]+$' \
+      | grep -v -E '^udp .*:(5353|68|546)$' | grep -v '^$' || true)"
+    if [[ -z "${outside}" ]]; then
+      audit_ok "다른 컴퓨터가 접속할 수 있는 서비스가 없어요" "확인: ss -tuln (127.0.0.1은 이 컴퓨터 안에서만 닿아요)"
+    else
+      audit_warn "다른 컴퓨터가 접속할 수 있는 포트가 있어요: $(printf '%s' "${outside}" | awk '{print $2}' | tr '\n' ' ')" \
+        "무엇인지 보기: sudo ss -tulnp. 모르는 서비스면 systemctl로 꺼요 (미션 9, 34)"
+    fi
+  else
+    audit_warn "ss가 없어서 열린 포트를 못 봤어요" "sudo pacman -S iproute2"
+  fi
+
+  audit_section "원격 접속"
+  if systemctl is-active --quiet sshd.service 2>/dev/null; then
+    audit_warn "SSH 서버(sshd)가 켜져 있어요. 같은 네트워크에서 이 컴퓨터에 로그인을 시도할 수 있어요" \
+      "쓰지 않으면: sudo systemctl disable --now sshd"
+  else
+    audit_ok "SSH 서버(sshd)는 꺼져 있어요" "다른 컴퓨터에 접속하는 ssh 명령은 그대로 쓸 수 있어요"
+  fi
+
+  audit_section "내 파일 권한"
+  mode="$(stat -c %a "${HOME}" 2>/dev/null || true)"
+  if [[ "${mode}" == "700" ]]; then
+    audit_ok "홈 폴더는 나만 열 수 있어요 (700)"
+  elif [[ -n "${mode}" ]]; then
+    audit_warn "홈 폴더 권한이 ${mode}이에요. 다른 사용자가 안을 볼 수 있어요" "chmod 700 ~ (미션 37)"
+  fi
+  for key in "${HOME}"/.ssh/id_*; do
+    [[ -f "${key}" && "${key}" != *.pub ]] || continue
+    keys=$((keys + 1))
+    [[ "$(stat -c %a "${key}")" == "600" ]] || bad_keys+=("${key##*/}")
+  done
+  if ((keys == 0)); then
+    audit_ok "SSH 개인 열쇠가 없어요" "만들려면: ssh-keygen -t ed25519 (미션 38)"
+  elif ((${#bad_keys[@]} == 0)); then
+    audit_ok "SSH 개인 열쇠 ${keys}개는 나만 읽을 수 있어요 (600)"
+  else
+    audit_warn "SSH 개인 열쇠를 다른 사람도 읽을 수 있어요: ${bad_keys[*]}" "chmod 600 ~/.ssh/${bad_keys[0]}"
+  fi
+
+  audit_section "되돌리기와 업데이트"
+  if [[ -d /run/archiso ]]; then
+    audit_ok "라이브 세션이라 스냅샷은 없어요" "설치하면 업데이트 전마다 스냅샷이 생겨요"
+  elif [[ -f /etc/snapper/configs/root ]]; then
+    audit_ok "업데이트 전마다 스냅샷을 만들어요" "되돌리기: robinctl snapshot list, robinctl snapshot rollback <번호>"
+  else
+    audit_warn "스냅샷이 설정돼 있지 않아요. 업데이트가 잘못되면 되돌리기 어려워요" "sudo robinctl snapshot setup"
+  fi
+  audit_ok "업데이트는 빠른 설정의 \"업데이트\" 단추나 sudo robinctl update로 해요" "보안 고침은 대부분 업데이트로 와요"
+
+  audit_section "방화벽과 디스크"
+  for unit in nftables firewalld ufw; do
+    if systemctl is-active --quiet "${unit}.service" 2>/dev/null; then
+      fw="${unit}"
+      break
+    fi
+  done
+  if [[ -n "${fw}" ]]; then
+    audit_ok "방화벽(${fw})이 켜져 있어요"
+  else
+    audit_ok "방화벽은 켜져 있지 않아요" "밖에서 닿는 서비스가 없으면(위) 괜찮아요. 공용 Wi-Fi에서 서비스를 켤 때는 방화벽을 생각해요"
+  fi
+  crypt="$(lsblk -nr -o TYPE 2>/dev/null | grep -c '^crypt$' || true)"
+  if [[ "${crypt:-0}" -gt 0 ]]; then
+    audit_ok "디스크가 암호화돼 있어요 (LUKS)"
+  else
+    audit_warn "디스크가 암호화돼 있지 않아요. 노트북을 잃어버리면 디스크를 떼어 내 파일을 읽을 수 있어요" \
+      "암호화는 설치할 때 정해요. 중요한 파일만이라도 gpg -c로 잠가요 (미션 40)"
+  fi
+
+  printf '\n'
+  if ((AUDIT_WARNINGS == 0)); then
+    printf '%s살펴볼 것이 없어요.%s\n' "${C_GREEN}" "${C_RESET}"
+  else
+    printf '살펴볼 것 %s개. %s!%s 줄 아래의 방법을 참고해요.\n' "${AUDIT_WARNINGS}" "${C_YELLOW}" "${C_RESET}"
+  fi
+}
+
 check_line() {
   local label="$1"
   local found="$2"
@@ -3270,6 +3381,9 @@ main() {
       ;;
     doctor)
       doctor
+      ;;
+    audit)
+      audit
       ;;
     update)
       shift
