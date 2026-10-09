@@ -290,6 +290,12 @@ PanelWindow {
             active: ShellState.quickSettingsOpen && ShellState.overlayScreen === bar.screen
             onClicked: ShellState.toggleQuickSettings(bar.screen)
 
+            // The wheel over the status icons changes the volume, like Windows'
+            // speaker icon; a touchpad's small steps add up the same way
+            WheelHandler {
+                onWheel: event => ShellState.setVolume(ShellState.volume + event.angleDelta.y / 120 * 0.05)
+            }
+
             Icon {
                 name: ShellState.netIcon
                 color: ShellState.online || ShellState.wifiEnabled ? Theme.fgSoft : Theme.subtle

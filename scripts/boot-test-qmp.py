@@ -336,6 +336,12 @@ def main():
     type_text(qmp, "cat /tmp/sni-activated\n")
     wait(1)
     shot(qmp, "tray")
+    # The wheel over the bar's status icons turns the volume down (4 steps of 5%),
+    # and the volume indicator shows above the dock
+    for _ in range(4):
+        click(qmp, 1528, 18, "wheel-down")
+    wait(0.5)
+    shot(qmp, "volume-wheel")
     # "배경으로 설정" in Files and Image Viewer goes through the Wallpaper portal to
     # robinos-wallpaper-portal; the same call here sets the RobinOS logo as the
     # wallpaper. Then the launcher's "기본 배경화면으로" brings the drawn one back.
