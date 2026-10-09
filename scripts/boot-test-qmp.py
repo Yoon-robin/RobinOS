@@ -249,12 +249,16 @@ def main():
     keys(qmp, "esc")
     wait(1)
     # A notification toast bottom right ("알림" / "오른쪽 아래에 떠요": QMP only types
-    # ASCII, so bash's \u escapes spell the Korean), then Super+N clears it
+    # ASCII, so bash's \u escapes spell the Korean)
     type_text(qmp, "clear; notify-send -a RobinOS $'\\uc54c\\ub9bc'"
               " $'\\uc624\\ub978\\ucabd \\uc544\\ub798\\uc5d0 \\ub5a0\\uc694'\n")
     wait(2)
     shot(qmp, "notification")
+    # Super+N opens the notification center with that notification in it
     keys(qmp, "meta_l", "n")
+    wait(2)
+    shot(qmp, "notification-center")
+    keys(qmp, "esc")
     wait(1)
     # "배경으로 설정" in Files and Image Viewer goes through the Wallpaper portal to
     # robinos-wallpaper-portal; the same call here sets the RobinOS logo as the

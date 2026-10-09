@@ -158,6 +158,24 @@ Singleton {
         calendarOpen = true;
     }
 
+    // Notifications since login under the bell (NotificationCenter.qml, Super+N)
+    property bool notifCenterOpen: false
+
+    function toggleNotifCenter() {
+        if (welcomeOpen)
+            return;
+        if (notifCenterOpen) {
+            notifCenterOpen = false;
+            return;
+        }
+        launcherOpen = false;
+        quickSettingsOpen = false;
+        calendarOpen = false;
+        shortcutsOpen = false;
+        overlayScreen = focusedScreen;
+        notifCenterOpen = true;
+    }
+
     // Every shortcut on one card (Shortcuts.qml, Super+F1)
     property bool shortcutsOpen: false
 

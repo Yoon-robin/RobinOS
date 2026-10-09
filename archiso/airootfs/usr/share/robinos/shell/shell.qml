@@ -35,6 +35,8 @@ ShellRoot {
 
     Shortcuts {}
 
+    NotificationCenter {}
+
     Toasts {}
 
     Osd {}
@@ -84,8 +86,8 @@ ShellRoot {
     GlobalShortcut {
         appid: "robinos"
         name: "notifications"
-        description: "알림 모두 지우기"
-        onPressed: Notifs.clearAll()
+        description: "알림 센터 열기/닫기"
+        onPressed: ShellState.toggleNotifCenter()
     }
 
     GlobalShortcut {
@@ -125,6 +127,10 @@ ShellRoot {
 
         function shortcuts(): void {
             ShellState.toggleShortcuts();
+        }
+
+        function notifications(): void {
+            ShellState.toggleNotifCenter();
         }
 
         // The dock's right click: pin or unpin an app by its desktop entry id

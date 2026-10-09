@@ -11,6 +11,18 @@ Singleton {
     readonly property var list: server.trackedNotifications
     readonly property int count: server.trackedNotifications.values.length
 
+    // What came in since login, newest first, kept after the toasts go away so the
+    // notification center (NotificationCenter.qml, Win+N) can show it again
+    property var history: []
+    // Arrived since the notification center was last opened (the bar's dot)
+    property int unread: 0
+
+    function clearHistory() {
+        history = [];
+        unread = 0;
+        clearAll();
+    }
+
     function clearAll() {
         const items = ShellState.toArray(server.trackedNotifications.values);
         for (let i = 0; i < items.length; i++)
@@ -41,6 +53,16 @@ Singleton {
 
         onNotification: notification => {
             notification.tracked = true;
+            const entry = {
+                summary: notification.summary,
+                body: notification.body,
+                appName: notification.appName,
+                icon: root.iconSource(notification),
+                time: new Date()
+            };
+            root.history = [entry].concat(root.history).slice(0, 30);
+            if (!ShellState.notifCenterOpen)
+                root.unread++;
         }
     }
 }

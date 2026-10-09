@@ -36,7 +36,7 @@ PanelWindow {
             { keys: ["Win", "Shift", "S"], title: "화면 일부 캡처 (전체는 Print)" },
             { keys: ["Ctrl", "Shift", "Esc"], title: "작업 관리자" },
             { keys: ["Win", "Alt", "D"], title: "달력" },
-            { keys: ["Win", "N"], title: "알림 모두 지우기" },
+            { keys: ["Win", "N"], title: "알림 센터 (지난 알림, 방해 금지)" },
             { keys: ["Win", "L"], title: "화면 잠금" },
             { keys: ["오른쪽 Alt"], title: "한/영 전환" }
         ] },

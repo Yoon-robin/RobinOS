@@ -257,7 +257,7 @@ hl.bind(mainMod .. " + A",     hl.dsp.global("robinos:launcher"),      { descrip
 hl.bind(mainMod .. " + S",     hl.dsp.global("robinos:quicksettings"), { description = "빠른 설정" })
 hl.bind(mainMod .. " + I",     hl.dsp.global("robinos:quicksettings"), { description = "빠른 설정 (윈도우의 설정 Win+I)" })
 hl.bind(mainMod .. " + R",     hl.dsp.global("robinos:launcher"),      { description = "앱 런처 (윈도우의 실행 Win+R)" })
-hl.bind(mainMod .. " + N",     hl.dsp.global("robinos:notifications"), { description = "알림 모두 지우기" })
+hl.bind(mainMod .. " + N",     hl.dsp.global("robinos:notifications"), { description = "알림 센터" })
 hl.bind(mainMod .. " + D",     hl.dsp.global("robinos:desktop"),       { description = "바탕 화면 보기" })
 hl.bind(mainMod .. " + V",     hl.dsp.global("robinos:clipboard"),     { description = "클립보드 기록" })
 hl.bind(mainMod .. " + ALT + D", hl.dsp.global("robinos:calendar"),   { description = "달력" })

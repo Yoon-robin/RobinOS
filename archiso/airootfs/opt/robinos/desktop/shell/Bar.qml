@@ -298,12 +298,12 @@ PanelWindow {
             IconButton {
                 anchors.fill: parent
                 icon: ShellState.dnd ? "bell-off" : "bell"
-                label: ShellState.dnd ? "방해 금지 끄기" : "방해 금지 켜기"
-                onClicked: ShellState.dnd = !ShellState.dnd
+                label: Notifs.unread > 0 ? "알림 센터, 새 알림 " + Notifs.unread + "개" : "알림 센터"
+                onClicked: ShellState.toggleNotifCenter()
             }
 
             Rectangle {
-                visible: Notifs.count > 0
+                visible: Notifs.unread > 0
                 x: 17
                 y: 5
                 width: 6
