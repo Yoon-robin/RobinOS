@@ -37,6 +37,8 @@ ShellRoot {
 
     NotificationCenter {}
 
+    ConnectPanel {}
+
     Toasts {}
 
     Osd {}
@@ -131,6 +133,11 @@ ShellRoot {
 
         function notifications(): void {
             ShellState.toggleNotifCenter();
+        }
+
+        // "wifi" or "bluetooth": the network or device list behind the tiles
+        function connect(mode: string): void {
+            ShellState.openConnect(mode);
         }
 
         // The dock's right click: pin or unpin an app by its desktop entry id

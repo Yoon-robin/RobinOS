@@ -55,6 +55,12 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 ## 진행 중
 
+### T-089 Wi-Fi·블루투스 연결 창
+- 상태: 진행 중
+- 출처: 백로그 채우기 3(윈도우에서 넘어온 사람의 불편). 빠른 설정의 Wi-Fi 화살표는 터미널의 `nmtui`만 열고, 블루투스 타일에는 화살표가 없어서 이어폰을 연결할 길이 터미널(`bluetoothctl`)뿐이었어요
+- 한 것: `ConnectPanel.qml`. Wi-Fi 목록(연결됨·저장됨·신호 순, 자물쇠 네트워크는 비밀번호 칸, `nmtui`는 맨 아래 고급 설정), 블루투스 목록(페어링·연결·끊기·지우기, 배터리). 열려 있는 동안만 주변을 찾아요. IPC `connect wifi|bluetooth`
+- 완료 기준: 부팅 테스트에서 Wi-Fi 화살표로 연 창(VM에는 Wi-Fi 장치가 없다는 안내)과 IPC로 연 블루투스 창, 창 밖을 눌러 닫기
+
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
 - 출처: 사용자 요청("vmware로 깔아줘"). VMware Workstation Pro 26H1, VM은 `문서\Virtual Machines\RobinOS\RobinOS.vmx`(EFI, 8GB, NVMe 64GB, 3D 가속 켬)

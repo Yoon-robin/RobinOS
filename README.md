@@ -27,7 +27,7 @@ RobinOS는 윈도우에서 넘어온 사람이 매일 쓰는 OS예요. 쓰면서
 
 - Arch 기반, 골라 둔 보안 프로필
 - Hyprland 데스크톱과 shadcn/ui zinc 스타일로 만든 RobinOS 전용 Quickshell 셸 ([docs/desktop.md](docs/desktop.md))
-- 윈도우 사용자에게 익숙한 기본값: 자유 배치 창, 독, `Alt+Tab`, `Alt+F4`, `Win+E`, `Win+D`, `Win+V`(클립보드 기록), `Win+Shift+S`(캡처 도구), `Ctrl+Shift+Esc`(작업 관리자), 시계를 누르면 달력, 사진을 "배경으로 설정", 빠른 설정의 화면 배율·야간 모드·비행기 모드, 런처에서 파일 찾기, 업데이트 알림
+- 윈도우 사용자에게 익숙한 기본값: 자유 배치 창, 독, `Alt+Tab`, `Alt+F4`, `Win+E`, `Win+D`, `Win+V`(클립보드 기록), `Win+Shift+S`(캡처 도구), `Ctrl+Shift+Esc`(작업 관리자), 시계를 누르면 달력, 사진을 "배경으로 설정", 빠른 설정의 화면 배율·야간 모드·비행기 모드, Wi-Fi·블루투스 연결 창, `Win+N` 알림 센터, 런처에서 파일 찾기, 업데이트 알림
 - 학습 센터: 리눅스·네트워크·포렌식·리버싱·웹·셸·시스템 기초 미션 35개의 진행도와 다음 미션, 입문 CTF. 미션은 실제 터미널에서 풀어요
 - 매일 쓰는 데 필요한 것: Firefox, LibreOffice(한국어), 동영상·음악 재생, 앱 스토어(Flathub)와 Steam, 프린터, NVIDIA 그래픽 카드 드라이버(GTX 16, RTX 20 이후)
 - pacman 작업 전후 자동 Btrfs 스냅샷과 부팅 메뉴에서 되돌리기 ([docs/recovery.md](docs/recovery.md))

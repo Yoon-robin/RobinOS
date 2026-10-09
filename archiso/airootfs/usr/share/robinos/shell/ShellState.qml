@@ -108,6 +108,7 @@ Singleton {
             launcherOpen = false;
             return;
         }
+        connectMode = "";
         quickSettingsOpen = false;
         calendarOpen = false;
         overlayScreen = focusedScreen;
@@ -122,6 +123,7 @@ Singleton {
             launcherOpen = false;
             return;
         }
+        connectMode = "";
         quickSettingsOpen = false;
         calendarOpen = false;
         overlayScreen = focusedScreen;
@@ -136,6 +138,7 @@ Singleton {
             quickSettingsOpen = false;
             return;
         }
+        connectMode = "";
         launcherOpen = false;
         calendarOpen = false;
         overlayScreen = screen ?? focusedScreen;
@@ -152,6 +155,7 @@ Singleton {
             calendarOpen = false;
             return;
         }
+        connectMode = "";
         launcherOpen = false;
         quickSettingsOpen = false;
         overlayScreen = screen ?? focusedScreen;
@@ -171,9 +175,28 @@ Singleton {
         launcherOpen = false;
         quickSettingsOpen = false;
         calendarOpen = false;
+        connectMode = "";
         shortcutsOpen = false;
         overlayScreen = focusedScreen;
         notifCenterOpen = true;
+    }
+
+    // Wi-Fi networks or Bluetooth devices under the quick settings tiles'
+    // arrows (ConnectPanel.qml): "wifi", "bluetooth" or "" when closed
+    property string connectMode: ""
+
+    function openConnect(mode) {
+        if (welcomeOpen)
+            return;
+        // From a tile: stay on the screen the quick settings were on
+        if (!quickSettingsOpen)
+            overlayScreen = focusedScreen;
+        launcherOpen = false;
+        quickSettingsOpen = false;
+        calendarOpen = false;
+        notifCenterOpen = false;
+        shortcutsOpen = false;
+        connectMode = mode === "bluetooth" ? "bluetooth" : "wifi";
     }
 
     // Every shortcut on one card (Shortcuts.qml, Super+F1)
@@ -189,6 +212,7 @@ Singleton {
         launcherOpen = false;
         quickSettingsOpen = false;
         calendarOpen = false;
+        connectMode = "";
         overlayScreen = focusedScreen;
         shortcutsOpen = true;
     }

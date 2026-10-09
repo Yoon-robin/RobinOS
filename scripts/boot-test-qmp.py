@@ -184,7 +184,12 @@ def main():
     shot(qmp, "quick-settings-dnd")
     click(qmp, 1337, 197)
     wait(1)
-    keys(qmp, "meta_l", "s")
+    # The Wi-Fi tile's arrow (top left tile, right edge) opens the connect panel; the
+    # VM has no Wi-Fi card, so it says so and points at the wired connection
+    click(qmp, 1399, 131)
+    wait(2)
+    shot(qmp, "connect-wifi")
+    keys(qmp, "esc")
     wait(2)
     # Super+Alt+D opens the clock's month calendar (a click on the clock does too)
     keys(qmp, "meta_l", "alt", "d")
@@ -259,6 +264,13 @@ def main():
     wait(2)
     shot(qmp, "notification-center")
     keys(qmp, "esc")
+    wait(1)
+    # The Bluetooth tile's arrow, through IPC since the VM has no adapter (the tile
+    # is greyed out); a click outside the card closes it
+    type_text(qmp, "clear; " + ipc + "connect bluetooth\n")
+    wait(2)
+    shot(qmp, "connect-bluetooth")
+    click(qmp, 400, 400)
     wait(1)
     # "배경으로 설정" in Files and Image Viewer goes through the Wallpaper portal to
     # robinos-wallpaper-portal; the same call here sets the RobinOS logo as the

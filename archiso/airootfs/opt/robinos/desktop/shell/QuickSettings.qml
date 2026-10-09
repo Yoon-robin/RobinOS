@@ -350,10 +350,7 @@ PanelWindow {
                         if (ShellState.wifiDevice)
                             ShellState.toggleWifi();
                     }
-                    onDetailRequested: {
-                        root.close();
-                        ShellState.runInTerminal("nmtui");
-                    }
+                    onDetailRequested: ShellState.openConnect("wifi")
                 }
 
                 ToggleTile {
@@ -364,7 +361,9 @@ PanelWindow {
                     subtitle: ShellState.btAdapter ? (ShellState.btEnabled ? "켜짐" : "꺼짐") : "장치 없음"
                     checked: ShellState.btEnabled
                     enabled: ShellState.btAdapter !== null
+                    hasDetail: true
                     onToggled: ShellState.toggleBluetooth()
+                    onDetailRequested: ShellState.openConnect("bluetooth")
                 }
 
                 ToggleTile {
