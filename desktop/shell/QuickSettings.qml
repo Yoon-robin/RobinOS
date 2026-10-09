@@ -482,6 +482,72 @@ PanelWindow {
                 }
             }
 
+            // ---- Display scale (ShellState.setScale), like Windows' 배율 ----
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.leftMargin: 2
+                spacing: 6
+
+                Text {
+                    Layout.rightMargin: 4
+                    text: "화면 배율"
+                    color: Theme.muted
+                    font.family: Theme.font
+                    font.pixelSize: 12
+                    font.weight: Font.Medium
+                }
+
+                Repeater {
+                    model: ShellState.scaleOptions
+
+                    Rectangle {
+                        id: scaleButton
+
+                        required property real modelData
+                        // Hyprland may round to a scale that fits the screen exactly
+                        readonly property bool selected: Math.abs(ShellState.displayScale - modelData) < 0.06
+
+                        Layout.fillWidth: true
+                        implicitHeight: 30
+                        radius: Theme.radiusMd
+                        color: selected ? Theme.primary : (scaleMouse.containsMouse ? Theme.secondaryHover : Theme.secondary)
+
+                        Accessible.role: Accessible.RadioButton
+                        Accessible.name: "화면 배율 " + Math.round(modelData * 100) + "%"
+                        Accessible.checked: selected
+
+                        activeFocusOnTab: true
+                        Keys.onPressed: event => {
+                            if (Keyboard.activates(event)) {
+                                ShellState.setScale(scaleButton.modelData);
+                                event.accepted = true;
+                            }
+                        }
+
+                        FocusRing {
+                            baseRadius: scaleButton.radius
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: Math.round(scaleButton.modelData * 100) + "%"
+                            color: scaleButton.selected ? Theme.primaryFg : Theme.fg
+                            font.family: Theme.font
+                            font.pixelSize: 12
+                            font.weight: Font.Medium
+                        }
+
+                        MouseArea {
+                            id: scaleMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: ShellState.setScale(scaleButton.modelData)
+                        }
+                    }
+                }
+            }
+
             // ---- Sliders ----
             ColumnLayout {
                 Layout.fillWidth: true

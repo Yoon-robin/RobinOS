@@ -7,7 +7,8 @@
 # mode. Hyprland keeps the mode it started with, so this applies the new size
 # whenever the kernel says the screen changed. Turning off "Autofit Guest" in
 # VMware stops the size updates, and the screen keeps its last size.
-# Screens 3200 pixels wide or more get 2x scale, the rest 1x.
+# Screens 3200 pixels wide or more get 2x scale, the rest 1x, unless a scale
+# was picked in quick settings (~/.local/state/robinos/display-scale).
 
 set -uo pipefail
 
@@ -31,8 +32,14 @@ current_mode() {
     on && /^\tscale:/ { print mode "@" $2; exit }'
 }
 
+# The scale picked in quick settings ("화면 배율", ShellState.setScale), if any
+saved_scale() {
+  awk -v name="$1" '$1 == name && $2 ~ /^[0-9.]+$/ { scale = $2 } END { if (scale) print scale }' \
+    "${XDG_STATE_HOME:-${HOME}/.local/state}/robinos/display-scale" 2>/dev/null
+}
+
 fit() {
-  local c name mode scale
+  local c name mode scale saved
   while read -r c; do
     name="${c##*/}"
     name="${name#card*-}"
@@ -40,6 +47,8 @@ fit() {
     [[ "${mode}" =~ ^([0-9]+)x[0-9]+$ ]] || continue
     scale=1
     (( BASH_REMATCH[1] >= 3200 )) && scale=2
+    saved="$(saved_scale "${name}")"
+    [[ -n "${saved}" ]] && scale="${saved}"
     [[ "$(current_mode "${name}")" == "${mode}@${scale}" ]] && continue
     hyprctl eval "hl.monitor({ output = \"${name}\", mode = \"${mode}\", position = \"auto\", scale = ${scale} })" >/dev/null
   done < <(screens)

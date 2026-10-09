@@ -45,6 +45,25 @@ for i = 1, 8 do
     })
 end
 
+-- The display scale picked in quick settings ("화면 배율", ShellState.setScale),
+-- one "output scale" line per screen
+local state_dir = os.getenv("XDG_STATE_HOME") or ((os.getenv("HOME") or "") .. "/.local/state")
+local scales = io.open(state_dir .. "/robinos/display-scale")
+if scales then
+    for line in scales:lines() do
+        local output, scale = line:match("^([%w-]+)%s+([%d.]+)$")
+        if output and tonumber(scale) then
+            hl.monitor({
+                output   = output,
+                mode     = "preferred",
+                position = "auto",
+                scale    = tonumber(scale),
+            })
+        end
+    end
+    scales:close()
+end
+
 
 -------------------------------
 ---- ENVIRONMENT VARIABLES ----

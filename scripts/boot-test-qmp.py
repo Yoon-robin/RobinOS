@@ -277,6 +277,13 @@ def main():
     shot(qmp, "light-quick-settings")
     keys(qmp, "meta_l", "s")
     wait(2)
+    # 화면 배율 125%, through the same shell function as the quick settings
+    # buttons: the whole desktop grows, and the choice is saved for the next login
+    type_text(qmp, "clear; " + ipc + "setScale 1.25; sleep 2; cat .local/state/robinos/display-scale\n")
+    wait(5)
+    shot(qmp, "scale-125")
+    type_text(qmp, "clear; " + ipc + "setScale 1\n")
+    wait(3)
     type_text(qmp, "qs ipc -p /usr/share/robinos/shell call shell setDark true\n")
     wait(3)
 
