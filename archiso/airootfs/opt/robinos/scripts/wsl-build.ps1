@@ -20,7 +20,7 @@
 param(
     [Parameter(Position = 0)]
     # verify: a fast test ISO (zstd), then the boot and the install test side by side
-    [ValidateSet("setup", "check", "status", "build", "package", "boot-test", "install-test", "verify", "shell")]
+    [ValidateSet("setup", "check", "status", "build", "package", "publish-repo", "boot-test", "install-test", "verify", "shell")]
     [string]$Task = "build",
     # install-test: archinstall (docs/install.md method 2), robinos (installer/robin-install on
     # the whole disk) or windows (robin-install next to a stand-in Windows disk)
@@ -277,6 +277,30 @@ switch ($Task) {
     "package" {
         # The robinos pacman package (packaging/robinos), signed: out/packages
         Invoke-Wsl "cd /root/RobinOS && scripts/build-package.sh"
+    }
+    "publish-repo" {
+        # The RobinOS pacman repository (docs/design.md "RobinOS 파일 업데이트"): the package
+        # and its signed database go to the GitHub release "repo", then a throwaway root
+        # installs robinos from there with signature checks (scripts/test-repo.sh)
+        Invoke-Wsl "cd /root/RobinOS && scripts/build-package.sh && scripts/build-repo.sh"
+        $repoDir = "\\wsl.localhost\$Distro\root\RobinOS\out\repo"
+        $files = Get-ChildItem $repoDir -File | Where-Object { $_.Name -notlike "*.tar.gz*" }
+        gh release view repo --repo Yoon-robin/RobinOS *> $null
+        if ($LASTEXITCODE -ne 0) {
+            gh release create repo --repo Yoon-robin/RobinOS --prerelease --latest=false --target main `
+                --title "RobinOS 패키지 저장소" `
+                --notes "RobinOS 파일 업데이트용 pacman 저장소예요. 설치한 시스템의 robinctl update가 여기서 받아요. 사람이 직접 내려받을 파일은 아니에요. 모든 파일은 RobinOS 릴리스 열쇠(D8EB 0C49 5CBF 5B2B BB57 EACC FD9B 53B8 B79E 9AAD)로 서명돼 있어요."
+            if ($LASTEXITCODE -ne 0) { throw "깃허브 릴리스 repo를 만들지 못했어요" }
+        }
+        gh release upload repo --repo Yoon-robin/RobinOS --clobber ($files | ForEach-Object { $_.FullName })
+        if ($LASTEXITCODE -ne 0) { throw "저장소 파일을 올리지 못했어요" }
+        # Older packages are no longer in the database
+        $keep = $files | ForEach-Object { $_.Name }
+        $assets = gh release view repo --repo Yoon-robin/RobinOS --json assets --jq ".assets[].name"
+        foreach ($asset in $assets) {
+            if ($keep -notcontains $asset) { gh release delete-asset repo $asset --repo Yoon-robin/RobinOS --yes }
+        }
+        Invoke-Wsl "cd /root/RobinOS && scripts/test-repo.sh"
     }
     "boot-test" {
         if ($Accel -eq "auto") { $Accel = if (Test-Path $Qemu) { "whpx" } else { "tcg" } }

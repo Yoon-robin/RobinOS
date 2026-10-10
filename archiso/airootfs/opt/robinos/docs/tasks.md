@@ -78,7 +78,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 조사(2026-10-08): Orca 51 패키지와 libatspi 2.62를 받아 확인. Orca는 `Atspi.Device.new_full`로 키를 받고, Wayland에서는 `org.freedesktop.a11y.Manager`(Mutter 제공)를 써요. Hyprland 0.56.2 소스에 없어서 Orca 키 명령은 안 되고 포커스 읽기만 돼요. 결론과 이유를 design.md 미결정 사항에 적음. 업스트림 변화 점검 때 Hyprland가 이 인터페이스를 넣었는지 봐요
 
 ### T-144 깃허브 릴리스를 pacman 저장소로 (T-026 2단계)
-- 상태: 할 일
+- 상태: 진행 중 (묶음 70)
+- 한 것: `scripts/build-repo.sh`(서명한 데이터베이스, 링크 없는 파일 이름), `scripts/test-repo.sh`(버린 루트에 `SigLevel = Required`로 설치), `wsl-build.ps1 publish-repo`(빌드, `gh`로 릴리스 `repo`에 올리기, 옛 패키지 지우기, 시험), release.md "RobinOS 패키지 저장소"
 - 할 것: `scripts/publish-repo.sh`가 `repo-add --sign`으로 데이터베이스를 만들고 패키지·데이터베이스 서명과 함께 깃허브 릴리스 `repo`에 올려요(같은 이름은 바꿔 올림)
 - 완료 기준: 다른 Arch(WSL 컨테이너)에서 저장소를 켜고 `pacman -Sy robinos`가 서명 확인을 통과해 설치
 

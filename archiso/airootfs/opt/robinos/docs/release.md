@@ -39,6 +39,20 @@ build/logs/mkarchiso-*.log
 - 백업: PC가 망가지면 열쇠도 사라져요. 오프라인 USB 같은 곳에 따로 보관해 두는 걸 권해요: `wsl -d archlinux -u root -e env GNUPGHOME=/root/.robinos-signing gpg --armor --export-secret-keys D8EB0C495CBF5B2BBB57EACCFD9B53B8B79E9AAD > robinos-release-secret.asc` (이 파일은 USB에만 두고 PC에서는 지워요)
 - 같은 열쇠로 RobinOS 파일 업데이트(pacman 저장소)에도 서명해요(T-026)
 
+## RobinOS 패키지 저장소
+
+설치한 시스템이 RobinOS 파일 업데이트를 받는 pacman 저장소예요([design.md](design.md) "RobinOS 파일 업데이트"). 깃허브 릴리스 `repo`(프리릴리스, "최신" 표시 안 함)의 첨부 파일이 저장소예요: `robinos.db`, `robinos.files`와 그 서명, 패키지 `robinos-<버전>-1-any.pkg.tar.zst`와 서명.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 publish-repo
+```
+
+1. WSL에서 HEAD로 패키지를 빌드하고(`scripts/build-package.sh`: 파일 목록, robinctl, 서명 확인), 서명한 데이터베이스를 만들어요(`scripts/build-repo.sh`)
+2. 윈도우의 `gh`로 릴리스 `repo`에 올리고(같은 이름은 바꿔 올림), 데이터베이스에 없는 옛 패키지는 지워요
+3. 버린 루트에 깃허브에서 받아 설치해 봐요(`scripts/test-repo.sh`, `SigLevel = Required`)
+
+패키지 버전은 `config/robinos.toml`의 버전과 커밋 수예요(예: `0.3.0.r400`). 검증을 통과한 main에서만 올려요.
+
 ## 배포
 
 - `SHA256SUMS`, `SHA256SUMS.sig`, 공개 열쇠(`keys/robinos-release.asc`)와 함께 GitHub 릴리스에 올려요.
