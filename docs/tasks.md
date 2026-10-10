@@ -77,12 +77,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 출처: 품질 점검(접근성) "화면 읽기 프로그램(Orca)은 아직"
 - 조사(2026-10-08): Orca 51 패키지와 libatspi 2.62를 받아 확인. Orca는 `Atspi.Device.new_full`로 키를 받고, Wayland에서는 `org.freedesktop.a11y.Manager`(Mutter 제공)를 써요. Hyprland 0.56.2 소스에 없어서 Orca 키 명령은 안 되고 포커스 읽기만 돼요. 결론과 이유를 design.md 미결정 사항에 적음. 업스트림 변화 점검 때 Hyprland가 이 인터페이스를 넣었는지 봐요
 
-### T-144 깃허브 릴리스를 pacman 저장소로 (T-026 2단계)
-- 상태: 진행 중 (묶음 70)
-- 한 것: `scripts/build-repo.sh`(서명한 데이터베이스, 링크 없는 파일 이름), `scripts/test-repo.sh`(버린 루트에 `SigLevel = Required`로 설치), `wsl-build.ps1 publish-repo`(빌드, `gh`로 릴리스 `repo`에 올리기, 옛 패키지 지우기, 시험), release.md "RobinOS 패키지 저장소"
-- 할 것: `scripts/publish-repo.sh`가 `repo-add --sign`으로 데이터베이스를 만들고 패키지·데이터베이스 서명과 함께 깃허브 릴리스 `repo`에 올려요(같은 이름은 바꿔 올림)
-- 완료 기준: 다른 Arch(WSL 컨테이너)에서 저장소를 켜고 `pacman -Sy robinos`가 서명 확인을 통과해 설치
-
 ### T-145 설치본이 RobinOS 저장소를 쓰게 (T-026 3단계)
 - 상태: 할 일
 - 할 것: 설치기·post-install이 `[robinos]` 저장소와 열쇠(로컬 서명)를 넣고 RobinOS 파일을 패키지로 설치. 이미 깐 파일에서 옮겨 가는 `robinctl update`(처음 한 번 `--overwrite`)
@@ -105,6 +99,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 최근 것이 위에 있어요. 더 오래된 기록은 [done.md](done.md)에 있어요.
 
+- 2026-10-10 T-144 깃허브 릴리스를 pacman 저장소로(`e3ace38`, `816c352`): `wsl-build.ps1 publish-repo`가 `robinos-0.3.0.r400-1`과 서명한 데이터베이스를 깃허브 프리릴리스 [repo](https://github.com/Yoon-robin/RobinOS/releases/tag/repo)에 올리고, `scripts/test-repo.sh`가 버린 루트에 `SigLevel = Required DatabaseRequired`로 깃허브에서 받아 설치(`robinos 0.3.0.r400-1`, `repo ok`). 빌드·배포 도구만 바뀌어서 이 실제 올리기와 설치가 검증이에요
 - 2026-10-10 묶음 69 검증(`f6ceb6d`, verify 빌드 3.6분 + 테스트 14.5분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장, 부팅 끝 14.8초)
   - T-143 RobinOS 파일을 pacman 패키지로(`30cfd62`): `wsl-build.ps1 package`가 `robinos-0.2.0.r395-1-any.pkg.tar.zst`(파일 264개)를 만들고 파일 목록·robinctl 실행·서명 확인 통과. `stage-robinos.sh`로 바꾼 ISO 동기화의 오버레이가 옛 것과 파일 하나까지 같고, 그 ISO로 부팅·설치 테스트 통과. 개발 버전 0.3.0-dev(`f6ceb6d`)
 - 2026-10-10 묶음 68 검증(`82600be`, verify 빌드 3.5분 + 테스트 14.5분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)
