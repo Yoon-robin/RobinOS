@@ -11,9 +11,10 @@
 
 DVWA는 처음에 http://localhost:8080/setup.php 에서 "Create / Reset Database"를 누르고 `admin` / `password`로 로그인해요. "DVWA Security"에서 난이도를 low부터 올려 가며 연습해요.
 
-시작:
+시작: Docker는 `web` 프로필에 들어 있어요. 처음 한 번은 프로필부터 설치해요.
 
 ```bash
+sudo robinctl profile web
 robinctl lab start web
 ```
 

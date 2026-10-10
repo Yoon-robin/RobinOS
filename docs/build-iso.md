@@ -7,7 +7,7 @@ Arch Linux나 Arch 기반 VM에서 빌드해요.
 ## 요구사항
 
 ```bash
-sudo pacman -S --needed archiso git
+sudo pacman -S --needed archiso git grub
 ```
 
 빌드하기 전에 패키지 이름이 맞는지 확인해요.
@@ -44,12 +44,19 @@ RobinOS 스크립트의 실행 권한은 ISO 프로필의 `archiso/profiledef.sh
 scripts/build-iso.sh
 ```
 
-ISO, 체크섬 파일, 빌드 로그는 아래 위치에 저장돼요.
+빌드는 프로필을 준비한 뒤, 같은 커밋의 RobinOS 패키지(`robinos`)를 만들어 ISO의 `/opt/robinos/pkg`에 넣어요(`sudo scripts/build-package.sh`). 설치기는 이 패키지로 RobinOS 파일의 주인을 pacman에 넘겨요([design.md](design.md) "RobinOS 파일 업데이트"). 패키지는 작업 트리가 아니라 HEAD를 `git clone`해서 만들어요. 커밋하지 않은 변경은 오버레이에는 들어가도 패키지에는 안 들어가고, 설치할 때 패키지가 그 파일을 덮어써요. 그러니 빌드 전에 먼저 커밋해요.
+
+ISO, 체크섬 파일, 패키지, 빌드 로그는 아래 위치에 저장돼요.
 
 ```text
-out/
+out/robinos-*.iso
+out/SHA256SUMS
+out/SHA256SUMS.sig                          (이 PC에 릴리스 열쇠가 있을 때)
+out/packages/robinos-*.pkg.tar.zst(.sig)
 build/logs/
 ```
+
+빌드 환경 점검을 건너뛰려면 `--skip-doctor`를 붙여요.
 
 패키지 확인을 이미 마쳤다면 이렇게 더 빠르게 다시 빌드할 수 있어요.
 

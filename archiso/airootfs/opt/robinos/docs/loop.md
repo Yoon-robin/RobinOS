@@ -37,7 +37,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 status
 백그라운드 작업이 끝나면 알림이 와요. 대화가 새로 시작돼서 알림이 없을 때는, `status`에 아무것도 돌고 있지 않은데 tasks.md에 `실행 중`인 백그라운드 작업이 있으면 끝난 거예요.
 
 - 부팅 테스트: `build\boot-test\*.png`를 한 장씩 열어 봐요. `serial.log`에서 `robinos-session`, `quickshell`, `qml`, `Failed`를 찾아요.
-- 설치 테스트: `build\install-test\*.png`와 `serial-live.log`, `serial-installed.log` 끝부분에서 `[install-test] FAILED`나 `passed`를 찾아요.
+- 설치 테스트: 통과·실패(`[install-test] phase … passed`, `FAILED: …`)는 명령 출력에 나와요. 스크린샷은 `build\install-test\*.png`이고, 실패하면 `failure.png`가 생겨요. 단계별 기록은 `serial-<단계>.log`(live, installed, snapshots, snapshot-boot, rollback)를 봐요. `verify`의 부팅 테스트 출력은 `build\verify-boot.log`에 있어요.
 - ISO 빌드: WSL의 `/root/RobinOS/out/`과 `build/logs/`의 마지막 로그를 봐요.
 
 결과를 tasks.md에 적어요. 통과했으면 해당 작업과 푸시 대기 커밋을 갱신하고, 실패했으면 원인을 찾아서 고칠 일을 `진행 중`으로 올려요. 같은 실패가 세 번 반복되면 그 작업은 `막힘`으로 두고, 원인과 시도한 것을 적은 뒤 다른 작업으로 넘어가요.
@@ -49,7 +49,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 status
 1. 방금 거둔 결과에서 나온 실패 고치기
 2. `진행 중`인 작업
 3. 정기 점검이 밀렸으면 정기 점검 (아래 "정기 점검")
-4. `할 일`의 맨 위 작업 (`막힘`은 건너뛰어요)
+4. `할 일`의 맨 위 작업 (`막힘`, `보류`, `검증 대기`는 건너뛰어요. `검증 대기`는 5번 "검증"에서 다뤄요)
 5. 할 일이 없거나 전부 `막힘`이면 **백로그 채우기**(아래)로 새 작업을 만들고 그 맨 위 작업
 
 빌드나 테스트가 돌고 있으면 새 빌드·테스트는 시작하지 않아요. 그동안은 작업 트리(`../RobinOS-wt`, 아래 "5. 검증")에서 다음 작업을 만들어요. 코드 작성, `ready.ps1 -Check`, 문서 정리, 백로그 채우기 같은 일이에요.
@@ -74,10 +74,10 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 status
 
 | 작업 | WHPX (기본) | TCG (Windows용 QEMU가 없을 때) |
 |---|---|---|
-| `verify` (zstd ISO + 부팅·설치 테스트 동시) | 약 10분: 빌드 3.4분 + 테스트 6~7분 (2026-10-08) | 쓸 수 없어요 |
+| `verify` (zstd ISO + 부팅·설치 테스트 동시) | 약 18분: 빌드 3.6분 + 테스트 14.5분 (2026-10-10, 묶음 69) | 쓸 수 없어요 |
 | ISO 빌드 (xz, 릴리스용) | 7분 (2026-10-08) | 같음 |
-| 부팅 테스트 (33장) | 6분 (2026-10-08) | 15분 넘게 |
-| 설치 테스트 (robinos) | 6.5분 (2026-10-08, 인터넷 속도에 따라 달라요) | 1시간 넘을 수 있음 |
+| 부팅 테스트 (79장) | `verify` 안에서 설치 테스트와 함께 돌아요. 따로는 6분(2026-10-08, 33장일 때) | 15분 넘게 |
+| 설치 테스트 (robinos) | 6.5분 (2026-10-08, 인터넷 속도에 따라 달라요). archinstall 11.4분, windows 9.1분 (2026-10-10) | 1시간 넘을 수 있음 |
 
 새로 잰 시간은 이 표에 고쳐 적어요.
 
@@ -123,20 +123,21 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 status
 
 `할 일`이 비었거나 전부 `막힘`이면 아래 출처를 위에서부터 훑어서 새 작업을 3~5개 만들어요. 앞쪽 출처에서 쓸 만한 일이 나오면 뒤쪽은 보지 않아도 돼요.
 
-1. **설계의 빈 곳**: [design.md](design.md)의 "설계 점검" 표, v0.1 표, 요구사항 표에서 아직 구현되지 않았거나 검증되지 않은 것(v0.1 프리뷰는 2026-10-08에 공개했어요)
+1. **설계의 빈 곳**: [design.md](design.md)의 "설계 점검" 표, v0.1 표, 요구사항 표에서 아직 구현되지 않았거나 검증되지 않은 것(v0.2 프리뷰는 2026-10-10에 공개했어요)
 2. **검증이 빠진 기능**: tasks.md 완료 목록에 "VM 검증 전"이 붙은 것, 자동 테스트가 없는 기능(부팅 테스트에 장면 추가, 설치 테스트에 시나리오 추가)
 3. **화면 다듬기**: 가장 최근 부팅·설치 테스트 스크린샷에서 보이는 문제. 잘리거나 겹치는 글자, 어색한 여백, 영어로 남은 문구, 다크·라이트 불일치, [design.md](design.md)의 shadcn/ui 기준과 다른 곳
 4. **RobinOS다운 경험 넓히기**: RobinOS가 직접 만든 화면과 도구가 아직 없는 곳. 설정, 부팅 화면, 도움말, 시스템 소리, 앱끼리 같은 디자인 언어로 맞추기 같은 것이에요. "다른 OS에는 있는데 RobinOS에는 없는 것"보다 "RobinOS라면 어떻게 할까"에서 시작해요
 5. **학습 기능 늘리기**: [design.md](design.md) 학습 설계를 따라요. 미션 추가(네트워크 기초, 웹 보안), 실습 랩 추가(네트워크 스캔 랩, 로컬 CTF)
-6. **로드맵 다음 단계**: [roadmap.md](roadmap.md)에서 끝나지 않은 항목 (3단계 보안 프로필, 6단계 공개 프리뷰 준비 등)
+6. **로드맵 다음 단계**: [roadmap.md](roadmap.md)에서 끝나지 않은 항목 (7단계 "매일 쓰는 나만의 OS" 등)
 7. **품질 점검**: 아래 영역 중 tasks.md "품질 점검 기록"에서 가장 오래전에 본 영역 하나를 골라 훑고, 찾은 문제를 작업으로 만들어요.
+   - 설계 점검: [design.md](design.md)의 방향과 원칙으로 지금 RobinOS를 다시 보고, "설계 점검" 표를 고쳐요
    - 코드 검토: 버그, 오류 처리, `set -e` 함정, 경계 조건 (`robinctl`, `robin-install`, 셸 QML을 파일 단위로)
    - 문서와 코드 맞추기: 문서에 적힌 명령, 경로, 단축키가 실제와 같은지
    - 보안과 윤리: 랩이 `127.0.0.1`에만 열리는지, 라이브 ISO의 기본 비밀번호와 원격 접속, sudo 설정, [ethics.md](ethics.md)와 맞는지
    - 접근성: 키보드만으로 셸을 다 쓸 수 있는지, 글자 대비, 스크린 리더 이름(`Accessible.name`)
    - 성능: 소프트웨어 렌더링(VM)에서 셸 효과와 애니메이션, 부팅 시간
    - 업스트림 변화: Arch 패키지 이름, Hyprland·Quickshell 새 버전에서 설정과 QML 검사
-8. **v0.2 후보**: tasks.md T-011(foot 제목 표시줄 등). 1~7에서 쓸 만한 일이 없을 때 꺼내요.
+8. **다음 버전 후보**: tasks.md T-011(foot 제목 표시줄). 1~7에서 쓸 만한 일이 없을 때 꺼내요.
 
 새 작업을 만들 때 지킬 것:
 

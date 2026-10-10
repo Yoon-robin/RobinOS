@@ -19,7 +19,6 @@ RobinOS에는 자체 명령과, 시스템을 하나로 엮어 주는 연결 코�
 ```bash
 robinctl doctor
 robinctl update
-robinctl repo
 robinctl snapshot rollback 12
 robinctl audit
 robinctl learn
