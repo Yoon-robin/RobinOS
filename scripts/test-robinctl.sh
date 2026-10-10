@@ -418,6 +418,12 @@ said "list shows the text group" "텍스트 다루기"
 # Text: grep -c, sort | uniq -c, awk, sed and diff on ~/practice/text
 check "41 fails before the files exist" fail learn check 41
 check "show 41 makes ~/practice/text" 0 learn show 41
+# Internet addresses in the made-up log come from the documentation ranges only
+if in_home "awk '{print \$1}' practice/text/access.log | grep -Evq '^(192\.0\.2|198\.51\.100|203\.0\.113)\.'"; then
+  bad "41: access.log has addresses outside RFC 5737 (docs/ethics.md)"
+else
+  ok "41: access.log uses documentation addresses only"
+fi
 in_home "echo 0 > practice/text/404.txt"
 check "41 fails with a wrong count" fail learn check 41
 in_home "cd practice/text && grep -c ' 404 ' access.log > 404.txt"

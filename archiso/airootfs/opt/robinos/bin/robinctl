@@ -2152,7 +2152,8 @@ learn_prepare_text() {
 import datetime, random, sys
 text, state = sys.argv[1], sys.argv[2]
 r = random.Random()
-normal = ["192.168.0.%d" % n for n in r.sample(range(2, 99), 6)]
+# Visitors from the internet: documentation addresses only (RFC 5737, docs/ethics.md)
+normal = ["198.51.100.%d" % n for n in r.sample(range(2, 250), 6)]
 attacker = "203.0.113.%d" % r.randint(2, 254)
 pages = ["/", "/index.html", "/about.html", "/news.html", "/contact.html", "/css/site.css", "/img/logo.png", "/favicon.ico"]
 probes = ["/admin", "/wp-login.php", "/.env", "/phpmyadmin/", "/backup.zip", "/config.php", "/.git/HEAD", "/server-status"]
