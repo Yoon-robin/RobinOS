@@ -40,7 +40,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (없음) | | |
+| 묶음 69 | T-143 robinos 패키지(stage-robinos.sh로 ISO 동기화 바꿈), 0.3.0-dev | `verify -Installer robinos` (`wsl-build.ps1 package`는 통과: 264개 파일, 서명) |
 
 `82600be`까지 2026-10-10 묶음 68 검증(`verify`: 빌드 3.5분 + 테스트 14.5분)을 마치고 푸시했어요.
 
@@ -78,7 +78,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 조사(2026-10-08): Orca 51 패키지와 libatspi 2.62를 받아 확인. Orca는 `Atspi.Device.new_full`로 키를 받고, Wayland에서는 `org.freedesktop.a11y.Manager`(Mutter 제공)를 써요. Hyprland 0.56.2 소스에 없어서 Orca 키 명령은 안 되고 포커스 읽기만 돼요. 결론과 이유를 design.md 미결정 사항에 적음. 업스트림 변화 점검 때 Hyprland가 이 인터페이스를 넣었는지 봐요
 
 ### T-143 RobinOS 파일을 pacman 패키지로 (T-026 1단계)
-- 상태: 진행 중 (묶음 69)
+- 상태: 검증 대기 (묶음 69)
 - 한 것: RobinOS 파일을 놓는 일을 `scripts/stage-robinos.sh --root`로 모았어요. ISO 오버레이 동기화(`sync-archiso-files.sh`)와 패키지가 함께 써요(옛 동기화와 오버레이가 파일 하나까지 같은 것을 WSL에서 비교). `packaging/robinos/PKGBUILD`(버전 = config 버전 + 커밋 수, `/etc/robinos/config.toml`만 backup, 설치 후 `dconf update`와 os-release), `scripts/build-package.sh`(WSL에서 robinbuild 사용자로 makepkg, 파일 목록 비교, robinctl 실행, 서명과 확인), `wsl-build.ps1 package`. 라이브 ISO의 `/etc/robinos/config.toml`은 라이브용이라 공통 목록에서 뺐어요
 - 출처: T-026, design.md "RobinOS 파일 업데이트"
 - 할 것: `packaging/robinos/PKGBUILD`(이름 `robinos`, 버전은 `config/robinos.toml`). `package()`가 `scripts/install-desktop.sh --root "$pkgdir"`, `robinctl`, `/etc/robinos/config.toml`, 브랜딩, `/opt/robinos`(robinctl이 읽는 패키지 목록과 스크립트)를 넣어요. `/etc` 파일은 `backup`. WSL에서 일반 사용자로 `makepkg` 하는 `scripts/build-package.sh`, 패키지 서명
