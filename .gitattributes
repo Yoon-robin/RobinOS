@@ -17,6 +17,8 @@
 *.ini text eol=lf
 *.txt text eol=lf
 *.md text eol=lf
+# Armored keys and signatures, the same bytes on every checkout
+*.asc text eol=lf
 
 desktop/** text eol=lf
 archiso/airootfs/usr/share/robinos/** text eol=lf
