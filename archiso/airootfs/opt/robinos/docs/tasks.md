@@ -40,9 +40,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| 묶음 69 | T-143 robinos 패키지(stage-robinos.sh로 ISO 동기화 바꿈), 0.3.0-dev | `verify -Installer robinos` (`wsl-build.ps1 package`는 통과: 264개 파일, 서명) |
+| (없음) | | |
 
-`82600be`까지 2026-10-10 묶음 68 검증(`verify`: 빌드 3.5분 + 테스트 14.5분)을 마치고 푸시했어요.
+`f6ceb6d`까지 2026-10-10 묶음 69 검증(`verify`: 빌드 3.6분 + 테스트 14.5분)을 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -77,13 +77,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 출처: 품질 점검(접근성) "화면 읽기 프로그램(Orca)은 아직"
 - 조사(2026-10-08): Orca 51 패키지와 libatspi 2.62를 받아 확인. Orca는 `Atspi.Device.new_full`로 키를 받고, Wayland에서는 `org.freedesktop.a11y.Manager`(Mutter 제공)를 써요. Hyprland 0.56.2 소스에 없어서 Orca 키 명령은 안 되고 포커스 읽기만 돼요. 결론과 이유를 design.md 미결정 사항에 적음. 업스트림 변화 점검 때 Hyprland가 이 인터페이스를 넣었는지 봐요
 
-### T-143 RobinOS 파일을 pacman 패키지로 (T-026 1단계)
-- 상태: 검증 대기 (묶음 69)
-- 한 것: RobinOS 파일을 놓는 일을 `scripts/stage-robinos.sh --root`로 모았어요. ISO 오버레이 동기화(`sync-archiso-files.sh`)와 패키지가 함께 써요(옛 동기화와 오버레이가 파일 하나까지 같은 것을 WSL에서 비교). `packaging/robinos/PKGBUILD`(버전 = config 버전 + 커밋 수, `/etc/robinos/config.toml`만 backup, 설치 후 `dconf update`와 os-release), `scripts/build-package.sh`(WSL에서 robinbuild 사용자로 makepkg, 파일 목록 비교, robinctl 실행, 서명과 확인), `wsl-build.ps1 package`. 라이브 ISO의 `/etc/robinos/config.toml`은 라이브용이라 공통 목록에서 뺐어요
-- 출처: T-026, design.md "RobinOS 파일 업데이트"
-- 할 것: `packaging/robinos/PKGBUILD`(이름 `robinos`, 버전은 `config/robinos.toml`). `package()`가 `scripts/install-desktop.sh --root "$pkgdir"`, `robinctl`, `/etc/robinos/config.toml`, 브랜딩, `/opt/robinos`(robinctl이 읽는 패키지 목록과 스크립트)를 넣어요. `/etc` 파일은 `backup`. WSL에서 일반 사용자로 `makepkg` 하는 `scripts/build-package.sh`, 패키지 서명
-- 완료 기준: 패키지의 파일 목록이 `install-desktop.sh --root`로 깐 목록과 같다는 검사, 빈 컨테이너(또는 chroot)에 설치해 `robinctl help`가 돎
-
 ### T-144 깃허브 릴리스를 pacman 저장소로 (T-026 2단계)
 - 상태: 할 일
 - 할 것: `scripts/publish-repo.sh`가 `repo-add --sign`으로 데이터베이스를 만들고 패키지·데이터베이스 서명과 함께 깃허브 릴리스 `repo`에 올려요(같은 이름은 바꿔 올림)
@@ -111,6 +104,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 최근 것이 위에 있어요. 더 오래된 기록은 [done.md](done.md)에 있어요.
 
+- 2026-10-10 묶음 69 검증(`f6ceb6d`, verify 빌드 3.6분 + 테스트 14.5분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장, 부팅 끝 14.8초)
+  - T-143 RobinOS 파일을 pacman 패키지로(`30cfd62`): `wsl-build.ps1 package`가 `robinos-0.2.0.r395-1-any.pkg.tar.zst`(파일 264개)를 만들고 파일 목록·robinctl 실행·서명 확인 통과. `stage-robinos.sh`로 바꾼 ISO 동기화의 오버레이가 옛 것과 파일 하나까지 같고, 그 ISO로 부팅·설치 테스트 통과. 개발 버전 0.3.0-dev(`f6ceb6d`)
 - 2026-10-10 묶음 68 검증(`82600be`, verify 빌드 3.5분 + 테스트 14.5분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)
   - 부팅 테스트의 실패한 서비스 장면(`82600be`): `30-failed-units`에 vmware, 0 loaded units, inactive, active가 다 찍히고, `72-light-learn-center`가 다시 1/45
 - 2026-10-10 T-142 v0.2 프리뷰 공개(사용자 결정 "공개해, 만들어, 지워"): `b4072b0`을 `wsl-build.ps1 build`(xz)로 빌드, ISO 2,101,510,144바이트(한도까지 43.8MiB), SHA-256 `b1e3c36c…f1b51b8`, `SHA256SUMS.sig`(열쇠 `D8EB…9AAD`). 이 ISO로 부팅 테스트 79장(부팅 끝 17.6초) 통과, 학습 센터가 0/45로 나온 것은 테스트의 pager 문제(다음 묶음에서 고침). 깃허브 프리릴리스 [v0.2.0](https://github.com/Yoon-robin/RobinOS/releases/tag/v0.2.0)에 ISO, SHA256SUMS, 서명, 공개 열쇠. 깃허브가 계산한 ISO 체크섬이 서명된 SHA256SUMS와 같고, 내려받은 서명이 공개 열쇠로 "Good signature". 같은 날 릴리스 서명 열쇠를 만들고 깃허브의 `work/t025-vmware`를 지웠어요
