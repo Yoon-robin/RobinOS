@@ -285,6 +285,8 @@ switch ($Task) {
         Invoke-Wsl "cd /root/RobinOS && scripts/build-package.sh && scripts/build-repo.sh"
         $repoDir = "\\wsl.localhost\$Distro\root\RobinOS\out\repo"
         $files = Get-ChildItem $repoDir -File | Where-Object { $_.Name -notlike "*.tar.gz*" }
+        # gh writes "release not found" and upload progress to stderr; that is no error here
+        $ErrorActionPreference = "Continue"
         gh release view repo --repo Yoon-robin/RobinOS *> $null
         if ($LASTEXITCODE -ne 0) {
             gh release create repo --repo Yoon-robin/RobinOS --prerelease --latest=false --target main `
@@ -300,6 +302,7 @@ switch ($Task) {
         foreach ($asset in $assets) {
             if ($keep -notcontains $asset) { gh release delete-asset repo $asset --repo Yoon-robin/RobinOS --yes }
         }
+        $ErrorActionPreference = "Stop"
         Invoke-Wsl "cd /root/RobinOS && scripts/test-repo.sh"
     }
     "boot-test" {
