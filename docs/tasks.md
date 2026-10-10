@@ -40,9 +40,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| 묶음 68 | 부팅 테스트의 실패한 서비스 장면(`--no-pager`, 8초) | `verify -Installer robinos` (`failed-units`에 결과, 학습 센터 1/45) |
+| (없음) | | |
 
-`8312625`까지 2026-10-10 묶음 66 검증(`verify`: 빌드 3.2분 + 테스트 14.4분)을 마치고 푸시했어요.
+`82600be`까지 2026-10-10 묶음 68 검증(`verify`: 빌드 3.5분 + 테스트 14.5분)을 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -96,6 +96,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 최근 것이 위에 있어요. 더 오래된 기록은 [done.md](done.md)에 있어요.
 
+- 2026-10-10 묶음 68 검증(`82600be`, verify 빌드 3.5분 + 테스트 14.5분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)
+  - 부팅 테스트의 실패한 서비스 장면(`82600be`): `30-failed-units`에 vmware, 0 loaded units, inactive, active가 다 찍히고, `72-light-learn-center`가 다시 1/45
 - 2026-10-10 T-142 v0.2 프리뷰 공개(사용자 결정 "공개해, 만들어, 지워"): `b4072b0`을 `wsl-build.ps1 build`(xz)로 빌드, ISO 2,101,510,144바이트(한도까지 43.8MiB), SHA-256 `b1e3c36c…f1b51b8`, `SHA256SUMS.sig`(열쇠 `D8EB…9AAD`). 이 ISO로 부팅 테스트 79장(부팅 끝 17.6초) 통과, 학습 센터가 0/45로 나온 것은 테스트의 pager 문제(다음 묶음에서 고침). 깃허브 프리릴리스 [v0.2.0](https://github.com/Yoon-robin/RobinOS/releases/tag/v0.2.0)에 ISO, SHA256SUMS, 서명, 공개 열쇠. 깃허브가 계산한 ISO 체크섬이 서명된 SHA256SUMS와 같고, 내려받은 서명이 공개 열쇠로 "Good signature". 같은 날 릴리스 서명 열쇠를 만들고 깃허브의 `work/t025-vmware`를 지웠어요
 - 2026-10-10 묶음 66 검증(`8312625`, verify 빌드 3.2분 + 테스트 14.4분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장, 부팅 끝 15.2초)
   - T-141 코드 검토 고침(`8312625`): 정적 검사에 Shell JS imports, 계산 시험 27가지, robinctl 테스트 "it says to show the mission first". `50-notification-opened`는 전과 같음
