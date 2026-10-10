@@ -16,6 +16,7 @@
 | 설치 방법 | [install.md](install.md) |
 | 스냅샷과 복구 | [recovery.md](recovery.md) |
 | 데스크톱 구성, 단축키, 셸 기능 | [desktop.md](desktop.md) |
+| 릴리스 절차, 서명, RobinOS 패키지 저장소 | [release.md](release.md) |
 | CTF 시작하기, 입문 CTF, 다음 연습장 | [ctf.md](ctf.md) |
 | 디자인 토큰 | `desktop/shell/Theme.qml` (코드가 원본, [brand.md](brand.md)의 표는 사본) |
 
@@ -44,7 +45,7 @@
 - [boot-branding.md](boot-branding.md): 부팅 메뉴와 로그인 화면 브랜딩
 - [release.md](release.md): 릴리스 체크리스트
 - [release-notes-v0.1.md](release-notes-v0.1.md): v0.1 프리뷰 릴리스 노트
-- [release-notes-v0.2.md](release-notes-v0.2.md): v0.2 프리뷰 발표문 (공개 전 초안)
+- [release-notes-v0.2.md](release-notes-v0.2.md): v0.2 프리뷰 릴리스 노트
 - [../themes/README.md](../themes/README.md): 테마 파일
 
 작업 관리
@@ -56,19 +57,20 @@
 
 ## 문서 쓰는 규칙
 
-- 한국어로 써요. 말투는 [design.md](design.md)를 따라요(해요체, 짧고 쉬운 문장, 번역투 없이). 코드, 명령, 경로, 워크플로 이름은 그대로 둬요.
+- 한국어로 써요. 말투는 [design.md](design.md)의 "말투"를 따라요(해요체, 짧고 쉬운 문장, 번역투 없이). 코드, 명령, 경로, 워크플로 이름은 그대로 둬요.
 - 코드를 바꾸면 같은 커밋에서 관련 문서도 고쳐요.
 
 | 바꾼 것 | 같이 고칠 문서 |
 |---|---|
-| `robinctl` 명령 | `README.md`의 초기 명령, 해당 기능 문서(`recovery.md`, `desktop.md` 등) |
+| `robinctl` 명령 | `README.md`의 주요 명령, 해당 기능 문서(`recovery.md`, `desktop.md` 등) |
 | 셸 기능, 단축키 | `desktop.md`, 환영 마법사의 단축키 안내(`Welcome.qml`), `README.md`의 핵심 아이디어 |
 | 기본 앱 연결 (`desktop/mime/mimeapps.list`) | `desktop.md`의 "동영상과 음악, 기본 앱" |
 | 학습 미션 (`robinctl learn`) | `README.md`의 학습 미션 표, `desktop.md`, 런처의 학습 미션 설명(`Launcher.qml`), `robinctl help`. 학습 센터(`LearnCenter.qml`)는 `robinctl learn tsv`를 읽으니 그 형식을 바꾸면 같이 고쳐요 |
 | 패키지 목록 (`packages/*.txt`) | `install.md`(설치본에 들어가는 것), `desktop.md`(라이브 세션에 없는 것) |
 | 설치 과정 (`post-install.sh`, `robin-install`) | `install.md`, `testing.md` |
 | 테스트 스크립트 | `testing.md` |
-| 빌드 스크립트, 빌드 환경 | `build-iso.md`, `build-environment.md` |
+| 빌드 스크립트, 빌드 환경 | `build-iso.md`, `build-environment.md`, `release.md` |
+| RobinOS 패키지와 저장소 (`packaging/robinos`, `stage-robinos.sh`, `build-package.sh`, `build-repo.sh`, `robinctl repo`, `keys/`) | `release.md` "RobinOS 패키지 저장소", `design.md` "RobinOS 파일 업데이트", `install.md`, `testing.md`, `build-iso.md` |
 | v0.1 항목의 상태 | `design.md`의 v0.1 표, `tasks.md` |
 | 새 설계 결정 | `design.md` (결정과 이유, 날짜) |
 

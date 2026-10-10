@@ -1,6 +1,6 @@
 # RobinOS 데스크톱
 
-RobinOS는 Hyprland 위에 직접 만든 Quickshell 셸을 얹어 써요. 디자인은 shadcn/ui의 zinc 팔레트를 따르고, 기본값은 윈도우에서 넘어온 사용자에게 맞췄어요. 왜 이렇게 만들었는지는 `docs/design.md`에 있어요.
+RobinOS의 데스크톱은 Hyprland 위에 직접 만든 Quickshell 셸이에요. 디자인은 shadcn/ui의 zinc 팔레트를 따라요. 윈도우에서 온 사람도 바로 쓸 수 있게 익숙한 단축키와 이름을 입구로 뒀어요. 왜 이렇게 만들었는지는 [design.md](design.md)에 있어요.
 
 ## 구성 요소
 
@@ -36,6 +36,7 @@ RobinOS는 Hyprland 위에 직접 만든 Quickshell 셸을 얹어 써요. 디자
 `desktop/install-map.txt`에 모든 파일과 각 파일이 들어갈 위치가 적혀 있어요. 아래 스크립트는 모두 이 파일 하나만 보고 움직여요.
 
 - `scripts/install-desktop.sh` (설치된 시스템용. 다른 루트 경로에 설치할 때는 `--root`)
+- `scripts/stage-robinos.sh` (`robinos` 패키지와 라이브 ISO 오버레이가 함께 써요. `--root`로 받은 경로 아래에 RobinOS 파일 전체를 놓아요)
 - `scripts/sync-archiso-files.sh`, `scripts/sync-archiso-files.ps1` (라이브 ISO 오버레이)
 
 주요 위치:
@@ -247,7 +248,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 ## 학습 미션
 
-런처의 "학습 미션"을 고르면 학습 센터가 열려요(`desktop/shell/LearnCenter.qml`). 맨 위에 진행도 막대와 다음 미션이 있고, 그 아래에 아홉 묶음의 미션 45개가 끝낸 것은 초록 체크, 다음 것은 강조색 동그라미로 보여요. 미션을 고르면(마우스나 `Tab`과 `Enter`) 터미널이 열리고 `robinctl learn show <번호>`가 설명을 보여 줘요. 미션은 그 터미널에서 직접 풀고, `robinctl learn check`로 확인해요. 통과하면 학습 센터의 체크가 바로 바뀌고, 묶음 하나를 다 끝내면 다음 묶음을 알려 주는 알림이 떠요. 목록 끝에는 입문 CTF 10문제가 한 묶음으로 있어서, 고르면 터미널에서 `robinctl ctf show 번호`가 열려요. 맨 아래에는 입문 CTF의 진행도와 "CTF 열기"가 있어요. 환영 마법사에서 "리눅스 기초"를 고르고 끝내도 학습 센터가 열려요. 미션 목록은 `robinctl learn tsv`에서 읽어요. 리눅스, 네트워크, 포렌식, 리버싱, 웹, 셸, 시스템, 보안 기초가 5개씩 있고(연습 파일은 `~/practice/forensics`, 연습 프로그램은 `~/practice/reversing`, 웹 연습 서버는 `~/practice/web`에 만들어요), 자세한 내용은 [README](../README.md#학습-미션)에 있어요. 미션을 하나라도 끝내면 런처의 "학습 미션"에 "3/40 완료"처럼 진행도가 보여요(`~/.local/state/robinos/learn/done`을 셸이 읽어요).
+런처의 "학습 미션"을 고르면 학습 센터가 열려요(`desktop/shell/LearnCenter.qml`). 맨 위에 진행도 막대와 다음 미션이 있고, 그 아래에 아홉 묶음의 미션 45개가 끝낸 것은 초록 체크, 다음 것은 강조색 동그라미로 보여요. 미션을 고르면(마우스나 `Tab`과 `Enter`) 터미널이 열리고 `robinctl learn show <번호>`가 설명을 보여 줘요. 미션은 그 터미널에서 직접 풀고, `robinctl learn check`로 확인해요. 통과하면 학습 센터의 체크가 바로 바뀌고, 묶음 하나를 다 끝내면 다음 묶음을 알려 주는 알림이 떠요. 목록 끝에는 입문 CTF 10문제가 한 묶음으로 있어서, 고르면 터미널에서 `robinctl ctf show 번호`가 열려요. 맨 아래에는 입문 CTF의 진행도와 "CTF 열기"가 있어요. 환영 마법사에서 "리눅스 기초"를 고르고 끝내도 학습 센터가 열려요. 미션 목록은 `robinctl learn tsv`에서 읽어요. 리눅스, 네트워크, 포렌식, 리버싱, 웹, 셸, 시스템, 보안 기초, 텍스트 다루기가 5개씩 있고(연습 파일은 `~/practice/forensics`, 연습 프로그램은 `~/practice/reversing`, 웹 연습 서버는 `~/practice/web`, 텍스트 연습 파일은 `~/practice/text`에 만들어요), 자세한 내용은 [README](../README.md#학습-미션)에 있어요. 미션을 하나라도 끝내면 런처의 "학습 미션"에 "3/45 완료"처럼 진행도가 보여요(`~/.local/state/robinos/learn/done`을 셸이 읽어요).
 
 셸이 작업용으로 여는 터미널은 `ROBINOS_NO_GREETING=1`로 시작해서 `~/.bashrc`가 fastfetch를 띄우지 않아요. fastfetch는 한국어 라벨로 짧게 줄인 설정(`desktop/fastfetch/config.jsonc` → `/etc/xdg/fastfetch/config.jsonc`)을 쓰고, 왼쪽에 Arch 로고 대신 RobinOS 울새 그림(`/usr/share/robinos/fastfetch/robinos-logo.ansi`, [brand.md](brand.md))을 보여 줘요.
 
@@ -255,7 +256,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 ## 라이브 세션
 
-라이브 ISO는 `robin` 계정(비밀번호 `robin`)으로 RobinOS 세션에 자동 로그인해요. 비밀번호 없는 sudo는 라이브 ISO에만 설정돼 있어요(`/etc/sudoers.d/10-robinos-live`). 시간대는 한국(`Asia/Seoul`)이고, 인터넷에 연결되면 `systemd-timesyncd`가 시계를 맞춰요. 설치한 시스템의 시간대는 설치기에서 정해요.
+라이브 ISO는 `robin` 계정(비밀번호 `robin`)으로 RobinOS 세션에 자동 로그인해요. 비밀번호 없는 sudo는 라이브 ISO에만 설정돼 있어요(`/etc/sudoers.d/10-robinos-live`). 시간대는 한국(`Asia/Seoul`)이고, 인터넷에 연결되면 `systemd-timesyncd`가 시계를 맞춰요. 설치한 시스템도 서울 시간대예요. 명령으로 설치할 때는 계획 파일의 `timezone`으로 바꿀 수 있어요([install.md](install.md)).
 
 라이브 ISO에는 가벼운 보안 도구(nmap, tcpdump, netcat, dig, sqlmap, binwalk 같은 것)만 들어 있어요. Wireshark 화면 앱, john, hashcat, hydra, gdb, Docker(웹 랩), 가상 머신 도구는 크기가 커서 빠져 있고, 설치한 시스템에서 `sudo robinctl profile <이름>`으로 넣어요. 라이브 세션은 메모리 위에서 돌아서 큰 묶음이나 랩 이미지를 받을 자리가 거의 없어요. 프린터(CUPS와 프린터 설정 앱), 오피스(LibreOffice), 앱 스토어(GNOME 소프트웨어), 디스크 관리(GNOME 디스크)도 설치본에만 들어가요(`packages/apps.txt`).
 
@@ -359,4 +360,4 @@ qs ipc -p /usr/share/robinos/shell call shell setDark false
 scripts/check-desktop.sh
 ```
 
-Lua 문법을 확인하고 `Hyprland --verify-config`를 실행해요. 모든 QML 파일은 `qmlformat`으로 파싱해 보고, 데스크톱 스크립트는 `bash -n`으로 검사해요. `Validate` 워크플로가 Arch Linux 컨테이너에서 이 스크립트를 실행해요.
+Lua 문법을 확인하고 `Hyprland --verify-config`를 실행해요. 모든 QML 파일은 `qmlformat`으로 파싱해 보고, 데스크톱 스크립트는 `bash -n`으로 검사해요. 이 PC에서는 `scripts/wsl-build.ps1 check`가 WSL의 Arch에서 이 스크립트와 qmllint를 함께 돌려요([testing.md](testing.md)).

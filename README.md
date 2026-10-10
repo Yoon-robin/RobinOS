@@ -36,43 +36,16 @@ RobinOS는 직접 만든 데스크톱과 도구로 이루어진, 매일 쓰는 �
 ## 핵심 아이디어
 
 - 직접 만든 데스크톱: Hyprland 위에 RobinOS 전용 Quickshell 셸(바, 독, 런처, 빠른 설정, 알림 센터, 창 전환과 작업 보기, 환영 마법사, 학습 센터, 설치기)을 shadcn/ui zinc 스타일 하나로 그려요 ([docs/desktop.md](docs/desktop.md))
-- 자체 시스템 계층: `robinctl`(진단, 업데이트, 스냅샷, 보안 점검, 학습, 랩), 직접 만든 설치기, 서명한 RobinOS 업데이트 저장소
+- 자체 시스템 계층: `robinctl`(진단, 업데이트, 스냅샷, 보안 점검, 학습, 랩), 직접 만든 설치기, 서명한 RobinOS 업데이트 저장소(v0.2.0 다음 버전부터)
 - 매일 쓰는 데 필요한 것: Firefox, LibreOffice(한국어), 동영상·음악 재생, 앱 스토어(Flathub)와 Steam, 프린터, NVIDIA 그래픽 카드 드라이버(GTX 16, RTX 20 이후)
 - 망가뜨려도 괜찮게: pacman 작업 전후 자동 Btrfs 스냅샷과 부팅 메뉴에서 되돌리기 ([docs/recovery.md](docs/recovery.md))
 - 한글 입력, 한글 글꼴, 한국어 로캘과 문서가 기본
-- 익숙한 입구: 자유 배치 창, 독, `Alt+Tab`, `Alt+F4`, `Win+E`, `Win+D`, `Win+V`(클립보드 기록), `Win+Shift+S`(캡처 도구), `Ctrl+Shift+Esc`(작업 관리자), 시계를 누르면 달력, 사진을 "배경으로 설정", 빠른 설정의 화면 배율·야간 모드·비행기 모드, Wi-Fi·블루투스 연결 창, 출력 장치와 앱별 음량을 고르는 소리 창, `Win+N` 알림 센터, `Alt+Tab` 창 전환 화면(미리보기), `Win+Tab` 작업 보기, `Win+X` 빠른 메뉴, 독 아이콘 위의 창 미리보기, `Win+.` 이모지, `Win+←/→` 창 반쪽 붙이기, `Win+Ctrl+D`·`Win+Ctrl+F4` 작업 공간 만들기·닫기, 바탕 화면·독·런처의 오른쪽 클릭 메뉴, 바의 트레이 아이콘, 런처에서 파일 찾기·계산·웹 검색, 이벤트 뷰어·서비스·장치 관리자 같은 윈도우 관리 도구 이름, 누르면 열리는 지난 알림, 보안 점검(`robinctl audit`), 업데이트 알림
+- 익숙한 입구: 자유 배치 창과 독, `Alt+Tab`, `Alt+F4`, `Win+E`, `Win+D`, `Win+V`(클립보드 기록), `Win+Shift+S`(캡처 도구)처럼 윈도우에서 쓰던 단축키가 그대로 동작해요. 런처에서 "제어판", "작업 관리자" 같은 윈도우 이름으로도 찾아져요. 전체 단축키와 셸 기능은 [docs/desktop.md](docs/desktop.md)에 있어요
 - 배울 수 있는 OS: 학습 센터에 리눅스·네트워크·포렌식·리버싱·웹·셸·시스템·보안 기초·텍스트 다루기 미션 45개와 입문 CTF. 미션은 실제 터미널에서 풀어요. 보안 도구는 전부 쏟아 넣지 않고 학습 순서에 맞춘 프로필로 골라 깔고, 실습 랩은 컨테이너로 격리해요
 
-## 계획 중인 에디션
+## 주요 명령
 
-### RobinOS Core
-
-최소 구성 데스크톱, 한국어 사용자에게 맞춘 기본 설정, 안전한 업데이트 계층, `robinctl`의 기본 틀을 담아요.
-
-### RobinOS Security Lab
-
-Core에 웹 보안, 네트워크 분석, CTF, 리버싱, 포렌식, 무선 보안 학습용으로 골라 둔 도구를 더해요.
-
-### RobinOS Live
-
-워크숍, 수업, 간단한 실습, 시스템 복구 같은 작업에 쓰는 부팅 가능한 라이브 ISO예요.
-
-## 첫 마일스톤
-
-첫 마일스톤은 아래 내용을 갖춘, 부팅되는 Arch ISO예요.
-
-- RobinOS 브랜딩을 입힌 부팅 화면, 로그인 화면, 배경화면, 터미널 프롬프트
-- RobinOS 셸을 얹은 Hyprland 데스크톱 (VM에서는 자동으로 소프트웨어 렌더링)
-- 한글 입력과 한글 글꼴 기본 설정
-- `robinctl doctor`
-- `robinctl profile security`
-- 골라 둔 패키지 목록
-- Btrfs + Snapper 설계
-- VM에서 검증한 설치 과정
-
-## 초기 명령
-
-지금은 `robinctl` 초기 프로토타입이 있어요.
+`robinctl`로 할 수 있는 일이에요.
 
 ```bash
 bin/robinctl version
@@ -149,6 +122,11 @@ bin/robinctl lab status web
 | 38 | SSH 열쇠 만들기 | `ssh-keygen -t ed25519` |
 | 39 | 내려받은 파일 검사하기 | `sha256sum -c` |
 | 40 | 파일 암호화하기 | `gpg -c`, `gpg -d` |
+| 41 | 줄 세고 거르기 | `grep -c`, `wc -l` |
+| 42 | 가장 많이 온 주소 찾기 | `cut`, `sort`, `uniq -c` |
+| 43 | 칸 골라내기 | `awk`, `sort -u` |
+| 44 | 비밀번호 가리기 | `sed` |
+| 45 | 두 파일 비교하기 | `diff`, `comm` |
 
 리버싱 미션의 연습 프로그램은 직접 만든 작은 C 프로그램이에요. 소스는 [practice/reversing](practice/reversing)에 있고, 요령을 쓰면 코드를 보여 주는 것 말고는 아무 일도 하지 않아요. 웹 기초 미션의 연습 서버([practice/web/server.py](practice/web/server.py))는 파이썬 표준 라이브러리만 쓰고 `127.0.0.1:8000`에서만 열려요.
 

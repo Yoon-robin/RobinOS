@@ -30,11 +30,11 @@ RobinOS 릴리스 열쇠 지문: `D8EB 0C49 5CBF 5B2B BB57 EACC FD9B 53B8 B79E 9
 
 ### 보안 부팅 끄기
 
-요즘 PC는 대부분 보안 부팅이 켜진 채로 팔려요. 보안 부팅은 마이크로소프트가 서명한 부트로더만 켜 주는 펌웨어 기능인데, RobinOS의 부트로더에는 아직 그 서명이 없어요(T-148). 그래서 USB로 켜기 전에 꺼야 해요. 윈도우를 지우고 RobinOS만 설치할 때도 마찬가지예요.
+요즘 PC는 대부분 보안 부팅이 켜진 채로 팔려요. 보안 부팅은 마이크로소프트가 서명한 부트로더만 켜 주는 펌웨어 기능인데, RobinOS의 부트로더에는 아직 그 서명이 없어요. 그래서 USB로 켜기 전에 꺼야 해요. 윈도우를 지우고 RobinOS만 설치할 때도 마찬가지예요.
 
 1. **윈도우를 남길 거라면 BitLocker 복구 키부터 확인해요.** 보안 부팅을 끄면 다음에 윈도우를 켤 때 48자리 복구 키를 물을 수 있어요. 윈도우 11은 Microsoft 계정으로 로그인하면 "장치 암호화"(BitLocker)가 저절로 켜져 있기도 해요. 윈도우의 설정 → 개인 정보 및 보안 → 장치 암호화(Pro는 제어판 → BitLocker 드라이브 암호화)에서 켜져 있는지 보고, 켜져 있으면 다른 기기에서 [aka.ms/myrecoverykey](https://aka.ms/myrecoverykey)를 열어 복구 키가 보이는지 확인해 두세요. 종이에 적어 두면 가장 안전해요.
-2. **펌웨어 설정(UEFI) 화면을 열어요.** 윈도우에서 설정 → 시스템 → 복구 → 고급 시작의 **지금 다시 시작** → 문제 해결 → 고급 옵션 → **UEFI 펌웨어 설정**을 누르면 돼요. 윈도우가 없다면 전원을 켜자마자 F2, Del, F10, Esc 중 하나(제조사마다 달라요)를 여러 번 눌러요.
-3. **Secure Boot를 Disabled로 바꿔요.** 보통 Security, Boot, Authentication 탭에 있어요. 회색이라 바뀌지 않으면 먼저 관리자(Supervisor) 비밀번호를 정하거나, "OS Type"을 "Other OS"로 바꾸는 제조사도 있어요.
+2. **펌웨어 설정(UEFI) 화면을 열어요.** 윈도우 11에서는 설정 → 시스템 → 복구 → 고급 시작의 **지금 다시 시작** → 문제 해결 → 고급 옵션 → **UEFI 펌웨어 설정**을 누르면 돼요. 윈도우 10이라면 시작 메뉴의 전원 단추에서 `Shift`를 누른 채 **다시 시작**을 누르면 같은 파란 화면이 나와요. 윈도우가 없다면 전원을 켜자마자 F2, Del, F10, Esc 중 하나(제조사마다 달라요)를 여러 번 눌러요.
+3. **Secure Boot를 Disabled로 바꿔요.** 보통 Security, Boot, Authentication 탭에 있어요. 회색이라 바뀌지 않으면 제조사마다 방법이 달라요. 관리자(Supervisor) 비밀번호를 먼저 정해야 하는 곳도 있고, "OS Type"을 "Other OS"로 바꾸는 곳도 있어요.
 4. 저장하고 다시 켜요(보통 F10). 부팅 메뉴 키(F12, F11, Esc 등)로 USB를 골라 켜요.
 
 설치한 뒤에도 보안 부팅은 꺼 둬야 RobinOS가 켜져요. 다시 켜면 RobinOS는 부팅되지 않아요(윈도우가 있으면 윈도우는 켜져요). 그때는 다시 끄면 그대로 돌아와요.
@@ -64,7 +64,7 @@ RobinOS 릴리스 열쇠 지문: `D8EB 0C49 5CBF 5B2B BB57 EACC FD9B 53B8 B79E 9
 - 부트로더는 GRUB이에요. 윈도우 옆에 설치하면 부팅 메뉴에 윈도우도 나오고, 윈도우와 시계가 어긋나지 않게 하드웨어 시계를 지역 시간으로 둬요.
 - NVIDIA 그래픽 카드가 있으면 GTX 16, RTX 20 이후 카드에는 NVIDIA 드라이버(`nvidia-open`)를 설치해요. 노트북처럼 인텔·AMD 그래픽과 함께 있어도 마찬가지예요. 그보다 오래된 카드(GTX 10 이전)는 기본 드라이버(nouveau)로 돌아가서 화면이 느릴 수 있어요. 실제 NVIDIA 카드에서는 아직 확인 전이에요.
 - VMware, QEMU 같은 가상 머신에서는 게스트 도구(`open-vm-tools`, `qemu-guest-agent`)를 설치해요.
-- 라이브 ISO에는 없는 앱(`packages/apps.txt`)을 더 설치해요. 지금은 프린터(CUPS와 프린터 설정 앱), 오피스(LibreOffice, 한국어), 앱 스토어(GNOME 소프트웨어, Flathub), 디스크 관리(GNOME 디스크), 동영상·음악 재생(Showtime, Decibels, MP4 코덱)예요. LibreOffice만 150MB쯤 더 내려받아요.
+- 라이브 ISO에는 없는 앱(`packages/apps.txt`)을 더 설치해요. 지금은 프린터(CUPS와 프린터 설정 앱), 오피스(LibreOffice, 한국어), 앱 스토어(GNOME 소프트웨어, Flathub), 디스크 관리(GNOME 디스크), 동영상·음악 재생(Showtime, Decibels, MP4 코덱)이에요. LibreOffice만 150MB쯤 더 내려받아요.
 - 설치 기록은 라이브 세션의 `/var/log/robin-install.log`에 남아요. 실패하면 설치기 화면에 이유가 나오고, 고친 뒤 처음부터 다시 할 수 있어요.
 
 ### 윈도우 옆에 설치하려면
@@ -115,7 +115,7 @@ archinstall로 Arch를 설치한다면 이렇게 골라야 스냅샷과 부팅 �
 
 윈도우와 같은 디스크에 직접 나눠 설치했다면, 부팅 메뉴에 윈도우가 나오도록 설치한 시스템에서 `/etc/default/grub.d/20-dual-boot.cfg`에 `GRUB_DISABLE_OS_PROBER=false`를 적고 `sudo grub-mkconfig -o /boot/grub/grub.cfg`를 실행하세요. RobinOS 설치기는 이걸 알아서 해요.
 
-설치한 Arch에서 RobinOS 파일을 받아 설치 후 설정을 실행해요. 라이브 ISO로 설치했다면 `/opt/robinos`를 설치한 시스템에 복사해서 써도 돼요(ISO의 RobinOS 패키지 `pkg/`도 함께 와요). 루트가 Btrfs면 스냅샷 설정(`robinctl snapshot setup`)까지 해요. RobinOS 파일 업데이트 저장소도 켜서, 셸과 `robinctl`이 `robinos` 패키지가 돼요(`robinctl repo`로 확인).
+설치한 Arch에서 RobinOS 파일을 받아 설치 후 설정을 실행해요. 라이브 ISO로 설치했다면 `/opt/robinos`를 설치한 시스템에 복사해서 써도 돼요(ISO의 RobinOS 패키지 `pkg/`도 함께 와요). 설치 후 설정은 루트가 Btrfs면 스냅샷 설정(`robinctl snapshot setup`)까지 하고, RobinOS 저장소를 켜서 셸과 `robinctl`을 `robinos` 패키지로 옮겨요(`robinctl repo`로 확인).
 
 ```bash
 sudo scripts/post-install.sh --dry-run
@@ -127,10 +127,14 @@ robinctl doctor
 
 ```bash
 robinctl doctor
-robinctl learn
+sudo robinctl update
 ```
 
-`robinctl doctor`로 한글 입력, 스냅샷, 부팅 메뉴 설정을 확인하고, `robinctl learn`으로 학습 미션(리눅스·네트워크·포렌식·리버싱·웹 기초)을 시작해요. 보안 실습 도구는 배우는 단계에 맞춰 프로필 하나씩 설치해요.
+`robinctl doctor`로 한글 입력, 스냅샷, 부팅 메뉴 설정을 확인해요. Wi-Fi와 블루투스는 빠른 설정(`Win+S`), 앱은 런처의 "소프트웨어"(앱 스토어)에서 찾아 설치해요.
+
+업데이트는 `sudo robinctl update`로 해요. Arch 패키지와 함께 RobinOS 파일(셸, `robinctl`, 미션)도 RobinOS 저장소에서 새 버전으로 올라가요. 이 기능은 v0.2.0 다음 버전으로 설치한 시스템부터 있어요. v0.2.0 ISO로 설치했다면 아직 RobinOS 파일은 업데이트되지 않아요. 업데이트 전후에 스냅샷이 생겨서, 문제가 생기면 [recovery.md](recovery.md)대로 되돌리면 돼요. 앱 스토어에서 설치한 앱(Flatpak)도 이어서 업데이트해요. 다만 이 앱들은 스냅샷 대상이 아니에요.
+
+배우고 싶다면 `robinctl learn`이나 런처의 "학습 미션"으로 학습 미션 45개(리눅스 기초부터 텍스트 다루기까지 아홉 묶음)를 시작해요. 보안 실습 도구는 배우는 단계에 맞춰 프로필 하나씩 설치해요.
 
 ```bash
 robinctl profile list
@@ -139,8 +143,6 @@ sudo robinctl profile network
 ```
 
 프로필은 `network`(네트워크 분석), `web`(웹 보안과 로컬 웹 랩), `forensics`, `reversing`, `passwords`, `wireless`, `vm`이고, `security`는 전부예요.
-
-업데이트는 `sudo robinctl update`로 해요. Arch 패키지와 함께 RobinOS 파일(셸, `robinctl`, 미션)도 RobinOS 저장소에서 새 버전으로 올라가요. 업데이트 전후에 스냅샷이 생겨서, 문제가 생기면 [recovery.md](recovery.md)대로 되돌리면 돼요. 앱 스토어에서 설치한 앱(Flatpak)도 이어서 업데이트해요. 다만 이 앱들은 스냅샷 대상이 아니에요.
 
 ## 아직 없는 것
 

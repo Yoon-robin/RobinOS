@@ -13,6 +13,8 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 ```text
 out/robinos-*.iso
 out/SHA256SUMS
+out/SHA256SUMS.sig            (이 PC에 릴리스 열쇠가 있을 때)
+out/packages/robinos-*.pkg.tar.zst(.sig)   (ISO에 넣은 RobinOS 패키지)
 build/logs/mkarchiso-*.log
 ```
 
@@ -37,7 +39,7 @@ build/logs/mkarchiso-*.log
 - 개인 열쇠는 이 PC의 WSL(`archlinux`) 안 `/root/.robinos-signing`(권한 700)에만 있어요. 빌드가 사람 없이 서명하도록 암호를 걸지 않았어요. 저장소에는 절대 넣지 않아요
 - 폐기 인증서: 같은 폴더의 `openpgp-revocs.d/D8EB0C495CBF5B2BBB57EACCFD9B53B8B79E9AAD.rev`. 열쇠가 새면 이걸로 폐기를 알려요
 - 백업: PC가 망가지면 열쇠도 사라져요. 오프라인 USB 같은 곳에 따로 보관해 두는 걸 권해요: `wsl -d archlinux -u root -e env GNUPGHOME=/root/.robinos-signing gpg --armor --export-secret-keys D8EB0C495CBF5B2BBB57EACCFD9B53B8B79E9AAD > robinos-release-secret.asc` (이 파일은 USB에만 두고 PC에서는 지워요)
-- 같은 열쇠로 RobinOS 파일 업데이트(pacman 저장소)에도 서명해요(T-026)
+- 같은 열쇠로 RobinOS 파일 업데이트(pacman 저장소)에도 서명해요(아래 "RobinOS 패키지 저장소")
 
 ## RobinOS 패키지 저장소
 

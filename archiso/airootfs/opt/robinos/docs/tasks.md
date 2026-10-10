@@ -2,7 +2,7 @@
 
 루프가 회차마다 읽고 갱신하는 작업 목록이에요. 절차는 [loop.md](loop.md), 제품 범위와 상태는 [design.md](design.md)에 있어요.
 
-상태: `할 일` → `진행 중` → `검증 대기` → `완료`. 사용자가 해야 하는 일을 기다리거나 같은 실패가 세 번 반복되면 `막힘`으로 두고 다른 작업을 해요. `할 일`이 비면 [loop.md](loop.md)의 "백로그 채우기"로 채워요.
+상태: `할 일` → `진행 중` → `검증 대기` → `완료`. 사용자가 해야 하는 일을 기다리거나 같은 실패가 세 번 반복되면 `막힘`으로 두고 다른 작업을 해요. `보류`는 지금 하지 않기로 한 작업이에요(이유를 적어 둬요). `막힘`, `보류`, `검증 대기`는 작업을 고를 때 건너뛰어요. `할 일`이 비면 [loop.md](loop.md)의 "백로그 채우기"로 채워요.
 
 ## 백그라운드 작업
 
@@ -41,9 +41,10 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| T-145 커밋 (브랜치 `claude/eoseohae-7nleia`) | 설치본이 RobinOS 저장소를 쓰게 | `verify -Installer robinos`(ISO 빌드가 패키지를 넣는지, 설치 테스트의 `pacman -Qo`·저장소 확인), 이어서 `install-test`(archinstall 경로). 통과하면 main에 합치고 푸시 |
+| `9b5d5f3` (브랜치 `claude/eoseohae-7nleia`) | T-145 설치본이 RobinOS 저장소를 쓰게 | `verify -Installer robinos`(ISO 빌드가 패키지를 넣는지, 설치 테스트의 `pacman -Qo`·저장소 확인), 이어서 `install-test`(archinstall 경로) |
+| `1549271`과 그 뒤 문서 커밋 (같은 브랜치) | 방향 고침, 설계 점검, 문서 최종 점검(`install-test.sh`와 `doctor-build.sh` 한 줄씩 포함) | 정적 검증(통과). 앞의 T-145와 함께 기다려요 |
 
-`f6ceb6d`까지 2026-10-10 묶음 69 검증(`verify`: 빌드 3.6분 + 테스트 14.5분)을 마치고 푸시했어요.
+모두 클라우드 세션에서 만들어 작업 브랜치에만 올렸어요. 이 PC에서 브랜치를 받아 검증하고, 통과하면 main에 합치고 푸시해요. main은 `c910682`까지 푸시했어요(묶음 69는 `f6ceb6d`, T-144는 실제 올리기로 확인).
 
 ## 사용자 확인 필요
 
@@ -76,7 +77,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 2026-10-10 방향 결정("나만의 새로운 OS", [design.md](design.md))과 설계 점검으로 순서를 다시 잡았어요. RobinOS다운 경험(설정, 부팅 화면, 정체성)과 실제 PC에서 켜지는 것을 먼저 하고, 윈도우 기능 따라 하기와 학습 기능은 그 뒤예요.
 
-### T-145 설치본이 RobinOS 저장소를 쓰게 (T-026 3단계)
+### T-145 설치본이 RobinOS 저장소를 쓰게 (RobinOS 파일 업데이트 3단계)
 - 상태: 검증 대기 (2026-10-10 클라우드 세션에서 만듦, 이 PC의 VM 검증 전)
 - 할 것: 설치기·post-install이 `[robinos]` 저장소와 열쇠(로컬 서명)를 넣고 RobinOS 파일을 패키지로 설치. 이미 깐 파일에서 옮겨 가는 `robinctl update`(처음 한 번 `--overwrite`)
 - 한 것: `robinctl repo`(상태), `repo setup`(열쇠 지문 고정, `[robinos]` 넣기), `repo adopt`(패키지에 든 경로에만 `--overwrite`). `post-install.sh`가 설치 끝에 둘 다 하고, `robinctl update`는 저장소가 켜졌는데 패키지가 아니면 한 번 옮겨요. `build-iso.sh`가 같은 커밋의 패키지를 라이브 ISO `/opt/robinos/pkg`에 넣어서 설치기는 그걸 써요(개발 ISO에서 저장소의 옛 파일로 돌아가지 않게, design.md). 릴리스 열쇠는 `/opt/robinos/keys`. 설치 테스트에 `pacman -Qo`·`pacman -Qk`·저장소·열쇠·`pacman -Si robinos` 확인, archinstall 경로는 ISO의 `pkg/`도 복사
@@ -102,7 +103,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ### T-151 정체성 문구를 화면에
 - 상태: 할 일
 - 출처: 설계 점검(2026-10-10) "정체성 문구". 문서(design, vision, README, brand)는 고쳤고 화면이 남았어요
-- 할 것: 로고 한 줄 소개("매일 쓰면서 배우는 보안 학습 OS")를 새 방향에 맞게 바꾸고 `assets/brand/build-logo.py`로 SVG 다시 만들기, 로그인·잠금 화면의 "허가받은 환경에서만 쓰는 보안 학습용 시스템이에요"를 RobinOS 인사로 바꾸기(윤리 안내는 학습 센터·랩·motd·ethics.md에 그대로), 환영 마법사 첫 화면 문구 다시 보기
+- 할 것: 로고 한 줄 소개("매일 쓰면서 배우는 보안 학습 OS")를 새 방향에 맞게 바꾸고 `assets/brand/build-logo.py`로 SVG 다시 만들기, 로그인·잠금 화면의 "허가받은 환경에서만 쓰는 보안 학습용 시스템이에요"를 RobinOS 인사로 바꾸기(윤리 안내는 학습 센터·랩·motd·ethics.md에 그대로), 라이브 부팅 메뉴 이름 "RobinOS Security Learning Live"(`scripts/customize-iso-boot.sh`, testing.md), 터미널 인사 "RobinOS 보안 학습 환경"(`desktop/bash/robinos-bashrc.sh`, fastfetch가 없을 때), `config/robinos.toml`의 `purpose = "security-learning"`(읽는 코드가 없는지 먼저 확인), 환영 마법사 첫 화면 문구 다시 보기. README의 학습 센터 스크린샷이 "1 / 40"이라 다시 찍기
 - 완료 기준: 부팅 테스트의 SDDM·잠금 화면 장면, README 로고
 
 ### T-148 보안 부팅을 켠 채로 부팅 (조사)
@@ -122,7 +123,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 출처: 품질 점검(접근성) "화면 읽기 프로그램(Orca)은 아직"
 - 조사(2026-10-08): Orca 51 패키지와 libatspi 2.62를 받아 확인. Orca는 `Atspi.Device.new_full`로 키를 받고, Wayland에서는 `org.freedesktop.a11y.Manager`(Mutter 제공)를 써요. Hyprland 0.56.2 소스에 없어서 Orca 키 명령은 안 되고 포커스 읽기만 돼요. 결론과 이유를 design.md 미결정 사항에 적음. 업스트림 변화 점검 때 Hyprland가 이 인터페이스를 넣었는지 봐요
 
-### T-146 이미 설치한 시스템 안내 (T-026 4단계)
+### T-146 이미 설치한 시스템 안내 (RobinOS 파일 업데이트 4단계)
 - 상태: 보류 (2026-10-10 설계 점검: 깃허브 ISO 내려받기가 v0.1·v0.2 모두 0번이라 옮겨 줄 설치본이 거의 없어요. 실사용자가 생기면 꺼내요)
 - 할 것: v0.2 이하 설치본이 저장소를 켜는 방법을 install.md와 다음 발표문에. 업데이트가 나왔다는 알림(바의 업데이트 점은 pacman을 보니 그대로 동작)
 
@@ -133,8 +134,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 확인할 것: v20.2.0의 문제 이름과 API 응답 모양(설치 테스트 -Lab에서 받아 보기), 랩이 꺼져 있을 때 안내
 - 완료 기준: 채점 테스트(가짜 API 응답으로), 설치 테스트 -Lab에서 한 문제를 실제로 풀고 채점
 
-### T-011 v0.2 후보 (백로그 1~7에서 쓸 만한 일이 없을 때 꺼내요)
-- foot 제목 표시줄(hyprbars), 학습 센터 앱, 네트워크·CTF 랩 (최소화와 `Win+D`는 T-024, Qt 앱 제목 표시줄은 T-029)
+### T-011 다음 버전 후보 (백로그 1~7에서 쓸 만한 일이 없을 때 꺼내요)
+- foot 제목 표시줄(hyprbars). 학습 센터, 네트워크 랩, 입문 CTF는 이미 들어갔어요(최소화와 `Win+D`는 T-024, Qt 앱 제목 표시줄은 T-029)
 
 ## 완료
 
@@ -159,41 +160,3 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
   - T-137 VMware가 아닌 VM의 VMware 도구(`eab6589`): QEMU(WHPX) 테스트 VM은 여전히 `vmware`로 감지되지만, 라이브 단계 vmtoolsd가 `ExecCondition`(vmware-checkvm)으로 건너뛰어 `ConditionResult=no`, 실패한 서비스 없음. 설치본에는 `open-vm-tools`가 깔리지 않고 실패한 서비스 없음. `30-failed-units`에 0 loaded units, networkd inactive, NetworkManager active
 - 2026-10-10 묶음 61 검증(`b1319d5`, verify 빌드 3.6분 + 테스트 14.3분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)
   - T-137 원인 찾기(`b1319d5`): 설치 테스트 로그에서 QEMU(WHPX) 테스트 VM을 systemd가 라이브·설치본 모두 `vmware`로 감지(`ConditionResult=yes`), 설치기가 `open-vm-tools`를 깔고 설치본에서도 vmtoolsd가 실패. 고침은 다음 묶음
-- 2026-10-10 묶음 60 검증(`0d7c3bf`, verify 빌드 3.3분 + 테스트 14.2분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)
-  - T-137 테스트 VM의 vmtoolsd(`0d7c3bf`): `vmport=off`로도 라이브 세션의 vmtoolsd가 그대로 시작해서 원인이 아니었어요. `30-failed-units`는 명령 결과가 나오기 전에 찍혀 `systemd-detect-virt` 값을 못 봤어요. 다음 묶음에서 설치 테스트 로그로 가려요
-- 2026-10-10 묶음 59 검증(`8f96fba`, verify 빌드 3.4분 + 테스트 14.1분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)
-  - T-134 런처 계산·웹 검색(`cce5c5f`): `16-launcher-calc`에 `(12+3)*4` = 60, `17-launcher-web`에 "웹에서 'arch wiki hyprland' 찾기" 항목만
-  - T-135 런처 오른쪽 클릭 메뉴(`27c7d29`): `64-launcher-menu`에 열기·독에 고정·제거, `65-launcher-pin`에 고정 알림과 열린 채인 런처, 그 뒤 `66-app-remove-kept`는 전과 같음. 같은 메뉴 카드를 쓰는 `quick-links`, `desktop-menu`, `dock-menu`도 전과 같음
-  - T-136 라이브 ISO 서비스(`8f96fba`): `30-failed-units`에 `systemd-networkd` inactive, `NetworkManager` active. `29-event-viewer`에서 networkd 다툼, resolved `LinkBusy`, preset `unresolvable alias` 경고가 사라짐. `vmtoolsd`는 여전히 실패해서 따로 봐요(T-137)
-- 2026-10-10 묶음 58 검증(`d335d16`, verify 빌드 3.7분 + 테스트 13.7분, 설치 테스트 다섯 단계 통과, 부팅 테스트 75장)
-  - T-131 바탕 화면 오른쪽 클릭 메뉴(`3fa1f07`): `38-desktop-menu`에 클릭한 자리에서 터미널 열기, 파일 탐색기, 배경화면 바꾸기, 디스플레이 설정, 단축키 보기. `12-quick-links`(같은 메뉴 코드로 바꾼 Win+X)는 전과 같음
-  - T-132 독 오른쪽 클릭 메뉴(`f2dbcba`): `56-dock-menu`에 계산기의 새 창·독에 고정·창 닫기, 아래 화살표·Enter로 `57-dock-pinned`("독에 고정했어요" 알림)
-  - T-133 이벤트 뷰어·rtkit(`d335d16`): `27-event-viewer`의 맨 위와 끝에 `journalctl` 명령, RTKit 오류 줄이 없어짐. 설치 테스트에 `rtkit 0.14-1`. 남은 경고에서 라이브 ISO의 systemd-networkd와 NetworkManager가 같은 장치를 다투는 것, QEMU에서 실패하는 `vmtoolsd`를 찾음 → T-136
-- 2026-10-10 묶음 57 검증(`f6fea5a`, verify 빌드 4.4분 + 테스트 13.6분, 설치 테스트 다섯 단계 통과, 부팅 테스트 73장)
-  - T-128 런처의 윈도우 관리 도구 이름(`4cf800f`): `27-event-viewer`에 런처에서 `eventvwr`로 연 새 터미널과 `journalctl` 경고 기록. 설치 테스트에서 `/usr/bin/lspci`, `/usr/bin/lsusb`. 기록이 길어 맨 위의 명령 줄은 화면 밖으로 밀려서, 명령을 끝에도 보여 주게 다음 묶음에서 고쳐요(T-133)
-  - T-129 문서와 코드 맞추기(`c55db71`): robinctl 테스트에서 CTF 9번 서버가 답한 뒤 시간이 되면 스스로 꺼짐
-  - T-130 Win+Ctrl+D·F4(`f6fea5a`): `35-workspace-new`에 작업 공간 2의 새 터미널, `36-workspace-closed`에 그 터미널이 작업 공간 1로 옮겨짐
-- 2026-10-10 묶음 56 검증(`5544db7`, verify 빌드 3.4분 + 테스트 13.1분, 설치 테스트 다섯 단계 통과, 부팅 테스트 70장)
-  - T-126 알림 센터의 지난 알림 누르면 열기(`5b7e3c9`): `43-notification-opened`에서 알림 센터의 스크린샷 알림(토스트는 이미 사라짐)을 누르니 이미지 뷰어가 그 사진(`20261010-061249.png`)을 열었고, `Ctrl+W`로 닫은 뒤 `44-connect-bluetooth`는 터미널 그대로
-  - T-127 야간 모드 아이콘(`5544db7`): `18-quick-settings`, `66-light-quick-settings`의 아이콘이 해 지는 모양(반원, 빛살, 아래 화살표)
-- 2026-10-10 묶음 55 검증(`030455d`, verify 빌드 3.7분 + 테스트 13.1분, 설치 테스트 다섯 단계 통과, 부팅 테스트 69장)
-  - T-124 닫힌 창의 독 미리보기(`030455d`): `55-launcher-pin`, `56-app-remove-kept`에 빈 미리보기가 없음
-  - T-125 사라지는 창의 키보드(`030455d`): `56-app-remove-kept`의 안내 창이 포커스를 받아 Enter로 닫히고, `57-shell-restarted`에 셸 다시 띄우기 기록이 그대로 보임
-- 2026-10-10 묶음 54 검증(`c082c42`, verify 빌드 3.5분 + 테스트 13.0분, 설치 테스트 다섯 단계 통과, 부팅 테스트 69장)
-  - T-122 런처 앱 제거(`c082c42`): `56-app-remove-kept`에 "gnome-calculator는 RobinOS 기본 구성에 들어 있는 앱이라 지우지 않아요". robinctl 테스트로 지울 수 있는 앱의 pacman 명령
-  - T-123 설치 테스트 UDP 확인(`c082c42`): 라이브 단계 `ss -Huln`에 127.0.0.53%lo:53, 127.0.0.54:53만(5355 없음)
-  - 같이 찾은 것: 닫힌 창의 독 미리보기가 남고(55·56번 장면), 런처에서 바로 뜬 터미널이 포커스를 못 받음 → T-124, T-125
-- 2026-10-10 묶음 53 검증(`8bb934d`, verify 빌드 3.2분 + 테스트 12.9분, 설치 테스트 다섯 단계 통과, 부팅 테스트 68장)
-  - T-121 라이브 ISO의 LLMNR 끄기(`8bb934d`): `26-security-audit`에 "다른 컴퓨터가 접속할 수 있는 서비스가 없어요"(전에는 5355가 있었음). 설치 테스트에 넣은 `ss -Hun`은 듣는 UDP 소켓을 보지 않는 명령이라 다음 묶음에서 `ss -Huln`으로 고쳐요
-- 2026-10-10 묶음 52 검증(`95eee50`, verify 빌드 3.2분 + 테스트 12.9분, 설치 테스트 다섯 단계 통과, 부팅 테스트 68장)
-  - T-120 robinctl audit(`95eee50`): `26-security-audit`에 항목별 결과. 라이브 세션에서 UDP 5355(systemd-resolved의 LLMNR)가 모든 주소에 열린 것을 찾음 → T-121
-- 2026-10-10 묶음 51 검증(`d3cf56f`, verify 빌드 3.2분 + 테스트 12.8분, 설치 테스트 다섯 단계 통과, 부팅 테스트 67장)
-  - T-119 Win+X 빠른 메뉴(`902267a`): `12-quick-links`에 런처 단추 위로 터미널(선택)·작업 관리자·파일 탐색기·설정·네트워크 연결·소리·시스템 점검·이벤트 뷰어·화면 잠금·종료 또는 로그아웃(라이브라 디스크 관리·저장소는 빠짐). robinctl 테스트의 웹 연습 서버 대기도 들어감
-- 2026-10-10 묶음 49 검증(`5854ae4`, verify 빌드 3.2분 + 테스트 12.7분, 설치 테스트 다섯 단계 통과, 부팅 테스트 66장)
-  - T-117 런처 최근 파일(`526d810`, `0e7cc16`, `aec719b`, `5854ae4`): `57-light-launcher`에 "최근 파일 · hello.txt ~/practice". 묶음 46~48에서 안 보인 건 테스트 입력 표에 `%`가 없어 xbel이 안 써진 탓이었어요(묶음 48의 `recent-file-written`으로 찾음)
-- 2026-10-10 묶음 46 검증(`526d810`, verify 빌드 4.4분 + 테스트 12.6분, 설치 테스트 다섯 단계 통과, 부팅 테스트 65장)
-  - T-118 디스크 사용량 분석(`526d810`): 설치 테스트에서 `command -v baobab` → `/usr/bin/baobab`, robinctl 테스트의 힌트 앱 확인
-  - T-117 런처 최근 파일은 `56-light-launcher`에 안 보여서 묶음 47에서 다시 봐요
-- 2026-10-10 묶음 44 검증(`c06c9e9`, verify 빌드 2.9분 + 테스트 12.1분, 설치 테스트 다섯 단계 통과, 부팅 테스트 65장)
-  - T-116 설치 테스트의 명령 확인(`90a0f1d`): 설치본에서 `command -v which ssh-keygen gpg wtype` 통과(`/usr/bin/ssh-keygen`)
-- 2026-10-10 T-115 공개용 ISO 크기: `3db2e72`를 `wsl-build.ps1 build`(xz)로 빌드하니 2,101,510,144바이트(2004MiB). 깃허브 한도 2,147,483,648바이트까지 약 44MiB 남아서 v0.2는 올릴 수 있어요(v0.1은 2,097,446,912바이트). 라이브 ISO에 패키지를 더 넣을 때는 release.md대로 크기부터 봐요

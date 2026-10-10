@@ -68,7 +68,7 @@ fi
 if have_cmd git; then
   ok "git"
 else
-  warn "git is not required for local builds, but useful for versioning"
+  fail "git (the robinos package takes its version from the commit count)"
 fi
 
 if have_cmd qemu-system-x86_64; then

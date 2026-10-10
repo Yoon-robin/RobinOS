@@ -67,16 +67,19 @@ sudo reboot
 
 `rollback`은 지금 시스템(`@`)을 `@.broken-<시각>`으로 이름만 바꿔 남겨 두고, 스냅샷 12번을 복사해 새 `@`를 만들어요. 재부팅하면 그 상태로 켜져요. 마음이 바뀌면 같은 방법으로 다른 스냅샷으로 다시 되돌리면 돼요.
 
-직접 하고 싶다면 `rollback`이 하는 일은 이게 전부예요.
+직접 하고 싶다면 `rollback`이 하는 일의 핵심은 이거예요(원래 시스템으로 켰을 때). 스냅샷으로 부팅한 상태에서는 `/`가 메모리 위의 overlay라 장치 이름이 나오지 않으니 `sudo robinctl snapshot rollback`을 써요.
 
 ```bash
 root_dev="$(findmnt -no SOURCE / | cut -d'[' -f1)"
 sudo mount -o subvolid=5 "${root_dev}" /mnt
-sudo mv /mnt/@ /mnt/@.broken
+sudo mv /mnt/@ "/mnt/@.broken-$(date +%Y%m%d-%H%M%S)"
 sudo btrfs subvolume snapshot /mnt/@snapshots/12/snapshot /mnt/@
+sudo rm -f /mnt/@/var/lib/pacman/db.lck
 sudo umount /mnt
 sudo reboot
 ```
+
+업데이트 전 스냅샷에는 pacman의 잠금 파일(`db.lck`)이 같이 찍혀 있어서 지워요. 그대로 두면 되돌린 뒤 pacman이 돌지 않아요. `/boot`가 EFI 파티션이면(archinstall 기본값) 아래 "EFI 파티션이 `/boot`일 때"처럼 `/mnt/@/.bootbackup`의 커널과 initramfs도 `/boot`로 복사해야 해요. `rollback`은 이것까지 해요.
 
 재부팅해서 잘 되는 걸 확인했으면 남겨 둔 옛 시스템을 지워 공간을 돌려받아요. `@.broken-` 뒤의 이름은 `ls /mnt`로 확인하세요.
 

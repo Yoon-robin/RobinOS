@@ -11,7 +11,8 @@ RobinOS는 GitHub Actions를 쓰지 않고 개발 PC에서 검증해요. 윈도�
 | 셸 QML (`desktop/shell/`) | 정적 검증, 데스크톱 설정 검사, ISO 빌드, 자동 부팅 테스트 |
 | Hyprland 설정, foot, 테마 | 데스크톱 설정 검사, ISO 빌드, 자동 부팅 테스트 |
 | 패키지 목록, `archiso/` | 패키지 검사, ISO 빌드, 자동 부팅 테스트 |
-| 설치와 복구 (`post-install.sh`, `robinctl snapshot`, `robin-install`) | 정적 검증, 설치기 테스트, 설치 테스트 |
+| 설치와 복구 (`post-install.sh`, `robinctl snapshot`, `robin-install`) | 정적 검증, 설치기 테스트, 설치 테스트(셸이나 `robinctl`을 바꿨다면 커밋하고 ISO를 다시 빌드해서, 보통 `verify`) |
+| RobinOS 패키지와 저장소 (`packaging/`, `stage-robinos.sh`, `robinctl repo`) | 정적 검증, `wsl-build.ps1 package`, `verify` |
 
 ## 정적 검증
 
@@ -47,7 +48,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 check
 
 Arch Linux에서는 `scripts/check-desktop.sh`와 `scripts/qmllint.sh`를 직접 실행해요.
 
-`check`는 ISO 빌드가 WSL에서 하는 오버레이 동기화(`scripts/sync-archiso-files.sh`)를 작업 트리의 임시 복사본에서 미리 돌려 보고(`scripts/check-sync.sh`, 2초쯤), VM 없이 도는 빠른 테스트 두 개도 함께 돌려요. `scripts/test-robinctl.sh`는 미션 채점, 입문 CTF(9번 서버가 시간이 되면 스스로 꺼지는 것까지), 보안 프로필, 랩, 윈도우 명령 힌트, 보안 점검(`audit`), 앱 제거, NVIDIA 진단, 업데이트를 보고, `scripts/test-robin-install.py`는 설치기가 그래픽 카드에 맞는 드라이버를 고르는지(가짜 `/sys/bus/pci/devices`로), initramfs 훅, fstab 정리를 봐요. 실제 NVIDIA 카드에서 드라이버가 뜨는지는 실기기에서만 확인할 수 있어요.
+`check`는 ISO 빌드가 WSL에서 하는 오버레이 동기화(`scripts/sync-archiso-files.sh`)를 작업 트리의 임시 복사본에서 미리 돌려 보고(`scripts/check-sync.sh`, 2초쯤), VM 없이 도는 빠른 테스트 두 개도 함께 돌려요. `scripts/test-robinctl.sh`는 미션 채점, 입문 CTF(9번 서버가 시간이 되면 스스로 꺼지는 것까지), 보안 프로필, 랩, 윈도우 명령 힌트, 보안 점검(`audit`), 앱 제거, NVIDIA 진단, 업데이트, RobinOS 저장소(`repo`)를 보고, `scripts/test-robin-install.py`는 설치기가 그래픽 카드에 맞는 드라이버를 고르는지(가짜 `/sys/bus/pci/devices`로), initramfs 훅, fstab 정리를 봐요. 실제 NVIDIA 카드에서 드라이버가 뜨는지는 실기기에서만 확인할 수 있어요.
 
 ## 패키지 검사
 
@@ -77,7 +78,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 4. 런처: 추천 목록, `term` 검색, 윈도우 이름 `notepad` 검색, 수식 `(12+3)*4`의 계산 결과(= 60), 아무것도 맞지 않는 `arch wiki hyprland`의 웹 검색 항목
 5. 설치기 첫 두 단계(테스트 VM에는 빈 64GB 디스크가 있어요)
 6. 빠른 설정, Tab으로 옮긴 키보드 포커스, 마우스로 누른 방해 금지 타일, Wi-Fi 타일 화살표로 연 연결 창(VM에는 Wi-Fi 장치가 없다는 안내), `Super+Alt+D`로 연 달력(그달의 공휴일 목록), `Super+F1`로 연 단축키 보기
-7. 터미널: `ipconfig` 힌트, `robinctl learn show 1`, `robinctl audit` 보안 점검, 런처에서 `eventvwr`로 연 시스템 기록(새 터미널 맨 위와 끝에 `journalctl` 명령, `Alt+F4`로 닫기), VM 종류(`systemd-detect-virt`), 실패한 서비스가 없고 systemd-networkd 없이 NetworkManager만 도는지(`systemctl --failed`, `systemctl is-active`)과 미션 1 풀기(라이트 모드 런처에 "1/40 완료"), 포털이 알려 주는 제목 표시줄 단추 배치(`button-layout`)
+7. 터미널: `ipconfig` 힌트, `robinctl learn show 1`, `robinctl audit` 보안 점검, 런처에서 `eventvwr`로 연 시스템 기록(새 터미널 맨 위와 끝에 `journalctl` 명령, `Alt+F4`로 닫기), VM 종류(`systemd-detect-virt`), 실패한 서비스가 없고 systemd-networkd 없이 NetworkManager만 도는지(`systemctl --failed`, `systemctl is-active`)와 미션 1 풀기(라이트 모드 런처에 "1/45 완료"), 포털이 알려 주는 제목 표시줄 단추 배치(`button-layout`)
 8. 독처럼 최소화하고 되돌리기, `Super+←`(왼쪽 절반), `Super+↑`(최대화), `Super+↓` 두 번(원래 크기), `Super+Ctrl+→`(빈 작업 공간 2)와 `Super+Ctrl+←`, `Super+Ctrl+D`(새 작업 공간)에서 연 터미널을 `Super+Ctrl+F4`로 작업 공간 1에 데려오기, `Super+D` 두 번(바탕 화면 보기와 되돌리기, 그 사이에 빈 바탕 화면을 오른쪽 클릭해 연 메뉴), `Super+Shift+S`(영역 고르기 화면, Esc로 취소), `Shift+Print`로 찍은 전체 화면 알림("폴더 열기" 단추), `Super+V`(복사한 글이 클립보드 기록에), `Super+.`로 `heart`를 찾아 터미널에 넣은 이모지, `notify-send`로 띄운 한국어 알림(오른쪽 아래)과 `Super+N`으로 연 알림 센터, 알림 센터의 스크린샷 알림을 눌러 이미지 뷰어로 연 사진(`Ctrl+W`로 닫기), IPC로 연 블루투스 연결 창(창 밖을 눌러 닫기), 런처에서 윈도우 이름 `mixer`로 연 소리 창과 `Tab`으로 옮긴 장치 줄의 포커스(VM 사운드 카드가 출력·입력 장치로, `pw-play`가 앱별 음량에), 바의 트레이 아이콘(ISO에 든 테스트용 `scripts/sni-test-item.sh`를 띄우고, 아이콘을 눌러 앱에 닿는지), 바의 상태 아이콘 위 휠로 줄인 음량(음량 표시), 독의 터미널 위에 마우스를 올려 뜬 창 미리보기, Wallpaper 포털로 바꾼 배경화면과 런처의 "기본 배경화면으로", 독에서 계산기를 오른쪽 클릭해 연 메뉴(새 창, 독에 고정, 창 닫기)와 아래 화살표·`Enter`로 고정하기, `Alt`를 누른 채 `Tab`을 눌러 연 창 전환 화면(터미널과 계산기 미리보기)과 `Alt`를 놓아 바뀐 창, `Super+Tab` 작업 보기, 런처에서 오른쪽 클릭으로 연 메뉴(열기, 독에 고정, 제거)로 고정하기, 런처에서 계산기에 `Shift+Delete`(기본 앱이라 지우지 않는다는 안내)
 9. 셸을 끄면 `robinos-shell`이 다시 띄우는지
 10. 라이트 모드(셸 IPC `setDark false`): 터미널(`robinctl learn` 목록), 런처(최근에 연 앱, recently-used.xbel에 적은 최근 파일)와 파일 찾기(`notes`), Alt+F4로 닫았다가 IPC로 다시 연 학습 센터(미션 1에 체크, 미션 2 줄을 눌러 터미널에 열기, 휠로 내린 목록 끝의 입문 CTF 10문제, 닫기 단추), 빠른 설정, 화면 배율 125%(저장된 파일 내용과 함께), 야간 모드(VM 그래픽에는 색 변환이 없어 `hyprsunset`이 켜지는지만 봐요). 찍은 뒤 다크로 돌려요
