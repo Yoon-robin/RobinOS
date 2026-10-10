@@ -19,6 +19,8 @@
 *.md text eol=lf
 # Armored keys and signatures, the same bytes on every checkout
 *.asc text eol=lf
+# The robinos package's build files are read on Arch
+packaging/** text eol=lf
 
 desktop/** text eol=lf
 archiso/airootfs/usr/share/robinos/** text eol=lf

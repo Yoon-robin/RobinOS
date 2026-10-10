@@ -46,6 +46,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 ## 사용자 확인 필요
 
+- **라이선스**: 저장소에 라이선스 파일이 없어서 RobinOS 패키지에 `license=(unknown)`으로 적었어요. 공개 프로젝트라 정해 두는 게 좋아요(예: MIT, GPL-3.0). 정해 주면 `LICENSE`와 패키지에 넣어요
 - **실기기 라이브 부팅**: USB로 실제 PC에서 ISO를 부팅해 봐야 해요. 사용자만 할 수 있어요. NVIDIA 카드(GTX 16, RTX 20 이후)가 있는 PC라면 설치한 뒤 데스크톱이 뜨는지, `lsmod | grep nvidia`에 나오는지도 봐 주세요(T-030). 노트북이라면 전원을 뽑고 배터리가 10%가 될 때 "배터리가 10% 남았어요" 알림이 뜨는지(T-070), 런처의 "Steam 설치하기"로 받은 Steam에서 게임이 켜지는지(T-066)도 봐 주세요. 빠른 설정의 "야간 모드"를 켜면 화면이 따뜻한 색이 되는지도 봐 주세요(T-076, VM에서는 안 돼요). (`막힘`)
 - **실제 윈도우 PC에서 "윈도우 옆에 설치"**: VM의 가짜 윈도우 디스크로는 파티션과 부팅 파일이 그대로인 것까지 확인했어요(T-006). 진짜 윈도우가 GRUB 메뉴에 나오는지, BitLocker 복구 키를 묻는지는 실제 PC에서만 볼 수 있어요. 백업해 둔 PC나 남는 디스크로 해 주세요. (`막힘`)
 - **집 PC의 VMware 서비스 켜기(T-025)**: 집 PC(Blitz)에서 VM을 만들어 켜려 했더니 VMware의 윈도우 서비스(Authorization, DHCP, NAT, USB Arbitration)가 모두 "사용 안 함"이라 VM이 켜지지 않아요. 관리자 권한이 필요해서 직접 하지 않아요. 쓰려면 관리자 PowerShell에서 `'VMAuthdService','VMnetDHCP','VMware NAT Service','VMUSBArbService' | ForEach-Object { Set-Service -Name $_ -StartupType Manual }; Start-Service VMAuthdService,VMnetDHCP,'VMware NAT Service'` (2026-10-10 처음 알려 드린 명령은 `Set-Service`에 이름을 한꺼번에 넘겨서 윈도우 PowerShell 5.1에서 실패했어요). VM(`문서\Virtual Machines\RobinOS`)과 스크립트(`build\vmware\vmware-test.py`)는 준비돼 있어요 (`막힘`)
@@ -77,7 +78,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 조사(2026-10-08): Orca 51 패키지와 libatspi 2.62를 받아 확인. Orca는 `Atspi.Device.new_full`로 키를 받고, Wayland에서는 `org.freedesktop.a11y.Manager`(Mutter 제공)를 써요. Hyprland 0.56.2 소스에 없어서 Orca 키 명령은 안 되고 포커스 읽기만 돼요. 결론과 이유를 design.md 미결정 사항에 적음. 업스트림 변화 점검 때 Hyprland가 이 인터페이스를 넣었는지 봐요
 
 ### T-143 RobinOS 파일을 pacman 패키지로 (T-026 1단계)
-- 상태: 할 일
+- 상태: 진행 중 (묶음 69)
+- 한 것: RobinOS 파일을 놓는 일을 `scripts/stage-robinos.sh --root`로 모았어요. ISO 오버레이 동기화(`sync-archiso-files.sh`)와 패키지가 함께 써요(옛 동기화와 오버레이가 파일 하나까지 같은 것을 WSL에서 비교). `packaging/robinos/PKGBUILD`(버전 = config 버전 + 커밋 수, `/etc/robinos/config.toml`만 backup, 설치 후 `dconf update`와 os-release), `scripts/build-package.sh`(WSL에서 robinbuild 사용자로 makepkg, 파일 목록 비교, robinctl 실행, 서명과 확인), `wsl-build.ps1 package`. 라이브 ISO의 `/etc/robinos/config.toml`은 라이브용이라 공통 목록에서 뺐어요
 - 출처: T-026, design.md "RobinOS 파일 업데이트"
 - 할 것: `packaging/robinos/PKGBUILD`(이름 `robinos`, 버전은 `config/robinos.toml`). `package()`가 `scripts/install-desktop.sh --root "$pkgdir"`, `robinctl`, `/etc/robinos/config.toml`, 브랜딩, `/opt/robinos`(robinctl이 읽는 패키지 목록과 스크립트)를 넣어요. `/etc` 파일은 `backup`. WSL에서 일반 사용자로 `makepkg` 하는 `scripts/build-package.sh`, 패키지 서명
 - 완료 기준: 패키지의 파일 목록이 `install-desktop.sh --root`로 깐 목록과 같다는 검사, 빈 컨테이너(또는 chroot)에 설치해 `robinctl help`가 돎

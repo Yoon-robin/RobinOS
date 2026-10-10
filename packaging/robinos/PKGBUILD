@@ -1,0 +1,32 @@
+# RobinOS's own files as a pacman package, so `robinctl update` can bring fixes to
+# installed systems (docs/design.md "RobinOS 파일 업데이트"). Built from this
+# repository by scripts/build-package.sh, not from a downloaded source.
+
+pkgname=robinos
+pkgver=0
+pkgrel=1
+pkgdesc="RobinOS desktop shell, robinctl, learning missions and branding"
+arch=(any)
+url="https://github.com/Yoon-robin/RobinOS"
+# The project has no license file yet (docs/tasks.md "사용자 확인 필요")
+license=(unknown)
+depends=(bash python)
+# The user's settings; the desktop defaults under /etc/xdg follow each update
+backup=(etc/robinos/config.toml)
+install=robinos.install
+options=(!strip !debug)
+
+_repo="$(cd -- "${startdir}/../.." && pwd)"
+
+# 0.3.0.r1234: the version in config/robinos.toml and the commit count, so every
+# commit makes a newer package
+pkgver() {
+  local base
+  base="$(sed -n 's/^version = "\([0-9.]*\).*/\1/p' "${_repo}/config/robinos.toml")"
+  printf '%s.r%s' "${base}" "$(git -C "${_repo}" rev-list --count HEAD)"
+}
+
+package() {
+  "${_repo}/scripts/stage-robinos.sh" --root "${pkgdir}"
+  install -Dm644 "${_repo}/config/robinos.toml" "${pkgdir}/etc/robinos/config.toml"
+}

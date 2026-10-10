@@ -1,0 +1,9 @@
+# What scripts/post-install.sh runs after copying the files, for the package
+post_install() {
+  dconf update 2>/dev/null || true
+  /usr/share/robinos/bin/robinos-os-release 2>/dev/null || true
+}
+
+post_upgrade() {
+  post_install
+}

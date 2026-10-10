@@ -20,7 +20,7 @@
 param(
     [Parameter(Position = 0)]
     # verify: a fast test ISO (zstd), then the boot and the install test side by side
-    [ValidateSet("setup", "check", "status", "build", "boot-test", "install-test", "verify", "shell")]
+    [ValidateSet("setup", "check", "status", "build", "package", "boot-test", "install-test", "verify", "shell")]
     [string]$Task = "build",
     # install-test: archinstall (docs/install.md method 2), robinos (installer/robin-install on
     # the whole disk) or windows (robin-install next to a stand-in Windows disk)
@@ -228,7 +228,7 @@ if ($Task -eq "setup") {
 set -e
 pacman-key --init >/dev/null 2>&1 || true
 pacman-key --populate archlinux >/dev/null 2>&1 || true
-pacman -Syu --noconfirm --needed archiso git grub sudo qemu-full edk2-ovmf libarchive python openssl rsync quickshell qt6-declarative lua hyprland
+pacman -Syu --noconfirm --needed archiso git grub sudo qemu-full edk2-ovmf libarchive python openssl rsync quickshell qt6-declarative lua hyprland fakeroot
 echo 'WSL 빌드 환경이 준비됐어요.'
 "@
     exit 0
@@ -273,6 +273,10 @@ git clean -qfd
 switch ($Task) {
     "build" {
         Invoke-Wsl "cd /root/RobinOS && scripts/build-iso.sh"
+    }
+    "package" {
+        # The robinos pacman package (packaging/robinos), signed: out/packages
+        Invoke-Wsl "cd /root/RobinOS && scripts/build-package.sh"
     }
     "boot-test" {
         if ($Accel -eq "auto") { $Accel = if (Test-Path $Qemu) { "whpx" } else { "tcg" } }
