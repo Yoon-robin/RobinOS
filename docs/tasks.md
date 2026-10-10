@@ -40,9 +40,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| 묶음 64 | T-139 라이브 ISO 부팅이 NTP를 기다리지 않게 | `verify -Installer robinos` (부팅 테스트 시리얼 로그의 `Startup finished`) |
+| (없음) | | |
 
-`a31a8f8`까지 2026-10-10 묶음 63 검증(`verify`: 빌드 3.4분 + 테스트 14.4분)을 마치고 푸시했어요.
+`f96dd13`까지 2026-10-10 묶음 64 검증(`verify`: 빌드 3.5분 + 테스트 14.4분)을 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -67,12 +67,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 남은 것 (VMware가 있는 PC: robin PC, 집 PC(Blitz, VMware Workstation 26.0)): 최종 ISO로 VMware VM에 다시 설치(`vmrun` 게스트 명령, 계획은 디스크 `/dev/nvme0n1` 전체), 로그인 뒤 셸·해상도 확인. 집 PC에는 VM이 아직 없어서 새로 만들어요(`build\vmware\guest-*.sh`는 robin PC에만 있어요). VMware가 없는 PC의 루프는 이 작업을 건너뛰어요
 
 ## 할 일 (위에서부터)
-
-### T-139 라이브 ISO 부팅이 NTP를 기다리지 않게
-- 상태: 검증 대기 (묶음 64)
-- 출처: 백로그 채우기 6 (품질 점검: 성능). 묶음 63 부팅 테스트 시리얼 로그에서 부팅 끝이 83.7초(묶음 38은 13.9초). 데스크톱은 11초에 뜨지만, releng가 켜 둔 `systemd-time-wait-sync`가 시계 동기화를 78초까지 기다렸고 pacman-init(열쇠 준비), multi-user.target, 전원 모드 데몬이 그 뒤로 밀렸어요. timesyncd가 IPv6 NTP 서버마다 10초씩 기다린 뒤에야 IPv4 서버로 맞췄어요(QEMU NAT에는 IPv6 바깥 연결이 없어요. IPv6가 안 되는 집 네트워크도 같아요)
-- 한 것: `scripts/prepare-archiso.sh`가 releng의 `sysinit.target.wants/systemd-time-wait-sync.service` 링크를 빼요. 시계 동기화는 그대로 하고 부팅만 기다리지 않아요
-- 완료 기준: 부팅 테스트 시리얼 로그의 `Startup finished`가 20초 안쪽, `Wait Until Kernel Time Synchronized`가 없음
 
 ### T-104 2029년 공휴일 넣기
 - 상태: 할 일 (2028년 가을에 해요)
@@ -105,6 +99,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 최근 것이 위에 있어요. 더 오래된 기록은 [done.md](done.md)에 있어요.
 
+- 2026-10-10 묶음 64 검증(`f96dd13`, verify 빌드 3.5분 + 테스트 14.4분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)
+  - T-139 라이브 ISO 부팅이 NTP를 기다리지 않게(`f96dd13`): 시리얼 로그 `Startup finished ... = 13.993s`(전에는 83.7초), pacman 열쇠 준비 13.8초, 전원 모드 데몬 14.0초, 시계 동기화 대기 없음. `verify-boot.log`에 `Startup finished` 줄이 남음
 - 2026-10-10 묶음 63 검증(`a31a8f8`, verify 빌드 3.4분 + 테스트 14.4분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)
   - T-138 텍스트 다루기 미션 41~45(`a31a8f8`): robinctl 테스트가 다섯 미션을 틀린 답과 맞는 답으로 채점(목록에 "텍스트 다루기", 45/45). `72-light-learn-center`에 1/45, `74-learn-center-ctf`는 휠 60번으로 목록 끝의 입문 CTF까지. 설치 테스트에 `/usr/bin/diff`
 - 2026-10-10 묶음 62 검증(`eab6589`, verify 빌드 3.4분 + 테스트 14.2분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)
