@@ -417,6 +417,9 @@ said "list shows the text group" "텍스트 다루기"
 
 # Text: grep -c, sort | uniq -c, awk, sed and diff on ~/practice/text
 check "41 fails before the files exist" fail learn check 41
+said "it says to show the mission first" "robinctl learn show 41"
+check "45 fails before the files exist" fail learn check 45
+said "45 says so too" "연습 파일이 아직 없어요"
 check "show 41 makes ~/practice/text" 0 learn show 41
 # Internet addresses in the made-up log come from the documentation ranges only
 if in_home "awk '{print \$1}' practice/text/access.log | grep -Evq '^(192\.0\.2|198\.51\.100|203\.0\.113)\.'"; then

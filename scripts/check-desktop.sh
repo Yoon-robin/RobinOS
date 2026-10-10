@@ -138,6 +138,33 @@ else
   skip "python3 not found"
 fi
 
+# A JS library used without its import ("Keyboard is not defined") only fails when
+# that code runs, and qmllint's unqualified warnings are filtered (scripts/qmllint.sh):
+# every file that says Keyboard. must import "keys.js" as Keyboard (2026-10-10)
+printf 'Shell JS imports\n'
+if command -v python3 >/dev/null 2>&1; then
+  if python3 - "${ROOT_DIR}/desktop/shell" <<'PY'
+import glob, os, re, sys
+files = sorted(glob.glob(os.path.join(sys.argv[1], "*.qml")))
+aliases = set()
+for path in files:
+    aliases.update(re.findall(r'^import\s+"[^"]+\.js"\s+as\s+(\w+)', open(path, encoding="utf-8").read(), re.M))
+bad = []
+for path in files:
+    text = open(path, encoding="utf-8").read()
+    imported = set(re.findall(r'^import\s+"[^"]+\.js"\s+as\s+(\w+)', text, re.M))
+    code = re.sub(r"//[^\n]*", "", text)
+    for alias in sorted(aliases - imported):
+        if re.search(r"\b%s\." % alias, code):
+            bad.append("%s uses %s without importing it" % (os.path.basename(path), alias))
+if bad:
+    sys.exit("\n".join(bad))
+PY
+  then ok "desktop/shell/*.qml"; else fail "desktop/shell/*.qml"; fi
+else
+  skip "python3 not found"
+fi
+
 # The launcher's calculator (calc.js) with the QML engine that runs it
 printf 'Launcher calculator\n'
 qml_bin="$(command -v qml6 || command -v qml || true)"
@@ -154,7 +181,9 @@ QtObject {
             ["2+3", "5"], ["2 + 3 * 4", "14"], ["(2+3)*4", "20"], ["2^10", "1024"],
             ["10/4", "2.5"], ["0.1+0.2", "0.3"], ["-3+5", "2"], ["2×3÷4", "1.5"],
             ["7-2-1", "4"], ["2^3^2", "512"], ["3", null], ["(3)", null], ["-5", null],
-            ["1/0", null], ["2+", null], ["(1+2", null], ["abc", null], ["2+x", null]
+            ["1/0", null], ["2+", null], ["(1+2", null], ["abc", null], ["2+x", null],
+            ["-2^2", "-4"], ["2^-1", "0.5"], ["(-2)^2", "4"], ["1 2+3", null], ["10 - 3", "7"],
+            [" (1+2) * 3 ", "9"], ["2026-10-10", null], ["010-1234-5678", null], ["10-3-2", "5"]
         ];
         let bad = 0;
         for (const [text, want] of cases) {

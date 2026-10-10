@@ -635,7 +635,8 @@ PanelWindow {
         }
 
         if (item.kind === "web") {
-            Quickshell.execDetached(["firefox", "--search", item.query]);
+            // A term starting with "-" would read as a Firefox option (-P opens profiles)
+            Quickshell.execDetached(["firefox", "--search", item.query.startsWith("-") ? " " + item.query : item.query]);
             return;
         }
 

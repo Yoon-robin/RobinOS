@@ -11,7 +11,21 @@ RobinOS는 라이브 USB로 부팅해서 설치해요. 방법은 두 가지예�
 - **40GB 이상의 디스크 공간**
 - **인터넷**: 설치하면서 최신 패키지를 내려받아요. 유선이 가장 편하고, Wi-Fi는 빠른 설정(`Win+S`)에서 연결해요.
 - **백업**: 디스크 전체에 설치하면 그 디스크의 파일이 모두 지워져요. 윈도우 옆에 설치하더라도 중요한 파일은 먼저 백업하세요.
-- **라이브 USB**: [build-iso.md](build-iso.md)로 만든 ISO를 Rufus(DD 이미지 모드)나 Ventoy로 USB에 담아요.
+- **라이브 USB**: 깃허브 릴리스에서 내려받거나 [build-iso.md](build-iso.md)로 만든 ISO를 Rufus(DD 이미지 모드)나 Ventoy로 USB에 담아요.
+
+### 내려받은 ISO 확인하기
+
+내려받는 중에 망가졌거나 누가 바꿔치기하지 않았는지 확인해요(학습 미션 39와 같은 방법이에요). 릴리스에는 ISO와 함께 `SHA256SUMS`(체크섬), `SHA256SUMS.sig`(서명), `robinos-release.asc`(공개 열쇠)가 있어요.
+
+1. 체크섬: 윈도우 PowerShell에서 `Get-FileHash robinos-*.iso -Algorithm SHA256`의 값이 `SHA256SUMS`의 값과 같은지 봐요. 리눅스에서는 `sha256sum -c SHA256SUMS`예요.
+2. 서명: `SHA256SUMS`를 RobinOS 열쇠로 서명했어요. 윈도우는 Gpg4win을 깔고, 리눅스는 그대로 아래를 실행해요. "Good signature"가 나오고 지문이 아래와 같아야 해요.
+
+```text
+gpg --import robinos-release.asc
+gpg --verify SHA256SUMS.sig SHA256SUMS
+```
+
+RobinOS 릴리스 열쇠 지문: `D8EB 0C49 5CBF 5B2B BB57 EACC FD9B 53B8 B79E 9AAD` (`RobinOS Release Signing`, 2029-10-09까지). 저장소의 [keys/robinos-release.asc](../keys/robinos-release.asc)와 같은 열쇠예요.
 
 ## 방법 1: RobinOS 설치기
 

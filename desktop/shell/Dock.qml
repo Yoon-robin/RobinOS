@@ -375,9 +375,14 @@ PanelWindow {
                             dock.activateOrLaunch(modelData.appIds, modelData.command);
                     }
                     // RobinOS's own apps stay pinned; the installer runs once
-                    onRightClicked: dock.openAppMenu(pinnedItem, label, modelData.appIds, {
-                        launch: modelData.key === "installer" ? null : () => Quickshell.execDetached(modelData.command)
-                    })
+                    // The values are taken now: a rescan of the desktop entries can
+                    // make this button again while its menu is open
+                    onRightClicked: {
+                        const command = modelData.command;
+                        dock.openAppMenu(pinnedItem, label, modelData.appIds, {
+                            launch: modelData.key === "installer" ? null : () => Quickshell.execDetached(command)
+                        });
+                    }
                     onHoveredChanged: {
                         dock.showTip(pinnedItem, hovered ? label : "");
                         dock.hoverApp(pinnedItem, modelData.appIds, hovered);
@@ -404,10 +409,15 @@ PanelWindow {
                         else
                             dock.activateOrLaunch(modelData.appIds, null);
                     }
-                    onRightClicked: dock.openAppMenu(userPinItem, label, modelData.appIds, {
-                        launch: () => modelData.entry.execute(),
-                        unpin: () => ShellState.unpinFromDock(modelData.id, modelData.label)
-                    })
+                    onRightClicked: {
+                        const entry = modelData.entry;
+                        const id = modelData.id;
+                        const name = modelData.label;
+                        dock.openAppMenu(userPinItem, label, modelData.appIds, {
+                            launch: () => entry.execute(),
+                            unpin: () => ShellState.unpinFromDock(id, name)
+                        });
+                    }
                     onHoveredChanged: {
                         dock.showTip(userPinItem, hovered ? label : "");
                         dock.hoverApp(userPinItem, modelData.appIds, hovered);

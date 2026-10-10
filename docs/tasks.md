@@ -48,10 +48,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 - **실기기 라이브 부팅**: USB로 실제 PC에서 ISO를 부팅해 봐야 해요. 사용자만 할 수 있어요. NVIDIA 카드(GTX 16, RTX 20 이후)가 있는 PC라면 설치한 뒤 데스크톱이 뜨는지, `lsmod | grep nvidia`에 나오는지도 봐 주세요(T-030). 노트북이라면 전원을 뽑고 배터리가 10%가 될 때 "배터리가 10% 남았어요" 알림이 뜨는지(T-070), 런처의 "Steam 설치하기"로 받은 Steam에서 게임이 켜지는지(T-066)도 봐 주세요. 빠른 설정의 "야간 모드"를 켜면 화면이 따뜻한 색이 되는지도 봐 주세요(T-076, VM에서는 안 돼요). (`막힘`)
 - **실제 윈도우 PC에서 "윈도우 옆에 설치"**: VM의 가짜 윈도우 디스크로는 파티션과 부팅 파일이 그대로인 것까지 확인했어요(T-006). 진짜 윈도우가 GRUB 메뉴에 나오는지, BitLocker 복구 키를 묻는지는 실제 PC에서만 볼 수 있어요. 백업해 둔 PC나 남는 디스크로 해 주세요. (`막힘`)
-- **집 PC의 VMware 서비스 켜기(T-025)**: 집 PC(Blitz)에서 VM을 만들어 켜려 했더니 VMware의 윈도우 서비스(Authorization, DHCP, NAT, USB Arbitration)가 모두 "사용 안 함"이라 VM이 켜지지 않아요. 관리자 권한이 필요해서 직접 하지 않아요. 쓰려면 관리자 PowerShell에서 `Set-Service VMAuthdService,VMnetDHCP,'VMware NAT Service',VMUSBArbService -StartupType Manual`, `Start-Service VMAuthdService,VMnetDHCP,'VMware NAT Service'`. VM(`문서\Virtual Machines\RobinOS`)과 스크립트(`build\vmware\vmware-test.py`)는 준비돼 있어요 (`막힘`)
-- **작업 브랜치 `work/t025-vmware` 지우기**: 내용은 모두 main에 들어갔어요. GitHub에서 지워도 되는지 알려 주세요
-- **RobinOS 파일 업데이트 배포 방식(T-026)**: 2026-10-08 사용자가 중앙 서버가 필요한지 묻고 추천을 원함. 추천: 따로 서버 없이 깃허브 릴리스를 pacman 저장소로 쓰고, RobinOS 파일을 pacman 패키지로 만들어 서명해요. `robinctl update` 한 번에 함께 올라가고 snap-pac 스냅샷도 그대로 생겨요. 서명 열쇠(GPG)를 이 PC에 만들어야 해서 사용자 답을 기다려요
-- **v0.2 프리뷰 공개**: v0.1 뒤로 오피스·앱 스토어·프린터·NVIDIA·업데이트 알림이 들어갔고, 윈도우처럼 쓰는 기능(Win+V, Alt+Tab 미리보기, Win+Tab, Win+←/→, Win+., 트레이, 독 미리보기, 연결·소리 창, 알림 센터, 달력 공휴일)과 학습 미션 40개, 입문 CTF 10문제, 학습 센터가 생겼어요. 발표문 초안은 `docs/release-notes-v0.2.md`, README 앞에 화면 사진도 있어요. 2026-10-10에 xz ISO가 2,101,510,144바이트로 깃허브 한도 안인 것을 확인했어요. 공개하기로 하면 릴리스용 xz ISO를 빌드하고 부팅 테스트한 뒤 깃허브 릴리스로 올려요(태그 `v0.2.0`, 프리릴리스)
+- **집 PC의 VMware 서비스 켜기(T-025)**: 집 PC(Blitz)에서 VM을 만들어 켜려 했더니 VMware의 윈도우 서비스(Authorization, DHCP, NAT, USB Arbitration)가 모두 "사용 안 함"이라 VM이 켜지지 않아요. 관리자 권한이 필요해서 직접 하지 않아요. 쓰려면 관리자 PowerShell에서 `'VMAuthdService','VMnetDHCP','VMware NAT Service','VMUSBArbService' | ForEach-Object { Set-Service -Name $_ -StartupType Manual }; Start-Service VMAuthdService,VMnetDHCP,'VMware NAT Service'` (2026-10-10 처음 알려 드린 명령은 `Set-Service`에 이름을 한꺼번에 넘겨서 윈도우 PowerShell 5.1에서 실패했어요). VM(`문서\Virtual Machines\RobinOS`)과 스크립트(`build\vmware\vmware-test.py`)는 준비돼 있어요 (`막힘`)
 
 ## 진행 중
 
@@ -68,6 +65,18 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 ## 할 일 (위에서부터)
 
+### T-141 코드 검토 (2026-10-10 오전)
+- 상태: 진행 중 (묶음 66)
+- 출처: 백로그 채우기 6 (품질 점검: 코드 검토). 오늘 들어간 코드(알림 열기, 메뉴, 런처, 작업 공간, 텍스트 미션)를 검토 에이전트와 함께 다시 봤어요
+- 고친 것: ① 알림 센터에서 Tab 다음 Enter가 안 됨(`keys.js` import 빠짐) → import, 그리고 이런 실수를 찾는 검사(`check-desktop.sh`의 Shell JS imports, 옛 코드에서 잡는 것 확인). ② `robinctl learn check 41`이 연습 파일 없이 안내 없이 끝남(`set -e`) → `|| true`와 안내 문구 테스트. ③ 계산기 `-2^2`가 4 → -4(부호는 ^보다 느슨하게), `1 2+3`이 15 → 계산 안 함, `2026-10-10`·`010-1234-5678`은 계산하지 않음(시험 9가지 더). ④ 사라진 알림이 여전히 누를 수 있게 보임 → 닫힐 때 기록에서 동작을 지움, 열 것이 없으면 센터를 닫지 않음. ⑤ 새 알림이 오면 알림 센터의 포커스가 빠짐 → 카드로 되돌림. ⑥ 바탕 화면·독 메뉴가 다른 창을 열어도 남음 → `closeMenus()`. ⑦ 독 메뉴의 동작이 다시 만들어진 버튼을 참조할 수 있음 → 열 때 값을 잡아 둠. ⑧ 작업 공간을 닫으면 그곳에서 최소화한 창이 돌아갈 곳을 잃음 → 옮긴 작업 공간으로. ⑨ 웹 검색어가 `-`로 시작하면 Firefox 옵션으로 읽힘 → 앞에 빈칸
+- 완료 기준: 묶음 66 검증(정적 검사, robinctl 테스트, 부팅·설치 테스트)
+
+### T-142 v0.2 프리뷰 공개
+- 상태: 진행 중
+- 출처: 2026-10-10 사용자 결정("공개해")
+- 할 것: 묶음 66(T-141 고침, 서명)이 검증을 통과하면 그 커밋으로 릴리스 ISO(`wsl-build.ps1 build`, xz) 빌드 → 크기 확인(2GiB 안) → 부팅 테스트 → 깃허브 프리릴리스 `v0.2.0`(ISO, `SHA256SUMS`, `SHA256SUMS.sig`, 공개 열쇠, 발표문 `docs/release-notes-v0.2.md`)
+- 같이 한 것: 릴리스 서명 열쇠를 만들었어요(2026-10-10 사용자 결정 "만들어", 지문 `D8EB 0C49 5CBF 5B2B BB57 EACC FD9B 53B8 B79E 9AAD`, `docs/release.md` "서명"). `build-iso.sh`가 `SHA256SUMS.sig`를 만들어요. 깃허브의 `work/t025-vmware` 브랜치는 지웠어요("지워")
+
 ### T-104 2029년 공휴일 넣기
 - 상태: 할 일 (2028년 가을에 해요)
 - 출처: T-103. `desktop/shell/holidays.js`의 음력 공휴일·대체공휴일 표가 2028년까지예요
@@ -80,7 +89,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 조사(2026-10-08): Orca 51 패키지와 libatspi 2.62를 받아 확인. Orca는 `Atspi.Device.new_full`로 키를 받고, Wayland에서는 `org.freedesktop.a11y.Manager`(Mutter 제공)를 써요. Hyprland 0.56.2 소스에 없어서 Orca 키 명령은 안 되고 포커스 읽기만 돼요. 결론과 이유를 design.md 미결정 사항에 적음. 업스트림 변화 점검 때 Hyprland가 이 인터페이스를 넣었는지 봐요
 
 ### T-026 RobinOS 자체 파일 업데이트
-- 상태: 할 일 (배포 방식은 사용자 결정, "사용자 확인 필요" 참고)
+- 상태: 할 일 (2026-10-10 사용자 결정: 서명 열쇠를 만들고 추천 방식으로. 열쇠는 만들었어요, T-142)
 - 출처: T-025. `robinctl update`는 `pacman -Syu`만 해요. 셸, `robinctl`, 설정 같은 RobinOS 파일은 설치할 때의 ISO 버전에 머물러서, 셸 버그를 고쳐도 설치한 사람에게 갈 길이 없어요
 - 후보: ① RobinOS 파일을 pacman 패키지(`robinos-desktop` 등)로 만들고 자체 저장소에서 서명해 배포, ② `/opt/robinos`를 GitHub 릴리스 태그로 받아 서명이나 체크섬을 확인한 뒤 `install-desktop.sh`로 다시 설치. ①은 pacman과 스냅샷(snap-pac)에 자연스럽게 묶이고, ②는 빨리 만들 수 있어요
 - 완료 기준: 설치 테스트에서 옛 버전을 설치한 뒤 `robinctl update`로 새 버전 파일이 들어오고, 업데이트 전 스냅샷이 생김

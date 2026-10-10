@@ -2,17 +2,24 @@
 
 // The launcher's calculator, like typing "12*3" into the Windows Start menu.
 // A small recursive-descent parser (no eval): numbers, + - * / ^, × ÷, brackets.
+// A sign binds looser than ^, as in maths: -2^2 is -4.
 //
 //   expr   := term (("+" | "-") term)*
-//   term   := power (("*" | "/") power)*
-//   power  := unary ("^" power)?
-//   unary  := ("+" | "-") unary | number | "(" expr ")"
+//   term   := unary (("*" | "/") unary)*
+//   unary  := ("+" | "-") unary | power
+//   power  := primary ("^" unary)?
+//   primary := number | "(" expr ")"
 
 function tokens(text) {
     var out = [];
-    var s = text.replace(/×/g, "*").replace(/÷/g, "/").replace(/\s+/g, "");
+    var s = text.replace(/×/g, "*").replace(/÷/g, "/");
     var i = 0;
     while (i < s.length) {
+        // Spaces only separate: "1 2+3" is two numbers side by side, not 12+3
+        if (/\s/.test(s[i])) {
+            i++;
+            continue;
+        }
         var m = /^(\d+(\.\d*)?|\.\d+)/.exec(s.slice(i));
         if (m) {
             out.push(parseFloat(m[0]));
@@ -27,9 +34,12 @@ function tokens(text) {
     return out;
 }
 
-// The value of a math expression, or null when the text isn't one (a plain number
-// isn't either: there is nothing to work out)
+// The value of a math expression, or null when the text isn't one: a plain number,
+// or a date or phone number like 2026-10-10 and 010-1234-5678 (people search for
+// those, so the launcher keeps them for files)
 function evaluate(text) {
+    if (/^\s*\d{2,}(-\d{2,}){2,}\s*$/.test(text))
+        return null;
     var list = tokens(text);
     if (!list || list.length < 3 || !list.some(function (t) { return typeof t === "string" && t !== "(" && t !== ")"; }))
         return null;
@@ -50,30 +60,38 @@ function evaluate(text) {
     }
 
     function term() {
-        var value = power();
+        var value = unary();
         while (peek() === "*" || peek() === "/") {
             var op = list[pos++];
-            var right = power();
+            var right = unary();
             value = op === "*" ? value * right : value / right;
         }
         return value;
     }
 
+    function unary() {
+        if (peek() === "-") {
+            pos++;
+            return -unary();
+        }
+        if (peek() === "+") {
+            pos++;
+            return unary();
+        }
+        return power();
+    }
+
     function power() {
-        var base = unary();
+        var base = primary();
         if (peek() === "^") {
             pos++;
-            return Math.pow(base, power());
+            return Math.pow(base, unary());
         }
         return base;
     }
 
-    function unary() {
+    function primary() {
         var t = list[pos++];
-        if (t === "-")
-            return -unary();
-        if (t === "+")
-            return unary();
         if (typeof t === "number")
             return t;
         if (t === "(") {

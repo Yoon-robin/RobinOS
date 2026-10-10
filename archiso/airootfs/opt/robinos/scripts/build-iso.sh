@@ -92,6 +92,24 @@ fi
   sha256sum ./*.iso > SHA256SUMS
 )
 
+# Signed with the release key when this build machine has it (docs/release.md):
+# gpg --verify SHA256SUMS.sig SHA256SUMS checks it against keys/robinos-release.asc
+rm -f "${OUT_DIR}/SHA256SUMS.sig"
+signing_home="${ROBINOS_SIGNING_HOME:-/root/.robinos-signing}"
+release_key="${ROOT_DIR}/keys/robinos-release.asc"
+signer="$(gpg --batch --show-keys --with-colons "${release_key}" 2>/dev/null | awk -F: '/^fpr:/ {print $10; exit}' || true)"
+if [[ -n "${signer}" ]] && GNUPGHOME="${signing_home}" gpg --batch --list-secret-keys "${signer}" >/dev/null 2>&1; then
+  GNUPGHOME="${signing_home}" gpg --batch --yes --detach-sign -u "${signer}" -o "${OUT_DIR}/SHA256SUMS.sig" "${OUT_DIR}/SHA256SUMS"
+  # Checked the way a downloader would: only the public key from the repository
+  check_home="$(mktemp -d)"
+  GNUPGHOME="${check_home}" gpg --batch --quiet --import "${release_key}"
+  GNUPGHOME="${check_home}" gpg --batch --verify "${OUT_DIR}/SHA256SUMS.sig" "${OUT_DIR}/SHA256SUMS"
+  rm -rf "${check_home}"
+  printf 'Signed: %s (key %s)\n' "${OUT_DIR}/SHA256SUMS.sig" "${signer}"
+else
+  printf 'note: no release key on this machine, SHA256SUMS is not signed\n'
+fi
+
 printf '\nBuild complete.\n'
 printf 'Log: %s\n' "${LOG_FILE}"
 printf 'Output:\n'

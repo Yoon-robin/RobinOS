@@ -3001,9 +3001,9 @@ learn_check_40() {
   fi
 }
 
-# The first mission of n's group, and the first of the next group (or one past the last)
+# A text mission's answer; empty (not a set -e exit) before the files are made
 learn_text_answer() {
-  sed -n "s/^$1=//p" "${LEARN_STATE}/text-answers" 2>/dev/null | head -n 1
+  sed -n "s/^$1=//p" "${LEARN_STATE}/text-answers" 2>/dev/null | head -n 1 || true
 }
 
 # The first word of a learner's answer file, without Windows line ends
@@ -3108,6 +3108,7 @@ learn_check_45() {
   fi
 }
 
+# The first mission of n's group, and the first of the next group (or one past the last)
 learn_group_first() {
   local i="$1"
   while [[ -z "$(learn_group "${i}")" ]]; do

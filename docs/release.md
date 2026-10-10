@@ -29,7 +29,17 @@ build/logs/mkarchiso-*.log
 - 실기기 한 대 이상에서 라이브 부팅
 - 문서와 `/etc/motd`에 윤리 안내가 보임
 
+## 서명
+
+`scripts/build-iso.sh`는 빌드 PC에 릴리스 열쇠가 있으면 `SHA256SUMS`에 서명해서 `SHA256SUMS.sig`를 만들고, 저장소의 공개 열쇠([keys/robinos-release.asc](../keys/robinos-release.asc))만으로 바로 확인해요. 열쇠가 없으면 서명 없이 "note: no release key"만 남겨요.
+
+- 열쇠: `RobinOS Release Signing <115547263+Yoon-robin@users.noreply.github.com>`, RSA 4096, 서명 전용, 지문 `D8EB 0C49 5CBF 5B2B BB57 EACC FD9B 53B8 B79E 9AAD`, 2026-10-10에 만들고 2029-10-09에 끝나요(그 전에 `gpg --quick-set-expire`로 늘려요)
+- 개인 열쇠는 이 PC의 WSL(`archlinux`) 안 `/root/.robinos-signing`(권한 700)에만 있어요. 빌드가 사람 없이 서명하도록 암호를 걸지 않았어요. 저장소에는 절대 넣지 않아요
+- 폐기 인증서: 같은 폴더의 `openpgp-revocs.d/D8EB0C495CBF5B2BBB57EACCFD9B53B8B79E9AAD.rev`. 열쇠가 새면 이걸로 폐기를 알려요
+- 백업: PC가 망가지면 열쇠도 사라져요. 오프라인 USB 같은 곳에 따로 보관해 두는 걸 권해요: `wsl -d archlinux -u root -e env GNUPGHOME=/root/.robinos-signing gpg --armor --export-secret-keys D8EB0C495CBF5B2BBB57EACCFD9B53B8B79E9AAD > robinos-release-secret.asc` (이 파일은 USB에만 두고 PC에서는 지워요)
+- 같은 열쇠로 RobinOS 파일 업데이트(pacman 저장소)에도 서명해요(T-026)
+
 ## 배포
 
-- `SHA256SUMS`와 함께 GitHub 릴리스에 올려요.
+- `SHA256SUMS`, `SHA256SUMS.sig`, 공개 열쇠(`keys/robinos-release.asc`)와 함께 GitHub 릴리스에 올려요.
 - 릴리스 노트에는 v0.1 범위([design.md](design.md))에서 바뀐 점과 알려진 한계를 적어요.

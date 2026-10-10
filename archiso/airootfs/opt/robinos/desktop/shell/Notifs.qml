@@ -42,6 +42,14 @@ Singleton {
         return null;
     }
 
+    function forget(notification) {
+        for (const entry of history) {
+            if (entry.notification === notification)
+                entry.notification = null;
+        }
+        history = history.slice();
+    }
+
     function canOpen(entry) {
         return !!defaultAction(entry) || entry.open !== "" || (entry.desktopEntry !== "" && !!DesktopEntries.byId(entry.desktopEntry));
     }
@@ -103,6 +111,9 @@ Singleton {
                 open: open.startsWith("/") ? open : "",
                 desktopEntry: notification.desktopEntry ?? ""
             };
+            // Gone (expired or dismissed): its actions with it, so the row stops
+            // offering them
+            notification.closed.connect(() => root.forget(notification));
             root.history = [entry].concat(root.history).slice(0, 30);
             if (!ShellState.notifCenterOpen)
                 root.unread++;

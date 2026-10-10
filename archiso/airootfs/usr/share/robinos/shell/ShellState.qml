@@ -111,6 +111,7 @@ Singleton {
         }
         detailPanel = "";
         taskViewOpen = false;
+        closeMenus();
         quickSettingsOpen = false;
         calendarOpen = false;
         overlayScreen = focusedScreen;
@@ -128,6 +129,7 @@ Singleton {
         }
         detailPanel = "";
         taskViewOpen = false;
+        closeMenus();
         quickSettingsOpen = false;
         calendarOpen = false;
         overlayScreen = focusedScreen;
@@ -146,6 +148,7 @@ Singleton {
         }
         detailPanel = "";
         taskViewOpen = false;
+        closeMenus();
         quickSettingsOpen = false;
         calendarOpen = false;
         overlayScreen = focusedScreen;
@@ -163,6 +166,7 @@ Singleton {
         }
         detailPanel = "";
         taskViewOpen = false;
+        closeMenus();
         launcherOpen = false;
         calendarOpen = false;
         overlayScreen = screen ?? focusedScreen;
@@ -187,6 +191,7 @@ Singleton {
         notifCenterOpen = false;
         detailPanel = "";
         taskViewOpen = false;
+        closeMenus();
         overlayScreen = focusedScreen;
         quickLinksOpen = true;
     }
@@ -203,7 +208,7 @@ Singleton {
         calendarOpen = false;
         notifCenterOpen = false;
         detailPanel = "";
-        quickLinksOpen = false;
+        closeMenus();
         overlayScreen = screen;
         desktopMenuAt = Qt.point(x, y);
         desktopMenuOpen = true;
@@ -223,11 +228,18 @@ Singleton {
         calendarOpen = false;
         notifCenterOpen = false;
         detailPanel = "";
-        quickLinksOpen = false;
+        closeMenus();
         overlayScreen = screen;
         dockMenuAt = Qt.point(x, y);
         dockMenuItems = items;
         dockMenuOpen = true;
+    }
+
+    // The small menus (Win+X, the desktop's, the dock's) close when anything else opens
+    function closeMenus() {
+        quickLinksOpen = false;
+        desktopMenuOpen = false;
+        dockMenuOpen = false;
     }
 
     // Asks the app to close, like the window's own close button
@@ -260,6 +272,7 @@ Singleton {
         }
         detailPanel = "";
         taskViewOpen = false;
+        closeMenus();
         launcherOpen = false;
         quickSettingsOpen = false;
         overlayScreen = screen ?? focusedScreen;
@@ -281,6 +294,7 @@ Singleton {
         calendarOpen = false;
         detailPanel = "";
         taskViewOpen = false;
+        closeMenus();
         shortcutsOpen = false;
         overlayScreen = focusedScreen;
         notifCenterOpen = true;
@@ -312,6 +326,7 @@ Singleton {
             return;
         if (taskViewOpen) {
             taskViewOpen = false;
+            closeMenus();
             return;
         }
         launcherOpen = false;
@@ -339,6 +354,7 @@ Singleton {
         calendarOpen = false;
         detailPanel = "";
         taskViewOpen = false;
+        closeMenus();
         overlayScreen = focusedScreen;
         shortcutsOpen = true;
     }
@@ -474,6 +490,13 @@ Singleton {
             if (win.workspace?.id === current)
                 moveWindow(win, target);
         }
+        // Windows minimized from it come back to the workspace that took its windows
+        const restore = Object.assign({}, restoreTo);
+        for (const address in restore) {
+            if (restore[address] === String(current))
+                restore[address] = String(target);
+        }
+        restoreTo = restore;
         focusWorkspace(target);
     }
 

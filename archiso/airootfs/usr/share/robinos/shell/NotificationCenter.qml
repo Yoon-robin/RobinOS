@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Widgets
+import "keys.js" as Keyboard
 
 // Notification center under the bar's bell (Win+N or a click on the bell), like
 // Windows 11's: the notifications since login (Notifs.history), clear all, and
@@ -169,6 +170,12 @@ PanelWindow {
             Repeater {
                 model: Math.min(8, Notifs.history.length)
 
+                // A new notification makes the rows again; keep Tab and Esc working
+                onItemRemoved: (index, item) => {
+                    if (item.activeFocus)
+                        card.forceActiveFocus();
+                }
+
                 Rectangle {
                     id: item
 
@@ -188,6 +195,8 @@ PanelWindow {
                     Accessible.name: modelData.summary
 
                     function activate() {
+                        if (!Notifs.canOpen(modelData))
+                            return;
                         root.close();
                         Notifs.openEntry(modelData);
                     }
