@@ -107,7 +107,7 @@ WHPX가 필요해요. TCG에서는 `build`, `boot-test`, `install-test`를 차�
 
 ## 설치 테스트
 
-`scripts/install-test.sh`는 빈 40GB 디스크에 RobinOS를 설치하고, 설치한 시스템을 시리얼 콘솔로 조작하면서 확인해요. RobinOS 파일은 ISO 안의 사본이 아니라 지금 저장소 것을 써요(읽기 전용 FAT 디스크로 넘겨요).
+`scripts/install-test.sh`는 빈 40GB 디스크에 RobinOS를 설치하고, 설치한 시스템을 시리얼 콘솔로 조작하면서 확인해요. RobinOS 파일은 ISO 안의 사본이 아니라 지금 저장소 것을 써요(읽기 전용 FAT 디스크로 넘겨요). 다만 설치 후 설정이 마지막에 ISO에 든 `robinos` 패키지(ISO를 빌드한 커밋)로 RobinOS 파일의 주인을 pacman에 넘기면서 그 커밋의 파일로 덮어써요. 설치기와 설치 후 설정 스크립트는 지금 저장소 것이 돌지만, 셸이나 `robinctl`을 바꿨다면 커밋하고 ISO를 다시 빌드해야 설치본에 들어가요(`verify`가 그렇게 해요).
 
 설치 방식은 세 가지예요.
 
@@ -117,7 +117,7 @@ WHPX가 필요해요. TCG에서는 `build`, `boot-test`, `install-test`를 차�
 
 설치한 뒤 확인하는 것:
 
-1. `robinctl doctor`, 스냅샷 설정, `/etc/fstab`의 `@snapshots`, grub-btrfs 항목, 부팅 메뉴 이름, 보안 프로필 목록, 설치본 전용 앱(`packages/apps.txt`: 인쇄 서비스가 응답하는지, LibreOffice 한국어판, 앱 스토어와 Flathub 저장소, 동영상·음악 재생 앱과 `gio`로 본 기본 앱, 디스크 관리(`gnome-disks`)와 디스크 사용량(`baobab`)), 바의 업데이트 점이 쓰는 `checkupdates`, Firefox 원격 측정을 끄는 정책, 배경화면 포털 백엔드와 포털 설정, `filesystem`을 다시 설치한 뒤에도 RobinOS인 os-release, 사용자 `~/.bashrc`의 RobinOS 설정, `which`·`ssh-keygen`·`gpg`·`wtype`·`lspci`·`lsusb`·`diff`(학습 미션, 이모지, 런처의 장치 관리자에 필요), 소리 서버의 실시간 우선순위(`rtkit`), 열린 포트
+1. `robinctl doctor`, 스냅샷 설정, `/etc/fstab`의 `@snapshots`, grub-btrfs 항목, 부팅 메뉴 이름, 보안 프로필 목록, 설치본 전용 앱(`packages/apps.txt`: 인쇄 서비스가 응답하는지, LibreOffice 한국어판, 앱 스토어와 Flathub 저장소, 동영상·음악 재생 앱과 `gio`로 본 기본 앱, 디스크 관리(`gnome-disks`)와 디스크 사용량(`baobab`)), 바의 업데이트 점이 쓰는 `checkupdates`, Firefox 원격 측정을 끄는 정책, 배경화면 포털 백엔드와 포털 설정, `filesystem`을 다시 설치한 뒤에도 RobinOS인 os-release, RobinOS 파일이 `robinos` 패키지인지(`pacman -Qo`, `pacman -Qk`)와 `[robinos]` 저장소·릴리스 열쇠, 깃허브 저장소가 서명된 데이터베이스로 답하는지(`pacman -Sy`, `pacman -Si robinos`), 사용자 `~/.bashrc`의 RobinOS 설정, `which`·`ssh-keygen`·`gpg`·`wtype`·`lspci`·`lsusb`·`diff`(학습 미션, 이모지, 런처의 장치 관리자에 필요), 소리 서버의 실시간 우선순위(`rtkit`), 열린 포트
 2. 재부팅해서 GRUB 메뉴와 스냅샷 하위 메뉴 스크린샷
 3. `pacman -S cowsay`로 snap-pac의 전후 스냅샷이 생기는지
 4. 다시 켜서 GRUB의 스냅샷 하위 메뉴로 cowsay 설치 전 스냅샷을 골라 부팅하고([recovery.md](recovery.md)의 비상 경로), 그 안에서 `robinctl snapshot rollback`

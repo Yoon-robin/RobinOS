@@ -144,7 +144,7 @@ function Invoke-WhpxInstallTest {
     # This checkout's files for the installed system, as a read-only FAT disk
     $share = Join-Path $out "share\robinos"
     New-Item -ItemType Directory -Force $share | Out-Null
-    foreach ($dir in "assets", "bin", "config", "desktop", "docs", "installer", "labs", "packages", "scripts", "themes") {
+    foreach ($dir in "assets", "bin", "config", "desktop", "docs", "installer", "keys", "labs", "packages", "scripts", "themes") {
         Copy-Item (Join-Path $root $dir) $share -Recurse
     }
 

@@ -501,7 +501,9 @@ def install_with_archinstall(con):
 
     # archinstall may leave the target mounted; mount it the way we want it
     con.run("umount -R /mnt 2>/dev/null; mount -o subvol=@ /dev/vda2 /mnt && mount /dev/vda1 /mnt/boot")
+    # Like docs/install.md: this checkout's files, and the live ISO's robinos package
     con.run("rm -rf /mnt/opt/robinos && mkdir -p /mnt/opt && cp -r /share/robinos /mnt/opt/robinos"
+            " && cp -r /opt/robinos/pkg /mnt/opt/robinos/pkg"
             " && chmod +x /mnt/opt/robinos/bin/* /mnt/opt/robinos/installer/* /mnt/opt/robinos/scripts/*.sh"
             " /mnt/opt/robinos/scripts/*.py /mnt/opt/robinos/desktop/bin/*")
 
@@ -606,6 +608,13 @@ def phase_installed(con, qmp):
     # The guest tools robin-install picked for this VM (systemd-detect-virt, T-137)
     con.run("systemd-detect-virt; pacman -Q open-vm-tools qemu-guest-agent; systemctl --failed --no-legend",
             check=False)
+    # RobinOS's own files are the robinos package (the live ISO's, from the same
+    # commit), and the [robinos] repository on GitHub answers with a database signed
+    # by the release key, which pacman trusts (docs/design.md "RobinOS 파일 업데이트")
+    con.run("pacman -Qo /usr/share/robinos/shell/shell.qml /usr/local/bin/robinctl /opt/robinos/bin/robinctl"
+            " && pacman -Qkq robinos && robinctl repo && grep -A3 -x '\\[robinos\\]' /etc/pacman.conf"
+            " && pacman-key --list-keys D8EB0C495CBF5B2BBB57EACCFD9B53B8B79E9AAD > /dev/null")
+    con.run("pacman -Sy > /dev/null && pacman -Si robinos | grep -E '^(Repository|Version)'", timeout=300)
 
     # QEMU's WHPX can't reset a VM that reboots itself ("Unexpected VP exit code 4"),
     # so every boot is its own QEMU run: power off here, the next phase boots again.

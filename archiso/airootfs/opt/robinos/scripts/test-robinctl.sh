@@ -644,6 +644,18 @@ chmod 755 "${UPDATE_BIN}/flatpak"
 check "update dry run with flatpak" 0 env PATH="${UPDATE_BIN}:/usr/bin" bash "${ROBINCTL}" update --dry-run
 said "update also updates app store apps" "flatpak update --system"
 
+printf '%s\n' "RobinOS repository (robinctl repo) with the stand-in pacman"
+check "repo status" 0 env PATH="${UPDATE_BIN}:/usr/bin" bash "${ROBINCTL}" repo
+said "status says the files aren't a package yet" "아직 패키지가 아니에요"
+check "repo setup dry run" 0 env PATH="${UPDATE_BIN}:/usr/bin" bash "${ROBINCTL}" repo setup --dry-run
+said "setup adds the release key" "keys/robinos-release.asc"
+key_fpr="$(gpg --batch --show-keys --with-colons "${ROOT_DIR}/keys/robinos-release.asc" 2>/dev/null | awk -F: '/^fpr:/ {print $10; exit}')"
+said "setup trusts the release key's fingerprint (${key_fpr:-no gpg})" "pacman-key --lsign-key ${key_fpr:-?}"
+touch "${WORK}/robinos-0.3.0.r1-1-any.pkg.tar.zst"
+check "repo adopt dry run with a package file" 0 env PATH="${UPDATE_BIN}:/usr/bin" bash "${ROBINCTL}" repo adopt --dry-run "${WORK}/robinos-0.3.0.r1-1-any.pkg.tar.zst"
+said "adopt overwrites only the existing RobinOS files" "--overwrite <이미 있는 RobinOS 파일>"
+check "repo adopt with a missing file" fail env PATH="${UPDATE_BIN}:/usr/bin" bash "${ROBINCTL}" repo adopt --dry-run "${WORK}/nothing.pkg.tar.zst"
+
 printf '%s\n' "Web lab (robinctl lab) with stand-in docker, sudo and systemctl"
 FAKE="${WORK}/fake"
 mkdir -p "${FAKE}"

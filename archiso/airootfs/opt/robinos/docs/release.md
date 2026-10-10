@@ -53,6 +53,8 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 publish-repo
 
 패키지 버전은 `config/robinos.toml`의 버전과 커밋 수예요(예: `0.3.0.r400`). 검증을 통과한 main에서만 올려요.
 
+ISO 빌드(`build-iso.sh`)도 같은 커밋의 패키지를 만들어 라이브 ISO의 `/opt/robinos/pkg`에 넣어요. 설치기는 그 패키지로 설치하고, 업데이트부터 저장소를 봐요. 그래서 ISO를 공개할 때는 같은 커밋(또는 더 새것)으로 저장소도 올려요. 저장소가 더 오래되면 그 사이에는 RobinOS 파일 업데이트가 오지 않아요(pacman이 "local is newer"라고만 해요).
+
 ## 배포
 
 - `SHA256SUMS`, `SHA256SUMS.sig`, 공개 열쇠(`keys/robinos-release.asc`)와 함께 GitHub 릴리스에 올려요.

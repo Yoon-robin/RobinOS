@@ -40,7 +40,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (없음) | | |
+| T-145 커밋 (브랜치 `claude/eoseohae-7nleia`) | 설치본이 RobinOS 저장소를 쓰게 | `verify -Installer robinos`(ISO 빌드가 패키지를 넣는지, 설치 테스트의 `pacman -Qo`·저장소 확인), 이어서 `install-test`(archinstall 경로). 통과하면 main에 합치고 푸시 |
 
 `f6ceb6d`까지 2026-10-10 묶음 69 검증(`verify`: 빌드 3.6분 + 테스트 14.5분)을 마치고 푸시했어요.
 
@@ -78,8 +78,11 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 조사(2026-10-08): Orca 51 패키지와 libatspi 2.62를 받아 확인. Orca는 `Atspi.Device.new_full`로 키를 받고, Wayland에서는 `org.freedesktop.a11y.Manager`(Mutter 제공)를 써요. Hyprland 0.56.2 소스에 없어서 Orca 키 명령은 안 되고 포커스 읽기만 돼요. 결론과 이유를 design.md 미결정 사항에 적음. 업스트림 변화 점검 때 Hyprland가 이 인터페이스를 넣었는지 봐요
 
 ### T-145 설치본이 RobinOS 저장소를 쓰게 (T-026 3단계)
-- 상태: 할 일
+- 상태: 검증 대기 (2026-10-10 클라우드 세션에서 만듦, 이 PC의 VM 검증 전)
 - 할 것: 설치기·post-install이 `[robinos]` 저장소와 열쇠(로컬 서명)를 넣고 RobinOS 파일을 패키지로 설치. 이미 깐 파일에서 옮겨 가는 `robinctl update`(처음 한 번 `--overwrite`)
+- 한 것: `robinctl repo`(상태), `repo setup`(열쇠 지문 고정, `[robinos]` 넣기), `repo adopt`(패키지에 든 경로에만 `--overwrite`). `post-install.sh`가 설치 끝에 둘 다 하고, `robinctl update`는 저장소가 켜졌는데 패키지가 아니면 한 번 옮겨요. `build-iso.sh`가 같은 커밋의 패키지를 라이브 ISO `/opt/robinos/pkg`에 넣어서 설치기는 그걸 써요(개발 ISO에서 저장소의 옛 파일로 돌아가지 않게, design.md). 릴리스 열쇠는 `/opt/robinos/keys`. 설치 테스트에 `pacman -Qo`·`pacman -Qk`·저장소·열쇠·`pacman -Si robinos` 확인, archinstall 경로는 ISO의 `pkg/`도 복사
+- 확인한 것(클라우드 세션, Arch 컨테이너의 실제 pacman): ① 복사한 파일 위에 `repo setup` + `repo adopt <패키지>` → `pacman -Qo`가 `robinos`, `-Qk` 빠진 파일 없음, 다시 setup해도 `[robinos]` 한 번, 깃허브 저장소가 서명된 DB로 답함(`0.3.0.r400-1`) ② 패키지 없이 파일만 있는 시스템에서 `robinctl update`가 깃허브에서 받아 옮기고, 고친 `config.toml`은 남고 `.pacnew` ③ `post-install.sh --dry-run`이 `pkg/`가 있으면 `pacman -U`, 없으면 `pacman -S`(여기서 `pkg/`가 없을 때 `find` 실패로 스크립트가 멈추던 것을 찾아 고침) ④ 정적 검증(pwsh), `check-sync.sh`, `test-robinctl.sh`(새 repo 시험 통과, 컨테이너에 systemd가 없어 미션 34 관련 5개는 전부터 실패), `test-robin-install.py`
+- 남은 것: 이 PC에서 `verify -Installer robinos`. 서명한 로컬 패키지(`.sig`)를 `pacman -U`가 받아들이는지는 VM에서 처음 봐요(컨테이너에는 개인 열쇠가 없어 서명 없이 시험). 스냅샷과 함께 받는 것은 실제 새 버전이 저장소에 올라간 뒤 설치본에서 확인
 - 완료 기준: 설치 테스트에서 `pacman -Qo /usr/share/robinos/shell/shell.qml`이 `robinos`, `robinctl update`가 스냅샷과 함께 새 버전을 받음
 
 ### T-146 이미 설치한 시스템 안내 (T-026 4단계)

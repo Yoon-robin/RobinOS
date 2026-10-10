@@ -39,7 +39,10 @@ robinctl - RobinOS 관리 도구
   robinctl doctor                       시스템 점검
   robinctl audit                        보안 점검 (윈도우 보안처럼: 열린 포트, 원격 접속, 권한, 암호화)
   robinctl app remove <앱 ID> [--dry-run]  앱 제거 (런처에서 Shift+Delete, RobinOS 기본 앱은 막아요)
-  robinctl update [--dry-run]           스냅샷을 만든 뒤 시스템 업데이트 (앱 스토어 앱도)
+  robinctl update [--dry-run]           스냅샷을 만든 뒤 시스템 업데이트 (RobinOS 파일, 앱 스토어 앱도)
+  robinctl repo                         RobinOS 파일 업데이트 저장소와 패키지 상태
+  robinctl repo setup [--dry-run]       RobinOS 저장소 켜기 (설치기가 해요)
+  robinctl repo adopt [패키지 파일]     복사로 설치한 RobinOS 파일을 패키지로 옮기기 (update가 해요)
   robinctl snapshot create [이름]       스냅샷 만들기
   robinctl snapshot list                스냅샷 목록
   robinctl snapshot setup [--dry-run]   스냅샷 설정 (Btrfs 루트, 처음 한 번)
@@ -422,6 +425,9 @@ update_system() {
       none) printf '스냅샷이 설정되지 않아서 업데이트 전 스냅샷을 만들지 않아요 (설정: sudo robinctl snapshot setup).\n' ;;
     esac
     printf '실행할 명령: pacman -Syu\n'
+    if repo_configured && ! pkg_installed robinos; then
+      printf 'RobinOS 파일을 robinos 패키지로 옮겨요: pacman -S robinos --overwrite <이미 있는 RobinOS 파일>\n'
+    fi
     if have_cmd flatpak; then
       printf '앱 스토어(Flatpak) 앱이 있으면 이어서: flatpak update --system\n'
     fi
@@ -440,11 +446,176 @@ update_system() {
   esac
   pacman -Syu
 
+  # Installed before the RobinOS repository's package took over: move the files once
+  if repo_configured && ! pkg_installed robinos; then
+    printf '\nRobinOS 파일(셸, robinctl, 설정)을 robinos 패키지로 옮겨요. 다음부터는 위 업데이트에 함께 들어가요.\n'
+    repo_adopt || printf '%s알림:%s RobinOS 파일을 패키지로 옮기지 못했어요. 다음 업데이트 때 다시 해요.\n' \
+      "${C_YELLOW}" "${C_RESET}" >&2
+  fi
+
   # Apps from the app store (Flathub) live outside pacman and its snapshots
   if have_cmd flatpak && [[ -n "$(flatpak list --system --app --columns=application 2>/dev/null)" ]]; then
     printf '\n앱 스토어(Flatpak) 앱을 업데이트해요.\n'
     flatpak update --system
   fi
+}
+
+# ---- RobinOS's own files from the [robinos] pacman repository ----
+#
+# The shell, robinctl and settings are the robinos package in a signed repository on
+# GitHub (docs/design.md "RobinOS 파일 업데이트"), so pacman -Syu updates them with
+# everything else and snap-pac snapshots around it. Only the release key is trusted
+# for it: the fingerprint is fixed here, whatever else the key file holds.
+
+readonly REPO_SERVER="https://github.com/Yoon-robin/RobinOS/releases/download/repo"
+readonly REPO_KEY_FPR="D8EB0C495CBF5B2BBB57EACCFD9B53B8B79E9AAD"
+readonly PACMAN_CONF="/etc/pacman.conf"
+
+repo_key_file() {
+  local key
+  for key in "${PROJECT_ROOT}/keys/robinos-release.asc" "${SCRIPT_DIR}/../keys/robinos-release.asc"; do
+    if [[ -f "${key}" ]]; then
+      printf '%s\n' "${key}"
+      return 0
+    fi
+  done
+  return 1
+}
+
+repo_configured() {
+  grep -qx '\[robinos\]' "${PACMAN_CONF}" 2>/dev/null
+}
+
+repo_status() {
+  printf 'RobinOS 파일 업데이트:\n'
+  if repo_configured; then
+    printf '  저장소: 켜짐 (%s)\n' "${REPO_SERVER}"
+  else
+    printf '  저장소: 꺼짐 (켜기: sudo robinctl repo setup)\n'
+  fi
+  if pkg_installed robinos; then
+    printf '  패키지: %s (sudo robinctl update로 함께 업데이트해요)\n' "$(pacman -Q robinos)"
+  else
+    printf '  패키지: 아직 패키지가 아니에요 (저장소를 켜면 sudo robinctl update가 옮겨요)\n'
+  fi
+}
+
+# Trusts the release key in pacman's keyring and adds [robinos] to pacman.conf
+repo_setup() {
+  local dry_run="false" key
+  [[ "${1:-}" == "--dry-run" ]] && dry_run="true"
+  have_cmd pacman || die "pacman이 필요해요"
+  key="$(repo_key_file)" || die "RobinOS 서명 열쇠가 없어요: ${PROJECT_ROOT}/keys/robinos-release.asc"
+
+  if [[ "${dry_run}" == "true" ]]; then
+    printf '실행할 명령: pacman-key --add %s\n' "${key}"
+    printf '실행할 명령: pacman-key --lsign-key %s\n' "${REPO_KEY_FPR}"
+    if repo_configured; then
+      printf '%s에 [robinos] 저장소가 이미 있어요\n' "${PACMAN_CONF}"
+    else
+      printf '%s에 [robinos] 저장소를 넣어요 (%s)\n' "${PACMAN_CONF}" "${REPO_SERVER}"
+    fi
+    return
+  fi
+
+  need_root
+  # gpg talks a lot on stderr even when it works: show it only on failure
+  local out
+  out="$(pacman-key --add "${key}" 2>&1 && pacman-key --lsign-key "${REPO_KEY_FPR}" 2>&1)" || {
+    printf '%s\n' "${out}" >&2
+    die "pacman 열쇠고리에 RobinOS 서명 열쇠를 넣지 못했어요"
+  }
+  if ! repo_configured; then
+    printf '\n# RobinOS updates (robinctl repo setup, docs/design.md)\n[robinos]\nSigLevel = Required\nServer = %s\n' \
+      "${REPO_SERVER}" >>"${PACMAN_CONF}"
+  fi
+  printf 'RobinOS 저장소를 켰어요. 이제 sudo robinctl update가 RobinOS 파일도 업데이트해요.\n'
+}
+
+# --overwrite takes globs: a path matches only itself
+overwrite_glob() {
+  local path="$1"
+  path="${path//\\/\\\\}"
+  path="${path//\*/\\*}"
+  path="${path//\?/\\?}"
+  printf '%s' "${path//\[/\\[}"
+}
+
+# Hands RobinOS's files to pacman as the robinos package, from a package file (the
+# live ISO carries one, made from the same commit) or from the repository. The
+# installer copied the files without a package, so pacman would refuse to overwrite
+# them: --overwrite only the package's own paths. /etc/robinos/config.toml is a
+# backup file, so a changed one stays and the package's goes next to it as .pacnew.
+repo_adopt() {
+  local dry_run="false" file="" arg path confirm=() overwrite=()
+  for arg in "$@"; do
+    case "${arg}" in
+      --dry-run) dry_run="true" ;;
+      *) file="${arg}" ;;
+    esac
+  done
+  have_cmd pacman || die "pacman이 필요해요"
+  if pkg_installed robinos; then
+    printf 'RobinOS 파일은 이미 패키지예요: %s\n' "$(pacman -Q robinos)"
+    return
+  fi
+  [[ -z "${file}" || -f "${file}" ]] || die "패키지 파일이 없어요: ${file}"
+
+  if [[ "${dry_run}" == "true" ]]; then
+    if [[ -n "${file}" ]]; then
+      printf '실행할 명령: pacman -U %s --overwrite <이미 있는 RobinOS 파일>\n' "${file}"
+    else
+      printf '실행할 명령: pacman -S robinos --overwrite <이미 있는 RobinOS 파일>\n'
+    fi
+    return
+  fi
+
+  if [[ -z "${file}" ]] && ! repo_configured; then
+    die "RobinOS 저장소가 꺼져 있어요. 먼저: sudo robinctl repo setup"
+  fi
+
+  need_root
+  [[ "${ASSUME_YES}" == "true" ]] && confirm=(--noconfirm)
+  if [[ -z "${file}" ]]; then
+    # The file list comes from the package itself, so download it first
+    [[ -f "$(pacman-conf DBPath)sync/robinos.db" ]] || pacman -Sy
+    pacman -Sw --noconfirm robinos >/dev/null || return 1
+    file="$(pacman-conf CacheDir | head -n 1)$(pacman -Sp --print-format '%f' robinos)"
+    if [[ ! -f "${file}" ]]; then
+      printf '오류: 내려받은 패키지를 찾지 못했어요: %s\n' "${file}" >&2
+      return 1
+    fi
+  fi
+  while IFS= read -r path; do
+    [[ "${path}" == */ ]] && continue
+    if [[ -e "${path}" || -L "${path}" ]]; then
+      overwrite+=(--overwrite "$(overwrite_glob "${path}")")
+    fi
+  done < <(pacman -Qlpq "${file}" 2>/dev/null)
+
+  if [[ "${file}" == "$(pacman-conf CacheDir | head -n 1)"* ]]; then
+    pacman -S "${confirm[@]}" "${overwrite[@]}" robinos
+  else
+    pacman -U "${confirm[@]}" "${overwrite[@]}" "${file}"
+  fi
+}
+
+repo() {
+  case "${1:-}" in
+    ""|status)
+      repo_status
+      ;;
+    setup)
+      repo_setup "${2:-}"
+      ;;
+    adopt)
+      shift
+      repo_adopt "$@"
+      ;;
+    *)
+      die "사용법: robinctl repo [status|setup|adopt]"
+      ;;
+  esac
 }
 
 # ---- Snapshots: snapper + snap-pac + grub-btrfs on a Btrfs root ----
@@ -3751,6 +3922,10 @@ main() {
     update)
       shift
       update_system "${1:-}"
+      ;;
+    repo)
+      shift
+      repo "$@"
       ;;
     snapshot)
       shift

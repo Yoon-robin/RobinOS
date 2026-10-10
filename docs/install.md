@@ -103,7 +103,7 @@ archinstall로 Arch를 설치한다면 이렇게 골라야 스냅샷과 부팅 �
 
 윈도우와 같은 디스크에 직접 나눠 설치했다면, 부팅 메뉴에 윈도우가 나오도록 설치한 시스템에서 `/etc/default/grub.d/20-dual-boot.cfg`에 `GRUB_DISABLE_OS_PROBER=false`를 적고 `sudo grub-mkconfig -o /boot/grub/grub.cfg`를 실행하세요. RobinOS 설치기는 이걸 알아서 해요.
 
-설치한 Arch에서 RobinOS 파일을 받아 설치 후 설정을 실행해요. 라이브 ISO로 설치했다면 `/opt/robinos`를 설치한 시스템에 복사해서 써도 돼요. 루트가 Btrfs면 스냅샷 설정(`robinctl snapshot setup`)까지 해요.
+설치한 Arch에서 RobinOS 파일을 받아 설치 후 설정을 실행해요. 라이브 ISO로 설치했다면 `/opt/robinos`를 설치한 시스템에 복사해서 써도 돼요(ISO의 RobinOS 패키지 `pkg/`도 함께 와요). 루트가 Btrfs면 스냅샷 설정(`robinctl snapshot setup`)까지 해요. RobinOS 파일 업데이트 저장소도 켜서, 셸과 `robinctl`이 `robinos` 패키지가 돼요(`robinctl repo`로 확인).
 
 ```bash
 sudo scripts/post-install.sh --dry-run
@@ -128,7 +128,7 @@ sudo robinctl profile network
 
 프로필은 `network`(네트워크 분석), `web`(웹 보안과 로컬 웹 랩), `forensics`, `reversing`, `passwords`, `wireless`, `vm`이고, `security`는 전부예요.
 
-업데이트는 `sudo robinctl update`로 해요. 업데이트 전후에 스냅샷이 생겨서, 문제가 생기면 [recovery.md](recovery.md)대로 되돌리면 돼요. 앱 스토어에서 설치한 앱(Flatpak)도 이어서 업데이트해요. 다만 이 앱들은 스냅샷 대상이 아니에요.
+업데이트는 `sudo robinctl update`로 해요. Arch 패키지와 함께 RobinOS 파일(셸, `robinctl`, 미션)도 RobinOS 저장소에서 새 버전으로 올라가요. 업데이트 전후에 스냅샷이 생겨서, 문제가 생기면 [recovery.md](recovery.md)대로 되돌리면 돼요. 앱 스토어에서 설치한 앱(Flatpak)도 이어서 업데이트해요. 다만 이 앱들은 스냅샷 대상이 아니에요.
 
 ## 아직 없는 것
 

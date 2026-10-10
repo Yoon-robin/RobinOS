@@ -132,6 +132,24 @@ done
 
 run systemctl set-default graphical.target
 
+# RobinOS's own files become the robinos package from the [robinos] repository, so
+# robinctl update brings their fixes too (docs/design.md "RobinOS 파일 업데이트").
+# The live ISO carries the package made from its own commit (pkg/); a git checkout
+# gets it from the repository. Before the snapshot setup: no snapshots of the install.
+robinos_pkg=""
+if [[ -d "${ROOT_DIR}/pkg" ]]; then
+  robinos_pkg="$(find "${ROOT_DIR}/pkg" -maxdepth 1 -name 'robinos-*.pkg.tar.zst' -print | sort | tail -n 1)"
+fi
+if [[ "${DRY_RUN}" == "true" ]]; then
+  "${ROOT_DIR}/bin/robinctl" repo setup --dry-run
+  "${ROOT_DIR}/bin/robinctl" repo adopt --dry-run ${robinos_pkg:+"${robinos_pkg}"}
+elif "${ROOT_DIR}/bin/robinctl" repo setup; then
+  "${ROOT_DIR}/bin/robinctl" repo adopt ${robinos_pkg:+"${robinos_pkg}"} \
+    || printf '알림: RobinOS 파일을 패키지로 옮기지 못했어요. 나중에 sudo robinctl update가 다시 해요\n'
+else
+  printf '알림: RobinOS 저장소를 켜지 못했어요. 나중에 sudo robinctl repo setup으로 켤 수 있어요\n'
+fi
+
 # Snapshots around every pacman transaction and in the GRUB menu (Btrfs root only).
 # Runs after install-branding.sh so its grub-mkconfig keeps the theme.
 root_fs="$(findmnt -no FSTYPE / 2>/dev/null || true)"

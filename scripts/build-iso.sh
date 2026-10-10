@@ -29,8 +29,9 @@ Steps:
   1. Checks the build environment
   2. Optionally validates package names with pacman -Si
   3. Prepares build/archiso-profile from Arch releng
-  4. Runs mkarchiso
-  5. Writes SHA256SUMS for generated ISO files
+  4. Builds the robinos package into it (/opt/robinos/pkg)
+  5. Runs mkarchiso
+  6. Writes SHA256SUMS for generated ISO files
 EOF
       exit 0
       ;;
@@ -62,6 +63,14 @@ if [[ "${SKIP_PACKAGE_CHECK}" != "true" ]]; then
 fi
 
 "${ROOT_DIR}/scripts/prepare-archiso.sh"
+
+# The robinos package of this same commit, for post-install.sh to hand the copied
+# files to pacman (docs/design.md "RobinOS 파일 업데이트"). Kept out of the
+# committed overlay: it is a build output, a few hundred KB.
+sudo "${ROOT_DIR}/scripts/build-package.sh"
+iso_pkg_dir="${ROOT_DIR}/build/archiso-profile/airootfs/opt/robinos/pkg"
+mkdir -p "${iso_pkg_dir}"
+cp "${ROOT_DIR}"/out/packages/robinos-*.pkg.tar.zst* "${iso_pkg_dir}/"
 
 # ROBINOS_FAST_ISO=1 (wsl-build.ps1 verify): zstd instead of xz for a test ISO. It
 # builds a few minutes faster and boots a little faster, but it is bigger than

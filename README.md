@@ -92,6 +92,8 @@ bin/robinctl packages web
 bin/robinctl packages optional
 bin/robinctl snapshot setup --dry-run
 bin/robinctl snapshot list
+bin/robinctl repo
+bin/robinctl repo setup --dry-run
 bin/robinctl learn
 bin/robinctl learn show 1
 bin/robinctl learn check 1
