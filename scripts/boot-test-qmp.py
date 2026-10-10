@@ -272,9 +272,11 @@ def main():
     # A clean live boot: what the VM is taken for, no failed units (the VMware tools
     # are meant to start only in VMware, T-137) and NetworkManager alone, without
     # systemd-networkd fighting it over the interface
-    type_text(qmp, "clear; systemd-detect-virt; systemctl --failed; systemctl is-active systemd-networkd NetworkManager\n")
+    # --no-pager: less would swallow the keys typed next (mission 1 stayed unsolved
+    # on the slower xz release ISO, 2026-10-10)
+    type_text(qmp, "clear; systemd-detect-virt; systemctl --failed --no-pager; systemctl is-active systemd-networkd NetworkManager\n")
     # The guest is still taking the typed keys for a while after QMP sent them
-    wait(5)
+    wait(8)
     shot(qmp, "failed-units")
     # Solve mission 1, so the launcher's learning entry shows "1/45" in light-launcher
     type_text(qmp, "mkdir -p ~/practice/notes && robinctl learn check 1 >/dev/null\n")
