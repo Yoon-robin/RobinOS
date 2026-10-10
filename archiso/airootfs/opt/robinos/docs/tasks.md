@@ -40,7 +40,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (없음) | | |
+| 묶음 71 | T-145 설치본이 robinos 패키지와 RobinOS 저장소를 쓰게 | `verify -Installer robinos` (빌드의 `Package:`, 설치 테스트의 패키지 소유·저장소·열쇠) |
 
 `f6ceb6d`까지 2026-10-10 묶음 69 검증(`verify`: 빌드 3.6분 + 테스트 14.5분)을 마치고 푸시했어요.
 
@@ -78,7 +78,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 조사(2026-10-08): Orca 51 패키지와 libatspi 2.62를 받아 확인. Orca는 `Atspi.Device.new_full`로 키를 받고, Wayland에서는 `org.freedesktop.a11y.Manager`(Mutter 제공)를 써요. Hyprland 0.56.2 소스에 없어서 Orca 키 명령은 안 되고 포커스 읽기만 돼요. 결론과 이유를 design.md 미결정 사항에 적음. 업스트림 변화 점검 때 Hyprland가 이 인터페이스를 넣었는지 봐요
 
 ### T-145 설치본이 RobinOS 저장소를 쓰게 (T-026 3단계)
-- 상태: 진행 중 (묶음 71)
+- 상태: 검증 대기 (묶음 71)
 - 한 것: ISO 빌드가 같은 커밋의 `robinos` 패키지를 만들어 `/opt/robinos/pkg`에 넣고, `post-install.sh`가 열쇠를 로컬 서명으로 믿고 `[robinos]` 저장소를 넣은 뒤 그 패키지를 `pacman -U`(덮어쓰기는 `/opt/robinos/*`만)로 설치해요. 패키지가 없으면(Arch 먼저 깔고 체크아웃에서 실행) 예전처럼 복사해요. 다른 패키지가 가진 `/etc/skel/.bashrc`(bash), `/etc/xdg/foot/foot.ini`(foot)는 패키지에서 빼고 설치 후 스크립트가 덮어요(`desktop/package-shared.txt`, `pacman -F`로 266개 파일 중 둘만 겹침). `build-package.sh`가 겹치는 파일이 다시 생기면 실패해요. `/opt/robinos/keys`에 공개 열쇠
 - 할 것: 설치기·post-install이 `[robinos]` 저장소와 열쇠(로컬 서명)를 넣고 RobinOS 파일을 패키지로 설치. 이미 깐 파일에서 옮겨 가는 `robinctl update`(처음 한 번 `--overwrite`)
 - 완료 기준: 설치 테스트에서 `pacman -Qo /usr/share/robinos/shell/shell.qml`이 `robinos`, `robinctl update`가 스냅샷과 함께 새 버전을 받음
