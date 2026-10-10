@@ -49,15 +49,40 @@ mapfile -t desktop_packages < <(package_file "${ROOT_DIR}/packages/desktop.txt")
 mapfile -t app_packages < <(package_file "${ROOT_DIR}/packages/apps.txt")
 
 run pacman "${PACMAN_ARGS[@]}" "${core_packages[@]}" "${desktop_packages[@]}" "${app_packages[@]}"
-run install -Dm755 "${ROOT_DIR}/bin/robinctl" /usr/local/bin/robinctl
-run install -Dm644 "${ROOT_DIR}/config/robinos.toml" /etc/robinos/config.toml
+
+# The RobinOS repository: its release key trusted locally, then [robinos] in
+# pacman.conf, so `robinctl update` brings new RobinOS files too (docs/design.md
+# "RobinOS 파일 업데이트")
+release_key="${ROOT_DIR}/keys/robinos-release.asc"
+if [[ -f "${release_key}" ]]; then
+  fingerprint="$(gpg --batch --show-keys --with-colons "${release_key}" | awk -F: '/^fpr:/ {print $10; exit}')"
+  run pacman-key --add "${release_key}"
+  run pacman-key --lsign-key "${fingerprint}"
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    printf '/etc/pacman.conf에 [robinos] 저장소를 넣어요\n'
+  elif ! grep -q '^\[robinos\]' /etc/pacman.conf; then
+    printf '\n# RobinOS files (docs/design.md "RobinOS 파일 업데이트")\n[robinos]\nSigLevel = Required DatabaseRequired\nServer = https://github.com/Yoon-robin/RobinOS/releases/download/repo\n' >>/etc/pacman.conf
+  fi
+fi
+
+# RobinOS's own files: the robinos package the ISO carries (built from the same
+# commit), so they belong to pacman. robin-install copied /opt/robinos already, and
+# only those files may be overwritten. A checkout without the package (Arch first,
+# then this script) copies the files as before.
+robinos_package="$(find "${ROOT_DIR}/pkg" -maxdepth 1 -name 'robinos-*.pkg.tar.zst' -print -quit 2>/dev/null || true)"
+if [[ -n "${robinos_package}" ]]; then
+  run pacman -U --noconfirm --overwrite '/opt/robinos/*' "${robinos_package}"
+else
+  run install -Dm755 "${ROOT_DIR}/bin/robinctl" /usr/local/bin/robinctl
+  run install -Dm644 "${ROOT_DIR}/config/robinos.toml" /etc/robinos/config.toml
+fi
 
 # Desktop: Hyprland + Quickshell shell, themes, input method and font defaults
 if [[ "${DRY_RUN}" == "true" ]]; then
   "${ROOT_DIR}/scripts/install-desktop.sh" --dry-run
   printf 'Geist와 Pretendard 글꼴을 /usr/share/fonts/robinos에 내려받아요\n'
 else
-  run "${ROOT_DIR}/scripts/install-desktop.sh"
+  [[ -n "${robinos_package}" ]] || run "${ROOT_DIR}/scripts/install-desktop.sh"
   # robin-install copies the fonts from the live ISO, so there is nothing to download
   if [[ -f "/usr/share/fonts/robinos/Geist[wght].ttf" && -f /usr/share/fonts/robinos/PretendardVariable.ttf ]]; then
     printf 'RobinOS 글꼴이 이미 있어요\n'

@@ -606,6 +606,19 @@ def phase_installed(con, qmp):
     # The guest tools robin-install picked for this VM (systemd-detect-virt, T-137)
     con.run("systemd-detect-virt; pacman -Q open-vm-tools qemu-guest-agent; systemctl --failed --no-legend",
             check=False)
+    # RobinOS's own files belong to the robinos package the ISO carries, the RobinOS
+    # repository and its key are set up for updates (T-145), and the two files other
+    # packages own got RobinOS's version (desktop/package-shared.txt)
+    # (archinstall's way runs post-install.sh from the checkout, which has no package:
+    # the files are copied as before and only the repository is set up)
+    if INSTALLER != "archinstall":
+        con.run(r"pacman -Q robinos && pacman -Qo /usr/share/robinos/shell/shell.qml /usr/local/bin/robinctl"
+                r" /opt/robinos/bin/robinctl | grep -c 'is owned by robinos' | grep -qx 3")
+    con.run(r"grep -A2 '^\[robinos\]' /etc/pacman.conf"
+            r" && pacman-key --list-keys D8EB0C495CBF5B2BBB57EACCFD9B53B8B79E9AAD >/dev/null")
+    con.run(r"pacman -Sy >/dev/null && pacman -Si robinos | head -n 3")
+    con.run(r'[ "$(sha256sum < /etc/skel/.bashrc)" = "$(sha256sum < /opt/robinos/desktop/bash/bashrc)" ]'
+            r' && [ "$(sha256sum < /etc/xdg/foot/foot.ini)" = "$(sha256sum < /opt/robinos/desktop/foot/foot.ini)" ]')
 
     # QEMU's WHPX can't reset a VM that reboots itself ("Unexpected VP exit code 4"),
     # so every boot is its own QEMU run: power off here, the next phase boots again.

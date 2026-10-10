@@ -63,6 +63,13 @@ fi
 
 "${ROOT_DIR}/scripts/prepare-archiso.sh"
 
+# The robinos package of this same commit, signed, for the installer: post-install.sh
+# installs it so the installed system's RobinOS files belong to pacman and later come
+# from the RobinOS repository (docs/design.md "RobinOS 파일 업데이트")
+"${ROOT_DIR}/scripts/build-package.sh"
+install -d "${ROOT_DIR}/build/archiso-profile/airootfs/opt/robinos/pkg"
+cp "${ROOT_DIR}"/out/packages/robinos-*.pkg.tar.zst* "${ROOT_DIR}/build/archiso-profile/airootfs/opt/robinos/pkg/"
+
 # ROBINOS_FAST_ISO=1 (wsl-build.ps1 verify): zstd instead of xz for a test ISO. It
 # builds a few minutes faster and boots a little faster, but it is bigger than
 # GitHub's 2 GiB release limit, so releases are built without it (docs/release.md).

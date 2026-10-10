@@ -1,5 +1,10 @@
 # What scripts/post-install.sh runs after copying the files, for the package
 post_install() {
+  # RobinOS's versions of files other packages own (desktop/package-shared.txt)
+  while read -r src dest; do
+    case "${src}" in "" | \#*) continue ;; esac
+    install -Dm644 "/opt/robinos/${src}" "${dest}"
+  done </opt/robinos/desktop/package-shared.txt
   dconf update 2>/dev/null || true
   /usr/share/robinos/bin/robinos-os-release 2>/dev/null || true
 }

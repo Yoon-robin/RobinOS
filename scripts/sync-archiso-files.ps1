@@ -26,6 +26,8 @@ Copy-Item "$root\config\*" "$root\archiso\airootfs\opt\robinos\config" -Recurse 
 # Only the Markdown: docs\screenshots (README pictures) stays out of the ISO
 Copy-Item "$root\docs\*.md" "$root\archiso\airootfs\opt\robinos\docs" -Force
 Copy-Item "$root\packages\*.txt" "$root\archiso\airootfs\opt\robinos\packages" -Force
+New-Item -ItemType Directory -Force -Path "$root\archiso\airootfs\opt\robinos\keys" | Out-Null
+Copy-Item "$root\keys\robinos-release.asc" "$root\archiso\airootfs\opt\robinos\keys\robinos-release.asc" -Force
 Copy-Item "$root\labs\*" "$root\archiso\airootfs\opt\robinos\labs" -Recurse -Force
 if (Test-Path "$root\archiso\airootfs\opt\robinos\desktop") {
     Remove-Item "$root\archiso\airootfs\opt\robinos\desktop" -Recurse -Force

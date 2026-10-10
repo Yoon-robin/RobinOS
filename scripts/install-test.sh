@@ -73,7 +73,7 @@ label="$(dd if="${ISO}" bs=1 skip=32808 count=32 2>/dev/null | tr -d ' \0')"
 # The files the installed system needs from this checkout
 share="${OUT_DIR}/share/robinos"
 mkdir -p "${share}"
-for dir in assets bin config desktop docs installer labs packages scripts themes; do
+for dir in assets bin config desktop docs installer keys labs packages scripts themes; do
   cp -a "${ROOT_DIR}/${dir}" "${share}/"
 done
 

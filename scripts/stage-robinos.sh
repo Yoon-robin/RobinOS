@@ -43,6 +43,8 @@ install -Dm644 "${ROOT_DIR}"/docs/*.md -t "${opt}/docs"
 install -Dm644 "${ROOT_DIR}"/packages/*.txt -t "${opt}/packages"
 install -Dm755 "${ROOT_DIR}"/scripts/*.sh -t "${opt}/scripts"
 install -Dm644 "${ROOT_DIR}"/scripts/*.ps1 -t "${opt}/scripts"
+# The release key: post-install.sh trusts it for the RobinOS repository
+install -Dm644 "${ROOT_DIR}/keys/robinos-release.asc" "${opt}/keys/robinos-release.asc"
 rm -rf "${opt}/labs"
 cp -a "${ROOT_DIR}/labs" "${opt}/labs"
 rm -rf "${opt}/desktop"
