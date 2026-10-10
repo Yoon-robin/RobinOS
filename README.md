@@ -8,6 +8,8 @@ RobinOS는 Arch 기반 보안 학습용 운영체제예요. 윤리적 해킹, CT
 
 RobinOS는 윈도우에서 넘어온 사람이 매일 쓰는 OS예요. 쓰면서 리눅스와 보안을 함께 배워요. 전체 설계는 [docs/design.md](docs/design.md)에 있어요.
 
+**내려받기**: 최신 프리뷰는 [v0.2.0](https://github.com/Yoon-robin/RobinOS/releases/tag/v0.2.0)이에요(2026-10-10). 아직 VM에서만 검증한 프리뷰라 중요한 자료는 꼭 백업하세요. USB에 담기 전에 체크섬과 서명을 확인하는 방법은 [docs/install.md](docs/install.md)의 "내려받은 ISO 확인하기"에 있어요.
+
 ## 화면
 
 부팅 테스트(VM, 1600×900)가 찍은 화면이에요. 다크·라이트 모드를 고를 수 있어요.

@@ -65,12 +65,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 ## 할 일 (위에서부터)
 
-### T-142 v0.2 프리뷰 공개
-- 상태: 진행 중
-- 출처: 2026-10-10 사용자 결정("공개해")
-- 할 것: 묶음 66(T-141 고침, 서명)이 검증을 통과하면 그 커밋으로 릴리스 ISO(`wsl-build.ps1 build`, xz) 빌드 → 크기 확인(2GiB 안) → 부팅 테스트 → 깃허브 프리릴리스 `v0.2.0`(ISO, `SHA256SUMS`, `SHA256SUMS.sig`, 공개 열쇠, 발표문 `docs/release-notes-v0.2.md`)
-- 같이 한 것: 릴리스 서명 열쇠를 만들었어요(2026-10-10 사용자 결정 "만들어", 지문 `D8EB 0C49 5CBF 5B2B BB57 EACC FD9B 53B8 B79E 9AAD`, `docs/release.md` "서명"). `build-iso.sh`가 `SHA256SUMS.sig`를 만들어요. 깃허브의 `work/t025-vmware` 브랜치는 지웠어요("지워")
-
 ### T-104 2029년 공휴일 넣기
 - 상태: 할 일 (2028년 가을에 해요)
 - 출처: T-103. `desktop/shell/holidays.js`의 음력 공휴일·대체공휴일 표가 2028년까지예요
@@ -102,6 +96,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 최근 것이 위에 있어요. 더 오래된 기록은 [done.md](done.md)에 있어요.
 
+- 2026-10-10 T-142 v0.2 프리뷰 공개(사용자 결정 "공개해, 만들어, 지워"): `b4072b0`을 `wsl-build.ps1 build`(xz)로 빌드, ISO 2,101,510,144바이트(한도까지 43.8MiB), SHA-256 `b1e3c36c…f1b51b8`, `SHA256SUMS.sig`(열쇠 `D8EB…9AAD`). 이 ISO로 부팅 테스트 79장(부팅 끝 17.6초) 통과, 학습 센터가 0/45로 나온 것은 테스트의 pager 문제(다음 묶음에서 고침). 깃허브 프리릴리스 [v0.2.0](https://github.com/Yoon-robin/RobinOS/releases/tag/v0.2.0)에 ISO, SHA256SUMS, 서명, 공개 열쇠. 깃허브가 계산한 ISO 체크섬이 서명된 SHA256SUMS와 같고, 내려받은 서명이 공개 열쇠로 "Good signature". 같은 날 릴리스 서명 열쇠를 만들고 깃허브의 `work/t025-vmware`를 지웠어요
 - 2026-10-10 묶음 66 검증(`8312625`, verify 빌드 3.2분 + 테스트 14.4분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장, 부팅 끝 15.2초)
   - T-141 코드 검토 고침(`8312625`): 정적 검사에 Shell JS imports, 계산 시험 27가지, robinctl 테스트 "it says to show the mission first". `50-notification-opened`는 전과 같음
   - T-142 릴리스 서명(`8312625`): 빌드 로그에 `Signed: /root/RobinOS/out/SHA256SUMS.sig (key D8EB0C495CBF5B2BBB57EACCFD9B53B8B79E9AAD)`, 저장소의 공개 열쇠만으로 "Good signature"
