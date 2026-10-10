@@ -2,7 +2,7 @@
 set -euo pipefail
 
 readonly ROBINOS_NAME="RobinOS"
-readonly ROBINOS_VERSION="0.2.0-dev"
+readonly ROBINOS_VERSION="0.3.0-dev"
 readonly CONFIG_FILE="/etc/robinos/config.toml"
 readonly SHELL_DIR="/usr/share/robinos/shell"
 readonly SESSION_FILE="/usr/share/wayland-sessions/robinos.desktop"
