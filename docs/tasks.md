@@ -76,12 +76,25 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 출처: 품질 점검(접근성) "화면 읽기 프로그램(Orca)은 아직"
 - 조사(2026-10-08): Orca 51 패키지와 libatspi 2.62를 받아 확인. Orca는 `Atspi.Device.new_full`로 키를 받고, Wayland에서는 `org.freedesktop.a11y.Manager`(Mutter 제공)를 써요. Hyprland 0.56.2 소스에 없어서 Orca 키 명령은 안 되고 포커스 읽기만 돼요. 결론과 이유를 design.md 미결정 사항에 적음. 업스트림 변화 점검 때 Hyprland가 이 인터페이스를 넣었는지 봐요
 
-### T-026 RobinOS 자체 파일 업데이트
-- 상태: 할 일 (2026-10-10 사용자 결정: 서명 열쇠를 만들고 추천 방식으로. 열쇠는 만들었어요, T-142)
-- 출처: T-025. `robinctl update`는 `pacman -Syu`만 해요. 셸, `robinctl`, 설정 같은 RobinOS 파일은 설치할 때의 ISO 버전에 머물러서, 셸 버그를 고쳐도 설치한 사람에게 갈 길이 없어요
-- 후보: ① RobinOS 파일을 pacman 패키지(`robinos-desktop` 등)로 만들고 자체 저장소에서 서명해 배포, ② `/opt/robinos`를 GitHub 릴리스 태그로 받아 서명이나 체크섬을 확인한 뒤 `install-desktop.sh`로 다시 설치. ①은 pacman과 스냅샷(snap-pac)에 자연스럽게 묶이고, ②는 빨리 만들 수 있어요
-- 완료 기준: 설치 테스트에서 옛 버전을 설치한 뒤 `robinctl update`로 새 버전 파일이 들어오고, 업데이트 전 스냅샷이 생김
+### T-143 RobinOS 파일을 pacman 패키지로 (T-026 1단계)
+- 상태: 할 일
+- 출처: T-026, design.md "RobinOS 파일 업데이트"
+- 할 것: `packaging/robinos/PKGBUILD`(이름 `robinos`, 버전은 `config/robinos.toml`). `package()`가 `scripts/install-desktop.sh --root "$pkgdir"`, `robinctl`, `/etc/robinos/config.toml`, 브랜딩, `/opt/robinos`(robinctl이 읽는 패키지 목록과 스크립트)를 넣어요. `/etc` 파일은 `backup`. WSL에서 일반 사용자로 `makepkg` 하는 `scripts/build-package.sh`, 패키지 서명
+- 완료 기준: 패키지의 파일 목록이 `install-desktop.sh --root`로 깐 목록과 같다는 검사, 빈 컨테이너(또는 chroot)에 설치해 `robinctl help`가 돎
 
+### T-144 깃허브 릴리스를 pacman 저장소로 (T-026 2단계)
+- 상태: 할 일
+- 할 것: `scripts/publish-repo.sh`가 `repo-add --sign`으로 데이터베이스를 만들고 패키지·데이터베이스 서명과 함께 깃허브 릴리스 `repo`에 올려요(같은 이름은 바꿔 올림)
+- 완료 기준: 다른 Arch(WSL 컨테이너)에서 저장소를 켜고 `pacman -Sy robinos`가 서명 확인을 통과해 설치
+
+### T-145 설치본이 RobinOS 저장소를 쓰게 (T-026 3단계)
+- 상태: 할 일
+- 할 것: 설치기·post-install이 `[robinos]` 저장소와 열쇠(로컬 서명)를 넣고 RobinOS 파일을 패키지로 설치. 이미 깐 파일에서 옮겨 가는 `robinctl update`(처음 한 번 `--overwrite`)
+- 완료 기준: 설치 테스트에서 `pacman -Qo /usr/share/robinos/shell/shell.qml`이 `robinos`, `robinctl update`가 스냅샷과 함께 새 버전을 받음
+
+### T-146 이미 설치한 시스템 안내 (T-026 4단계)
+- 상태: 할 일
+- 할 것: v0.2 이하 설치본이 저장소를 켜는 방법을 install.md와 다음 발표문에. 업데이트가 나왔다는 알림(바의 업데이트 점은 pacman을 보니 그대로 동작)
 ### T-021 웹 보안 미션 (Juice Shop)
 - 상태: 보류. 범위를 다시 잡을 때까지 다른 작업을 먼저 해요. 랩 안내(`robinctl lab info web`)와 Juice Shop 자체의 점수판으로 시작할 수 있어요
 - 출처: 백로그 채우기 4 (학습 기능 늘리기), design.md 학습 순서의 세 번째(웹 보안)

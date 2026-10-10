@@ -128,6 +128,17 @@ Calamares를 쓰지 않은 이유예요.
 
 Hyprland 0.56은 `start-hyprland`(감시 프로세스)로 띄우라고 하고, 그냥 띄우면 시작할 때 경고를 남겨요. RobinOS는 `robinos-session`이 `Hyprland`를 직접 띄워요(2026-10-09 결정). `start-hyprland`는 Hyprland가 비정상 종료하면 `--safe-mode`로 다시 띄우는데(실행 파일에서 확인), 그러면 위 2번의 "곧바로 종료되면 소프트웨어 렌더링으로" 대처가 동작하지 않아요. 경고는 무시해도 돼요.
 
+### RobinOS 파일 업데이트: 서명한 pacman 저장소 (2026-10-10)
+
+셸, `robinctl`, 설정 같은 RobinOS 파일은 지금 설치할 때 복사만 돼서, 고친 것이 이미 설치한 사람에게 갈 길이 없어요(T-026). 사용자 결정(2026-10-10)에 따라 따로 서버를 두지 않고 이렇게 해요.
+
+1. **패키지**: RobinOS 파일을 pacman 패키지 `robinos`로 만들어요(`packaging/robinos/PKGBUILD`). 파일 배치는 지금처럼 `desktop/install-map.txt`와 `scripts/install-desktop.sh --root`가 정해서, 설치기와 패키지가 같은 곳에 같은 파일을 놓아요. `/etc`의 설정 파일은 `backup`에 넣어 사용자가 고친 것을 덮지 않아요.
+2. **저장소**: 깃허브 릴리스 하나(태그 `repo`)를 pacman 저장소로 써요. `repo-add`가 만든 데이터베이스와 패키지를 릴리스 열쇠(`keys/robinos-release.asc`)로 서명해서 올려요. 서버 비용과 운영이 없고, 깃허브가 내려받기를 맡아요.
+3. **설치본 설정**: 설치기가 `/etc/pacman.conf`에 `[robinos]` 저장소를 넣고(`SigLevel = Required`), pacman 열쇠고리에 RobinOS 열쇠를 넣어 로컬 서명으로 믿게 해요. 그러면 `sudo robinctl update`(`pacman -Syu`) 한 번에 RobinOS 파일도 올라가고, snap-pac이 업데이트 전후 스냅샷을 그대로 만들어요.
+4. **옮겨 가기**: 이미 설치한 시스템의 파일은 어떤 패키지에도 속하지 않아서 pacman이 덮어쓰기를 거부해요. 처음 한 번은 `robinctl`이 그 경로에만 `--overwrite`를 주고 설치해요. v0.2 이하로 설치한 시스템은 이 기능이 없는 `robinctl`이라, 저장소를 켜는 한 줄 안내를 문서에 둬요.
+
+열쇠가 이 PC의 WSL에만 있어서, 패키지와 저장소는 이 PC에서만 서명해요([release.md](release.md) "서명").
+
 ## v0.1 범위
 
 | # | 항목 | 상태 |
