@@ -612,8 +612,9 @@ def phase_installed(con, qmp):
     # (archinstall's way runs post-install.sh from the checkout, which has no package:
     # the files are copied as before and only the repository is set up)
     if INSTALLER != "archinstall":
-        con.run(r"pacman -Q robinos && pacman -Qo /usr/share/robinos/shell/shell.qml /usr/local/bin/robinctl"
-                r" /opt/robinos/bin/robinctl | grep -c 'is owned by robinos' | grep -qx 3")
+        # -q: just the package name; the full answer is in Korean on the installed system
+        con.run(r"pacman -Q robinos && pacman -Qqo /usr/share/robinos/shell/shell.qml /usr/local/bin/robinctl"
+                r" /opt/robinos/bin/robinctl | grep -cx robinos | grep -qx 3")
     con.run(r"grep -A2 '^\[robinos\]' /etc/pacman.conf"
             r" && pacman-key --list-keys D8EB0C495CBF5B2BBB57EACCFD9B53B8B79E9AAD >/dev/null")
     con.run(r"pacman -Sy >/dev/null && pacman -Si robinos | head -n 3")
