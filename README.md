@@ -190,3 +190,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test
 - [docs/README.md](docs/README.md): 문서 지도. 어떤 문서가 무엇의 원본인지 정리돼 있어요.
 - [docs/design.md](docs/design.md): 제품 설계와 v0.1 범위의 진행 상황
 - [docs/tasks.md](docs/tasks.md): 지금 할 일과 진행 중인 작업
+
+## 라이선스
+
+RobinOS가 직접 만든 코드와 문서는 [GPL-3.0](LICENSE)으로 공개해요(2026-10-11). 고쳐서 배포하면 그 결과물도 같은 조건으로 공개해야 해요. RobinOS가 쓰는 Arch Linux, Hyprland, Quickshell 같은 다른 소프트웨어는 각자의 라이선스를 따라요.

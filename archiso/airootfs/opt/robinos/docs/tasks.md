@@ -46,7 +46,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 ## 사용자 확인 필요
 
-- **라이선스**: 저장소에 라이선스 파일이 없어서 RobinOS 패키지에 `license=(unknown)`으로 적었어요. 공개 프로젝트라 정해 두는 게 좋아요(예: MIT, GPL-3.0). 정해 주면 `LICENSE`와 패키지에 넣어요
 - **실기기 라이브 부팅**: USB로 실제 PC에서 ISO를 부팅해 봐야 해요. 사용자만 할 수 있어요. NVIDIA 카드(GTX 16, RTX 20 이후)가 있는 PC라면 설치한 뒤 데스크톱이 뜨는지, `lsmod | grep nvidia`에 나오는지도 봐 주세요(T-030). 노트북이라면 전원을 뽑고 배터리가 10%가 될 때 "배터리가 10% 남았어요" 알림이 뜨는지(T-070), 런처의 "Steam 설치하기"로 받은 Steam에서 게임이 켜지는지(T-066)도 봐 주세요. 빠른 설정의 "야간 모드"를 켜면 화면이 따뜻한 색이 되는지도 봐 주세요(T-076, VM에서는 안 돼요). (`막힘`)
 - **실제 윈도우 PC에서 "윈도우 옆에 설치"**: VM의 가짜 윈도우 디스크로는 파티션과 부팅 파일이 그대로인 것까지 확인했어요(T-006). 진짜 윈도우가 GRUB 메뉴에 나오는지, BitLocker 복구 키를 묻는지는 실제 PC에서만 볼 수 있어요. 백업해 둔 PC나 남는 디스크로 해 주세요. (`막힘`)
 - **집 PC의 VMware 서비스 켜기(T-025)**: 집 PC(Blitz)에서 VM을 만들어 켜려 했더니 VMware의 윈도우 서비스(Authorization, DHCP, NAT, USB Arbitration)가 모두 "사용 안 함"이라 VM이 켜지지 않아요. 관리자 권한이 필요해서 직접 하지 않아요. 쓰려면 관리자 PowerShell에서 `'VMAuthdService','VMnetDHCP','VMware NAT Service','VMUSBArbService' | ForEach-Object { Set-Service -Name $_ -StartupType Manual }; Start-Service VMAuthdService,VMnetDHCP,'VMware NAT Service'` (2026-10-10 처음 알려 드린 명령은 `Set-Service`에 이름을 한꺼번에 넘겨서 윈도우 PowerShell 5.1에서 실패했어요). VM(`문서\Virtual Machines\RobinOS`)과 스크립트(`build\vmware\vmware-test.py`)는 준비돼 있어요 (`막힘`)
@@ -78,7 +77,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 조사(2026-10-08): Orca 51 패키지와 libatspi 2.62를 받아 확인. Orca는 `Atspi.Device.new_full`로 키를 받고, Wayland에서는 `org.freedesktop.a11y.Manager`(Mutter 제공)를 써요. Hyprland 0.56.2 소스에 없어서 Orca 키 명령은 안 되고 포커스 읽기만 돼요. 결론과 이유를 design.md 미결정 사항에 적음. 업스트림 변화 점검 때 Hyprland가 이 인터페이스를 넣었는지 봐요
 
 ### T-145 설치본이 RobinOS 저장소를 쓰게 (T-026 3단계)
-- 상태: 검증 대기 (묶음 71)
+- 상태: 진행 중 (묶음 72)
+- 묶음 71 검증에서 찾은 것: 첫 번째는 설치 테스트 VM이 미러에 닿지 않아 실패(네트워크, 다시 돌림). 두 번째는 진짜 버그로, `[robinos]`를 켜기만 하고 목록을 받지 않아 설치 직후 `pacman -S`가 "database file for 'robinos' does not exist"로 실패 → 저장소를 켠 뒤 `pacman -Sy`(실패하면 안내만)
 - 한 것: ISO 빌드가 같은 커밋의 `robinos` 패키지를 만들어 `/opt/robinos/pkg`에 넣고, `post-install.sh`가 열쇠를 로컬 서명으로 믿고 `[robinos]` 저장소를 넣은 뒤 그 패키지를 `pacman -U`(덮어쓰기는 `/opt/robinos/*`만)로 설치해요. 패키지가 없으면(Arch 먼저 깔고 체크아웃에서 실행) 예전처럼 복사해요. 다른 패키지가 가진 `/etc/skel/.bashrc`(bash), `/etc/xdg/foot/foot.ini`(foot)는 패키지에서 빼고 설치 후 스크립트가 덮어요(`desktop/package-shared.txt`, `pacman -F`로 266개 파일 중 둘만 겹침). `build-package.sh`가 겹치는 파일이 다시 생기면 실패해요. `/opt/robinos/keys`에 공개 열쇠
 - 할 것: 설치기·post-install이 `[robinos]` 저장소와 열쇠(로컬 서명)를 넣고 RobinOS 파일을 패키지로 설치. 이미 깐 파일에서 옮겨 가는 `robinctl update`(처음 한 번 `--overwrite`)
 - 완료 기준: 설치 테스트에서 `pacman -Qo /usr/share/robinos/shell/shell.qml`이 `robinos`, `robinctl update`가 스냅샷과 함께 새 버전을 받음

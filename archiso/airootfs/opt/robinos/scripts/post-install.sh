@@ -63,6 +63,14 @@ if [[ -f "${release_key}" ]]; then
   elif ! grep -q '^\[robinos\]' /etc/pacman.conf; then
     printf '\n# RobinOS files (docs/design.md "RobinOS 파일 업데이트")\n[robinos]\nSigLevel = Required DatabaseRequired\nServer = https://github.com/Yoon-robin/RobinOS/releases/download/repo\n' >>/etc/pacman.conf
   fi
+  # Its database now, or every `pacman -S` fails with "database file for 'robinos'
+  # does not exist" until the first -Sy (install test, 2026-10-11). Offline, the next
+  # `robinctl update` fetches it.
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    printf '실행할 명령: pacman -Sy\n'
+  elif ! pacman -Sy --noconfirm >/dev/null; then
+    printf '알림: RobinOS 저장소 목록을 받지 못했어요. 인터넷이 될 때 sudo robinctl update를 실행하세요\n' >&2
+  fi
 fi
 
 # RobinOS's own files: the robinos package the ISO carries (built from the same
