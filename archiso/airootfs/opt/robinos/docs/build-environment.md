@@ -70,7 +70,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test
 3. 서명 열쇠를 옮겨요. 릴리스 ISO 체크섬과 RobinOS 패키지 저장소에 서명할 때만 필요해요(없으면 빌드는 되고 서명만 빠져요). 백업한 USB의 `robinos-release-secret.asc`를 바탕화면에 복사한 뒤 아래를 실행하고, 바탕화면의 복사본은 지워요.
 
    ```powershell
-   $key = wsl.exe -d archlinux -e wslpath -a "$env:USERPROFILE\Desktopobinos-release-secret.asc"
+   $key = wsl.exe -d archlinux -e wslpath -a "$env:USERPROFILE\Desktop\robinos-release-secret.asc"
    wsl.exe -d archlinux -u root -e bash -c "install -d -m 700 /root/.robinos-signing && GNUPGHOME=/root/.robinos-signing gpg --batch --import '$key' && GNUPGHOME=/root/.robinos-signing gpg --list-secret-keys"
    ```
 
