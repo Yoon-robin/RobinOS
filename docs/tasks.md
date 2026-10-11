@@ -40,9 +40,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| 묶음 71·72 | T-145 설치본이 robinos 패키지와 RobinOS 저장소를 쓰게(+ 저장소 목록 받기), GPL-3.0 | `verify -Installer robinos` (설치 테스트의 패키지 소유·저장소·열쇠, filesystem 재설치) |
+| (없음) | | |
 
-`f6ceb6d`까지 2026-10-10 묶음 69 검증(`verify`: 빌드 3.6분 + 테스트 14.5분)을 마치고 푸시했어요.
+`e82be3c`까지 2026-10-12 묶음 72 검증(`verify` 빌드·부팅 테스트, 설치 테스트는 시험 고친 뒤 다시)을 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -76,13 +76,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 출처: 품질 점검(접근성) "화면 읽기 프로그램(Orca)은 아직"
 - 조사(2026-10-08): Orca 51 패키지와 libatspi 2.62를 받아 확인. Orca는 `Atspi.Device.new_full`로 키를 받고, Wayland에서는 `org.freedesktop.a11y.Manager`(Mutter 제공)를 써요. Hyprland 0.56.2 소스에 없어서 Orca 키 명령은 안 되고 포커스 읽기만 돼요. 결론과 이유를 design.md 미결정 사항에 적음. 업스트림 변화 점검 때 Hyprland가 이 인터페이스를 넣었는지 봐요
 
-### T-145 설치본이 RobinOS 저장소를 쓰게 (T-026 3단계)
-- 상태: 검증 대기 (묶음 72)
-- 묶음 71 검증에서 찾은 것: 첫 번째는 설치 테스트 VM이 미러에 닿지 않아 실패(네트워크, 다시 돌림). 두 번째는 진짜 버그로, `[robinos]`를 켜기만 하고 목록을 받지 않아 설치 직후 `pacman -S`가 "database file for 'robinos' does not exist"로 실패 → 저장소를 켠 뒤 `pacman -Sy`(실패하면 안내만)
-- 한 것: ISO 빌드가 같은 커밋의 `robinos` 패키지를 만들어 `/opt/robinos/pkg`에 넣고, `post-install.sh`가 열쇠를 로컬 서명으로 믿고 `[robinos]` 저장소를 넣은 뒤 그 패키지를 `pacman -U`(덮어쓰기는 `/opt/robinos/*`만)로 설치해요. 패키지가 없으면(Arch 먼저 깔고 체크아웃에서 실행) 예전처럼 복사해요. 다른 패키지가 가진 `/etc/skel/.bashrc`(bash), `/etc/xdg/foot/foot.ini`(foot)는 패키지에서 빼고 설치 후 스크립트가 덮어요(`desktop/package-shared.txt`, `pacman -F`로 266개 파일 중 둘만 겹침). `build-package.sh`가 겹치는 파일이 다시 생기면 실패해요. `/opt/robinos/keys`에 공개 열쇠
-- 할 것: 설치기·post-install이 `[robinos]` 저장소와 열쇠(로컬 서명)를 넣고 RobinOS 파일을 패키지로 설치. 이미 깐 파일에서 옮겨 가는 `robinctl update`(처음 한 번 `--overwrite`)
-- 완료 기준: 설치 테스트에서 `pacman -Qo /usr/share/robinos/shell/shell.qml`이 `robinos`, `robinctl update`가 스냅샷과 함께 새 버전을 받음
-
 ### T-146 이미 설치한 시스템 안내 (T-026 4단계)
 - 상태: 할 일
 - 할 것: v0.2 이하 설치본이 저장소를 켜는 방법을 install.md와 다음 발표문에. 업데이트가 나왔다는 알림(바의 업데이트 점은 pacman을 보니 그대로 동작)
@@ -100,6 +93,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 최근 것이 위에 있어요. 더 오래된 기록은 [done.md](done.md)에 있어요.
 
+- 2026-10-12 묶음 71~73 검증(`e82be3c`, 빌드 4분 + 부팅 테스트 79장 통과, 설치 테스트 다섯 단계 통과)
+  - T-145 설치본이 RobinOS 저장소를 쓰게(`bd8c495`~`e82be3c`): 빌드가 `robinos-0.3.0.r405`를 만들어 ISO에 넣고, 설치본에서 `pacman -Q robinos` = 0.3.0.r405-1, `[robinos]` 저장소와 열쇠, `pacman -Si robinos`가 깃허브의 0.3.0.r400을 서명 확인과 함께 받음, `filesystem` 재설치 통과. 검증 중 찾은 것: ① 설치 테스트 VM의 일시적인 네트워크 끊김 ② 저장소를 켜고 목록을 받지 않아 `pacman -S`가 실패하던 버그(고침) ③ 한국어 설치본에서 `pacman -Qo` 문구를 영어로 찾던 시험(`-Qqo`로 고침). GPL-3.0 `LICENSE`(사용자 결정)
 - 2026-10-10 T-144 깃허브 릴리스를 pacman 저장소로(`e3ace38`, `816c352`): `wsl-build.ps1 publish-repo`가 `robinos-0.3.0.r400-1`과 서명한 데이터베이스를 깃허브 프리릴리스 [repo](https://github.com/Yoon-robin/RobinOS/releases/tag/repo)에 올리고, `scripts/test-repo.sh`가 버린 루트에 `SigLevel = Required DatabaseRequired`로 깃허브에서 받아 설치(`robinos 0.3.0.r400-1`, `repo ok`). 빌드·배포 도구만 바뀌어서 이 실제 올리기와 설치가 검증이에요
 - 2026-10-10 묶음 69 검증(`f6ceb6d`, verify 빌드 3.6분 + 테스트 14.5분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장, 부팅 끝 14.8초)
   - T-143 RobinOS 파일을 pacman 패키지로(`30cfd62`): `wsl-build.ps1 package`가 `robinos-0.2.0.r395-1-any.pkg.tar.zst`(파일 264개)를 만들고 파일 목록·robinctl 실행·서명 확인 통과. `stage-robinos.sh`로 바꾼 ISO 동기화의 오버레이가 옛 것과 파일 하나까지 같고, 그 ISO로 부팅·설치 테스트 통과. 개발 버전 0.3.0-dev(`f6ceb6d`)
