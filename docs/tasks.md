@@ -61,6 +61,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 지금까지(2026-10-08, robin PC): `426e32d` ISO를 VMware VM에 설치함. 설치기가 마지막 `umount`에서 멈췄고(gpg-agent, `933ca31`에서 고침) 손으로 분리한 뒤 고친 `robinos-shell`을 넣어 부팅. 설치본에서 `open-vm-tools` 설치, `vmtoolsd` 켜짐, SDDM 로그인 화면까지 확인. 로그인 뒤 데스크톱은 아직 못 봄(VMware에는 키 입력을 보낼 방법이 없어 사람이 로그인해야 해요)
 - 검증: `933ca31` ISO로 부팅 테스트(29장)와 설치 테스트 robinos(다섯 단계) 통과, `e038f2a`까지 main 푸시(정기 점검 표)
 - 2026-10-11: 사용자가 집 PC(Blitz)의 VMware 서비스(Authorization, DHCP, NAT)를 켜서 `Running` 확인. 이제 이 PC에서 VM을 만들어 최신 ISO로 설치해 볼 수 있어요
+- 2026-10-12 집 PC(Blitz): 묶음 72의 ISO(`bd8c495`, robinos 패키지 포함)를 `buildmwaremware-test.py install`로 VM에 설치하는 중. 끝나면 `installed`로 설치본 부팅·해상도·vmtoolsd 확인. 다른 PC로 옮기면 이 VM은 집 PC에만 있어요
 - 남은 것 (VMware가 있는 PC: robin PC, 집 PC(Blitz, VMware Workstation 26.0)): 최종 ISO로 VMware VM에 다시 설치(`vmrun` 게스트 명령, 계획은 디스크 `/dev/nvme0n1` 전체), 로그인 뒤 셸·해상도 확인. 집 PC에는 VM이 아직 없어서 새로 만들어요(`build\vmware\guest-*.sh`는 robin PC에만 있어요). VMware가 없는 PC의 루프는 이 작업을 건너뛰어요
 
 ## 할 일 (위에서부터)
