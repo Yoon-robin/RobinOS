@@ -655,6 +655,26 @@ chmod 755 "${UPDATE_BIN}/flatpak"
 check "update dry run with flatpak" 0 env PATH="${UPDATE_BIN}:/usr/bin" bash "${ROBINCTL}" update --dry-run
 said "update also updates app store apps" "flatpak update --system"
 
+printf '%s\n' "Update preview (T-162) with stand-in checkupdates, pacman and busctl"
+PREVIEW_BIN="${WORK}/preview-bin"
+mkdir -p "${PREVIEW_BIN}"
+printf '#!/bin/sh\nprintf "linux 7.2.9-1 -> 7.3.0-1\\nfirefox 157.0.1-1 -> 158.0-1\\n"\n' >"${PREVIEW_BIN}/checkupdates"
+# pacman -Sup --print-format %%s: download sizes in bytes (150 MiB together)
+printf '#!/bin/sh\nprintf "104857600\\n52428800\\n"\n' >"${PREVIEW_BIN}/pacman"
+printf '#!/bin/sh\necho "u 4"\n' >"${PREVIEW_BIN}/busctl"
+chmod 755 "${PREVIEW_BIN}"/*
+check "update preview" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --preview
+said "preview counts the updates" "업데이트 2개"
+said "preview gives the download size" "받을 크기 150MB"
+said "preview says the kernel changes" "커널이 바뀌어요"
+if grep -q "데이터 요금" "${WORK}/out"; then bad "preview warns on an unmetered connection"; else ok "no metered warning on Wi-Fi"; fi
+printf '#!/bin/sh\necho "u 1"\n' >"${PREVIEW_BIN}/busctl"
+check "update preview on a metered connection" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --preview
+said "preview warns about a metered connection" "데이터 요금이 드는 연결"
+printf '#!/bin/sh\nexit 2\n' >"${PREVIEW_BIN}/checkupdates"
+check "update preview with nothing new" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --preview
+said "preview says everything is current" "모두 최신이에요"
+
 printf '%s\n' "Web lab (robinctl lab) with stand-in docker, sudo and systemctl"
 FAKE="${WORK}/fake"
 mkdir -p "${FAKE}"

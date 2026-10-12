@@ -39,7 +39,7 @@ robinctl - RobinOS 관리 도구
   robinctl doctor                       시스템 점검
   robinctl audit                        보안 점검 (윈도우 보안처럼: 열린 포트, 원격 접속, 권한, 암호화)
   robinctl app remove <앱 ID> [--dry-run]  앱 제거 (런처에서 Shift+Delete, RobinOS 기본 앱은 막아요)
-  robinctl update [--dry-run]           스냅샷을 만든 뒤 시스템 업데이트 (앱 스토어 앱도)
+  robinctl update [--dry-run|--preview] 스냅샷을 만든 뒤 시스템 업데이트 (앱 스토어 앱도). --preview는 받을 개수·크기만
   robinctl snapshot create [이름]       스냅샷 만들기
   robinctl snapshot list                스냅샷 목록
   robinctl snapshot setup [--dry-run]   스냅샷 설정 (Btrfs 루트, 처음 한 번)
@@ -404,6 +404,53 @@ doctor() {
   fi
 }
 
+# What the update is about to do, before pacman asks (T-162): how many packages
+# and how much to download, whether the kernel changes (restart afterwards), the
+# snapshot number taken first, and a question on a metered connection. Reads a
+# throwaway copy of the package databases (checkupdates), so stopping here leaves
+# the system's own databases as they were. Returns 1 when the person stops.
+update_preview() {
+  local mode="$1" db list count bytes metered next
+  have_cmd checkupdates || return 0
+  db="$(mktemp -d)"
+  list="$(CHECKUPDATES_DB="${db}" checkupdates 2>/dev/null || true)"
+  if [[ -z "${list}" ]]; then
+    printf '시스템 패키지는 모두 최신이에요.\n'
+    rm -rf "${db}"
+    return 0
+  fi
+  count="$(printf '%s\n' "${list}" | wc -l)"
+  bytes="$(pacman -Sup --dbpath "${db}" --logfile /dev/null --print-format '%s' 2>/dev/null \
+    | awk '/^[0-9]+$/ { sum += $1 } END { print sum + 0 }')"
+  rm -rf "${db}"
+
+  printf '%s업데이트 %s개%s' "${C_BOLD}" "${count}" "${C_RESET}"
+  if ((bytes > 0)); then
+    printf ', 받을 크기 %s' "$(awk -v b="${bytes}" 'BEGIN { if (b >= 1073741824) printf "%.1fGB", b / 1073741824; else printf "%dMB", int((b + 1048575) / 1048576) }')"
+  fi
+  printf '\n'
+  if printf '%s\n' "${list}" | grep -qE '^linux(-lts|-zen|-hardened)? '; then
+    printf '  커널이 바뀌어요. 업데이트가 끝나면 컴퓨터를 다시 시작해요.\n'
+  fi
+  if [[ "${mode}" != none ]]; then
+    next="$(snapper --no-dbus -c root list --columns number 2>/dev/null | awk '$1 ~ /^[0-9]+$/ { n = $1 } END { print n + 1 }')"
+    printf '  업데이트 직전에 스냅샷 %s번을 찍어요. 문제가 생기면: sudo robinctl snapshot rollback %s\n' "${next}" "${next}"
+  fi
+
+  # NetworkManager's Metered: 1 yes, 3 guessed yes (a phone hotspot)
+  metered="$(busctl get-property org.freedesktop.NetworkManager /org/freedesktop/NetworkManager \
+    org.freedesktop.NetworkManager Metered 2>/dev/null | awk '{ print $2 }')"
+  if [[ "${metered}" == 1 || "${metered}" == 3 ]]; then
+    printf '%s알림:%s 데이터 요금이 드는 연결(휴대폰 핫스팟 등)이에요.\n' "${C_YELLOW}" "${C_RESET}"
+    if [[ -t 0 ]] && [[ "${ASSUME_YES}" != true ]]; then
+      local answer
+      read -r -p '그래도 지금 받을까요? [y/N] ' answer
+      [[ "${answer}" =~ ^[yY]$ ]] || { printf 'Wi-Fi에 연결한 뒤 다시 업데이트해요.\n'; return 1; }
+    fi
+  fi
+  printf '\n'
+}
+
 update_system() {
   local dry_run="false"
   [[ "${1:-}" == "--dry-run" ]] && dry_run="true"
@@ -417,6 +464,12 @@ update_system() {
     mode="snap-pac"
   elif snapshot_ready; then
     mode="manual"
+  fi
+
+  # robinctl update --preview: only what an update would bring, without root
+  if [[ "${1:-}" == "--preview" ]]; then
+    update_preview "${mode}"
+    return
   fi
 
   if [[ "${dry_run}" == "true" ]]; then
@@ -433,6 +486,7 @@ update_system() {
   fi
 
   need_root
+  update_preview "${mode}" || return 0
   case "${mode}" in
     manual)
       snapper --no-dbus -c root create --description "RobinOS before update" --cleanup-algorithm number
