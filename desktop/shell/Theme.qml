@@ -61,6 +61,8 @@ Singleton {
                                             : dark ? Qt.rgba(24 / 255, 24 / 255, 27 / 255, 0.70) : Qt.rgba(1, 1, 1, 0.72)
     readonly property color glassBorder: dark ? Qt.rgba(1, 1, 1, 0.13) : Qt.rgba(0, 0, 0, 0.10)
     readonly property color scrim: dark ? Qt.rgba(0, 0, 0, 0.55) : Qt.rgba(0, 0, 0, 0.25)
+    // Behind the launcher: the desktop stays in view, a little dimmer (like Spotlight)
+    readonly property color scrimSoft: dark ? Qt.rgba(0, 0, 0, 0.28) : Qt.rgba(0, 0, 0, 0.10)
     readonly property color shadow: dark ? Qt.rgba(0, 0, 0, 0.7) : Qt.rgba(0, 0, 0, 0.18)
 
     readonly property int radiusSm: 6
@@ -76,6 +78,7 @@ Singleton {
 
     readonly property int durFast: 120
     readonly property int dur: 180
+    readonly property int durSpring: 260
 
     // Set by robinos-session when there is no GPU acceleration (most VMs):
     // the shell then skips shadow effects, and Hyprland turns off blur.

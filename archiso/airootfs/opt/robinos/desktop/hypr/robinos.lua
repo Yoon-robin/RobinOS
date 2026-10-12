@@ -461,10 +461,12 @@ hl.layer_rule({
     ignore_alpha = 0.2,
 })
 
+-- Only under the card: the dim around it (Theme.scrimSoft) stays sharp, like Spotlight
 hl.layer_rule({
-    name  = "robinos-launcher-blur",
-    match = { namespace = "^robinos-launcher$" },
-    blur  = true,
+    name         = "robinos-launcher-blur",
+    match        = { namespace = "^robinos-launcher$" },
+    blur         = true,
+    ignore_alpha = 0.5,
 })
 
 -- Floating panels are full-screen layers with one translucent card (Theme.glass);

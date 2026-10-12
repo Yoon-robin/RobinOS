@@ -735,7 +735,7 @@ PanelWindow {
 
     Rectangle {
         anchors.fill: parent
-        color: Theme.scrim
+        color: Theme.scrimSoft
         opacity: root.revealed ? 1 : 0
 
         Behavior on opacity {
@@ -753,7 +753,7 @@ PanelWindow {
 
         anchors.horizontalCenter: parent.horizontalCenter
         y: Math.round(parent.height * 0.17)
-        width: 640
+        width: 680
         height: column.implicitHeight
         radius: Theme.radiusPanel
         color: Theme.glass
@@ -761,14 +761,15 @@ PanelWindow {
         border.color: Theme.glassBorder
         clip: true
         opacity: root.revealed ? 1 : 0
-        scale: root.revealed ? 1 : 0.98
+        scale: root.revealed ? 1 : 0.96
 
         Behavior on opacity {
             NumberAnimation { duration: Theme.dur; easing.type: Easing.OutCubic }
         }
 
+        // Opens with a small settle past full size, like a spring (T-152)
         Behavior on scale {
-            NumberAnimation { duration: Theme.dur; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Theme.durSpring; easing.type: Easing.OutBack; easing.overshoot: 0.9 }
         }
 
         layer.enabled: !Theme.lowPower
@@ -793,15 +794,15 @@ PanelWindow {
             // Search
             Item {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 54
+                Layout.preferredHeight: 62
 
                 Icon {
                     id: searchIcon
                     anchors.left: parent.left
-                    anchors.leftMargin: 16
+                    anchors.leftMargin: 18
                     anchors.verticalCenter: parent.verticalCenter
                     name: "search"
-                    size: 18
+                    size: 20
                     color: Theme.muted
                 }
 
@@ -817,7 +818,7 @@ PanelWindow {
                     selectionColor: Theme.secondaryHover
                     selectedTextColor: Theme.fg
                     font.family: Theme.font
-                    font.pixelSize: 15
+                    font.pixelSize: 18
                     clip: true
 
                     Accessible.role: Accessible.EditableText
