@@ -47,6 +47,12 @@ known+='|QProcess::ExitStatus|"BluetoothAdapter" of property "defaultAdapter" no
 # Qt 6.12 qmllint mixes our Theme singleton up with Qt.labs.StyleKit's Theme type
 # (not imported anywhere) even though the qmldir above declares it a singleton
 known+='|Type Theme not declared as singleton in qmldir but using pragma Singleton'
+# Quickshell 0.3.2's type info has these members (UntypedObjectModel.values,
+# QuickshellScreenInfo.width/height, PanelWindow's anchors), and the shell uses
+# them fine at runtime, but qmllint 6.12 doesn't find them through it (2026-10-12)
+known+='|Member "values" not found on type "UntypedObjectModel"'
+known+='|Member "(width|height)" not found on type "QuickshellScreenInfo"'
+known+='|Could not find property "(top|bottom|left|right)"'
 
 report="$("${QMLLINT}" -I /usr/lib/qt6/qml -I "${work}" "${files[@]}" 2>&1 || true)"
 problems="$(printf '%s\n' "${report}" | grep -E '^(Warning|Error)' | grep -Ev "${known}" || true)"

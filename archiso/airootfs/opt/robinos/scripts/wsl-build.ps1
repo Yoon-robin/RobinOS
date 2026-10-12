@@ -228,7 +228,8 @@ if ($Task -eq "setup") {
 set -e
 pacman-key --init >/dev/null 2>&1 || true
 pacman-key --populate archlinux >/dev/null 2>&1 || true
-pacman -Syu --noconfirm --needed archiso git grub sudo qemu-full edk2-ovmf libarchive python openssl rsync quickshell qt6-declarative lua hyprland fakeroot
+# which: robinctl mission 27 in scripts/test-robinctl.sh (not in Arch's WSL image)
+pacman -Syu --noconfirm --needed archiso git grub sudo qemu-full edk2-ovmf libarchive python openssl rsync quickshell qt6-declarative lua hyprland fakeroot which
 echo 'WSL 빌드 환경이 준비됐어요.'
 "@
     exit 0

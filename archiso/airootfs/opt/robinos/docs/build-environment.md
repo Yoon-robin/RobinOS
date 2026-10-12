@@ -79,6 +79,8 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test
 
 VMware 시험(T-025)은 VMware Workstation과 VM이 있는 PC에서만 해요.
 
+이미 준비된 PC로 돌아왔을 때는 `git pull`을 하고, `wsl-build.ps1 setup`도 한 번 다시 돌려요. WSL의 Quickshell과 Qt가 ISO에 들어가는 최신판과 같아야 `check`의 qmllint가 실제 제품과 같은 기준으로 봐요. 2026-10-12 robin PC는 Quickshell 0.3.1에 머물러 있었고, `setup` 뒤에 0.3.2 기준 오탐 6개가 처음 드러났어요(`scripts/qmllint.sh`에서 걸러요).
+
 ## 다른 방법
 
 저장소를 고치고 정적 검사를 하는 건 윈도우에서도 돼요. WSL 2를 쓰지 않는다면 ISO를 만들려면 아래 중 하나가 있어야 해요.
