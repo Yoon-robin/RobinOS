@@ -206,6 +206,7 @@
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-10-12 (오후 3시) | `5b1facd` 테스트 ISO | robin PC에서 `verify -Installer robinos` | 통과. 묶음 76: Spotlight 같은 런처, 제어 센터 같은 빠른 설정, 환영 화면 "망가져도 되돌리기", 디자인 문서, 설정 창(`light-settings`, `light-settings-about`: Win+I로 열리고 정보 페이지에 버전·CPU·메모리) |
 | 2026-10-12 (오후 2시 반) | `3ab6a33` 테스트 ISO | robin PC에서 `verify -Installer robinos` | 통과. 묶음 75: T-152 ①②(유리, 배경화면 빛), 부팅·로그인·잠금 화면은 이름만, 라이브 하드웨어 시계 LOCAL. 설치본 부팅 메뉴는 "RobinOS"만, 로그인 화면 아래 줄 없음, 환영 화면 뒤에 빨강 빛. VMware(GPU) 라이브에서 시계가 바로 맞는 것도 확인 |
 | 2026-10-12 (오후 2시) | `cc7ea3b` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 14.4분) | 통과. 묶음 74: 라이브 BIOS 부팅 메뉴의 RobinOS 스플래시와 색. VMware와 QEMU(BIOS)로 직접 켜서 메뉴 화면도 확인했어요 |
 | 2026-10-12 (오후) | `6113f35` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.8분, 테스트 14.5분) | 통과. 부팅 테스트 79장, 설치 테스트 다섯 단계. 묶음 73: 환영 마법사 첫 화면과 T-151 화면 문구. 설치본 부팅 메뉴의 한글 한 줄 소개가 Unifont로 깨지지 않고 나오고(`installed-01-grub-first-boot.png`), 로그인 화면 아래 줄도 새 문구예요(`rollback-02-sddm.png`) |

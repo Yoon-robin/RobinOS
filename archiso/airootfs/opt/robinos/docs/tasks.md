@@ -18,8 +18,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-10-13 (새벽) | `b80f5d0` 테스트 ISO | 집 PC(Blitz)에서 `verify -Installer robinos`(빌드 5.7분, 테스트 15.4분) | 통과. 학교에서 한 커밋들: 설치본에 `sof-firmware 2026.09.2`, `fwupd 2.1.8`(T-156), 터미널 한글 폭 규칙 뺀 뒤 Ptyxis 터미널 장면(`terminal-ptyxis` 시리얼 확인), 설치 테스트 다섯 단계, 부팅 테스트 82장 |
 | 2026-10-12 (오후 4시) | `3b08949` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 14.9분) | 통과. 묶음 77·78: Ptyxis 터미널, 스냅샷 알림과 바의 "스냅샷 N · 임시", 패널 스프링. 처음 두 번은 "통과"였지만 터미널 장면에 창이 없었어요: 새 스크립트가 profiledef.sh의 file_permissions에 없어 라이브에서 644였고, boot-test-qmp.py가 멈춰도 0으로 끝나서 검증이 실패를 못 봤어요. 둘 다 고치고(정적 검증이 권한 목록 확인, 멈춘 시나리오는 실패, 터미널이 안 열리면 tty3 진단) 미션 터미널의 빈 창 하나(--new-window와 명령을 같이 줌)도 고친 뒤 통과. 스크린샷에서 Ptyxis 창과 미션 내용 확인 |
-| 2026-10-12 (오후 3시) | `5b1facd` 테스트 ISO | robin PC에서 `verify -Installer robinos` | 통과. 묶음 76: Spotlight 같은 런처, 제어 센터 같은 빠른 설정, 환영 화면 "망가져도 되돌리기", 디자인 문서, 설정 창(`light-settings`, `light-settings-about`: Win+I로 열리고 정보 페이지에 버전·CPU·메모리) |
 
 ## 품질 점검 기록
 
@@ -41,9 +41,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| `e2cf7d8` 효과 없던 터미널 한글 폭 규칙 빼기, 설치본 펌웨어와 fwupd(T-156) (2026-10-12) | `ready.ps1 -Check` | 묶음 검증(`verify -Installer robinos`): 설치본에 `sof-firmware`, `fwupd` |
+| (없음) | | |
 
-`bad4c0e`까지 2026-10-12 묶음 검증(`verify -Installer robinos`)을 마치고 푸시했어요.
+`b80f5d0`까지 2026-10-13 묶음 검증(`verify -Installer robinos`, 집 PC)을 마쳤어요.
 
 ## 사용자 확인 필요
 
@@ -94,7 +94,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: 위 장면이 화면이 아니라 상태로 판정되고, 일부러 망가뜨린 ISO(실행 권한 빼기 등)에서 테스트가 실패하는 것을 한 번 확인
 
 ### T-156 설치본 펌웨어와 펌웨어 업데이트
-- 상태: 검증 대기
+- 상태: 완료 (2026-10-13 묶음 검증에서 설치본의 `pacman -Q sof-firmware fwupd` 확인. 실제 PC의 GNOME Software 펌웨어 목록은 실기기 확인 때 같이 봐요)
 - 출처: 다른 OS와 비교(2026-10-12). `sof-firmware`, `linux-firmware-marvell`, `wireless-regdb`가 라이브 ISO(`archiso/packages.x86_64`)에만 있고 설치본 목록에는 없었어요. 라이브에서는 소리가 나던 요즘 인텔·AMD 노트북이 설치하고 나면 소리가 안 날 수 있어요. 펌웨어 업데이트(fwupd)는 Fedora, elementary, Ubuntu에 다 있는데 RobinOS에는 없었어요
 - 한 것: 세 펌웨어를 `packages/core.txt`에, `fwupd`를 `packages/apps.txt`에 넣었어요. GNOME Software는 fwupd가 있으면 업데이트 목록에 펌웨어도 보여 줘요
 - 완료 기준: 설치 테스트에서 설치본에 `pacman -Q sof-firmware fwupd`가 나오고, 실제 PC에서 GNOME Software 업데이트에 펌웨어가 보이는지 확인(실기기 확인은 사용자)
