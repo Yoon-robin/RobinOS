@@ -75,10 +75,10 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 남은 것 (VMware가 있는 PC: robin PC, 집 PC(Blitz, VMware Workstation 26.0)): 최종 ISO로 VMware VM에 다시 설치(`vmrun` 게스트 명령, 계획은 디스크 `/dev/nvme0n1` 전체), 로그인 뒤 셸·해상도 확인. 집 PC에는 VM이 아직 없어서 새로 만들어요(`build\vmware\guest-*.sh`는 robin PC에만 있어요). VMware가 없는 PC의 루프는 이 작업을 건너뛰어요
 
 ### T-151 정체성 문구를 화면에
-- 상태: 진행 중
+- 상태: 진행 중 (검증 대기)
 - 출처: 설계 점검(2026-10-10) "정체성 문구". 2026-10-12에 목적을 "쓰다 보면 리눅스를 알게 되는 OS"로 정해서(design.md "목적 결정") 화면에 넣을 말이 생겼어요
-- 한 것(2026-10-12): 로고 한 줄 소개를 "쓰다 보면 리눅스를 알게 되는 OS"로 바꾸고 `build-logo.py`로 SVG를 다시 만듦(푸시함), 환영 마법사 첫 화면 문구(푸시 대기)
-- 남은 것: 로그인·잠금 화면의 "허가받은 환경에서만 쓰는 보안 학습용 시스템이에요"를 새 한 줄 소개로(윤리 안내는 학습 센터·랩·motd·ethics.md에 그대로), 설치본 부팅 메뉴의 "Security Learning Workstation"과 "Use only for legal learning, CTF practice, and authorized testing.", 라이브 부팅 메뉴 이름 "RobinOS Security Learning Live"(`scripts/customize-iso-boot.sh`, testing.md), 터미널 인사 "RobinOS 보안 학습 환경"(`desktop/bash/robinos-bashrc.sh`, fastfetch가 없을 때), `config/robinos.toml`의 `purpose = "security-learning"`(읽는 코드가 없는지 먼저 확인). README의 학습 센터 스크린샷이 "1 / 40"이라 다시 찍기. 끝나면 소개 영상의 부팅 메뉴를 가린 부분을 새 스크린샷으로 바꾸기
+- 한 것(2026-10-12): 로고 한 줄 소개와 SVG(푸시함), 환영 마법사 첫 화면. 사용자 요청("T-151 남은 화면 문구도 바꿔줘")으로 나머지도 바꿨어요: 로그인 화면(SDDM, 방패 아이콘 → 터미널 아이콘)과 잠금 화면(hyprlock)의 "허가받은 환경에서만 쓰는 보안 학습용 시스템이에요", 설치본 부팅 메뉴의 "Security Learning Workstation" → 한 줄 소개(Unifont라 한글이 나와야 해요)와 윤리 안내 줄 빼기, 라이브 부팅 메뉴·콘솔·ISO 이름 "RobinOS Security Learning Live" → "RobinOS Live"(영어로 둔 건 syslinux와 리눅스 콘솔이 한글을 못 그려서예요), 터미널 인사 "RobinOS 보안 학습 환경" → "RobinOS · 쓰다 보면 리눅스를 알게 되는 OS", `robinctl` 도움말의 "허가받은 환경에서 보안을 배우는 시스템이에요" 줄 빼기(실습 안내 줄은 그대로), 기본 배경화면 그림(`robinos-default.svg`)의 글, `config.toml`의 `purpose`(읽는 코드 없음)를 `learn-linux`로. 윤리 안내는 motd, 학습 센터, 랩, ethics.md에 그대로예요
+- 남은 것: 묶음 검증(`verify -Installer robinos`)으로 확인하기. 특히 설치 테스트의 부팅 메뉴 스크린샷에서 한글 한 줄 소개가 네모로 깨지지 않는지. 통과하면 README 학습 센터 스크린샷("1 / 40")과 소개 영상의 부팅 메뉴·로그인 화면을 새 스크린샷으로 바꾸고, 영상에서 가린 부분을 없애기
 - 완료 기준: 부팅 테스트의 SDDM·잠금 화면 장면, 설치 테스트의 부팅 메뉴 스크린샷, README 로고
 
 ## 할 일 (위에서부터)

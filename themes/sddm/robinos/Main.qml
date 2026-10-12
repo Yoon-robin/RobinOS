@@ -489,14 +489,14 @@ Rectangle {
 
         Glyph {
             anchors.verticalCenter: parent.verticalCenter
-            name: "shield"
+            name: "terminal"
             size: 14
             color: root.muted
         }
 
         Text {
             anchors.verticalCenter: parent.verticalCenter
-            text: "허가받은 환경에서만 쓰는 보안 학습용 시스템이에요"
+            text: "쓰다 보면 리눅스를 알게 되는 OS"
             color: root.muted
             font.family: root.font
             font.pixelSize: 12

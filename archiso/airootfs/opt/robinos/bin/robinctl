@@ -63,7 +63,6 @@ robinctl - RobinOS 관리 도구
   robinctl lab start <web|net>          랩 시작
   robinctl lab stop <web|net>           랩 중지
 
-RobinOS는 허가받은 환경에서 보안을 배우는 시스템이에요.
 실습은 내 컴퓨터 안의 랩과 허락받은 대상에서만 하세요.
 EOF
 }

@@ -152,7 +152,7 @@ scripts/run-vm.sh --gl
 
 ### 눈으로 확인할 것
 
-- 부팅 메뉴에 "RobinOS Security Learning Live"가 보여요.
+- 부팅 메뉴에 "RobinOS Live"가 보여요.
 - 라이브 세션으로 바로 로그인하고 환영 마법사가 떠요.
 - 데스크톱에 상단 바, 독, 점 격자 배경화면이 보여요.
 - `Super+Space`로 런처가, `Super+S`로 빠른 설정이 열려요.

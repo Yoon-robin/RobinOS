@@ -3,7 +3,7 @@
 iso_name="robinos"
 iso_label="ROBINOS_$(date +%Y%m)"
 iso_publisher="RobinOS <https://example.invalid/robinos>"
-iso_application="RobinOS Security Learning Live ISO"
+iso_application="RobinOS Live ISO"
 iso_version="$(date +%Y.%m.%d)"
 install_dir="robinos"
 buildmodes=("iso")

@@ -33,7 +33,7 @@
     <path d="M128 54 181 77v48c0 34-18 58-53 77V54Z" fill="#FFFFFF" opacity=".04"/>
   </g>
   <text x="1920" y="1335" text-anchor="middle" fill="#FAFAFA" font-family="Inter, Pretendard, Noto Sans, Arial, sans-serif" font-size="118" font-weight="800">RobinOS</text>
-  <text x="1920" y="1408" text-anchor="middle" fill="#A1A1AA" font-family="Inter, Pretendard, Noto Sans, Arial, sans-serif" font-size="34" font-weight="600">Security Learning Workstation</text>
+  <text x="1920" y="1408" text-anchor="middle" fill="#A1A1AA" font-family="Inter, Pretendard, Noto Sans, Arial, sans-serif" font-size="34" font-weight="600">쓰다 보면 리눅스를 알게 되는 OS</text>
   <path d="M1680 1455h480" stroke="#E5484D" stroke-width="8" stroke-linecap="round"/>
 </svg>
 

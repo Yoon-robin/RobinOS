@@ -14,8 +14,8 @@ replace_text() {
   [[ -f "${file}" ]] || return 0
 
   sed -i \
-    -e 's/Arch Linux install medium/RobinOS Security Learning Live/g' \
-    -e 's/Arch Linux archiso x86_64/RobinOS Security Learning Live/g' \
+    -e 's/Arch Linux install medium/RobinOS Live/g' \
+    -e 's/Arch Linux archiso x86_64/RobinOS Live/g' \
     -e 's/Arch Linux/RobinOS/g' \
     "${file}"
 }
@@ -53,11 +53,11 @@ customize_syslinux() {
   while IFS= read -r -d '' cfg; do
     replace_text "${cfg}"
     if grep -q '^MENU TITLE' "${cfg}"; then
-      sed -i 's/^MENU TITLE.*/MENU TITLE RobinOS Security Learning Live/' "${cfg}"
+      sed -i 's/^MENU TITLE.*/MENU TITLE RobinOS Live/' "${cfg}"
     else
       tmp_file="$(mktemp)"
       {
-        printf 'MENU TITLE RobinOS Security Learning Live\n'
+        printf 'MENU TITLE RobinOS Live\n'
         cat "${cfg}"
       } >"${tmp_file}"
       cat "${tmp_file}" >"${cfg}"
@@ -70,7 +70,7 @@ customize_loader_entries() {
   while IFS= read -r -d '' entry; do
     replace_text "${entry}"
     if grep -q '^title ' "${entry}"; then
-      sed -i 's/^title .*/title RobinOS Security Learning Live/' "${entry}"
+      sed -i 's/^title .*/title RobinOS Live/' "${entry}"
     fi
   done < <(find "${PROFILE_DIR}" -path '*/loader/entries/*.conf' -type f -print0 2>/dev/null || true)
 }
