@@ -153,6 +153,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 status
 기능 작업만 하다 보면 이미 된 것이 모르는 새 깨질 수 있어요. 그래서 주기적으로 처음부터 다시 확인해요.
 
 - 묶음 검증(`verify -Installer robinos`)이 빌드, 패키지 검사, 부팅 테스트, robinos 설치 테스트를 처음부터 다시 하니 정기 점검을 겸해요. 묶음이 하루 넘게 없었으면 바뀐 게 없어도 한 번 돌려요(업스트림 패키지가 바뀌었을 수 있어요).
+- 정기 점검 전에 `wsl-build.ps1 setup`으로 WSL 패키지를 최신으로 맞춰요. ISO는 늘 최신 패키지로 만들어지는데, WSL의 Quickshell·Qt가 뒤처지면 `check`의 qmllint가 실제 제품과 다른 기준으로 검사해요(2026-10-12 robin PC가 Quickshell 0.3.1에 머물러 있었어요). 그 PC에서 하루에 한 번이면 돼요.
 - 설치 테스트의 다른 방식(`windows`, `archinstall`)과 `-Lab`은 일주일에 한 번, 또는 그 경로의 코드를 바꿨을 때 돌려요.
 - 기록: tasks.md "정기 점검"에 날짜, 대상 커밋, 결과를 적어요. 깨진 게 있으면 고칠 일을 `진행 중`으로 올려요.
 
