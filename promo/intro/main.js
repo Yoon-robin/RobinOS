@@ -225,10 +225,10 @@ function build() {
     const el = q("#s-hero");
     scene(el, S.hero, S.screen);
     const hero = q(".hero", el), h1 = q("h1", el);
-    const [w1, w2, w3, w4] = wordsOf(h1);
+    const [w1, w2, w3] = wordsOf(h1);
     gsap.set(wordsOf(hero), { autoAlpha: 0 });
     reveal(q(".eyebrow", el), b(8), { dur: 0.9 });
-    [[w1, 8], [w2, 8.5], [w3, 10], [w4, 10.5]].forEach(([w, at]) => reveal([w], b(at), { y: 70, blur: 24, scale: 0.92, dur: 1.2 }));
+    [[w1, 8], [w2, 10], [w3, 10.75]].forEach(([w, at]) => reveal([w], b(at), { y: 70, blur: 24, scale: 0.92, dur: 1.2 }));
     reveal(q(".sub", el), b(12), { stagger: 0.06 });
     tl.fromTo(h1, { letterSpacing: "-0.02em" }, { letterSpacing: "-0.055em", duration: b(7), ease: "power2.out", immediateRender: false }, b(8));
     tl.fromTo(hero, { scale: 1 }, { scale: 1.04, duration: b(7), ease: "none", immediateRender: false }, b(8));
@@ -345,11 +345,9 @@ function build() {
     const dark = q("#s-theme"), light = q("#s-theme-light");
     scene(dark, S.theme, S.rollback);
     scene(light, S.theme + 1.6, S.rollback);
-    gsap.set(wordsOf(dark), { autoAlpha: 0 });
     gsap.set(wordsOf(q("#day-word")), { autoAlpha: 0 });
     arrive(q(".theme-card", dark), b(48), { y: 40, z: -160, rotationX: 10 }, 1.3);
     for (const s of [dark, light]) tl.fromTo(s, { scale: 1 }, { scale: 1.04, duration: b(3.4), ease: "none", immediateRender: false }, b(48));
-    reveal(q("#night-word"), b(48.5));
     const at = (r) => `circle(${r}px at 960px 410px)`;
     gsap.set(light, { clipPath: at(0) });
     tl.to(light, { clipPath: at(1500), duration: 1.25, ease: "power3.inOut" }, b(S.theme + 1.6));

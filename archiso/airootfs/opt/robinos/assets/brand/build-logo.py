@@ -48,7 +48,7 @@ def text_path(path, wght, text, size, x, y, tracking=0.0):
 
 
 BG, WHITE, WING, GREY, RED = "#09090B", "#FAFAFA", "#E4E4E7", "#A1A1AA", "#E5484D"
-TAGLINE = "매일 쓰면서 배우는 보안 학습 OS"
+TAGLINE = "쓰다 보면 리눅스를 알게 되는 OS"
 
 
 def robin(cid):

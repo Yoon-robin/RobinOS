@@ -74,9 +74,16 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 2026-10-12 집 PC(Blitz): 묶음 72의 ISO(`bd8c495`, robinos 패키지 포함)를 `build\vmware\vmware-test.py install`로 VM에 설치하는 중. 끝나면 `installed`로 설치본 부팅·해상도·vmtoolsd 확인. 다른 PC로 옮기면 이 VM은 집 PC에만 있어요. `build\`는 git에 안 올라가서 `vmware-test.py`도 집 PC에만 있어요. 집에서 이어 할 때 `scripts/`로 옮겨 커밋하면 robin PC에서도 같은 스크립트를 써요
 - 남은 것 (VMware가 있는 PC: robin PC, 집 PC(Blitz, VMware Workstation 26.0)): 최종 ISO로 VMware VM에 다시 설치(`vmrun` 게스트 명령, 계획은 디스크 `/dev/nvme0n1` 전체), 로그인 뒤 셸·해상도 확인. 집 PC에는 VM이 아직 없어서 새로 만들어요(`build\vmware\guest-*.sh`는 robin PC에만 있어요). VMware가 없는 PC의 루프는 이 작업을 건너뛰어요
 
+### T-151 정체성 문구를 화면에
+- 상태: 진행 중
+- 출처: 설계 점검(2026-10-10) "정체성 문구". 2026-10-12에 목적을 "쓰다 보면 리눅스를 알게 되는 OS"로 정해서(design.md "목적 결정") 화면에 넣을 말이 생겼어요
+- 한 것(2026-10-12): 로고 한 줄 소개를 "쓰다 보면 리눅스를 알게 되는 OS"로 바꾸고 `build-logo.py`로 SVG를 다시 만듦, 환영 마법사 첫 화면 문구
+- 남은 것: 로그인·잠금 화면의 "허가받은 환경에서만 쓰는 보안 학습용 시스템이에요"를 새 한 줄 소개로(윤리 안내는 학습 센터·랩·motd·ethics.md에 그대로), 설치본 부팅 메뉴의 "Security Learning Workstation"과 "Use only for legal learning, CTF practice, and authorized testing.", 라이브 부팅 메뉴 이름 "RobinOS Security Learning Live"(`scripts/customize-iso-boot.sh`, testing.md), 터미널 인사 "RobinOS 보안 학습 환경"(`desktop/bash/robinos-bashrc.sh`, fastfetch가 없을 때), `config/robinos.toml`의 `purpose = "security-learning"`(읽는 코드가 없는지 먼저 확인). README의 학습 센터 스크린샷이 "1 / 40"이라 다시 찍기. 끝나면 소개 영상의 부팅 메뉴를 가린 부분을 새 스크린샷으로 바꾸기
+- 완료 기준: 부팅 테스트의 SDDM·잠금 화면 장면, 설치 테스트의 부팅 메뉴 스크린샷, README 로고
+
 ## 할 일 (위에서부터)
 
-2026-10-10 방향 결정("나만의 새로운 OS", [design.md](design.md))과 설계 점검으로 순서를 다시 잡았어요. RobinOS다운 경험(설정, 부팅 화면, 정체성)과 실제 PC에서 켜지는 것을 먼저 하고, 윈도우 기능 따라 하기와 학습 기능은 그 뒤예요.
+2026-10-12 목적 결정("쓰다 보면 리눅스를 알게 되는 OS", [design.md](design.md))으로 순서를 다시 봤어요. 화면이 그 목적을 말하게 하는 일(T-151)과 실제 PC에서 켜지는 것이 먼저예요. 학습 기능(터미널 힌트, 미션)은 이제 목적의 중심이라, 윈도우 기능 따라 하기보다 앞에 둬요.
 
 ### T-152 shadcn × macOS: 질감과 움직임
 - 상태: 할 일 (범위는 사용자 확인 필요의 제안대로 가요. 다르게 하자고 하면 고쳐요)
@@ -103,12 +110,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 할 것: Plymouth와 RobinOS 테마(울새 마크, zinc 배경, 진행 표시). 설치본(`robin-install`·`post-install.sh`의 initramfs 훅, `quiet splash`)과 라이브 ISO 둘 다. 디스크 암호화를 나중에 넣을 때 비밀번호 입력도 이 화면이 맡아요
 - 확인할 것: 패키지 크기(라이브 ISO 한도까지 약 44MiB), 소프트웨어 렌더링 VM에서 SDDM으로 넘어가는 시간, 스냅샷으로 부팅할 때(grub-btrfs-overlayfs 훅과 함께)
 - 완료 기준: 부팅 테스트에 스플래시 장면, 부팅 시간이 전과 비슷함, 설치 테스트의 스냅샷 부팅 통과
-
-### T-151 정체성 문구를 화면에
-- 상태: 할 일
-- 출처: 설계 점검(2026-10-10) "정체성 문구". 문서(design, vision, README, brand)는 고쳤고 화면이 남았어요
-- 할 것: 로고 한 줄 소개("매일 쓰면서 배우는 보안 학습 OS")를 새 방향에 맞게 바꾸고 `assets/brand/build-logo.py`로 SVG 다시 만들기, 로그인·잠금 화면의 "허가받은 환경에서만 쓰는 보안 학습용 시스템이에요"를 RobinOS 인사로 바꾸기(윤리 안내는 학습 센터·랩·motd·ethics.md에 그대로), 라이브 부팅 메뉴 이름 "RobinOS Security Learning Live"(`scripts/customize-iso-boot.sh`, testing.md), 터미널 인사 "RobinOS 보안 학습 환경"(`desktop/bash/robinos-bashrc.sh`, fastfetch가 없을 때), `config/robinos.toml`의 `purpose = "security-learning"`(읽는 코드가 없는지 먼저 확인), 환영 마법사 첫 화면 문구 다시 보기. README의 학습 센터 스크린샷이 "1 / 40"이라 다시 찍기
-- 완료 기준: 부팅 테스트의 SDDM·잠금 화면 장면, README 로고
 
 ### T-148 보안 부팅을 켠 채로 부팅 (조사)
 - 상태: 할 일 (조사 뒤 사용자 확인이 필요할 수 있어요)
@@ -145,6 +146,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 최근 것이 위에 있어요. 더 오래된 기록은 [done.md](done.md)에 있어요.
 
+- 2026-10-12 목적을 다시 정함(사용자: 소개 영상의 "매일 쓰는, 나만의 OS."를 보고 "뭐 어쩌라는 건지 모르겠어, 목적을 제대로 정해야 할 것 같은데"): 세 안(쓰면서 배우는 리눅스, 윈도우 대신 쓰는 리눅스, 개발자용 작업 OS) 가운데 사용자가 "쓰면서 배우는 리눅스"를 골랐어요. 한 줄 정의는 "쓰다 보면 리눅스를 알게 되는 OS"이고, 10월 10일의 "나만의 새로운 OS"는 만드는 원칙으로 남겼어요. design·vision·brand·README·roadmap·loop·CLAUDE.md, 로고 한 줄 소개(SVG 다시 만듦), 환영 마법사 첫 화면, 소개 영상 문구를 바꿨어요. 함께 humanizer로 AI 같은 말을 덜어 냈어요(사용자: "claude humanizer 스킬 사용해서 AI 같은 말 다 정리해"): 영상의 대구 "밤에는 다크, 낮에는 라이트.", 쉼표로 가른 제목("켜는 순간부터, RobinOS.", "매일 쓰는 화면, 하나하나 직접."), 세 줄 대구 자막, 문서의 "A가 아니라 B" 문장과 의인화
 - 2026-10-12 10월 10일 방향 결정을 main에 합침(Robin: "10월 10일 브랜치 main에 합칠까" → 합치기로): `origin/claude/eoseohae-7nleia`에서 문서 두 커밋(`1549271` 방향 고침과 설계 점검, `57e2410` 문서 최종 점검)만 가져왔어요. 같은 브랜치의 `9b5d5f3`(T-145 코드)은 main이 그 뒤에 T-145를 다른 방식으로 끝내고 검증해서 뺐어요. 그래서 브랜치 문서가 가리키던 `robinctl repo`(main에 없는 명령)를 vision·roadmap·testing·docs/README·T-149에서 지우고, 할 일로 다시 들어온 T-145 절을 뺐어요. 충돌한 곳은 main의 최신 사실(묶음 73까지, T-145 완료, GPL-3.0)을 남기고 새 방향 문장을 얹었어요. 이제 정체성은 "직접 만든 데스크톱과 도구로 이루어진, 매일 쓰는 나만의 OS"이고, 백로그 출처 4번이 "RobinOS다운 경험 넓히기"예요(loop.md). 새 작업: T-147~T-151(보안 부팅 안내, 보안 부팅 조사, 설정 앱, 부팅 화면, 화면의 정체성 문구)
 - 2026-10-12 RobinOS 소개 영상(`promo/intro/`, 사용자 요청 "RobinOS 소개 영상 모션그래픽으로 예쁘고 모던하게"): 41초, 1920×1080, 60fps, 소리 포함. 세 번째 판이에요. 첫 판은 ITCS Connect 광고와 비슷했고, 둘째 판(RobinOS 세션 스타일)은 "PPT 슬라이드 같아"라고 해서 "애플 느낌의 모션그래픽"으로 다시 만들었어요. 검은 바탕에 한 번에 한 문장(단어가 흐림에서 떠올라 박마다 착지, 강조는 빨강→주황 그라데이션), 실제 스크린샷이 원근을 두고 떠서 내려앉고, 뒤의 빛이 떠다니며 킥마다 숨을 쉬어요. 장면: 로고 → "매일 쓰는, 나만의 OS." → 누운 화면이 일어서며 부팅 → 입체 키캡과 패널 덱("윈도우에서 쓰던 그대로") → 터미널 힌트와 학습 미션 45 → 쉬는 마디에 다크에서 라이트로 → 스냅샷 줄과 되돌리기, 실제 부팅 메뉴 → 벤토 격자 → 끝 로고. 곡은 `music.mjs`가 직접 합성한 일렉트로닉 펑크(116BPM, D단조, 사용자 요청 "노래 그냥 너가 만들고")라 저작권 걱정이 없어요. 크롬 5개로 약 70초에 녹화해요. 결과물 mp4는 git에 없어요(`npm run render`로 다시 만들어요)
 - 2026-10-12 묶음 71~73 검증(`e82be3c`, 빌드 4분 + 부팅 테스트 79장 통과, 설치 테스트 다섯 단계 통과)

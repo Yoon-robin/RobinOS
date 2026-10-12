@@ -1,6 +1,6 @@
 # RobinOS: Claude 작업 규칙
 
-RobinOS는 Arch Linux 기반의 한국어 우선 "나만의 OS"예요. Hyprland 위에 직접 만든 Quickshell 셸을 얹었고, 매일 쓰는 컴퓨터로 충분하면서 리눅스와 보안도 배울 수 있는 걸 목표로 해요. 중심은 RobinOS다운 경험이고, 윈도우 닮기와 보안 학습은 그 기능 중 하나예요(2026-10-10 사용자 결정). 제품 설계는 [docs/design.md](docs/design.md)에 있어요.
+RobinOS는 Arch Linux 기반의 한국어 우선 OS예요. 목적은 "쓰다 보면 리눅스를 알게 되는 OS"예요(2026-10-12 사용자 결정): 리눅스를 처음 써 보는 사람이 윈도우처럼 시작해서 매일 쓰는 동안 리눅스를 익혀요. Hyprland 위에 직접 만든 Quickshell 셸을 얹었고, 화면과 도구는 "RobinOS라면 어떻게 할까"에서 시작해 직접 만들어요(2026-10-10). 보안 학습은 학습 과정의 뒷부분이고 앞세우지 않아요. 제품 설계는 [docs/design.md](docs/design.md)에 있어요.
 
 ## 꼭 지킬 것
 
