@@ -14,6 +14,7 @@ launcher, quick settings) -> lock screen -> unlock with the live password.
 
 import json
 import os
+import re
 import socket
 import sys
 import time
@@ -188,7 +189,9 @@ def check_scene(qmp, name, timeout=30):
         at = data.find(marker)
         if at != -1:
             end = data.find(b"\n", at)
-            line = data[at:end if end != -1 else len(data)].decode(errors="replace").strip()
+            line = data[at:end if end != -1 else len(data)].decode(errors="replace")
+            # The console colors the forwarded journal line; keep the words only
+            line = re.sub(r"\x1b\[[0-9;]*m", "", line).strip()
             results[name] = line.split("status=", 1)[1]
             print(f"check: {line}", flush=True)
             return results[name].startswith("PASS")
