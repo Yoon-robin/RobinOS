@@ -17,6 +17,10 @@ libreoffice-still-ko
 gnome-disk-utility
 # What fills the disk, like Windows' storage settings ("저장소", "디스크 정리")
 baobab
+# Backups of personal files to a USB disk or a network folder (Deja Dup), like
+# Windows' File History ("백업", "파일 히스토리" in the launcher). Snapshots only
+# cover the system (docs/recovery.md "스냅샷과 백업")
+deja-dup
 
 # App store for Flathub apps (flatpak ships the Flathub remote). Without
 # PackageKit it never touches pacman; robinctl update updates its apps too.

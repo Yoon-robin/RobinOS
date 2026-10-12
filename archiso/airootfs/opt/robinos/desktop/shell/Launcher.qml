@@ -328,6 +328,7 @@ PanelWindow {
         { win: "캡처 도구", words: "캡처 도구 snipping tool 캡처 스크린샷 screenshot", cmd: "screenshot" },
         { win: "계산기", words: "계산기 calc calculator", app: "org.gnome.Calculator" },
         { win: "저장소", words: "저장소 저장 공간 storage 디스크 정리 disk cleanup cleanmgr 용량 디스크 사용량 disk usage 공간 확보", app: "org.gnome.baobab" },
+        { win: "파일 히스토리", words: "파일 히스토리 file history windows 백업 windows backup 백업 backup 복원 되살리기 restore time machine 타임머신 개인 파일", app: "org.gnome.DejaDup" },
         { win: "디스크 관리", words: "디스크 관리 disk management diskmgmt 포맷 format usb 파티션 partition", app: "org.gnome.DiskUtility" },
         { win: "Word", words: "워드 word 문서 작성 docx 오피스 office", app: "libreoffice-writer" },
         { win: "Excel", words: "엑셀 excel 스프레드시트 spreadsheet xlsx 오피스 office", app: "libreoffice-calc" },
