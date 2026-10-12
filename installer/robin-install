@@ -17,7 +17,9 @@ file. A plan file is deleted after reading. The plan:
     "user": "robin",
     "password": "...",
     "hostname": "robinos",
-    "timezone": "Asia/Seoul"
+    "timezone": "Asia/Seoul",
+    "bitlocker_key_saved": true  needed for "alongside" when Windows is on
+                              BitLocker: the person has its recovery key
   }
 
 Layout: GPT; the EFI system partition on /efi (Windows' own one in
@@ -162,8 +164,10 @@ def list_disks():
             continue
         parts = dev.get("children") or []
         esp = next((p["path"] for p in parts if (p.get("parttype") or "").lower() == ESP_TYPE), None)
-        windows = any(p.get("fstype") == "ntfs" or (p.get("parttype") or "").lower() in WINDOWS_TYPES
-                      for p in parts)
+        windows = any(p.get("fstype") in ("ntfs", "BitLocker")
+                      or (p.get("parttype") or "").lower() in WINDOWS_TYPES for p in parts)
+        # blkid names an encrypted Windows volume "BitLocker"
+        bitlocker = any(p.get("fstype") == "BitLocker" for p in parts)
         largest_free = 0
         if dev.get("pttype") == "gpt":
             try:
@@ -179,6 +183,7 @@ def list_disks():
             "pttype": dev.get("pttype") or "",
             "esp": esp,
             "windows": windows,
+            "bitlocker": bitlocker,
             "free": largest_free,
             "can_whole": int(dev.get("size") or 0) >= MIN_SIZE,
             "can_alongside": dev.get("pttype") == "gpt" and esp is not None and largest_free >= MIN_SIZE,
@@ -243,6 +248,10 @@ def prepare_disk(plan, disk):
     else:
         if not disk["can_alongside"]:
             raise InstallError("윈도우 옆에 설치하려면 GPT 디스크에 EFI 파티션과 40GB 이상 빈 공간이 있어야 해요")
+        # Changing the boot order can make Windows ask for the BitLocker recovery
+        # key; without it the Windows files cannot be opened again
+        if disk["bitlocker"] and plan.get("bitlocker_key_saved") is not True:
+            raise InstallError("윈도우 드라이브가 BitLocker로 잠겨 있어요. 복구 키를 따로 적어 둔 뒤 다시 설치해요")
         before = set(partitions(disk["path"]).values())
         # 0:0:0 = next number, the largest free block, all of it
         run("sgdisk", "-n", "0:0:0", "-t", "0:8300", "-c", "0:RobinOS", disk["path"])

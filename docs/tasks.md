@@ -58,7 +58,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 상태: 진행 중
 - 출처: 설계 점검(2026-10-10) "보안 부팅". 문서 어디에도 없었어요
 - 한 것: install.md "보안 부팅 끄기"(BitLocker 복구 키 확인, 윈도우의 고급 시작 → UEFI 펌웨어 설정, 설치 뒤에도 꺼 둬야 하는 것), 준비 목록, README 내려받기 안내
-- 남은 것: 설치기가 윈도우 옆에 설치할 때 윈도우 파티션이 BitLocker인지 보고(`lsblk -o FSTYPE`의 `BitLocker`) 확인 단계에서 "복구 키를 확인했나요?"를 묻기. 다음 릴리스 노트에 보안 부팅 안내
+- 한 것(2026-10-12 집 PC): 설치기가 디스크의 `BitLocker` 파티션을 알아보고(`lsblk`의 FSTYPE) 디스크 카드에 "윈도우 있음 (BitLocker)", "윈도우 옆에 설치"의 확인 단계에서 "복구 키를 따로 적어 두었어요"에 체크해야 설치 시작. 백엔드도 계획에 `bitlocker_key_saved`가 없으면 디스크를 건드리기 전에 멈춰요. `test-robin-install.py`에 가짜 BitLocker 디스크 검사 여덟 개. 확인 상자는 `ConfirmBox` 하나로 합쳤어요(지우기 확인과 같이 써요)
+- 남은 것: 묶음 검증(설치 테스트 robinos에서 지우기 확인 상자가 그대로 동작). 설치 테스트 windows의 가짜 디스크에 BitLocker 서명(`-FVE-FS-`)을 넣은 장면. 다음 릴리스 노트에 보안 부팅 안내
 - 완료 기준: 설치기 테스트(`test-robin-install.py`)에 가짜 BitLocker 파티션, 설치 테스트 windows에서 경고 장면
 
 ### T-025 VMware에서 쓰기

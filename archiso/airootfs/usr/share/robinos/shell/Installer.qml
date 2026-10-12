@@ -18,6 +18,7 @@ FloatingWindow {
     property string diskPath: ""
     property string mode: ""
     property bool eraseConfirmed: false
+    property bool recoveryConfirmed: false
     property real percent: 0
     property string stage: ""
     property string errorText: ""
@@ -40,7 +41,7 @@ FloatingWindow {
         case 2:
             return userValid && hostValid && passwordValid;
         case 3:
-            return mode === "alongside" || eraseConfirmed;
+            return mode === "alongside" ? !(disk && disk.bitlocker) || recoveryConfirmed : eraseConfirmed;
         default:
             return false;
         }
@@ -88,6 +89,7 @@ FloatingWindow {
     function chooseDisk(d) {
         diskPath = d.path;
         eraseConfirmed = false;
+        recoveryConfirmed = false;
         // Keep Windows by default when it is possible
         mode = d.can_alongside ? "alongside" : d.can_whole ? "whole" : "";
     }
@@ -412,7 +414,7 @@ FloatingWindow {
                                     Text {
                                         Layout.fillWidth: true
                                         text: diskCard.modelData.path
-                                              + (diskCard.modelData.windows ? " · 윈도우 있음" : "")
+                                              + (diskCard.modelData.windows ? " · 윈도우 있음" + (diskCard.modelData.bitlocker ? " (BitLocker)" : "") : "")
                                               + (diskCard.modelData.free > 0 ? " · 빈 공간 " + root.gb(diskCard.modelData.free) : "")
                                         color: Theme.muted
                                         font.family: Theme.mono
@@ -685,75 +687,20 @@ FloatingWindow {
                         }
                     }
 
-                    Rectangle {
-                        id: eraseBox
-
+                    ConfirmBox {
                         visible: root.mode === "whole"
-                        Layout.fillWidth: true
-                        Layout.topMargin: 10
-                        implicitHeight: warnRow.implicitHeight + 24
-                        radius: Theme.radius
-                        color: "transparent"
-                        border.width: 1
-                        border.color: Theme.destructive
+                        checked: root.eraseConfirmed
+                        label: (root.disk ? root.disk.path : "") + "의 파일과 운영체제가 모두 지워지는 걸 이해했어요"
+                        onToggled: root.eraseConfirmed = !root.eraseConfirmed
+                    }
 
-                        activeFocusOnTab: true
-                        Keys.onPressed: event => {
-                            if (Keyboard.activates(event)) {
-                                root.eraseConfirmed = !root.eraseConfirmed;
-                                event.accepted = true;
-                            }
-                        }
-
-                        FocusRing {
-                            baseRadius: eraseBox.radius
-                        }
-
-                        RowLayout {
-                            id: warnRow
-
-                            anchors.fill: parent
-                            anchors.margins: 12
-                            spacing: 12
-
-                            Rectangle {
-                                implicitWidth: 18
-                                implicitHeight: 18
-                                radius: Theme.radiusSm / 2
-                                color: root.eraseConfirmed ? Theme.destructive : "transparent"
-                                border.width: 1
-                                border.color: Theme.destructive
-
-                                Accessible.role: Accessible.CheckBox
-                                Accessible.name: "데이터가 지워지는 걸 이해했어요"
-                                Accessible.checked: root.eraseConfirmed
-
-                                Icon {
-                                    anchors.centerIn: parent
-                                    visible: root.eraseConfirmed
-                                    name: "check"
-                                    size: 12
-                                    stroke: 3
-                                    color: "#ffffff"
-                                }
-                            }
-
-                            Text {
-                                Layout.fillWidth: true
-                                text: (root.disk ? root.disk.path : "") + "의 파일과 운영체제가 모두 지워지는 걸 이해했어요"
-                                color: Theme.destructive
-                                font.family: Theme.font
-                                font.pixelSize: 13
-                                font.weight: Font.Medium
-                                wrapMode: Text.WordWrap
-                            }
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.eraseConfirmed = !root.eraseConfirmed
-                        }
+                    // A BitLocker drive asks for its recovery key once the boot
+                    // order changes; without the key Windows' files are gone
+                    ConfirmBox {
+                        visible: root.mode === "alongside" && root.disk !== null && root.disk.bitlocker
+                        checked: root.recoveryConfirmed
+                        label: "윈도우 드라이브가 BitLocker로 잠겨 있어요. 설치한 뒤 윈도우가 복구 키를 물을 수 있어요. 복구 키(aka.ms/myrecoverykey)를 따로 적어 두었어요"
+                        onToggled: root.recoveryConfirmed = !root.recoveryConfirmed
                     }
 
                     Item {
@@ -943,6 +890,81 @@ FloatingWindow {
                     }
                 }
             }
+        }
+    }
+
+    // A checkbox the person has to tick before installing, in the warning color
+    component ConfirmBox: Rectangle {
+        id: box
+
+        property bool checked: false
+        property string label: ""
+        signal toggled
+
+        Layout.fillWidth: true
+        Layout.topMargin: 10
+        implicitHeight: boxRow.implicitHeight + 24
+        radius: Theme.radius
+        color: "transparent"
+        border.width: 1
+        border.color: Theme.destructive
+
+        activeFocusOnTab: true
+        Keys.onPressed: event => {
+            if (Keyboard.activates(event)) {
+                box.toggled();
+                event.accepted = true;
+            }
+        }
+
+        FocusRing {
+            baseRadius: box.radius
+        }
+
+        RowLayout {
+            id: boxRow
+
+            anchors.fill: parent
+            anchors.margins: 12
+            spacing: 12
+
+            Rectangle {
+                implicitWidth: 18
+                implicitHeight: 18
+                radius: Theme.radiusSm / 2
+                color: box.checked ? Theme.destructive : "transparent"
+                border.width: 1
+                border.color: Theme.destructive
+
+                Accessible.role: Accessible.CheckBox
+                Accessible.name: box.label
+                Accessible.checked: box.checked
+
+                Icon {
+                    anchors.centerIn: parent
+                    visible: box.checked
+                    name: "check"
+                    size: 12
+                    stroke: 3
+                    color: "#ffffff"
+                }
+            }
+
+            Text {
+                Layout.fillWidth: true
+                text: box.label
+                color: Theme.destructive
+                font.family: Theme.font
+                font.pixelSize: 13
+                font.weight: Font.Medium
+                wrapMode: Text.WordWrap
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: box.toggled()
         }
     }
 }

@@ -82,6 +82,51 @@ for virt, vmware, want in (("vmware", True, (["open-vm-tools"], ["vmtoolsd.servi
     robin.is_vmware = lambda vmware=vmware: vmware
     check(f"{virt}, VMware answers: {vmware}", robin.guest_tools(), want)
 
+print("BitLocker (T-147)")
+GIB = 1024**3
+
+
+def lsblk_disk(windows_fstype):
+    """lsblk -J for a GPT disk with an ESP, a Windows partition and 100 GB free."""
+    return {"blockdevices": [{
+        "name": "nvme0n1", "path": "/dev/nvme0n1", "size": 512 * GIB, "type": "disk",
+        "model": "Test", "tran": "nvme", "rm": False, "ro": False, "pttype": "gpt",
+        "children": [
+            {"path": "/dev/nvme0n1p1", "parttype": robin.ESP_TYPE, "fstype": "vfat"},
+            {"path": "/dev/nvme0n1p2", "parttype": "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7",
+             "fstype": windows_fstype},
+        ]}]}
+
+
+def fake_output(listing):
+    def output(*args):
+        if args[0] == "lsblk":
+            return robin.json.dumps(listing)
+        # parted -m: the largest free block
+        return f"BYT;\n1:1048576B:{101 * GIB}B:{100 * GIB}B:free;\n"
+    return output
+
+
+robin.live_disk = lambda: None
+for fstype, want in (("ntfs", False), ("BitLocker", True)):
+    robin.output = fake_output(lsblk_disk(fstype))
+    disk = robin.list_disks()[0]
+    check(f"Windows partition {fstype}: windows", disk["windows"], True)
+    check(f"Windows partition {fstype}: bitlocker", disk["bitlocker"], want)
+    check(f"Windows partition {fstype}: can install alongside", disk["can_alongside"], True)
+
+robin.output = fake_output(lsblk_disk("BitLocker"))
+disk = robin.list_disks()[0]
+ran = []
+robin.run = lambda *args, **kwargs: ran.append(args)
+try:
+    robin.prepare_disk({"mode": "alongside"}, disk)
+    refused = False
+except robin.InstallError:
+    refused = True
+check("BitLocker without the recovery key confirmed: refused", refused, True)
+check("refused before touching the disk", ran, [])
+
 if failures:
     print(f"{failures} robin-install check(s) failed.")
     sys.exit(1)
