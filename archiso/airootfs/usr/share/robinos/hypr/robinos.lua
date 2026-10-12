@@ -280,6 +280,7 @@ hl.bind("Print",                hl.dsp.exec_cmd(bin_dir .. "/robinos-screenshot 
 hl.bind("SHIFT + Print",        hl.dsp.exec_cmd(bin_dir .. "/robinos-screenshot screen"), { description = "전체 스크린샷" })
 hl.bind(mainMod .. " + Print",  hl.dsp.exec_cmd(bin_dir .. "/robinos-screenshot screen"), { description = "전체 스크린샷 (윈도우의 Win+PrtSc)" })
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd(bin_dir .. "/robinos-screenshot region"), { description = "영역 스크린샷 (윈도우의 캡처 도구)" })
+hl.bind(mainMod .. " + ALT + R", hl.dsp.exec_cmd(bin_dir .. "/robinos-screenshot record"), { description = "화면 녹화 시작/멈춤 (윈도우의 Win+Alt+R)" })
 
 -- Windows (Windows-style shortcuts work too)
 hl.bind(mainMod .. " + Q", hl.dsp.window.close(), { description = "창 닫기" })

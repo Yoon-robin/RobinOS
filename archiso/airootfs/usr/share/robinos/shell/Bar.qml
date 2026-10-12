@@ -219,6 +219,29 @@ PanelWindow {
             }
         }
 
+        // A screen recording is running (Win+Alt+R): a red dot that stops it
+        BarButton {
+            visible: ShellState.recording
+            label: "화면 녹화 중, 눌러서 멈추기"
+            color: Qt.rgba(Theme.destructive.r, Theme.destructive.g, Theme.destructive.b, 0.16)
+            onClicked: ShellState.toggleRecording()
+
+            Rectangle {
+                implicitWidth: 8
+                implicitHeight: 8
+                radius: 4
+                color: Theme.destructive
+            }
+
+            Text {
+                text: "녹화 중"
+                color: Theme.fg
+                font.family: Theme.font
+                font.pixelSize: 12
+                font.weight: Font.Medium
+            }
+        }
+
         // Apps' tray icons (Steam, Discord ...), like the Windows notification area:
         // click opens the app, right click its menu. fcitx5's is left out, the
         // 한/A indicator next to it does the same job.

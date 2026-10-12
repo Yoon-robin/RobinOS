@@ -260,6 +260,11 @@ ShellRoot {
             ShellState.toggleNightLight();
         }
 
+        // robinos-screenshot record: a recording started (true) or stopped (false)
+        function setRecording(on: bool): void {
+            ShellState.recording = on;
+        }
+
         // The quick settings' 화면 배율 for the focused screen: 1, 1.25, 1.5, 1.75 or 2
         function setScale(scale: real): void {
             ShellState.setScale(scale);

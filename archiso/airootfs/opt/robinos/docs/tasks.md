@@ -92,7 +92,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 출처: ChatGPT 세 번째 검토(2026-10-12). 묶음 77이 "통과"로 나왔는데 라이브 ISO에서 터미널이 하나도 안 열렸어요. 스크린샷만 찍는 테스트는 화면이 틀려도 통과해요
 - 한 것(2026-10-12): 멈춘 시나리오는 실패(종료 코드 1, WHPX·TCG 실행기 둘 다), 터미널을 연 뒤 "활성 창이 Ptyxis"일 때만 남는 `logger` 표시를 시리얼 로그에서 확인(`expect_serial`), 안 열리면 tty3 진단, 키·포인터 QMP 명령이 오류로 답하면 실패(`Qmp.act`), `build-iso.sh`가 빌드한 airootfs의 `/usr/share/robinos/bin`과 `/usr/local/bin`이 모두 실행 가능한지 확인
 - 한 것(2026-10-13 집 PC): `scripts/e2e-check.sh`(ISO의 `/opt/robinos/scripts`)가 장면마다 VM 안에서 상태를 확인해 `robinos-e2e: scenario=<이름> status=PASS|FAIL <근거>`를 저널에 남기고, `boot-test-qmp.py`의 `check_scene`이 시리얼 로그에서 결과를 모아 하나라도 실패면 끝에 실패. 장면: 터미널(Ptyxis), 미션 1, 최대화(`fullscreen` 1, 바 아래·독 위, 화면 70% 넘게)와 되돌리기, 새 터미널이 창 하나만 늘리기, 셸 다시 띄우기(새 `qs`와 IPC 응답), 라이트·다크(저장된 값과 GTK `color-scheme`). 가짜 hyprctl로 판정 시험. [testing.md](testing.md) "상태로 판정하는 장면"
-- 남은 것: 묶음 검증에서 아홉 장면이 PASS인지. 일부러 망가뜨린 ISO로 실패하는 것 확인. 학습 미션 터미널의 출력도 장면으로
+- 남은 것: 묶음 검증에서 열 장면(T-160의 `recorded` 포함)이 PASS인지. 일부러 망가뜨린 ISO로 실패하는 것 확인. 학습 미션 터미널의 출력도 장면으로
 - 처음 할 것(기록): 장면마다 게스트 안에서 확인하고 통과했을 때만 `logger -t robinos-e2e "scenario=<이름> status=PASS"`를 남기기. 후보: 최대화(`hyprctl clients -j`의 fullscreen, at, size가 바·독 사이), 학습 미션 터미널의 출력, 테마 바꾸기(저장된 값과 GTK 설정), 셸 재시작(새 Quickshell과 IPC 응답), 새 터미널을 열 때 창이 하나만 늘어나는지. 결과를 장면별로 모아 하나라도 실패면 전체 실패
 - 완료 기준: 위 장면이 화면이 아니라 상태로 판정되고, 일부러 망가뜨린 ISO(실행 권한 빼기 등)에서 테스트가 실패하는 것을 한 번 확인
 
@@ -125,7 +125,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: 부팅 테스트에서 `.exe`를 열면 안내 창이 뜨고 알려진 이름 하나는 대신 쓸 앱을 보여 줘요
 
 ### T-160 화면 녹화
-- 상태: 할 일
+- 상태: 진행 중
+- 한 것(2026-10-13 집 PC): `robinos-screenshot record`가 `wf-recorder`로 지금 화면을 `~/동영상/Screencasts/날짜.mp4`에 녹화하고, 한 번 더 부르면 멈추고 "열기·폴더 열기" 알림. `Win+Alt+R`(Hyprland), 런처 "화면 녹화"(윈도우 이름 "Xbox Game Bar"), 녹화 중에는 바에 빨간 점 "녹화 중"(누르면 멈춤, 셸 IPC `setRecording`). `wf-recorder`는 `packages/desktop.txt`와 라이브 목록에. 부팅 테스트 `recording` 장면과 `recorded` 상태 확인(1초 넘는 mp4)
+- 남은 것: 묶음 검증. 소리 함께 녹화(선택), 영역 녹화
 - 출처: 다른 OS와 비교(2026-10-12). 윈도우(Win+Alt+R, 캡처 도구), macOS(Cmd+Shift+5), GNOME 기본 녹화가 있는데 RobinOS는 스크린샷만 있어요
 - 할 것: `robinos-screenshot`에 녹화 추가(`wf-recorder`나 `gpu-screen-recorder`), 녹화 중에는 바에 빨간 점과 멈춤 단추, 파일은 `~/동영상`에. 단축키는 Win+Alt+R
 - 완료 기준: 부팅 테스트에서 몇 초 녹화한 파일이 생기고 재생돼요

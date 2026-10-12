@@ -16,6 +16,7 @@
 #   mission-1       learning mission 1 counts as solved
 #   light           light mode saved by the shell and given to GTK apps
 #   dark            dark mode, the same way
+#   recorded        a screen recording (Win+Alt+R twice) left a playable video
 #   shell-restarted a new shell (qs) runs and answers over IPC
 
 set -uo pipefail
@@ -97,6 +98,14 @@ case "${name}" in
     scheme="$(gsettings get org.gnome.desktop.interface color-scheme | tr -d "'")"
     check "saved=${saved:-none} gtk=${scheme}" \
       bash -c "[[ '${saved}' =~ ${want_saved}\$ ]] && [ '${scheme}' = '${want_scheme}' ]"
+    ;;
+  recorded)
+    # Win+Alt+R twice: a video of a second or more in ~/Videos/Screencasts
+    dir="$(xdg-user-dir VIDEOS 2>/dev/null || printf '%s/Videos' "${HOME}")/Screencasts"
+    file="$(ls -t "${dir}"/*.mp4 2>/dev/null | head -n1)"
+    seconds="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "${file:-/nonexistent}" 2>/dev/null | cut -d. -f1)"
+    check "file=${file:-none} seconds=${seconds:-none} recording=$(pgrep -x wf-recorder >/dev/null && echo still || echo stopped)" \
+      bash -c "[ -n '${file}' ] && [ '${seconds:-0}' -ge 1 ] && ! pgrep -x wf-recorder >/dev/null"
     ;;
   shell-restarted)
     pids="$(pgrep -x qs | tr '\n' ' ')"

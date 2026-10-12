@@ -35,9 +35,10 @@ bluez-utils
 upower
 power-profiles-daemon
 
-# Screenshots, clipboard, notifications
+# Screenshots, screen recording (Win+Alt+R), clipboard, notifications
 grim
 slurp
+wf-recorder
 wl-clipboard
 cliphist
 libnotify

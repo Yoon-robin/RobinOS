@@ -848,6 +848,16 @@ Singleton {
         desktopStore.writeAdapter();
     }
 
+    // ---- Screen recording (robinos-screenshot record, Win+Alt+R) ----
+
+    // Set over IPC by robinos-screenshot when a recording starts and stops; the bar
+    // shows a red dot that stops it
+    property bool recording: false
+
+    function toggleRecording() {
+        Quickshell.execDetached(["/usr/share/robinos/bin/robinos-screenshot", "record"]);
+    }
+
     // ---- Korean input method (fcitx5-remote prints 2 when Hangul is active) ----
 
     property bool hangul: false

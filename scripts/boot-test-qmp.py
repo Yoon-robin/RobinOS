@@ -450,6 +450,14 @@ def main():
     keys(qmp, "shift", "print")
     wait(2)
     shot(qmp, "screenshot-toast")
+    # Win+Alt+R like Windows' Game Bar: a red dot in the bar while it records, the
+    # second press stops it and the video is there (T-160)
+    keys(qmp, "meta_l", "alt", "r")
+    wait(5)
+    shot(qmp, "recording")
+    keys(qmp, "meta_l", "alt", "r")
+    wait(4)
+    check_scene(qmp, "recorded")
     # Win+V like Windows' clipboard history: copy something, then open the list
     type_text(qmp, "clear; wl-copy clipboard-test-robinos\n")
     wait(2)

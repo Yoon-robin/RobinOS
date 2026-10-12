@@ -289,6 +289,7 @@ PanelWindow {
         { key: "doctor", group: "system", icon: "activity", title: "시스템 점검", subtitle: "robinctl doctor", mono: true, words: "doctor check 점검 진단" },
         { key: "audit", group: "system", icon: "shield", title: "보안 점검", subtitle: "robinctl audit · 열린 포트, 원격 접속, 권한, 암호화", words: "audit security 보안 점검 보안 센터 방화벽 firewall 포트 암호화" },
         { key: "screenshot", group: "system", icon: "scan", title: "영역 스크린샷", subtitle: "Win + Shift + S", words: "screenshot capture 스크린샷 캡처 화면 캡처" },
+        { key: "record", group: "system", icon: "video", title: "화면 녹화", subtitle: "Win + Alt + R · 한 번 더 누르면 멈춰요", words: "record recording screen recorder screencast 녹화 화면 녹화 동영상 캡처 game bar 게임 바 xbox" },
         { key: "control", group: "system", icon: "sliders", title: "설정", subtitle: "Win + I · 개인 설정, 정보", words: "settings control panel 설정 제어판 개인 설정 테마 강조색 투명도 정보 버전 사양" },
         { key: "settings", group: "system", icon: "sliders", title: "빠른 설정", subtitle: "Win + S", words: "settings quick 설정 빠른 설정 다크 모드" },
         { key: "sound", group: "system", icon: "volume", title: "소리 설정", subtitle: "출력 장치, 마이크, 앱별 음량", words: "sound audio volume mixer speaker headphones microphone mic 소리 음량 볼륨 믹서 스피커 이어폰 헤드폰 마이크 출력" },
@@ -326,6 +327,7 @@ PanelWindow {
         { win: "블루투스 및 장치", words: "블루투스 및 장치 bluetooth and devices 장치 추가 add device", cmd: "bluetooth" },
         { win: "Acrobat Reader", words: "acrobat 아크로뱃 adobe reader pdf 뷰어", app: "org.gnome.Evince" },
         { win: "캡처 도구", words: "캡처 도구 snipping tool 캡처 스크린샷 screenshot", cmd: "screenshot" },
+        { win: "Xbox Game Bar", words: "xbox game bar 게임 바 화면 녹화 녹화 screen recording", cmd: "record" },
         { win: "계산기", words: "계산기 calc calculator", app: "org.gnome.Calculator" },
         { win: "저장소", words: "저장소 저장 공간 storage 디스크 정리 disk cleanup cleanmgr 용량 디스크 사용량 disk usage 공간 확보", app: "org.gnome.baobab" },
         { win: "파일 히스토리", words: "파일 히스토리 file history windows 백업 windows backup 백업 backup 복원 되살리기 restore time machine 타임머신 개인 파일", app: "org.gnome.DejaDup" },
@@ -658,6 +660,9 @@ PanelWindow {
         case "screenshot":
             // Wait for the launcher to fade out, or it would be in the picture
             Quickshell.execDetached(["sh", "-c", "sleep 0.4; exec /usr/share/robinos/bin/robinos-screenshot region"]);
+            break;
+        case "record":
+            Quickshell.execDetached(["sh", "-c", "sleep 0.4; exec /usr/share/robinos/bin/robinos-screenshot record"]);
             break;
         case "control":
             ShellState.openSettings("");

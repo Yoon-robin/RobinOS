@@ -60,6 +60,7 @@ upower
 power-profiles-daemon
 grim
 slurp
+wf-recorder
 wl-clipboard
 cliphist
 libnotify
