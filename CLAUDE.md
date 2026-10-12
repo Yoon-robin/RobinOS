@@ -43,6 +43,7 @@ powershell -ExecutionPolicy Bypass -File scripts/sync-archiso-files.ps1         
 - **긴 작업은 `&`로 띄우지 않아요**: 명령이 끝난 것처럼 보여도 PowerShell과 QEMU가 살아남아서, 다음 실행과 같은 폴더·포트를 쓰다 서로 망가뜨려요(2026-10-08). 도구의 백그라운드 실행을 쓰고, 이상하면 `Get-CimInstance Win32_Process`로 `wsl-build`·`qemu-system` 프로세스부터 확인해요.
 - **설치 테스트는 작업 트리를 읽어요**: 시작할 때 HEAD가 아니라 윈도우 작업 트리(`bin/`, `scripts/`, `desktop/` 등)를 공유 폴더로 복사하고, `scripts/install-test.py`는 VM을 켤 때마다(단계마다) 다시 읽어요. 그래서 설치 테스트나 `verify`가 끝날 때까지 이 작업 트리를 고치지 않아요. 그동안의 작업은 `git worktree add ../RobinOS-wt -b work/batchN`에서 하고, 검증이 통과하면 합쳐요([docs/loop.md](docs/loop.md) "5. 검증").
 - **wsl.exe는 `-e`로**: `wsl.exe -- 명령`은 셸을 한 번 더 거쳐 `$?`나 따옴표가 깨져요. `wsl.exe -d archlinux -u root -e bash -lc '...'`처럼 쓰고, 긴 명령은 스크립트 파일로 만들어 실행해요.
+- **Node 24와 한글 경로**: `fs.rmSync`에 `바탕화면`이 든 절대 경로를 주면 node가 오류 메시지 없이 죽어요(0xC0000409, Node 24.13). 파일은 `fs.unlinkSync`로 지우거나 상대 경로를 써요.
 - **PowerShell 5.1과 한글**: BOM 없는 UTF-8 `.ps1`의 한글은 깨져요. 한글이 들어간 `.ps1`은 UTF-8 BOM으로 저장해요.
 - **CRLF**: 윈도우 체크아웃의 `.ps1`은 CRLF예요. 그 안의 here-string을 bash에 넘기면 `\r`이 붙어요. `Invoke-Wsl`처럼 넘기기 전에 `\r`을 지워요.
 - **VM 테스트는 WHPX로**: Windows용 QEMU(`%USERPROFILE%\RobinOS-tools\qemu`)가 있으면 `boot-test`가 WHPX로 돌아요. WSL의 QEMU는 KVM이 없어 TCG로만 돌아요.

@@ -7,124 +7,115 @@
 </head>
 <body>
 <div id="stage">
-  <div class="bg"></div>
-  <div class="grid"></div>
-  <div class="glow"></div>
 
-  <!-- 1. The robin lands on the prompt cursor -->
-  <section class="scene" id="intro">
+  <!-- The prompt: the robin lands on the cursor and the name is typed after it (start and end) -->
+  <section class="scene black" id="logo">
     <div class="lockup">
       <div class="mark-slot" data-mark></div>
-      <div class="word">RobinOS</div>
+      <div class="name"><span data-type="logo-name"></span></div>
     </div>
-    <p class="tagline">직접 만든 화면으로 매일 쓰는 리눅스</p>
+    <div class="url"><span data-type="end-url"></span></div>
   </section>
 
-  <!-- 2. Windows shortcuts, then the real Alt+Tab screen -->
-  <section class="scene" id="keys">
-    <header class="head center">
-      <p class="eyebrow"><b>&gt;</b> 단축키</p>
-      <h2 class="h" data-words>윈도우에서 쓰던 단축키 대부분이 그대로 돼요</h2>
-    </header>
-    <div class="combos"></div>
-    <figure class="shot wide" id="shot-alttab"><div class="cam"><img src="assets/alt-tab.png" alt=""></div>
-      <figcaption class="chip-kbd"><kbd>Alt</kbd><i>+</i><kbd>Tab</kbd></figcaption>
-    </figure>
+  <!-- Boot: the real boot menu, login screen and desktop, one beat each -->
+  <section class="scene black" id="boot">
+    <div class="crop" id="boot-grub" data-src="grub.png" data-crop="150,270,768,200" data-fit="stage"></div>
+    <div class="screen" id="boot-login">
+      <div class="crop" data-src="login.png" data-crop="53,0,1493,840" data-fit="cover"></div>
+      <div class="pw" id="pw"></div>
+    </div>
+    <div class="crop" id="boot-desktop" data-src="desktop-real.png" data-crop="0,0,1600,900" data-fit="cover"></div>
   </section>
 
-  <!-- 3. Launcher and quick settings: text on the left, the real screen on the right -->
-  <section class="scene split" id="launcher">
-    <header class="head side">
-      <p class="eyebrow"><b>&gt;</b> Win+Space 런처</p>
-      <h2 class="h" data-words>윈도우 이름으로 찾아도 돼요</h2>
-      <p class="sub" data-words>notepad를 찾으면 텍스트 편집기가 나와요</p>
-    </header>
-    <figure class="shot side"><div class="cam"><img src="assets/launcher-notepad.png" alt=""></div></figure>
-  </section>
+  <!-- The desktop: wallpaper, five workspaces, the bar. Drawn at 1.6x the real shell's size -->
+  <section class="scene desk" id="desk">
+    <div class="wallpaper"></div>
+    <div class="area">
+      <div class="ws" data-ws="1">
+        <div class="layer center" id="l-launcher">
+          <div class="crop" data-src="launcher-dark.png" data-crop="480,153,640,318" data-fade data-scale="1.42"></div>
+          <div class="crop over" id="l-launcher-result" data-src="launcher-notepad.png" data-crop="480,153,640,272" data-scale="1.42"></div>
+          <div class="search-type"><span data-type="launcher-search"></span><i class="caret thin"></i></div>
+        </div>
+        <div class="layer center" id="l-alttab"><div class="crop" data-src="alt-tab.png" data-crop="566,348,468,204" data-scale="2.1"></div></div>
+        <div class="layer center" id="l-clipboard"><div class="crop" data-src="clipboard.png" data-crop="476,149,648,248" data-scale="1.7"></div></div>
+        <div class="layer center" id="l-emoji"><div class="crop" data-src="emoji.png" data-crop="476,149,648,330" data-scale="1.6"></div></div>
+      </div>
 
-  <section class="scene split" id="settings">
-    <header class="head side">
-      <p class="eyebrow"><b>&gt;</b> Win+S 빠른 설정</p>
-      <h2 class="h" data-words>Wi-Fi, 블루투스, 화면 배율을 한곳에서 바꿔요</h2>
-    </header>
-    <figure class="shot side"><div class="cam"><img src="assets/quick-settings.png" alt=""></div></figure>
-  </section>
+      <div class="ws" data-ws="2">
+        <div class="win term" id="w-term1">
+          <div class="term-body">
+            <div class="line"><span class="ps">robin@robinos ~ <b>&gt;</b> </span><span data-type="term1-cmd1"></span><i class="caret" data-caret="term1-1"></i></div>
+            <div class="line out" data-at="hint"><strong>ipconfig</strong> 명령은 윈도우용이에요. 리눅스에서는</div>
+            <div class="line out" data-at="hint">  <span class="cmd">ip a</span>  <span class="dim">IP 주소와 네트워크 장치를 보여 줘요</span></div>
+            <div class="line" data-at="hint"><span class="ps">robin@robinos ~ <b>&gt;</b> </span><span data-type="term1-cmd2"></span><i class="caret" data-caret="term1-2"></i></div>
+          </div>
+        </div>
+        <div class="win" id="w-mission"><div class="crop" data-src="mission.png" data-crop="336,122,640,480" data-fit="win"></div></div>
+      </div>
 
-  <!-- 4. The terminal answers a Windows command, then a learning mission -->
-  <section class="scene" id="terminal">
-    <header class="head center">
-      <p class="eyebrow"><b>&gt;</b> 터미널</p>
-      <h2 class="h" data-words>윈도우 명령을 치면 리눅스 명령을 알려 줘요</h2>
-    </header>
-    <div class="term">
-      <div class="term-body">
-        <div class="line" id="l1"><span class="ps">robin@robinos ~ <b>&gt;</b> </span><span class="typed" data-text="ipconfig"></span><span class="caret" id="c1"></span></div>
-        <div class="line out" id="l2"><strong>ipconfig</strong> 명령은 윈도우용이에요. 리눅스에서는</div>
-        <div class="line out" id="l3">  <span class="cmd">ip a</span>  <span class="dim">IP 주소와 네트워크 장치를 보여 줘요</span></div>
-        <div class="line" id="l4"><span class="ps">robin@robinos ~ <b>&gt;</b> </span><span class="typed" data-text="robinctl learn show 1"></span><span class="caret" id="c2"></span></div>
+      <div class="ws" data-ws="3">
+        <div class="win term" id="w-term3">
+          <div class="term-body">
+            <div class="line"><span class="ps">robin@robinos ~ <b>&gt;</b> </span>ipconfig</div>
+            <div class="line out"><strong>ipconfig</strong> 명령은 윈도우용이에요. 리눅스에서는</div>
+            <div class="line out">  <span class="cmd">ip a</span>  <span class="dim">IP 주소와 네트워크 장치를 보여 줘요</span></div>
+            <div class="line"><span class="ps">robin@robinos ~ <b>&gt;</b> </span><i class="caret"></i></div>
+          </div>
+        </div>
+        <div class="layer" id="l-launcher3"><div class="crop" data-src="launcher-dark.png" data-crop="480,153,640,318" data-fade data-scale="1.3"></div></div>
+        <div class="layer" id="l-qs"><div class="crop" data-src="quick-settings.png" data-crop="1246,40,348,552" data-scale="1.45"></div></div>
+      </div>
+
+      <div class="ws" data-ws="4">
+        <div class="win term" id="w-term4">
+          <div class="term-body">
+            <div class="line"><span class="ps">robin@robinos ~ <b>&gt;</b> </span><span data-type="term4-cmd"></span><i class="caret" data-caret="term4"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ws" data-ws="5">
+        <div class="win" id="w-cal"><div class="crop" data-src="calendar.png" data-crop="646,40,307,390" data-fit="win"></div></div>
+        <div class="win" id="w-sound"><div class="crop" data-src="sound.png" data-crop="1250,40,344,310" data-fit="win"></div></div>
+        <div class="win" id="w-emoji"><div class="crop" data-src="emoji.png" data-crop="476,149,648,400" data-fit="win"></div></div>
+        <div class="win" id="w-qs"><div class="crop" data-src="quick-settings.png" data-crop="1246,40,348,552" data-fit="win"></div></div>
       </div>
     </div>
+    <header class="bar" id="bar"></header>
   </section>
 
-  <section class="scene" id="mission">
-    <header class="head center">
-      <p class="eyebrow"><b>&gt;</b> robinctl learn</p>
-      <h2 class="h" data-words>미션 45개를 실제 터미널에서 풀어요</h2>
-    </header>
-    <figure class="shot wide"><div class="cam"><img src="assets/mission.png" alt=""></div></figure>
-  </section>
-
-  <!-- 5. One design from power-on, then dark and light -->
-  <section class="scene" id="power">
-    <header class="head center">
-      <p class="eyebrow"><b>&gt;</b> 부팅 메뉴 · 로그인 · 바탕 화면</p>
-      <h2 class="h" data-words>켜는 순간부터 RobinOS예요</h2>
-      <p class="sub" data-words>부팅 메뉴부터 로그인, 바탕 화면까지 직접 그렸어요</p>
-    </header>
-    <div class="strip">
-      <div class="tile"><figure class="shot mini" data-cam="0.72,510,400"><div class="cam"><img src="assets/grub.png" alt=""></div></figure><p>부팅 메뉴</p></div>
-      <div class="tile"><figure class="shot mini" data-cam="0.5625,800,450"><div class="cam"><img src="assets/login.png" alt=""></div></figure><p>로그인</p></div>
-      <div class="tile"><figure class="shot mini" data-cam="0.59,800,650"><div class="cam"><img src="assets/desktop.png" alt=""></div></figure><p>바탕 화면</p></div>
+  <!-- The same desktop in light, revealed from the dark mode tile -->
+  <section class="scene desk light" id="light">
+    <div class="wallpaper"></div>
+    <div class="area">
+      <div class="win term" id="w-term3-light">
+        <div class="term-body">
+          <div class="line"><span class="ps">robin@robinos ~ <b>&gt;</b> </span>ipconfig</div>
+          <div class="line out"><strong>ipconfig</strong> 명령은 윈도우용이에요. 리눅스에서는</div>
+          <div class="line out">  <span class="cmd">ip a</span>  <span class="dim">IP 주소와 네트워크 장치를 보여 줘요</span></div>
+          <div class="line"><span class="ps">robin@robinos ~ <b>&gt;</b> </span><i class="caret"></i></div>
+        </div>
+      </div>
+      <div class="layer" id="l-launcher3-light"><div class="crop" data-src="launcher-light.png" data-crop="480,153,640,318" data-fade data-scale="1.3"></div></div>
     </div>
+    <header class="bar" id="bar-light"></header>
   </section>
 
-  <section class="scene split" id="theme">
-    <header class="head side">
-      <p class="eyebrow"><b>&gt;</b> 다크 · 라이트</p>
-      <h2 class="h" data-words>다크·라이트를 바꾸면 바, 런처, 터미널이 같이 바뀌어요</h2>
-    </header>
-    <figure class="shot side" id="shot-theme">
-      <div class="cam"><img src="assets/launcher-dark.png" alt=""></div>
-      <div class="wipe"><div class="cam"><img src="assets/launcher-light.png" alt=""></div></div>
-      <i class="divider"></i>
-    </figure>
+  <!-- Reboot into the boot menu, then the snapshots of one pacman transaction -->
+  <section class="scene black" id="reboot">
+    <div class="crop" id="grub-menu" data-src="grub.png" data-crop="150,270,768,200" data-fit="stage"></div>
+    <div class="crop" id="grub-pick" data-src="grub-pick.png" data-crop="180,272,760,200" data-fit="stage"></div>
   </section>
 
-  <!-- 6. Snapshots in the boot menu -->
-  <section class="scene" id="snapshot">
-    <header class="head center">
-      <p class="eyebrow"><b>&gt;</b> Btrfs 스냅샷</p>
-      <h2 class="h" data-words>업데이트로 망가져도 되돌려요</h2>
-      <p class="sub" data-words>업데이트 전후로 스냅샷이 남고, 부팅 메뉴에서 골라요</p>
-    </header>
-    <figure class="shot low" id="shot-grub"><div class="cam"><img src="assets/grub-snapshots.png" alt=""><div class="row-light"></div></div></figure>
-  </section>
+  <!-- The narrator: a prompt along the bottom, keys shown at the right -->
+  <footer class="strip" id="strip">
+    <div class="say"><b>&gt;</b><span data-type="caption"></span><i class="caret" data-caret="caption"></i></div>
+    <div class="keys" id="keys"></div>
+  </footer>
 
-  <!-- 7. What it's built on, then the logo -->
-  <section class="scene" id="end">
-    <div class="chips"></div>
-    <div class="lockup end">
-      <div class="mark-slot" data-mark></div>
-      <div class="word">RobinOS</div>
-    </div>
-    <div class="end-meta">
-      <span class="url">github.com/Yoon-robin/RobinOS</span>
-      <span class="badge ver">v0.2 프리뷰</span>
-    </div>
-  </section>
-
-  <div class="vignette"></div>
-  <div class="black"></div>
+  <div class="pointer" id="pointer"><svg viewBox="0 0 24 24"><path d="M5 3l14 8.5-6.2 1.3 3.6 6.9-2.4 1.2-3.6-6.9L5 18.5z"/></svg></div>
+  <div class="black-out" id="black-out"></div>
 </div>
 <script type="module" src="main.js"></script>
 </body>

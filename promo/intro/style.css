@@ -1,4 +1,6 @@
-/* RobinOS intro video. Colors and radii follow desktop/shell/Theme.qml (zinc, dark).
+/* RobinOS intro video. The stage is a RobinOS desktop drawn at 1.6x the real
+   shell (desktop/shell/Theme.qml tokens, desktop/hypr/robinos.lua gaps, border
+   and rounding), with a prompt along the bottom that narrates.
    No CSS transitions or animations: the recorder freezes the GSAP timeline on
    every frame, and anything CSS moves by itself would differ between frames. */
 
@@ -8,144 +10,135 @@
 
 :root {
   --bg: #09090b;
+  --surface: #121214;
   --raised: #18181b;
   --secondary: #27272a;
   --fg: #fafafa;
   --fg-soft: #e4e4e7;
   --muted: #a1a1aa;
   --subtle: #71717a;
-  --border: rgba(255, 255, 255, 0.10);
-  --border-strong: rgba(255, 255, 255, 0.16);
   --accent: #e5484d;
   --success: #4ade80;
   --sans: "Pretendard", "Geist", sans-serif;
   --mono: "Geist Mono", "Pretendard", monospace;
+  --bar: 58px;    /* 36px x 1.6 */
+  --strip: 128px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
 body { font-family: var(--sans); color: var(--fg); -webkit-font-smoothing: antialiased; }
 
-#stage {
-  position: absolute; left: 0; top: 0;
-  width: 1920px; height: 1080px;
-  overflow: hidden; background: var(--bg);
-  transform-origin: 0 0;
-}
-
-/* ── backdrop: the desktop's dot grid and one soft accent light ── */
-.bg { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 0%, #121214 0%, var(--bg) 60%); }
-.grid {
-  position: absolute; inset: -48px;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.075) 1px, transparent 1.6px);
-  background-size: 24px 24px;
-}
-.glow {
-  position: absolute; left: 260px; top: 40px; width: 1400px; height: 1000px;
-  background: radial-gradient(closest-side, rgba(229, 72, 77, 0.17), rgba(229, 72, 77, 0) 72%);
-  filter: blur(30px);
-}
-.vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(0, 0, 0, 0.6) 100%); }
-.black { position: absolute; inset: 0; background: #000; opacity: 0; }
-
+#stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; background: #050506; transform-origin: 0 0; }
 .scene { position: absolute; inset: 0; visibility: hidden; }
+.black { background: #050506; }
+.black-out { position: absolute; inset: 0; background: #000; opacity: 0; }
 
-/* ── type ── */
-.head.center { position: absolute; left: 0; right: 0; top: 96px; text-align: center; }
-.head.side { position: absolute; left: 150px; top: 330px; width: 600px; }
-.eyebrow { font: 500 26px/1 var(--mono); color: var(--muted); letter-spacing: -0.01em; margin-bottom: 22px; }
-.eyebrow b { color: var(--accent); font-weight: 600; }
-.h { font: 700 62px/1.24 var(--sans); letter-spacing: -0.03em; color: var(--fg); word-break: keep-all; text-wrap: balance; }
-.head.side .h { font-size: 60px; }
-.sub { font: 500 30px/1.45 var(--sans); color: var(--muted); margin-top: 24px; letter-spacing: -0.015em; word-break: keep-all; text-wrap: balance; }
-.w { display: inline-block; white-space: pre; }
+/* ── the prompt with the robin (start and end) ── */
+#logo .lockup { position: absolute; left: 0; right: 0; top: 360px; height: 280px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.mark-slot { width: 280px; height: 280px; flex: none; }
+.mark-slot svg { width: 100%; height: 100%; overflow: visible; }
+.name { position: relative; font: 600 150px/1 "Geist", sans-serif; letter-spacing: -0.05em; color: var(--fg); padding-bottom: 6px; }
+.name .ghost { visibility: hidden; }
+.name .typed { position: absolute; left: 0; top: 0; }
+#logo .url { position: absolute; left: 0; right: 0; top: 700px; text-align: center; font: 500 36px/1 var(--mono); color: var(--muted); white-space: pre; }
 
-/* ── real screens in a window frame ── */
-.shot {
-  position: absolute; overflow: hidden; border-radius: 18px; background: var(--bg);
-  box-shadow: 0 0 0 1px var(--border-strong), 0 60px 140px -40px rgba(0, 0, 0, 0.95), 0 20px 50px -20px rgba(0, 0, 0, 0.8);
-}
-.shot.wide { left: 320px; top: 296px; width: 1280px; height: 720px; }
-.shot.side { left: 820px; top: 228px; width: 980px; height: 551px; }
-.shot.low { left: 370px; top: 340px; width: 1180px; height: 664px; }
-.cam { position: absolute; left: 0; top: 0; width: 1600px; height: 900px; transform-origin: 0 0; }
-.cam img { display: block; width: 1600px; height: 900px; }
+/* ── real screens, cropped (main.js sets the size and the crop) ── */
+.crop { position: absolute; background-repeat: no-repeat; }
+/* the launcher is cut after its recommendations (before the lab entries): fade the cut edge */
+.crop[data-fade] { -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent); mask-image: linear-gradient(to bottom, #000 78%, transparent); }
+.screen { position: absolute; inset: 0; }
+.pw { position: absolute; display: flex; align-items: center; gap: 14px; font: 700 26px/1 var(--sans); color: var(--fg); }
 
-/* ── keycaps (shadcn Kbd, a little taller so they can be pressed) ── */
-.combos {
-  position: absolute; left: 260px; right: 260px; top: 400px;
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px 40px;
+/* ── the desktop ── */
+.desk .wallpaper {
+  position: absolute; inset: 0;
+  background-color: var(--bg);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1.4px, transparent 1.8px), radial-gradient(120% 90% at 50% 10%, #141416 0%, var(--bg) 70%);
+  background-size: 26px 26px, 100% 100%;
 }
-.combo {
-  display: flex; align-items: center; gap: 14px;
-  padding: 26px 32px; border-radius: 22px;
-  background: rgba(24, 24, 27, 0.62); box-shadow: 0 0 0 1px var(--border);
-}
-.combo .lbl { font: 600 34px/1 var(--sans); color: var(--fg-soft); margin-left: 16px; letter-spacing: -0.02em; }
-.combo i, .chip-kbd i { font: 400 30px/1 var(--mono); color: var(--subtle); font-style: normal; }
-.key { display: inline-block; padding-bottom: 5px; border-radius: 13px; background: #050506; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06); }
-kbd {
-  display: inline-block; min-width: 82px; text-align: center;
-  padding: 14px 22px 12px; border-radius: 12px;
-  font: 600 34px/1 var(--mono); color: var(--fg);
-  background: linear-gradient(180deg, #2c2c30, #1c1c1f);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 0 0 1px rgba(255, 255, 255, 0.12);
-}
-.chip-kbd {
-  position: absolute; left: 28px; bottom: 26px; display: flex; align-items: center; gap: 10px;
-  padding: 12px 16px; border-radius: 16px; background: rgba(9, 9, 11, 0.82); box-shadow: 0 0 0 1px var(--border-strong), 0 16px 40px -12px rgba(0, 0, 0, 0.9);
-}
-.chip-kbd kbd { min-width: 60px; font-size: 26px; padding: 10px 16px 9px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 0 0 1px rgba(255, 255, 255, 0.12), 0 3px 0 #050506; }
+.area { position: absolute; left: 0; right: 0; top: var(--bar); bottom: var(--strip); overflow: hidden; }
+.ws { position: absolute; inset: 0; visibility: hidden; }
 
-/* ── terminal (foot: no title bar, rounded window, zinc) ── */
-.term {
-  position: absolute; left: 330px; top: 310px; width: 1260px; height: 440px;
-  border-radius: 18px; background: #0b0b0d; padding: 44px 52px;
-  box-shadow: 0 0 0 1px var(--border-strong), 0 60px 140px -40px rgba(0, 0, 0, 0.95);
+/* windows: robinos.lua border_size 1, active rgba(fff,0.22) / inactive 0.08, rounding 12 (x1.6) */
+.win {
+  --bd: 0.08;
+  position: absolute; border-radius: 19px; overflow: hidden; background: #0b0b0d;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, var(--bd)), 0 30px 80px -30px rgba(0, 0, 0, 0.85);
 }
-.term-body { font: 400 34px/1.7 var(--mono); color: var(--fg-soft); }
-.line { height: 1.7em; white-space: pre; }
+.term-body { padding: 34px 40px; font: 400 31px/1.65 var(--mono); color: var(--fg-soft); }
+.line { min-height: 1.65em; white-space: pre-wrap; }
 .ps { color: var(--muted); }
 .ps b { color: var(--accent); font-weight: 400; }
 .line strong { color: var(--fg); font-weight: 700; }
 .cmd { color: var(--success); font-weight: 700; }
 .dim { color: var(--muted); }
-.caret { display: inline-block; width: 0.58em; height: 1.1em; margin-left: 2px; vertical-align: -0.2em; background: var(--fg-soft); }
 
-/* ── from power-on: three real screens in a row ── */
-.strip { position: absolute; left: 0; right: 0; top: 420px; display: flex; justify-content: center; gap: 36px; }
-.shot.mini { position: relative; width: 520px; height: 293px; }
-.tile p { margin-top: 22px; text-align: center; font: 600 26px/1 var(--sans); color: var(--muted); letter-spacing: -0.015em; }
+.layer { position: absolute; }
+.search-type { position: absolute; display: flex; align-items: center; font: 400 21px/1 var(--sans); color: var(--fg); white-space: pre; }
 
-/* ── dark → light: the light screen is wiped in over the dark one ── */
-.wipe { position: absolute; inset: 0; clip-path: inset(0 100% 0 0); }
-.divider { position: absolute; top: 0; bottom: 0; left: 0; width: 2px; margin-left: -1px; background: rgba(255, 255, 255, 0.9); box-shadow: 0 0 24px 2px rgba(255, 255, 255, 0.45); opacity: 0; }
+.caret { display: inline-block; width: 0.55em; height: 1.05em; margin-left: 2px; vertical-align: -0.18em; background: var(--fg-soft); }
+.caret.thin { width: 2px; height: 1.2em; margin-left: 1px; }
 
-.badge {
-  display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px; border-radius: 999px;
-  font: 600 21px/1 var(--sans); color: var(--fg-soft); box-shadow: inset 0 0 0 1px var(--border-strong);
+/* the bar: the real one (Bar.qml) at 1.6x */
+.bar {
+  position: absolute; left: 0; right: 0; top: 0; height: var(--bar);
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 16px;
+  background: rgba(9, 9, 11, 0.78); box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+  font: 600 21px/1 "Geist", var(--sans); color: var(--fg);
+}
+.bar-left, .bar-right { display: flex; align-items: center; gap: 22px; }
+.bar-right { justify-content: flex-end; gap: 26px; }
+.logo-pill { display: flex; align-items: center; gap: 13px; padding: 7px 12px 7px 8px; border-radius: 10px; letter-spacing: -0.02em; }
+.logo-ico { width: 29px; height: 29px; border-radius: 8px; background: var(--accent); display: grid; place-items: center; }
+.logo-ico svg { width: 21px; height: 21px; }
+.wsnums { position: relative; display: flex; gap: 3px; font: 500 19px/1 "Geist", sans-serif; color: var(--subtle); }
+.wsnums span { position: relative; width: 38px; height: 38px; display: grid; place-items: center; }
+.wsnums span.on { color: var(--fg); }
+.ws-pill { position: absolute; left: 0; top: 0; width: 38px; height: 38px; border-radius: 10px; background: var(--secondary); }
+.bar .title { font: 500 20px/1 var(--sans); color: var(--muted); }
+.bar-center { font: 600 21px/1 var(--sans); letter-spacing: -0.01em; }
+.ime { width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center; font: 600 16px/1 "Geist"; box-shadow: inset 0 0 0 1.5px var(--subtle); }
+.bar-right svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* the light theme (Theme.qml light tokens) */
+.light .wallpaper {
+  background-color: #ececee;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.07) 1.4px, transparent 1.8px), radial-gradient(120% 90% at 50% 10%, #f6f6f7 0%, #e7e7ea 70%);
+  background-size: 26px 26px, 100% 100%;
+}
+.light .bar { background: rgba(255, 255, 255, 0.82); color: #09090b; box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08); }
+.light .wsnums { color: #a1a1aa; }
+.light .wsnums span.on { color: #09090b; }
+.light .ws-pill { background: #e4e4e7; }
+.light .bar .title { color: #71717a; }
+.light .ime { box-shadow: inset 0 0 0 1.5px #a1a1aa; }
+.light .win { background: #ffffff; box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.16), 0 30px 80px -30px rgba(0, 0, 0, 0.25); }
+.light .term-body { color: #27272a; }
+.light .ps, .light .dim { color: #71717a; }
+.light .line strong { color: #09090b; }
+.light .cmd { color: #16a34a; }
+.light .caret { background: #27272a; }
+
+/* ── the narrator: a prompt along the bottom ── */
+.strip {
+  position: absolute; left: 0; right: 0; bottom: 0; height: var(--strip);
+  display: flex; align-items: center; justify-content: space-between; padding: 0 70px 0 64px;
+  background: #050506; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.say { display: flex; align-items: center; font: 600 46px/1 var(--sans); letter-spacing: -0.025em; white-space: pre; color: var(--fg); }
+.say b { font: 500 48px/1 var(--mono); color: var(--accent); margin-right: 26px; }
+.say .caret { width: 0.5em; height: 1.02em; vertical-align: 0; margin-left: 6px; background: var(--fg); }
+.keys { position: relative; height: 64px; width: 560px; }
+.keyset { position: absolute; right: 0; top: 0; height: 64px; display: flex; align-items: center; gap: 12px; opacity: 0; }
+.keyset i { font: 400 26px/1 var(--mono); color: var(--subtle); font-style: normal; }
+.cap { display: inline-block; padding-bottom: 5px; border-radius: 12px; background: #000; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.07); }
+kbd {
+  display: inline-block; min-width: 64px; text-align: center; padding: 11px 18px 10px; border-radius: 11px;
+  font: 600 27px/1 var(--mono); color: var(--fg);
+  background: linear-gradient(180deg, #2c2c30, #1c1c1f);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
-/* the snapshot row of the boot menu (screenshot coordinates) */
-.row-light {
-  position: absolute; left: 198px; top: 331px; width: 672px; height: 38px; border-radius: 6px;
-  background: rgba(229, 72, 77, 0.16); box-shadow: inset 0 0 0 1.5px rgba(229, 72, 77, 0.7); opacity: 0;
-}
-
-/* ── lockups ── */
-.lockup { position: absolute; left: 0; right: 0; top: 372px; height: 260px; display: flex; align-items: center; justify-content: center; gap: 14px; }
-.mark-slot { width: 260px; height: 260px; flex: none; }
-.mark-slot svg { width: 100%; height: 100%; overflow: visible; }
-.word { font: 600 156px/1 "Geist", sans-serif; letter-spacing: -0.05em; color: var(--fg); padding-bottom: 10px; }
-.tagline { position: absolute; left: 0; right: 0; top: 690px; text-align: center; font: 500 40px/1.3 var(--sans); color: var(--muted); letter-spacing: -0.02em; }
-.lockup.end { top: 330px; }
-.end-meta { position: absolute; left: 0; right: 0; top: 660px; display: flex; justify-content: center; align-items: center; gap: 22px; }
-.url { font: 500 34px/1 var(--mono); color: var(--fg-soft); letter-spacing: -0.01em; }
-.badge.ver { font-size: 24px; padding: 10px 18px; color: var(--fg); }
-
-/* ── built on ── */
-.chips { position: absolute; left: 0; right: 0; top: 500px; display: flex; justify-content: center; gap: 18px; }
-.chip {
-  padding: 18px 30px; border-radius: 999px; font: 600 34px/1 var(--sans); letter-spacing: -0.02em; color: var(--fg-soft);
-  background: rgba(24, 24, 27, 0.7); box-shadow: inset 0 0 0 1px var(--border-strong);
-}
+.pointer { position: absolute; left: 0; top: 0; width: 40px; height: 40px; opacity: 0; transform-origin: 6px 4px; }
+.pointer svg { width: 100%; height: 100%; fill: #fafafa; stroke: #09090b; stroke-width: 1.4; stroke-linejoin: round; }
