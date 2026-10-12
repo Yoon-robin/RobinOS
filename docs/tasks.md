@@ -107,7 +107,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: 설치 테스트에서 방화벽이 켜져 있고, 네트워크 프린터 찾기와 웹 보안 랩이 그대로 동작
 
 ### T-158 개인 파일 백업
-- 상태: 할 일
+- 상태: 검증 대기
+- 한 것(2026-10-12 집 PC): `deja-dup`을 `packages/apps.txt`에, 런처에서 "백업", "파일 히스토리", "Time Machine"으로 찾으면 Déjà Dup(윈도우의 파일 히스토리에 해당), [recovery.md](recovery.md) "스냅샷과 백업", 설치 테스트에서 `pacman -Q deja-dup`과 데스크톱 파일 확인
 - 출처: 다른 OS와 비교(2026-10-12). 스냅샷은 시스템만 되돌리고 개인 파일은 지켜 주지 않아요. Mint는 백업 도구, GNOME 계열은 Déjà Dup, 윈도우는 "Windows 백업", macOS는 Time Machine이 있어요
 - 할 것: Déjà Dup(`deja-dup`)을 `packages/apps.txt`에 넣고 런처에서 "백업", "파일 히스토리", "Time Machine"으로 찾게 하기. 환영 화면이나 [recovery.md](recovery.md)에 스냅샷과 백업의 차이를 한 줄로
 - 완료 기준: 설치본에서 런처로 백업 앱이 열리고, USB 디스크에 백업하고 파일 하나를 되살리는 것을 확인
