@@ -175,16 +175,27 @@ def diagnose_on_tty(qmp, tag, commands):
 results = {}
 
 
+def serial_size():
+    path = os.path.join(OUT, "serial.log")
+    return os.path.getsize(path) if os.path.exists(path) else 0
+
+
 def check_scene(qmp, name, label=None, timeout=30):
     """Types `e2e-check.sh <name>` into the focused terminal, which checks the scene's
     state inside the guest and logs "scenario=<name> status=PASS|FAIL" (T-155). The
     scenario goes on after a failure; main() fails the test at the end. label names
     the result when a scene is checked more than once; only the serial log written
     after the command was typed counts."""
+    start = serial_size()
+    type_text(qmp, f"clear; bash /opt/robinos/scripts/e2e-check.sh {name}\n")
+    return wait_verdict(name, label, start, timeout)
+
+
+def wait_verdict(name, label=None, start=0, timeout=30):
+    """Waits for e2e-check.sh's verdict on a scene in the serial log written after
+    `start`, for checks typed as part of a longer command."""
     label = label or name
     path = os.path.join(OUT, "serial.log")
-    start = os.path.getsize(path) if os.path.exists(path) else 0
-    type_text(qmp, f"clear; bash /opt/robinos/scripts/e2e-check.sh {name}\n")
     marker = f"scenario={name} status=".encode()
     deadline = time.time() + timeout * SPEED
     while time.time() < deadline:
@@ -466,6 +477,17 @@ def main():
     keys(qmp, "meta_l", "alt", "r")
     wait(4)
     check_scene(qmp, "recorded")
+    # Opening a Windows installer (T-159): the window says it won't run here and,
+    # since the name is KakaoTalk's, what to do instead. The check runs from the
+    # terminal while the window has the focus; Esc closes it.
+    start = serial_size()
+    type_text(qmp, "clear; printf MZ > /tmp/KakaoTalk_Setup.exe; gio open /tmp/KakaoTalk_Setup.exe;"
+              " sleep 4; bash /opt/robinos/scripts/e2e-check.sh windows-app\n")
+    wait(6)
+    shot(qmp, "windows-app")
+    wait_verdict("windows-app", start=start)
+    keys(qmp, "esc")
+    wait(2)
     # Win+V like Windows' clipboard history: copy something, then open the list
     type_text(qmp, "clear; wl-copy clipboard-test-robinos\n")
     wait(2)

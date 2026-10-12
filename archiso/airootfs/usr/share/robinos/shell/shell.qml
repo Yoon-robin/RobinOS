@@ -65,6 +65,8 @@ ShellRoot {
 
     Settings {}
 
+    WindowsApp {}
+
     // Bound in robinos.lua with hl.dsp.global("robinos:<name>")
     GlobalShortcut {
         appid: "robinos"
@@ -258,6 +260,11 @@ ShellRoot {
         // The quick settings' 야간 모드 tile
         function toggleNightLight(): void {
             ShellState.toggleNightLight();
+        }
+
+        // robinos-windows-app: an .exe or .msi was opened (T-159)
+        function windowsApp(path: string): void {
+            ShellState.openWindowsApp(path);
         }
 
         // robinos-screenshot record: a recording started (true) or stopped (false)

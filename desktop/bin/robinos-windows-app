@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Opens instead of a Windows program (.exe, .msi): the shell's WindowsApp window says
+# why it doesn't run here and what to use instead (T-159). Set as the default app for
+# those file types (desktop/mime/mimeapps.list).
+#
+# Usage: robinos-windows-app <file>
+set -uo pipefail
+
+file="${1:-}"
+# File managers may hand over a file:// URI
+file="${file#file://}"
+
+if qs ipc -p /usr/share/robinos/shell call shell windowsApp "${file}" >/dev/null 2>&1; then
+  exit 0
+fi
+# No shell running (another desktop): a plain notification
+notify-send --app-name=RobinOS "윈도우 프로그램은 바로 실행되지 않아요" \
+  "${file##*/}: 같은 일을 하는 리눅스 앱을 앱 스토어에서 찾아봐요" || true

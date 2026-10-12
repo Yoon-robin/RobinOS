@@ -34,3 +34,10 @@ audio/x-wav=org.gnome.Decibels.desktop
 audio/mp4=org.gnome.Decibels.desktop
 audio/x-m4a=org.gnome.Decibels.desktop
 audio/aac=org.gnome.Decibels.desktop
+# Windows programs: a window that says what to use instead (T-159)
+application/x-ms-dos-executable=robinos-windows-app.desktop
+application/x-msdownload=robinos-windows-app.desktop
+application/vnd.microsoft.portable-executable=robinos-windows-app.desktop
+application/x-msi=robinos-windows-app.desktop
+application/x-ms-installer=robinos-windows-app.desktop
+application/x-ms-shortcut=robinos-windows-app.desktop

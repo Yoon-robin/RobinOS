@@ -848,6 +848,19 @@ Singleton {
         desktopStore.writeAdapter();
     }
 
+    // ---- An .exe or .msi was opened (WindowsApp.qml, T-159) ----
+
+    property bool windowsAppOpen: false
+    property string windowsAppPath: ""
+
+    function openWindowsApp(path) {
+        windowsAppPath = path;
+        // Opened again for another file: show it from the top
+        if (windowsAppOpen)
+            windowsAppOpen = false;
+        windowsAppOpen = true;
+    }
+
     // ---- Screen recording (robinos-screenshot record, Win+Alt+R) ----
 
     // Set over IPC by robinos-screenshot when a recording starts and stops; the bar

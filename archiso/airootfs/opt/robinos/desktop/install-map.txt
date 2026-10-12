@@ -14,6 +14,7 @@ desktop/bin/robinos-os-release            /usr/share/robinos/bin/robinos-os-rele
 desktop/bin/robinos-terminal              /usr/share/robinos/bin/robinos-terminal          755
 desktop/bin/robinos-snapshot-notice       /usr/share/robinos/bin/robinos-snapshot-notice   755
 desktop/bin/robinos-wallpaper-portal      /usr/share/robinos/bin/robinos-wallpaper-portal  755
+desktop/bin/robinos-windows-app           /usr/share/robinos/bin/robinos-windows-app       755
 desktop/portal/robinos.portal             /usr/share/xdg-desktop-portal/portals/robinos.portal 644
 desktop/portal/org.freedesktop.impl.portal.desktop.robinos.service /usr/share/dbus-1/services/org.freedesktop.impl.portal.desktop.robinos.service 644
 desktop/portal/hyprland-portals.conf      /etc/xdg/xdg-desktop-portal/hyprland-portals.conf 644
@@ -36,3 +37,4 @@ desktop/fastfetch/config.jsonc            /etc/xdg/fastfetch/config.jsonc       
 desktop/fastfetch/robinos-logo.ansi       /usr/share/robinos/fastfetch/robinos-logo.ansi   644
 desktop/firefox/policies.json             /etc/firefox/policies/policies.json              644
 desktop/mime/mimeapps.list                /etc/xdg/mimeapps.list                           644
+desktop/mime/robinos-windows-app.desktop  /usr/share/applications/robinos-windows-app.desktop 644

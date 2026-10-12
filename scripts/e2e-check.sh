@@ -17,6 +17,7 @@
 #   light           light mode saved by the shell and given to GTK apps
 #   dark            dark mode, the same way
 #   recorded        a screen recording (Win+Alt+R twice) left a playable video
+#   windows-app     opening an .exe shows the "윈도우 프로그램" window
 #   shell-restarted a new shell (qs) runs and answers over IPC
 
 set -uo pipefail
@@ -106,6 +107,11 @@ case "${name}" in
     seconds="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "${file:-/nonexistent}" 2>/dev/null | cut -d. -f1)"
     check "file=${file:-none} seconds=${seconds:-none} recording=$(pgrep -x wf-recorder >/dev/null && echo still || echo stopped)" \
       bash -c "[ -n '${file}' ] && [ '${seconds:-0}' -ge 1 ] && ! pgrep -x wf-recorder >/dev/null"
+    ;;
+  windows-app)
+    # Opening an .exe brought up the shell's WindowsApp window (T-159)
+    title="$(hyprctl clients -j | grep -o '"title": "윈도우 프로그램"' | head -n1)"
+    check "window=${title:-none} default=$(xdg-mime query default application/x-ms-dos-executable)" test -n "${title}"
     ;;
   shell-restarted)
     pids="$(pgrep -x qs | tr '\n' ' ')"

@@ -99,6 +99,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 boot-test
 | `maximized`, `restored` | `Super+↑` 뒤 창이 최대화(`fullscreen` 1)돼서 바 아래, 독 위에 있고 화면의 70% 넘게 차지해요. `Super+↓` 두 번 뒤에는 최대화가 풀려요 |
 | `count-save`, `one-more` | 새 작업 공간에서 `Super+Enter`를 누르면 Ptyxis 창이 딱 하나 늘어나요. 학습 센터에서 미션 줄을 눌렀을 때도 같은 방법으로 미션 터미널이 하나 열리고 명령을 받는지 봐요(`mission-terminal`) |
 | `recorded` | `Super+Alt+R` 두 번(시작과 멈춤) 뒤 `~/비디오/Screencasts`에 1초 넘는 mp4가 있고(`ffprobe`), 녹화가 멈춰 있어요 |
+| `windows-app` | 가짜 `KakaoTalk_Setup.exe`를 `gio open`으로 열면 "윈도우 프로그램" 창이 떠요(기본 앱 연결과 셸 IPC) |
 | `shell-restarted` | 셸을 끈 뒤 새 `qs`가 돌고 IPC에 답해요 |
 | `light`, `dark` | 셸이 저장한 값(`appearance.json`)과 GTK 설정(`color-scheme`)이 둘 다 바뀌어요 |
 

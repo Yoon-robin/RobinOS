@@ -204,6 +204,50 @@ else
   skip "qml6 not found (pacman -S qt6-declarative)"
 fi
 
+# Windows installers' file names -> what to use instead (windowsapps.js, T-159)
+printf 'Windows program names\n'
+if [[ -n "${qml_bin}" ]]; then
+  apps_dir="$(mktemp -d)"
+  cp "${ROOT_DIR}/desktop/shell/windowsapps.js" "${apps_dir}/"
+  cat >"${apps_dir}/test.qml" <<'QML'
+import QtQml
+import "windowsapps.js" as WindowsApps
+
+QtObject {
+    Component.onCompleted: {
+        const cases = [
+            ["KakaoTalk_Setup.exe", "카카오톡"], ["Kakao Talk Setup (1).exe", "카카오톡"],
+            ["ChromeSetup.exe", "Chrome"], ["Hoffice2024_Setup.exe", "한글(한컴오피스)"],
+            ["OfficeSetup.exe", "Microsoft Office"], ["BANDIZIP-SETUP-STD-X64.EXE", "압축 프로그램"],
+            ["7z2301-x64.exe", "압축 프로그램"], ["GOMPLAYERGLOBALSETUP.EXE", "동영상 플레이어"],
+            ["DiscordSetup.exe", "Discord"], ["VSCodeUserSetup-x64-1.95.exe", "Visual Studio Code"],
+            ["Git-2.47.0-64-bit.exe", "Git"], ["npp.8.7.Installer.x64.exe", "메모장 프로그램"],
+            ["DigitalClock.exe", null], ["setup.exe", null], ["game.msi", null], ["jobs.exe", null]
+        ];
+        let bad = 0;
+        for (const [file, want] of cases) {
+            const found = WindowsApps.find(file);
+            const got = found ? found.name : null;
+            if (got !== want) {
+                console.log("windowsapps " + JSON.stringify(file) + ": " + got + ", want " + want);
+                bad++;
+            }
+        }
+        for (const program of WindowsApps.known)
+            if (!program.choices || program.choices.length === 0) {
+                console.log("windowsapps: " + program.name + " has no choices");
+                bad++;
+            }
+        Qt.exit(bad === 0 ? 0 : 1);
+    }
+}
+QML
+  if QT_QPA_PLATFORM=offscreen "${qml_bin}" "${apps_dir}/test.qml"; then ok "desktop/shell/windowsapps.js"; else fail "desktop/shell/windowsapps.js"; fi
+  rm -rf "${apps_dir}"
+else
+  skip "qml6 not found (pacman -S qt6-declarative)"
+fi
+
 if [[ "${failed}" == "true" ]]; then
   printf 'Desktop check failed.\n' >&2
   exit 1

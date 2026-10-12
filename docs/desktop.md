@@ -280,6 +280,10 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 파일을 어떤 앱으로 여는지는 `desktop/mime/mimeapps.list`(설치 위치 `/etc/xdg/mimeapps.list`)가 정해요. 폴더는 파일, 글 파일은 텍스트 편집기, PDF는 문서 보기, 사진은 이미지 보기, 동영상과 음악은 위 두 앱, 웹 주소는 Firefox예요. 파일 앱에서 "다른 앱으로 열기"로 바꾸면 내 설정(`~/.config/mimeapps.list`)이 먼저예요.
 
+## 윈도우 프로그램(.exe)을 열면
+
+`.exe`, `.msi`, `.lnk`를 열면 셸의 "윈도우 프로그램" 창이 떠요(`desktop/bin/robinos-windows-app`, `WindowsApp.qml`). 윈도우 프로그램은 리눅스에서 그대로 실행되지 않는다고 알려 주고, 파일 이름이 알려진 프로그램(`desktop/shell/windowsapps.js`: 카카오톡, Chrome, 한글, Office, 반디집, 곰플레이어, Discord, Steam 등)이면 대신 쓸 것을 단추로 보여 줘요. RobinOS에 있는 앱은 바로 열고, Flathub 앱은 앱 스토어의 그 앱 쪽을, 웹 버전은 브라우저를 열어요. 모르는 파일이면 Bottles(윈도우 프로그램 실행기) 설치 단추를 보여 줘요.
+
 ## 화면 배율
 
 글자와 창이 너무 작거나 크면 빠른 설정의 "화면 배율"에서 100%, 125%, 150%, 175%, 200% 중에 골라요(윈도우의 설정 > 디스플레이 > 배율과 같아요). 지금 마우스가 있는 화면에 바로 적용되고, `~/.local/state/robinos/display-scale`에 화면 이름별로 저장돼서 다음 로그인에도 그대로예요(`robinos.lua`가 읽어요). 화면이 정확히 나눠지지 않는 배율이면 Hyprland가 가장 가까운 값으로 맞춰요. 처음에는 Hyprland가 화면 크기를 보고 고른 배율이에요. VM 화면은 창 크기를 따라가는 `robinos-vm-display`가 저장된 배율을 함께 써요.
