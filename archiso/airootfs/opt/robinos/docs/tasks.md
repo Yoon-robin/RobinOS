@@ -94,6 +94,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 할 것: 비교: hyprbars 플러그인(Hyprland 버전마다 다시 빌드해야 해서 롤링 업데이트에 약해요), 제목 표시줄을 스스로 그리는 터미널(GNOME 콘솔·Ptyxis 등, foot의 테마 전환·힌트를 옮겨야 해요), 셸이 그리는 얇은 끌기 막대 ④ 제품 방향이 바뀌는 선택(터미널 교체)이면 사용자 확인 필요로
 - 한 것(2026-10-12, `work/batch74`): 기본 터미널을 Ptyxis로. `ShellState.terminal`(`ptyxis --new-window`) 하나를 독, 런처(터미널 앱 실행 포함), Win+X, 바탕 화면 메뉴, 미션·업데이트 터미널(`openTerminal`, `runInTerminal`)이 같이 써요. Hyprland `Win+Enter`도 Ptyxis. dconf 기본값 `[org/gnome/Ptyxis]`: 다크·라이트를 셸 선택대로(`interface-style='system'`), 지난 창 복원 끄기, 100×28. foot은 대체용으로 남기고 런처에서는 숨겨요. 패키지 목록(설치본, 라이브)에 ptyxis. 부팅 테스트의 최소화 장면은 `org.gnome.Ptyxis`로
 - 남은 것: 묶음 검증. RobinOS zinc 팔레트(Ptyxis 기본은 GNOME 팔레트), 이미 설치한 시스템에 ptyxis 깔기(`robinos` 패키지 의존성 또는 `robinctl update` 안내)
+- ChatGPT 두 번째 검토(2026-10-12) 반영: Ptyxis가 깔려 있는데 바로 실패하면(5초 안) foot으로. 남은 것: 파일 관리자(Nautilus)의 "터미널에서 열기"(지금은 없음. Nautilus 47 이후의 `xdg-terminal-exec` 또는 확장), RobinOS zinc 팔레트(`.palette`의 [Light]/[Dark], 프로필 UUID 처리), 한글 2칸 폭과 상자 그리기 문자(│├└─) 정렬, 닫기 확인 창이 실행 중인 작업에만 뜨는지
 - 완료 기준: 처음 쓰는 사람이 단축키 없이 터미널 창을 마우스로 옮기고 닫을 수 있음. 부팅 테스트에 끌어서 옮기는 장면
 
 ### T-153 스냅샷으로 켰을 때 알려 주고 화면에서 되돌리기
@@ -101,6 +102,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 출처: ChatGPT 검토(2026-10-12). [recovery.md](recovery.md)대로 부팅 메뉴에서 스냅샷을 골라 켜면 그 상태는 임시예요(grub-btrfs 오버레이). 완전히 되돌리려면 `sudo robinctl snapshot rollback`을 쳐야 하는데, 처음 쓰는 사람은 이미 되돌려졌다고 생각하기 쉬워요
 - 할 것: 셸이 스냅샷으로 켠 것을 알아채면(`/proc/cmdline`의 `rootflags=subvol=@snapshots/...` 또는 `robinctl snapshot status`) 바 아래에 알림: "업데이트 전 상태로 켰어요(임시). 이 상태로 되돌릴까요?" [되돌리기] [그냥 둘게요]. 되돌리기는 관리자 확인 뒤 `robinctl snapshot rollback`을 돌리고 다시 시작을 권해요
 - 한 것(2026-10-12, `work/batch74`): `robinctl snapshot booted`(커널 줄의 `rootflags=subvol=@snapshots/N/snapshot`에서 번호, `/.snapshots/N/info.xml`에서 설명), `desktop/bin/robinos-snapshot-notice`(로그인 때 Hyprland가 실행. 알림 "스냅샷 N번으로 켰어요"와 [이 상태로 되돌리기] [나중에], 되돌리기는 pkexec 비밀번호 창으로 `robinctl snapshot rollback N --yes`, 끝나면 [지금 다시 시작]). doctor도 번호를 말해요. test-robinctl.sh에 가짜 커널 줄 시험, 설치 테스트 snapshot-boot 단계에서 번호 확인. 남은 것: 설치 테스트에서 알림과 단추를 화면으로 확인(그 단계는 콘솔 로그인이라 데스크톱이 없어요)
+- ChatGPT 두 번째 검토(2026-10-12) 반영: "나중에"를 눌러도 바에 "스냅샷 N · 임시" 단추가 남고 누르면 알림이 다시 떠요(`ShellState.bootedSnapshot`). 알림에 "되돌리면 시스템과 설치한 프로그램이 이 상태가 되고, 내 파일(홈 폴더)은 그대로예요". 비밀번호 창을 닫으면(pkexec 126) 아무 일도 없던 것으로. 커널 사본이 없는 스냅샷이면 끝 알림이 그렇게 말해요. robinctl이 root로 번호를 다시 확인해요(스냅샷이 없으면 멈춤). 남은 것: 실패 시나리오(없는 번호, 커널 사본 없음, 취소)를 설치 테스트에 더 넣기, 다시 켠 뒤 이전 시스템(@.broken)을 지우는 일도 화면에서
 - 완료 기준: 터미널 없이 이전 상태로 돌아가고 다시 켜도 유지됨. 설치 테스트 rollback 단계에 알림과 버튼 장면
 
 ### T-152 shadcn × macOS: 질감과 움직임
@@ -122,6 +124,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 출처: 설계 점검(2026-10-10) "설정". 런처의 "제어판"과 바탕 화면 메뉴의 "디스플레이 설정"이 빠른 설정(배율, 밝기)으로 가요. 해상도, 여러 모니터, 날짜·시간, 사용자, 기본 앱은 화면이 없고 Lua 파일을 고쳐야 해요
 - 방향: 환영 마법사·학습 센터처럼 셸 안의 QML 창(`desktop/shell/Settings.qml`)으로 만들어요. 왼쪽에 항목, 오른쪽에 내용. 빠른 설정은 자주 쓰는 것만 남기고 "모든 설정"으로 이 창을 열어요. 바꾼 값은 사용자 설정 파일에 저장해 RobinOS 기본값을 덮어요(시스템 파일은 건드리지 않아요)
 - 단계(한 단계가 1~3회차): ① 창 틀과 "개인 설정"(테마, 강조색, 배경화면)·"정보"(RobinOS 버전과 `robinos` 패키지 버전, 하드웨어 요약) ② "디스플레이"(모니터마다 해상도·주사율·배율·위치, `hyprctl monitors`로 읽고 사용자 Hyprland 설정에 저장) ③ "소리"·"네트워크"·"블루투스"는 이미 있는 창으로 연결 ④ "날짜와 시간"(시간대, 자동 동기화)·"키보드"(한/영 키, 반복 속도) ⑤ "기본 앱"·"사용자 계정"(비밀번호 바꾸기는 `passwd`를 터미널에서) ⑥ "업데이트와 복구"(`robinctl update`, 스냅샷 목록)
+- ChatGPT 두 번째 검토(2026-10-12): 다음은 디스플레이 → 날짜와 시간 → 키보드 순서. 디스플레이는 바꾼 뒤 "이 설정을 유지할까요? 15초 뒤 되돌려요"를 두되, 되돌리는 타이머를 셸(QML) 밖의 따로 된 프로세스에 둬요(화면이 사라져 셸이 죽어도 돌아오게). `hyprctl monitors all -j`로 읽고, 확인한 뒤에만 저장. 날짜와 시간은 systemd-timedated(D-Bus, polkit)로, 하드웨어 시계 방식은 고급 설정에. 키보드는 배열·입력기·한/영 단축키를 따로 저장하고 기본 한/영 키는 남겨요
 - 검증: `wsl-build.ps1 check`(qmllint), 부팅 테스트에 설정 창 장면(단계마다 하나), 디스플레이는 두 번째 가상 모니터로
 - 완료 기준: 런처에서 "설정"·"제어판"으로 이 창이 열리고, 위 여섯 항목이 키보드만으로도 동작
 

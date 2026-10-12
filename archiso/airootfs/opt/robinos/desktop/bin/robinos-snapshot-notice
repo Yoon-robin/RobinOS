@@ -11,22 +11,37 @@ number="${line%%$'\t'*}"
 description=""
 [[ "${line}" == *$'\t'* ]] && description="${line#*$'\t'}"
 
-# The shell's notification server starts together with this script
-sleep 4
+# At login the shell's notification server starts together with this script;
+# the bar's "스냅샷 N · 임시" button runs it again with --now
+[[ "${1:-}" == "--now" ]] || sleep 4
 
+# What a rollback changes and what it leaves alone (second ChatGPT review): the
+# system and installed programs go back, personal files in /home do not
 body="지금은 임시 상태예요. 다시 켜면 원래 시스템으로 돌아가요."
-[[ -n "${description}" ]] && body="${body} 스냅샷: ${description}"
+[[ -n "${description}" ]] && body="${body} 스냅샷: ${description}."
+body="${body} 되돌리면 시스템과 설치한 프로그램이 이 상태가 되고, 내 파일(홈 폴더)은 그대로예요."
 action="$(notify-send --app-name=RobinOS --urgency=critical \
   --action=rollback="이 상태로 되돌리기" --action=later="나중에" \
   "스냅샷 ${number}번으로 켰어요" "${body}")"
 [[ "${action}" == "rollback" ]] || exit 0
 
-# pkexec asks for the password in a window (hyprpolkitagent): no terminal needed
+# pkexec asks for the password in a window (hyprpolkitagent): no terminal needed.
+# robinctl checks the number again as root (the snapshot must exist).
 log="${XDG_RUNTIME_DIR:-/tmp}/robinos-rollback.log"
-if pkexec "${robinctl}" snapshot rollback "${number}" --yes >"${log}" 2>&1; then
+pkexec "${robinctl}" snapshot rollback "${number}" --yes >"${log}" 2>&1
+status=$?
+# 126: the password window was closed or the password refused; nothing changed,
+# and the bar's button can start it again
+if ((status == 126)); then
+  exit 0
+elif ((status == 0)); then
+  done_body="다시 시작하면 그 상태로 켜져요. 지금 시스템은 @.broken-<시각>으로 남겨 뒀어요."
+  # No kernel copy in this snapshot: the files went back, the kernel did not
+  if grep -q '커널은 그대로예요' "${log}"; then
+    done_body="시스템 파일은 되돌렸는데, 이 스냅샷에는 커널 사본이 없어서 커널은 그대로예요. 다시 시작한 뒤 문제가 있으면 sudo pacman -S linux로 맞춰 주세요."
+  fi
   action="$(notify-send --app-name=RobinOS --urgency=critical --action=reboot="지금 다시 시작" \
-    "스냅샷 ${number}번으로 되돌렸어요" \
-    "다시 시작하면 그 상태로 켜져요. 지금 시스템은 @.broken-<시각>으로 남겨 뒀어요.")"
+    "스냅샷 ${number}번으로 되돌렸어요" "${done_body}")"
   [[ "${action}" == "reboot" ]] && systemctl reboot
 else
   notify-send --app-name=RobinOS --urgency=critical "되돌리지 못했어요" \

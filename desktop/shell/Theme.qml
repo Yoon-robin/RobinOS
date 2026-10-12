@@ -54,10 +54,10 @@ Singleton {
     // translucent and Hyprland blurs the desktop behind them (robinos.lua layer
     // rules). Without a GPU (lowPower) Hyprland has no blur, so they stay nearly solid;
     // the same when the user turns on "투명도 줄이기" in the settings (solid).
-    readonly property color barBg: dark ? Qt.rgba(9 / 255, 9 / 255, 11 / 255, solid ? 0.72 : 0.55)
-                                        : Qt.rgba(1, 1, 1, solid ? 0.78 : 0.62)
-    readonly property color dockBg: dark ? Qt.rgba(18 / 255, 18 / 255, 20 / 255, solid ? 0.82 : 0.58)
-                                         : Qt.rgba(1, 1, 1, solid ? 0.85 : 0.64)
+    readonly property color barBg: dark ? Qt.rgba(9 / 255, 9 / 255, 11 / 255, reduceTransparency ? 1 : solid ? 0.72 : 0.55)
+                                        : Qt.rgba(1, 1, 1, reduceTransparency ? 1 : solid ? 0.78 : 0.62)
+    readonly property color dockBg: dark ? Qt.rgba(18 / 255, 18 / 255, 20 / 255, reduceTransparency ? 1 : solid ? 0.82 : 0.58)
+                                         : Qt.rgba(1, 1, 1, reduceTransparency ? 1 : solid ? 0.85 : 0.64)
     readonly property color glass: solid ? surface
                                             : dark ? Qt.rgba(24 / 255, 24 / 255, 27 / 255, 0.70) : Qt.rgba(1, 1, 1, 0.72)
     readonly property color glassBorder: dark ? Qt.rgba(1, 1, 1, 0.13) : Qt.rgba(0, 0, 0, 0.10)

@@ -13,13 +13,23 @@ if [[ "${1:-}" == "-T" ]]; then
 fi
 [[ "${1:-}" == "--" ]] && shift
 
+foot_args=(foot)
+[[ -n "${title}" ]] && foot_args+=("--title=${title}")
+foot_args+=("$@")
+
 if command -v ptyxis >/dev/null 2>&1; then
   args=(ptyxis --new-window)
   [[ -n "${title}" ]] && args+=(-T "${title}")
   (($#)) && args+=(-- "$@")
-else
-  args=(foot)
-  [[ -n "${title}" ]] && args+=("--title=${title}")
-  args+=("$@")
+  # Ptyxis is installed but doesn't start (a broken GTK, no GPU driver): foot
+  # still gives a terminal. Only a failure right away counts; the first Ptyxis
+  # runs until its last window closes, and ending it later (a logout) is no
+  # reason to open foot.
+  started=${SECONDS}
+  status=0
+  "${args[@]}" || status=$?
+  if ((status == 0 || SECONDS - started > 5)) || ! command -v foot >/dev/null 2>&1; then
+    exit "${status}"
+  fi
 fi
-exec "${args[@]}"
+exec "${foot_args[@]}"

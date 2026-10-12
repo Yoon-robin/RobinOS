@@ -197,6 +197,28 @@ PanelWindow {
         anchors.verticalCenter: parent.verticalCenter
         spacing: 4
 
+        // Started from a snapshot (T-153): a reminder that this state is temporary
+        BarButton {
+            visible: ShellState.bootedSnapshot !== ""
+            label: "스냅샷 " + ShellState.bootedSnapshot + "번으로 켠 임시 상태, 눌러서 되돌리기"
+            color: Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.16)
+            onClicked: ShellState.showSnapshotNotice()
+
+            Icon {
+                name: "history"
+                size: 14
+                color: Theme.fg
+            }
+
+            Text {
+                text: "스냅샷 " + ShellState.bootedSnapshot + " · 임시"
+                color: Theme.fg
+                font.family: Theme.font
+                font.pixelSize: 12
+                font.weight: Font.Medium
+            }
+        }
+
         // Apps' tray icons (Steam, Discord ...), like the Windows notification area:
         // click opens the app, right click its menu. fcitx5's is left out, the
         // 한/A indicator next to it does the same job.

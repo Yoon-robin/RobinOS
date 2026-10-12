@@ -408,6 +408,24 @@ Singleton {
         settingsOpen = true;
     }
 
+    // ---- Started from a snapshot (T-153) ----
+    // The bar keeps "스냅샷 N · 임시" in view after the notice is gone, so the
+    // temporary state isn't forgotten; a click brings the notice back.
+
+    property string bootedSnapshot: ""
+
+    Process {
+        running: true
+        command: ["robinctl", "snapshot", "booted"]
+        stdout: StdioCollector {
+            onStreamFinished: root.bootedSnapshot = text.split("\t")[0].trim()
+        }
+    }
+
+    function showSnapshotNotice() {
+        Quickshell.execDetached(["/usr/share/robinos/bin/robinos-snapshot-notice", "--now"]);
+    }
+
     // ---- First-login welcome wizard (Welcome.qml) ----
 
     property bool welcomeOpen: false
