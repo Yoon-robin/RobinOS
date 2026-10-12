@@ -19,6 +19,9 @@ FloatingWindow {
     property string mode: ""
     property bool eraseConfirmed: false
     property bool recoveryConfirmed: false
+    property bool encrypt: false
+    // From robin-install's "@@ recovery-key" line, shown on the last page only
+    property string recoveryKey: ""
     property real percent: 0
     property string stage: ""
     property string errorText: ""
@@ -113,12 +116,19 @@ FloatingWindow {
         stage = "설치를 시작해요";
         errorText = "";
         succeeded = false;
+        recoveryKey = "";
         logLines = [];
         step = 4;
         installProc.running = true;
     }
 
     function handleLine(line) {
+        const keyLine = line.match(/^@@ recovery-key (\S+)$/);
+        if (keyLine) {
+            // Kept out of the log view below
+            recoveryKey = keyLine[1];
+            return;
+        }
         const progressLine = line.match(/^@@ (\d+) (.*)$/);
         const errorLine = line.match(/^@@ error (.*)$/);
         if (errorLine) {
@@ -175,7 +185,9 @@ FloatingWindow {
                 user: userField.text,
                 password: passwordField.text,
                 hostname: hostField.text,
-                timezone: "Asia/Seoul"
+                timezone: "Asia/Seoul",
+                bitlocker_key_saved: root.recoveryConfirmed,
+                encrypt: root.encrypt
             }) + "\n");
             // robin-install reads the plan until end of input
             installProc.stdinEnabled = false;
@@ -640,6 +652,42 @@ FloatingWindow {
                         font.pixelSize: 12
                     }
 
+                    // Disk encryption (T-166), off unless chosen
+                    RowLayout {
+                        Layout.columnSpan: 2
+                        Layout.fillWidth: true
+                        Layout.topMargin: 6
+                        spacing: 16
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+
+                            Text {
+                                text: "디스크 암호화"
+                                color: Theme.fg
+                                font.family: Theme.font
+                                font.pixelSize: 13
+                                font.weight: Font.Medium
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: "노트북을 잃어버려도 다른 사람이 파일을 읽지 못하게 잠가요. 켤 때마다 이 비밀번호를 물어요. 비밀번호와 복구 키를 둘 다 잊으면 파일을 되살릴 수 없어요."
+                                color: Theme.muted
+                                font.family: Theme.font
+                                font.pixelSize: 12
+                                wrapMode: Text.WordWrap
+                            }
+                        }
+
+                        Switch {
+                            checked: root.encrypt
+                            label: "디스크 암호화"
+                            onToggled: root.encrypt = !root.encrypt
+                        }
+                    }
+
                     Item {
                         Layout.columnSpan: 2
                         Layout.fillHeight: true
@@ -657,7 +705,8 @@ FloatingWindow {
                             { label: "사용자", value: userField.text },
                             { label: "컴퓨터 이름", value: hostField.text },
                             { label: "시간대와 언어", value: "서울 (Asia/Seoul), 한국어" },
-                            { label: "스냅샷", value: "업데이트 전후 자동, 부팅 메뉴에서 되돌리기" }
+                            { label: "스냅샷", value: "업데이트 전후 자동, 부팅 메뉴에서 되돌리기" },
+                            { label: "디스크 암호화", value: root.encrypt ? "켬 · 켤 때마다 비밀번호, 끝나면 복구 키를 보여 줘요" : "끔" }
                         ]
 
                         RowLayout {
@@ -807,6 +856,52 @@ FloatingWindow {
                         font.pixelSize: 14
                         lineHeight: 1.3
                         wrapMode: Text.WordWrap
+                    }
+
+                    // Encrypted disk (T-166): the recovery key, shown this once
+                    Rectangle {
+                        visible: root.succeeded && root.recoveryKey !== ""
+                        Layout.fillWidth: true
+                        implicitHeight: keyColumn.implicitHeight + 28
+                        radius: Theme.radius
+                        color: "transparent"
+                        border.width: 1
+                        border.color: Theme.destructive
+
+                        ColumnLayout {
+                            id: keyColumn
+
+                            anchors.fill: parent
+                            anchors.margins: 14
+                            spacing: 8
+
+                            Text {
+                                text: "복구 키 (지금 한 번만 보여 줘요)"
+                                color: Theme.fg
+                                font.family: Theme.font
+                                font.pixelSize: 14
+                                font.weight: Font.DemiBold
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: root.recoveryKey
+                                color: Theme.fg
+                                font.family: Theme.mono
+                                font.pixelSize: 18
+                                wrapMode: Text.WrapAnywhere
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: "비밀번호를 잊었을 때 부팅 화면에서 비밀번호 대신 이 키를 입력하면 열려요. 휴대폰으로 찍거나 종이에 적어서 이 컴퓨터와 다른 곳에 두세요. 비밀번호와 복구 키를 둘 다 잃으면 파일을 되살릴 수 없어요."
+                                color: Theme.muted
+                                font.family: Theme.font
+                                font.pixelSize: 12
+                                lineHeight: 1.3
+                                wrapMode: Text.WordWrap
+                            }
+                        }
                     }
 
                     Text {

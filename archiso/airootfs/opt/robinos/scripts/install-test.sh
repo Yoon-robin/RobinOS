@@ -17,9 +17,10 @@ set -euo pipefail
 # copy inside the ISO). scripts/install-test.py drives everything over the
 # serial console and takes screenshots over QMP.
 #
-# Usage: scripts/install-test.sh [--installer=archinstall|robinos|windows] [path/to/robinos.iso]
+# Usage: scripts/install-test.sh [--installer=archinstall|robinos|windows|encrypted] [path/to/robinos.iso]
 #   archinstall  docs/install.md option A: archinstall, then post-install.sh (default)
 #   robinos      installer/robin-install, erasing the disk (EFI on /efi)
+#   encrypted    the same with disk encryption (LUKS2, GRUB asks for the password)
 # Needs: qemu-system-x86_64, qemu-img, OVMF, bsdtar, python3.
 # Results: build/install-test/ (screenshots, serial logs)
 
@@ -30,7 +31,7 @@ if [[ "${1:-}" == --installer=* ]]; then
   ROBINOS_INSTALLER="${1#--installer=}"
   shift
 fi
-[[ "${ROBINOS_INSTALLER}" =~ ^(archinstall|robinos|windows)$ ]] ||
+[[ "${ROBINOS_INSTALLER}" =~ ^(archinstall|robinos|windows|encrypted)$ ]] ||
   { printf 'error: unknown installer: %s\n' "${ROBINOS_INSTALLER}" >&2; exit 1; }
 ISO="${1:-$(ls -t "${ROOT_DIR}"/out/robinos-*.iso 2>/dev/null | head -n1)}"
 

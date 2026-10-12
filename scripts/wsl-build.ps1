@@ -24,7 +24,7 @@ param(
     [string]$Task = "build",
     # install-test: archinstall (docs/install.md method 2), robinos (installer/robin-install on
     # the whole disk) or windows (robin-install next to a stand-in Windows disk)
-    [ValidateSet("archinstall", "robinos", "windows")]
+    [ValidateSet("archinstall", "robinos", "windows", "encrypted")]
     [string]$Installer = "archinstall",
     # boot-test: whpx runs QEMU for Windows with the Windows Hypervisor Platform,
     # several times faster than TCG in WSL (no KVM on Windows 10). auto = whpx

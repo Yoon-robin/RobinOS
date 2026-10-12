@@ -20,7 +20,12 @@ file. A plan file is deleted after reading. The plan:
     "timezone": "Asia/Seoul",
     "bitlocker_key_saved": true  needed for "alongside" when Windows is on
                               BitLocker: the person has its recovery key
+    "encrypt": true           optional: LUKS2 under Btrfs, unlocked in GRUB with
+                              the user's password (docs/design.md "디스크 암호화")
   }
+
+With "encrypt", a recovery key is printed once as "@@ recovery-key <key>"
+(stdout only, never the log file).
 
 Layout: GPT; the EFI system partition on /efi (Windows' own one in
 "alongside"); Btrfs with @ on /, @home, @log, @pkg and @snapshots on
@@ -64,6 +69,12 @@ GUEST_TOOLS = {
     "kvm": (["qemu-guest-agent"], []),
     "qemu": (["qemu-guest-agent"], []),
 }
+# Disk encryption (T-166): the opened LUKS2 volume, and the key file the initramfs
+# opens it with after GRUB asked for the password once. GRUB runs argon2 in the
+# firmware's memory, so the password's key slot keeps its memory cost low.
+CRYPT_NAME = "cryptroot"
+CRYPT_KEYFILE = "/etc/cryptsetup-keys.d/cryptroot.key"
+CRYPT_PBKDF = ["--pbkdf", "argon2id", "--pbkdf-memory", "262144", "--pbkdf-parallel", "1"]
 PCI_DEVICES = "/sys/bus/pci/devices"
 NVIDIA_VENDOR = 0x10DE
 # NVIDIA's open kernel modules (nvidia-open) run on Turing (GTX 16, RTX 20) and
@@ -260,8 +271,80 @@ def prepare_disk(plan, disk):
         if len(new) != 1:
             raise InstallError("새 파티션을 찾지 못했어요")
         esp, root = disk["esp"], new.pop()
+    if plan.get("encrypt"):
+        root = encrypt_partition(plan, root)
     run("mkfs.btrfs", "-f", "-L", "RobinOS", root)
     return esp, root
+
+
+def encrypt_partition(plan, part):
+    """LUKS2 on the new partition with the user's password; returns the opened
+    volume (/dev/mapper/cryptroot) to put Btrfs on."""
+    progress(4, "디스크 암호화")
+    password = plan["password"]
+    run("cryptsetup", "luksFormat", "--batch-mode", "--type", "luks2", *CRYPT_PBKDF,
+        "--label", "RobinOS-crypt", "--key-file", "-", part, input=password)
+    run("cryptsetup", "open", "--key-file", "-", part, CRYPT_NAME, input=password)
+    return f"/dev/mapper/{CRYPT_NAME}"
+
+
+def recovery_key():
+    """Like a BitLocker recovery key: eight groups of six digits, easy to type into
+    GRUB's prompt on any keyboard layout."""
+    import secrets
+    return "-".join(f"{secrets.randbelow(10**6):06d}" for _ in range(8))
+
+
+def finish_encryption(plan):
+    """Key file for the initramfs (GRUB already asked), the recovery key, GRUB's
+    cryptodisk support and the kernel's cryptdevice= line. Runs after pacstrap."""
+    progress(74, "암호화 설정")
+    part = output("cryptsetup", "status", CRYPT_NAME)
+    device = re.search(r"(?m)^\s*device:\s*(\S+)", part).group(1)
+    uuid = output("cryptsetup", "luksUUID", device).strip()
+    password = plan["password"]
+
+    # The key file lives inside the encrypted disk and in the initramfs, which is
+    # there too; it gets a fast PBKDF since it is random bytes, not a password
+    keyfile = TARGET + CRYPT_KEYFILE
+    os.makedirs(os.path.dirname(keyfile), mode=0o700, exist_ok=True)
+    with open(keyfile, "wb") as f:
+        f.write(os.urandom(64))
+    os.chmod(keyfile, 0o400)
+    run("cryptsetup", "luksAddKey", "--batch-mode", "--pbkdf", "pbkdf2", "--pbkdf-force-iterations", "1000",
+        "--key-file", "-", device, keyfile, input=password)
+
+    key = recovery_key()
+    recovery_file = "/run/robin-install-recovery.key"
+    fd = os.open(recovery_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f:
+        f.write(key)
+    try:
+        run("cryptsetup", "luksAddKey", "--batch-mode", *CRYPT_PBKDF, "--key-file", "-",
+            device, recovery_file, input=password)
+    finally:
+        os.remove(recovery_file)
+    # Only to the screen: the log file stays on the live system
+    print(f"@@ recovery-key {key}", flush=True)
+
+    with open(f"{TARGET}/etc/mkinitcpio.conf") as f:
+        mkinitcpio, count = re.subn(r"(?m)^FILES=\(.*\)$", f"FILES=({CRYPT_KEYFILE})", f.read())
+    if count == 0:
+        mkinitcpio += f"\nFILES=({CRYPT_KEYFILE})\n"
+    write("/etc/mkinitcpio.conf", mkinitcpio)
+
+    # grub-install reads GRUB_ENABLE_CRYPTODISK from /etc/default/grub itself (not
+    # grub.d), and needs it to put the LUKS2 and argon2 modules into GRUB
+    with open(f"{TARGET}/etc/default/grub") as f:
+        grub = f.read()
+    grub = re.sub(r"(?m)^#?GRUB_ENABLE_CRYPTODISK=.*$", "", grub)
+    cmdline = f"cryptdevice=UUID={uuid}:{CRYPT_NAME} cryptkey=rootfs:{CRYPT_KEYFILE}"
+    grub, count = re.subn(r'(?m)^GRUB_CMDLINE_LINUX="(.*)"$',
+                          lambda m: f'GRUB_CMDLINE_LINUX="{(m.group(1) + " " + cmdline).strip()}"', grub)
+    if count == 0:
+        grub += f'\nGRUB_CMDLINE_LINUX="{cmdline}"\n'
+    grub += "\n# The RobinOS disk is encrypted (LUKS2); GRUB asks for the password\nGRUB_ENABLE_CRYPTODISK=y\n"
+    write("/etc/default/grub", grub)
 
 
 def mount_target(esp, root):
@@ -364,12 +447,15 @@ def without_subvolid(fstab):
     return "\n".join(lines) + "\n"
 
 
-def initramfs_hooks(nvidia):
+def initramfs_hooks(nvidia, encrypt=False):
     """mkinitcpio hooks. With nvidia-open the kms hook goes, as the Arch wiki says:
-    it would put nouveau in the initramfs; the NVIDIA driver loads after it."""
+    it would put nouveau in the initramfs; the NVIDIA driver loads after it. An
+    encrypted disk needs the encrypt hook between block and filesystems."""
     hooks = UDEV_HOOKS.split()
     if nvidia:
         hooks.remove("kms")
+    if encrypt:
+        hooks.insert(hooks.index("filesystems"), "encrypt")
     return " ".join(hooks)
 
 
@@ -392,7 +478,8 @@ def configure_system(plan):
     # grub-btrfs-overlayfs hook that robinctl snapshot setup adds (and builds the
     # images with) only works there, and it makes a snapshot booted from the GRUB
     # menu writable in memory, so the desktop starts too (docs/recovery.md)
-    hooks = initramfs_hooks(os.path.exists(f"{TARGET}/usr/lib/modprobe.d/nvidia-utils.conf"))
+    hooks = initramfs_hooks(os.path.exists(f"{TARGET}/usr/lib/modprobe.d/nvidia-utils.conf"),
+                            bool(plan.get("encrypt")))
     with open(f"{TARGET}/etc/mkinitcpio.conf") as f:
         mkinitcpio, count = re.subn(r"(?m)^HOOKS=\(.*\)$", f"HOOKS=({hooks})", f.read())
     if count == 0:
@@ -475,16 +562,23 @@ def install(plan_path):
     say(f"# RobinOS 설치: {disk['path']} ({disk['model'] or '이름 없음'}), 방식 {plan['mode']}")
 
     subprocess.run(["umount", "-R", TARGET], capture_output=True)
+    # A failed earlier try may have left the encrypted volume open
+    subprocess.run(["cryptsetup", "close", CRYPT_NAME], capture_output=True)
     esp, root = prepare_disk(plan, disk)
     mount_target(esp, root)
     install_packages()
     configure_system(plan)
+    if plan.get("encrypt"):
+        finish_encryption(plan)
+        chroot("mkinitcpio", "-P")
     install_robinos(plan)
 
     progress(97, "마무리")
     stop_keyring_agent()
     run("sync")
     run("umount", "-R", TARGET)
+    if plan.get("encrypt"):
+        run("cryptsetup", "close", CRYPT_NAME)
     progress(100, "설치가 끝났어요")
 
 
@@ -516,6 +610,7 @@ def main():
             say(f"@@ error {error}")
             stop_keyring_agent()
             subprocess.run(["umount", "-R", TARGET], capture_output=True)
+            subprocess.run(["cryptsetup", "close", CRYPT_NAME], capture_output=True)
             return 1
     guide()
     return 0 if command in ("", "help", "-h", "--help") else 2

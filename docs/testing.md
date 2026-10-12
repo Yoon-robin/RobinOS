@@ -126,10 +126,11 @@ WHPX가 필요해요. TCG에서는 `build`, `boot-test`, `install-test`를 차�
 
 `scripts/install-test.sh`는 빈 40GB 디스크에 RobinOS를 설치하고, 설치한 시스템을 시리얼 콘솔로 조작하면서 확인해요. RobinOS 파일은 ISO 안의 사본이 아니라 지금 저장소 것을 써요(읽기 전용 FAT 디스크로 넘겨요).
 
-설치 방식은 세 가지예요.
+설치 방식은 네 가지예요.
 
 - `archinstall` (기본): [install.md](install.md)의 방법 A예요. archinstall로 Arch를 설치하고(기본 Btrfs 구성, GRUB, EFI는 `/boot`) `scripts/post-install.sh --yes`를 실행해요.
 - `robinos`: RobinOS 설치기 백엔드(`installer/robin-install`)로 디스크 전체에 설치해요(EFI는 `/efi`).
+- `encrypted`: `robinos`와 같지만 디스크 암호화를 켜요(LUKS2, T-166·T-167). 설치 뒤 복구 키가 화면 줄(`@@ recovery-key`)에만 있고 로그 파일에는 없는지 봐요. 설치본을 켤 때마다 GRUB이 화면에서 비밀번호를 물어서, 시리얼에 메뉴가 안 보이면 QMP로 비밀번호를 쳐요(`grub-password` 스크린샷, 잠금 해제에 걸린 시간을 기록). 두 번째 부팅(snapshots)은 비밀번호 대신 복구 키로 열어요.
 - `windows`: 윈도우가 깔린 것처럼 꾸민 64GB 디스크(100MB EFI 파티션과 그 안의 윈도우 부팅 관리자 자리, MSR, 20GB NTFS "C:", 나머지 빈 공간)에 RobinOS 설치기로 "윈도우 옆에 설치"해요. 설치 뒤 윈도우 파티션 세 개의 위치와 C:의 앞부분이 그대로인지, 윈도우 부팅 파일이 남아 있고 `EFI/RobinOS`만 더해졌는지, 하드웨어 시계가 지역 시간인지 확인해요.
 
 설치한 뒤 확인하는 것:

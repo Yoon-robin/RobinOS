@@ -163,13 +163,17 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: 방식 하나를 정해 [design.md](design.md)에 쓰고 구현 작업으로 나누기
 
 ### T-166 설치기에 디스크 암호화 선택
-- 상태: 할 일
+- 상태: 진행 중
+- 한 것(2026-10-13 집 PC): 백엔드 `"encrypt": true` → `cryptsetup luksFormat`(LUKS2, argon2id, 메모리 256MiB, 사용자 비밀번호), Btrfs는 `/dev/mapper/cryptroot` 위에. initramfs 키 파일(`/etc/cryptsetup-keys.d/cryptroot.key`, 빠른 PBKDF), `encrypt` 훅, `GRUB_ENABLE_CRYPTODISK=y`와 `cryptdevice=`·`cryptkey=`. 복구 키(6자리 숫자 여덟 묶음)를 세 번째 키 슬롯에 넣고 `@@ recovery-key` 줄로 화면에만(로그 파일에는 안 남겨요). 설치기 화면: 사용자 단계에 "디스크 암호화" 스위치(설명: 잊으면 되살릴 수 없음), 확인 단계 요약, 끝 화면에 복구 키 상자. GRUB의 `luks2` 모듈이 `argon2`에 의존해서 같이 들어가요(moddep.lst 확인). 같이 고친 것: 화면이 계획에 `bitlocker_key_saved`를 안 보내던 것(T-147 때 패치 하나가 조용히 빠짐) → `test-robin-install.py`가 백엔드가 읽는 계획 항목을 화면이 모두 보내는지 확인
+- 남은 것: T-167 설치 테스트
 - 출처: T-163 조사([design.md](design.md) "디스크 암호화")
 - 할 것: 설치기 확인 단계 앞에 "디스크 암호화" 선택(기본 꺼짐, 비밀번호를 잊으면 되살릴 수 없다는 설명), 백엔드가 LUKS2(argon2id, GRUB이 견딜 메모리 비용)로 Btrfs 파티션을 잠그고 `GRUB_ENABLE_CRYPTODISK=y`, initramfs에 키 파일과 `encrypt` 훅, `systemd-cryptenroll --recovery-key`로 복구 키를 만들어 마지막 화면에 보여 주기. `robinctl audit`의 "디스크 암호화" 줄은 그대로 동작
 - 완료 기준: T-167의 설치 테스트 통과
 
 ### T-167 설치 테스트에 암호화 설치
-- 상태: 할 일
+- 상태: 진행 중
+- 한 것(2026-10-13): `install-test -Installer encrypted`(`wsl-build.ps1`, `install-test.sh`), GRUB 비밀번호는 QMP로(`wait_menu`), 두 번째 부팅은 복구 키로, 잠금 해제 시간 로그
+- 남은 것: 실제로 돌려 보기
 - 출처: T-163
 - 할 것: `install-test.py`에 암호화 계획(`"encrypt": true`)으로 설치하고, GRUB 비밀번호 화면에 QMP로 비밀번호를 입력해 부팅, 스냅샷으로 부팅·되돌리기까지 지금처럼 확인. 복구 키로도 한 번 열기. GRUB의 argon2 잠금 해제 시간 재기
 - 완료 기준: 다섯 단계 통과, 잠금 해제 시간 기록

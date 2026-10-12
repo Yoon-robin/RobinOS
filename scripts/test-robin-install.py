@@ -9,6 +9,7 @@ install tests cover the rest.
 import importlib.machinery
 import importlib.util
 import os
+import re
 import sys
 import tempfile
 
@@ -126,6 +127,27 @@ except robin.InstallError:
     refused = True
 check("BitLocker without the recovery key confirmed: refused", refused, True)
 check("refused before touching the disk", ran, [])
+
+print("Disk encryption (T-166)")
+check("encrypt hook goes before filesystems",
+      robin.initramfs_hooks(False, True).split()[robin.initramfs_hooks(False, True).split().index("filesystems") - 1],
+      "encrypt")
+check("no encrypt hook without encryption", "encrypt" in robin.initramfs_hooks(False).split(), False)
+key = robin.recovery_key()
+check("recovery key: eight groups of six digits", bool(re.fullmatch(r"\d{6}(-\d{6}){7}", key)), True)
+check("recovery keys differ", robin.recovery_key() != key, True)
+
+print("Plan keys the installer window sends")
+# Every key robin-install reads from the plan must come from Installer.qml, or the
+# window's choice never reaches the backend (bitlocker_key_saved was missing, 2026-10-13)
+with open(os.path.join(ROOT, "installer", "robin-install")) as f:
+    backend = f.read()
+with open(os.path.join(ROOT, "desktop", "shell", "Installer.qml"), encoding="utf-8") as f:
+    window = f.read()
+plan_block = window[window.index("JSON.stringify({"):]
+plan_block = plan_block[:plan_block.index("})")]
+for name in sorted(set(re.findall(r"""plan(?:\.get\(|\[)["'](\w+)["']""", backend))):
+    check(f"Installer.qml sends {name}", re.search(rf"(?m)^\s*{name}:", plan_block) is not None, True)
 
 if failures:
     print(f"{failures} robin-install check(s) failed.")

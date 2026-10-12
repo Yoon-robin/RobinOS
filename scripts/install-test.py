@@ -39,6 +39,10 @@ INSTALLER = os.environ.get("ROBINOS_INSTALLER", "archinstall")
 TEST_LAB = os.environ.get("ROBINOS_TEST_LAB") == "1"
 # robin-install next to Windows puts RobinOS on the fourth partition
 ROOT_PART = "/dev/vda4" if INSTALLER == "windows" else "/dev/vda2"
+# "encrypted": robin-install on the whole disk with LUKS2 (T-167); Btrfs is then on
+# the opened volume, and GRUB asks for the password before its menu
+ENCRYPTED = INSTALLER == "encrypted"
+ROOT_DEV = "/dev/mapper/cryptroot" if ENCRYPTED else ROOT_PART
 PASSWORD = "robin"  # root and the robin user, like the live ISO
 MIRROR = "https://geo.mirror.pkgbuild.com/$repo/os/$arch"
 
@@ -437,8 +441,8 @@ def phase_live(con, qmp):
         before = windows_state(con)
         install_with_robin_install(con, mode="alongside")
         check_windows_kept(con, before)
-    elif INSTALLER == "robinos":
-        install_with_robin_install(con)
+    elif INSTALLER in ("robinos", "encrypted"):
+        install_with_robin_install(con, encrypt=ENCRYPTED)
     else:
         install_with_archinstall(con)
 
@@ -460,7 +464,7 @@ def phase_live(con, qmp):
     con.wait_closed(180)
 
 
-def install_with_robin_install(con, mode="whole"):
+def install_with_robin_install(con, mode="whole", encrypt=False):
     """installer/robin-install from this checkout; leaves the target on /mnt."""
     con.run("cp -r /share/robinos/. /opt/robinos/"
             " && chmod +x /opt/robinos/bin/* /opt/robinos/installer/* /opt/robinos/scripts/*.sh"
@@ -468,7 +472,7 @@ def install_with_robin_install(con, mode="whole"):
             " && install -m755 /opt/robinos/installer/robin-install /usr/local/bin/robin-install")
     con.run("robin-install disks", check=False)
     plan = {"disk": "/dev/vda", "mode": mode, "user": "robin", "password": PASSWORD,
-            "hostname": "robinos", "timezone": "Asia/Seoul"}
+            "hostname": "robinos", "timezone": "Asia/Seoul", "encrypt": encrypt}
     con.put_file("/root/plan.json", json.dumps(plan))
     con.run("chmod 600 /root/plan.json")
 
@@ -479,7 +483,19 @@ def install_with_robin_install(con, mode="whole"):
     if status != 0:
         raise RuntimeError(f"robin-install failed with {status}")
 
-    con.run(f"mount -o subvol=@ {ROOT_PART} /mnt && mount /dev/vda1 /mnt/efi")
+    if encrypt:
+        # The recovery key went to the screen only, never into the log file
+        _, key = con.capture("sed -n 's/^@@ recovery-key //p' /root/robin-install.out")
+        key = key.strip()
+        if not key:
+            raise RuntimeError("robin-install printed no recovery key")
+        with open(os.path.join(OUT, "recovery-key.txt"), "w") as f:
+            f.write(key + "\n")
+        con.run("! grep -q 'recovery-key' /var/log/robin-install.log")
+        con.run(f"cryptsetup luksDump {ROOT_PART} | grep -E '^(Version|\\s+PBKDF|\\s+Memory)'", check=False)
+        # Closed at the end of the install; open it again to finish the test setup
+        con.run(f"printf %s {PASSWORD} | cryptsetup open --key-file - {ROOT_PART} cryptroot")
+    con.run(f"mount -o subvol=@ {ROOT_DEV} /mnt && mount /dev/vda1 /mnt/efi")
     # robin-install locks root; the test logs in on the serial console as root
     con.run("arch-chroot /mnt sh -c 'echo root:robin | chpasswd'")
 
@@ -512,11 +528,39 @@ GRUB_BTRFS_CFG = "/boot/grub/grub-btrfs.cfg"
 MENU_ENTRY = r"(RobinOS|Arch) Linux"
 
 
-def boot_from_grub(con, qmp, name, show_snapshots=False):
+def wait_menu(con, qmp, secret=None):
+    """Waits for the GRUB menu on the serial port. On an encrypted disk GRUB first
+    asks for the password on the screen (its serial setup is in grub.cfg, which is
+    still locked), so type it there until the menu shows up."""
+    if not ENCRYPTED:
+        con.expect(MENU_ENTRY, 300)
+        return
+    secret = secret or PASSWORD
+    started = time.time()
+    typed = None
+    for attempt in range(20):
+        try:
+            con.expect(MENU_ENTRY, 15)
+            if typed is not None:
+                log(f"GRUB unlocked the disk in {time.time() - typed:.0f}s after the password")
+            return
+        except TimeoutError:
+            pass
+        if attempt == 2:
+            shot(qmp, "grub-password")
+        if attempt >= 2:
+            qmp.type_text(secret + "\n")
+            typed = time.time()
+    raise TimeoutError(f"no GRUB menu {time.time() - started:.0f}s after typing the password")
+
+
+def boot_from_grub(con, qmp, name, show_snapshots=False, secret=None):
     """Waits for the GRUB menu on the serial port, screenshots it, boots the default entry."""
     try:
-        con.expect(MENU_ENTRY, 300)
+        wait_menu(con, qmp, secret)
     except TimeoutError:
+        if ENCRYPTED:
+            raise
         log("GRUB menu not seen on the serial port; continuing")
         return
     time.sleep(3)
@@ -652,8 +696,12 @@ def cowsay_pre_snapshot(con):
 
 
 def phase_snapshots(con, qmp):
-    """Second boot: the snapshot submenu in GRUB and a snap-pac pair."""
-    boot_from_grub(con, qmp, "grub-menu", show_snapshots=True)
+    """Second boot: the snapshot submenu in GRUB and a snap-pac pair. An encrypted
+    disk is opened with the recovery key this time, like after a forgotten password."""
+    secret = None
+    if ENCRYPTED:
+        secret = open(os.path.join(OUT, "recovery-key.txt")).read().strip()
+    boot_from_grub(con, qmp, "grub-menu", show_snapshots=True, secret=secret)
     con.login("root", PASSWORD)
 
     # snap-pac: a pacman transaction leaves a pre/post pair behind
@@ -684,7 +732,7 @@ def phase_snapshot_boot(con, qmp):
     """Third boot: the snapshot from before cowsay, picked in the GRUB menu like
     docs/recovery.md says, and the rollback done from inside it."""
     position, pre = open(os.path.join(OUT, "snapshot-entry.txt")).read().split()
-    con.expect(MENU_ENTRY, 300)
+    wait_menu(con, qmp)
     time.sleep(3)
     qmp.keys("end")  # "RobinOS snapshots" is the last entry
     time.sleep(1)
@@ -733,7 +781,7 @@ def phase_rollback(con, qmp):
     log("rollback ok: cowsay is gone")
     # The pre snapshot was taken mid-transaction; pacman must still work afterwards
     con.run("test ! -e /var/lib/pacman/db.lck && pacman -Q pacman")
-    con.run(f"findmnt -no FSROOT /; mount -o subvolid=5 {ROOT_PART} /mnt && ls /mnt && umount /mnt", check=False)
+    con.run(f"findmnt -no FSROOT /; mount -o subvolid=5 {ROOT_DEV} /mnt && ls /mnt && umount /mnt", check=False)
     con.run("robinctl snapshot list", check=False)
 
     # Desktop: SDDM on the screen, log in as robin
