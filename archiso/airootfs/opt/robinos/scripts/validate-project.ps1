@@ -242,10 +242,15 @@ foreach ($path in $overlayPaths) {
 
 # Scripts must be executable in git, or Linux checkouts cannot run them.
 # Windows does not track the bit; fix with: git update-index --chmod=+x <file>
+# The ISO overlay's copies too: the live ISO takes their mode from git, so a new
+# script synced without the bit can't run there (2026-10-12: no terminal at all
+# in the live session because robinos-terminal's copy was 644).
 if (Get-Command git -ErrorAction SilentlyContinue) {
     Push-Location $root
     try {
-        $entries = git ls-files -s -- "scripts/*.sh" "scripts/*.py" "bin/*" "installer/*" "desktop/bin/*" 2>$null
+        $entries = git ls-files -s -- "scripts/*.sh" "scripts/*.py" "bin/*" "installer/*" "desktop/bin/*" `
+            "archiso/airootfs/usr/share/robinos/bin/*" "archiso/airootfs/opt/robinos/desktop/bin/*" `
+            "archiso/airootfs/opt/robinos/bin/*" "archiso/airootfs/usr/local/bin/*" 2>$null
         foreach ($entry in $entries) {
             $mode, $rest = $entry -split "\s+", 2
             $path = ($entry -split "`t", 2)[1]

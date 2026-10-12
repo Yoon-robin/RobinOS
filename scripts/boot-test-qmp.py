@@ -127,6 +127,24 @@ def type_text(qmp, text):
             keys(qmp, QCODES.get(ch, ch))
 
 
+def expect_serial(marker, timeout=20):
+    """Waits for a marker in the serial log, where the journal is forwarded
+    (systemd.journald.forward_to_console=1). Screenshots alone missed a live ISO
+    without any terminal window (2026-10-12): the typed commands went nowhere."""
+    path = os.path.join(OUT, "serial.log")
+    deadline = time.time() + timeout * SPEED
+    while time.time() < deadline:
+        try:
+            with open(path, "rb") as f:
+                if marker.encode() in f.read():
+                    print(f"serial: {marker}", flush=True)
+                    return
+        except FileNotFoundError:
+            pass
+        time.sleep(1)
+    raise RuntimeError(f"no \"{marker}\" in the serial log after {timeout} s")
+
+
 shot_number = 0
 
 
@@ -246,7 +264,10 @@ def main():
 
     keys(qmp, "meta_l", "ret")
     wait(6)
-    type_text(qmp, "ipconfig\n")
+    # The terminal (Ptyxis, robinos-terminal) really opened and runs what is typed
+    type_text(qmp, "logger -t robinos-boot-test terminal-open\n")
+    expect_serial("terminal-open")
+    type_text(qmp, "clear; ipconfig\n")
     wait(2)
     shot(qmp, "terminal-windows-hint")
     type_text(qmp, "clear\n")
