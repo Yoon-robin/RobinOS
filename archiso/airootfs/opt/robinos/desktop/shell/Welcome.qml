@@ -215,7 +215,7 @@ PanelWindow {
                         model: [
                             { icon: "grid", title: "익숙한 화면", desc: "아래 작업 표시줄, 자유롭게 띄우는 창, Alt+Tab이 윈도우와 같아요" },
                             { icon: "terminal", title: "조금씩 리눅스로", desc: "터미널에 윈도우 명령을 치면 같은 일을 하는 리눅스 명령을 알려 줘요" },
-                            { icon: "shield", title: "안전한 실습", desc: "보안 실습은 내 컴퓨터 안의 랩에서만 열려요" }
+                            { icon: "history", title: "망가져도 되돌리기", desc: "업데이트 전에 자동으로 스냅샷을 찍어 두고, 부팅 메뉴에서 되돌려요" }
                         ]
 
                         RowLayout {
