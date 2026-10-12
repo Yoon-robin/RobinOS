@@ -155,6 +155,7 @@ man-db
 man-pages
 less
 diffutils
+ufw
 rsync
 openssh
 tmux

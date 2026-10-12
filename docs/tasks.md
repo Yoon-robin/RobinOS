@@ -101,7 +101,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: 설치 테스트에서 설치본에 `pacman -Q sof-firmware fwupd`가 나오고, 실제 PC에서 GNOME Software 업데이트에 펌웨어가 보이는지 확인(실기기 확인은 사용자)
 
 ### T-157 방화벽 켜기
-- 상태: 할 일
+- 상태: 진행 중
+- 한 것(2026-10-13 집 PC): ufw를 골랐어요(`ufw status`, `ufw allow 22`처럼 명령이 말에 가까워서 미션에서 설명하기 쉬워요). `packages/core.txt`에 `ufw`, `post-install.sh`가 `/etc/ufw/ufw.conf`의 `ENABLED=yes`와 `ufw.service`로 켜요(설치기 chroot에서 `ufw enable`을 하면 라이브 커널에 규칙이 들어가서요). 기본값이 들어오는 연결은 막고 나가는 연결은 그대로, ufw의 before.rules가 DHCP·ping·mDNS(프린터 찾기)를 열어 둬요. `robinctl audit`은 설치본에서 방화벽이 꺼져 있으면 경고(라이브는 괜찮다고). 설치 테스트에서 `ufw` 켜짐과 mDNS 규칙 확인
+- 남은 것: 묶음 검증. 보안 기초 미션에 "방화벽 규칙 보기". 웹 보안 랩(Docker)이 그대로 되는지 실제로 띄워 보기
 - 출처: 다른 OS와 비교(2026-10-12). Fedora는 firewalld가 켜져 있고, Mint는 환영 화면 체크리스트에서 방화벽을 켜게 해요. RobinOS는 방화벽이 꺼져 있는데 `robinctl audit`은 괜찮다고 해요
 - 할 것: 들어오는 연결은 막고 나가는 연결은 그대로 두는 기본값(ufw나 firewalld 중 하나, 학습 미션에서 설명하기 쉬운 쪽). 프린터 찾기(mDNS)는 열어 두기. `robinctl audit`이 방화벽이 꺼져 있으면 알려 주기. 보안 기초 미션에 "방화벽 규칙 보기" 하나
 - 완료 기준: 설치 테스트에서 방화벽이 켜져 있고, 네트워크 프린터 찾기와 웹 보안 랩이 그대로 동작

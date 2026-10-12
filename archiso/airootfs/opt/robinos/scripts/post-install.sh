@@ -163,6 +163,17 @@ for unit in NetworkManager.service sddm.service bluetooth.service power-profiles
   fi
 done
 
+# Firewall: ufw's defaults drop what comes in and let everything out; its
+# before.rules keep DHCP, ping and mDNS (printers, name.local) open. Turned on by
+# its config file, not `ufw enable`, which would load rules into the kernel the
+# installer runs on (robin-install runs this in a chroot)
+if [[ "${DRY_RUN}" == "true" ]]; then
+  printf '방화벽(ufw)을 켜요: 들어오는 연결은 막고 나가는 연결은 그대로\n'
+elif [[ -f /etc/ufw/ufw.conf ]]; then
+  sed -i 's/^ENABLED=.*/ENABLED=yes/' /etc/ufw/ufw.conf
+  run systemctl enable ufw.service
+fi
+
 run systemctl set-default graphical.target
 
 # Snapshots around every pacman transaction and in the GRUB menu (Btrfs root only).

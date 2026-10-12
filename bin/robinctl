@@ -184,9 +184,11 @@ audit() {
     fi
   done
   if [[ -n "${fw}" ]]; then
-    audit_ok "방화벽(${fw})이 켜져 있어요"
+    audit_ok "방화벽(${fw})이 켜져 있어요" "들어오는 연결은 막고 나가는 연결은 그대로예요. 규칙 보기: sudo ufw status verbose"
+  elif [[ -d /run/archiso ]]; then
+    audit_ok "라이브 세션이라 방화벽은 꺼져 있어요" "설치하면 처음부터 켜져 있어요"
   else
-    audit_ok "방화벽은 켜져 있지 않아요" "밖에서 닿는 서비스가 없으면(위) 괜찮아요. 공용 Wi-Fi에서 서비스를 켤 때는 방화벽을 생각해요"
+    audit_warn "방화벽이 꺼져 있어요. 공용 Wi-Fi에서는 같은 네트워크의 누구나 열린 포트에 닿을 수 있어요" "sudo ufw enable"
   fi
   crypt="$(lsblk -nr -o TYPE 2>/dev/null | grep -c '^crypt$' || true)"
   if [[ "${crypt:-0}" -gt 0 ]]; then

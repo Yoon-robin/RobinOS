@@ -584,6 +584,10 @@ def phase_installed(con, qmp):
             " && grep -q DisableTelemetry /etc/firefox/policies/policies.json")
     # Same firmware as the live ISO (laptop sound, Marvell Wi-Fi) and firmware updates (T-156)
     con.run("pacman -Q sof-firmware linux-firmware-marvell wireless-regdb fwupd")
+    # Firewall on from the first boot, mDNS (printers) still open (T-157)
+    con.run("systemctl is-active ufw && LC_ALL=C ufw status verbose | head -n 4"
+            " && LC_ALL=C ufw status | grep -q '^Status: active'"
+            " && iptables -S ufw-before-input | grep -q 'dport 5353'")
     # Backups of personal files, "백업" in the launcher (T-158)
     con.run("pacman -Q deja-dup && test -f /usr/share/applications/org.gnome.DejaDup.desktop")
     # The shell's update dot asks checkupdates: 0 = updates, 2 = none, 1 = it failed
