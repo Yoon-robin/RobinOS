@@ -102,6 +102,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 한 것(2026-10-12, `work/batch74`): 기본 터미널을 Ptyxis로. `ShellState.terminal`(`ptyxis --new-window`) 하나를 독, 런처(터미널 앱 실행 포함), Win+X, 바탕 화면 메뉴, 미션·업데이트 터미널(`openTerminal`, `runInTerminal`)이 같이 써요. Hyprland `Win+Enter`도 Ptyxis. dconf 기본값 `[org/gnome/Ptyxis]`: 다크·라이트를 셸 선택대로(`interface-style='system'`), 지난 창 복원 끄기, 100×28. foot은 대체용으로 남기고 런처에서는 숨겨요. 패키지 목록(설치본, 라이브)에 ptyxis. 부팅 테스트의 최소화 장면은 `org.gnome.Ptyxis`로
 - 남은 것: 묶음 검증. RobinOS zinc 팔레트(Ptyxis 기본은 GNOME 팔레트), 이미 설치한 시스템에 ptyxis 깔기(`robinos` 패키지 의존성 또는 `robinctl update` 안내)
 - ChatGPT 두 번째 검토(2026-10-12) 반영: Ptyxis가 깔려 있는데 바로 실패하면(5초 안) foot으로. 남은 것: 파일 관리자(Nautilus)의 "터미널에서 열기"(지금은 없음. Nautilus 47 이후의 `xdg-terminal-exec` 또는 확장), RobinOS zinc 팔레트(`.palette`의 [Light]/[Dark], 프로필 UUID 처리), 한글 2칸 폭과 상자 그리기 문자(│├└─) 정렬, 닫기 확인 창이 실행 중인 작업에만 뜨는지
+- 한글 폭(2026-10-12): Ptyxis에서 한글 음절 사이가 벌어져요(한글 두 칸 = 1.2em인데 Noto Sans Mono CJK KR의 한글은 1.0em). fontconfig matrix로 가로세로 1.16배는 틈이 없어졌지만 한국어 환경에서 줄 높이가 22→28px로 커져 28줄 창이 900px 화면을 넘었고, 가로로만 1.16배는 VTE에 효과가 없었어요. 규칙은 뺐어요. 남은 후보: 한글과 영문 폭이 맞는 고정폭 글꼴로 터미널 글꼴 자체를 바꾸기, 기본 줄 수를 줄이고 가로세로 확대를 다시 쓰기
 - 완료 기준: 처음 쓰는 사람이 단축키 없이 터미널 창을 마우스로 옮기고 닫을 수 있음. 부팅 테스트에 끌어서 옮기는 장면
 
 ### T-153 스냅샷으로 켰을 때 알려 주고 화면에서 되돌리기
