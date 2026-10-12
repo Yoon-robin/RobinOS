@@ -73,7 +73,8 @@ qemu-system-x86_64 \
   -serial "file:${OUT_DIR}/serial.log" &
 qemu_pid=$!
 
-python3 "${ROOT_DIR}/scripts/boot-test-qmp.py" "${OUT_DIR}/qmp.sock" "${OUT_DIR}" "${speed}"
+scenario=0
+python3 "${ROOT_DIR}/scripts/boot-test-qmp.py" "${OUT_DIR}/qmp.sock" "${OUT_DIR}" "${speed}" || scenario=$?
 kill "${qemu_pid}" 2>/dev/null
 wait "${qemu_pid}" 2>/dev/null
 
@@ -90,7 +91,7 @@ summary() {
   printf -- '- ISO: `%s`\n' "$(basename "${ISO}")"
   printf -- '- Acceleration: `%s`\n\n' "${accel[1]}"
   printf 'Key lines from the serial log:\n\n```text\n'
-  grep -a -E 'robinos-session|Reached target .*Graphical|Startup finished in|Started .*(SDDM|Simple Desktop)|Failed to start|hyprland.*(ERR|error|CRIT)' \
+  grep -a -E 'robinos-session|robinos-diag|Reached target .*Graphical|Startup finished in|Started .*(SDDM|Simple Desktop)|Failed to start|hyprland.*(ERR|error|CRIT)' \
     "${OUT_DIR}/serial.log" | sed 's/\x1b\[[0-9;]*m//g' | tail -n 40
   printf '```\n'
 }
@@ -102,3 +103,9 @@ fi
 
 printf '\nScreenshots:\n'
 ls -1 "${OUT_DIR}"/*.png 2>/dev/null || printf '  (none)\n'
+
+# The scenario stops at the first scene that fails; that is a failed test
+if ((scenario != 0)); then
+  printf '\nThe boot test scenario stopped (status %s)\n' "${scenario}" >&2
+  exit 1
+fi

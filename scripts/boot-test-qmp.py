@@ -29,7 +29,7 @@ QCODES = {" ": "spc", "\n": "ret", "-": "minus", ".": "dot", "/": "slash", ";": 
 # Characters typed with Shift on a US keyboard
 SHIFTED = {"(": "9", ")": "0", "&": "7", "~": "grave_accent", ">": "dot", "<": "comma", "?": "slash", "$": "4", "%": "5",
            '"': "apostrophe", "{": "bracket_left", "}": "bracket_right", ":": "semicolon", "_": "minus",
-           "*": "8", "+": "equal"}
+           "*": "8", "+": "equal", "|": "backslash"}
 
 
 class Qmp:
@@ -143,6 +143,27 @@ def expect_serial(marker, timeout=20):
             pass
         time.sleep(1)
     raise RuntimeError(f"no \"{marker}\" in the serial log after {timeout} s")
+
+
+def diagnose_on_tty(qmp, tag, commands):
+    """When the desktop can't run a command (no terminal window), log in on tty3
+    and send each command's output to the journal, which reaches the serial log."""
+    keys(qmp, "ctrl", "alt", "f3")
+    wait(3)
+    type_text(qmp, "robin\n")
+    wait(2)
+    type_text(qmp, LIVE_PASSWORD + "\n")
+    wait(4)
+    shot(qmp, "tty-diagnose")
+    for command in commands:
+        type_text(qmp, f"({command}) 2>&1 | logger -t {tag}\n")
+        wait(3)
+    wait(5)
+    shot(qmp, "tty-diagnose-done")
+
+
+# The desktop session's environment, for commands started from tty3
+SESSION_ENV = "XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus"
 
 
 shot_number = 0
@@ -266,7 +287,15 @@ def main():
     wait(6)
     # The terminal (Ptyxis, robinos-terminal) really opened and runs what is typed
     type_text(qmp, "logger -t robinos-boot-test terminal-open\n")
-    expect_serial("terminal-open")
+    try:
+        expect_serial("terminal-open")
+    except RuntimeError:
+        diagnose_on_tty(qmp, "robinos-diag", [
+            "ls -l /usr/share/robinos/bin/robinos-terminal; command -v ptyxis foot",
+            f"{SESSION_ENV} timeout 15 /usr/share/robinos/bin/robinos-terminal; echo exit $?",
+            "journalctl --user -b --no-pager | tail -n 25",
+        ])
+        raise
     type_text(qmp, "clear; ipconfig\n")
     wait(2)
     shot(qmp, "terminal-windows-hint")
@@ -650,5 +679,8 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except Exception as error:  # keep the screenshots taken so far
+    except Exception as error:  # the screenshots taken so far stay
         print(f"QMP scenario stopped: {error}", flush=True)
+        # A stopped scenario is a failed test: it used to end with status 0, and
+        # a run without any terminal window passed as a whole (2026-10-12)
+        sys.exit(1)
