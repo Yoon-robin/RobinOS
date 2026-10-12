@@ -18,8 +18,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-10-12 (오후 3시) | `5b1facd` 테스트 ISO | robin PC에서 `verify -Installer robinos` | 통과. 묶음 76: Spotlight 같은 런처, 제어 센터 같은 빠른 설정, 환영 화면 "망가져도 되돌리기", 디자인 문서, 설정 창(`light-settings`, `light-settings-about`: Win+I로 열리고 정보 페이지에 버전·CPU·메모리) |
 | 2026-10-12 (오후 2시 반) | `3ab6a33` 테스트 ISO | robin PC에서 `verify -Installer robinos` | 통과. 묶음 75: T-152 ①②(유리, 배경화면 빛), 부팅·로그인·잠금 화면은 이름만, 라이브 하드웨어 시계 LOCAL. 설치본 부팅 메뉴는 "RobinOS"만, 로그인 화면 아래 줄 없음, 환영 화면 뒤에 빨강 빛. VMware(GPU) 라이브에서 시계가 바로 맞는 것도 확인 |
-| 2026-10-12 (오후 2시) | `cc7ea3b` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 14.4분) | 통과. 묶음 74: 라이브 BIOS 부팅 메뉴의 RobinOS 스플래시와 색. VMware와 QEMU(BIOS)로 직접 켜서 메뉴 화면도 확인했어요 |
 
 ## 품질 점검 기록
 
@@ -41,9 +41,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| `dd196a8` T-152 ③ 런처, `ef56283` ④ 빠른 설정, `591f5fc` 환영 화면 되돌리기, `31c2b9c` ⑥ 디자인 문서, `935dbe1` T-149 ① 설정 창 (2026-10-12) | `ready.ps1 -Check`(qmllint) 통과 | 묶음 검증: 런처·빠른 설정 장면(부팅 테스트가 누르는 첫 결과 줄), `light-settings` 장면 |
+| `576fac8` T-154 Ptyxis, `4a54583` T-153 스냅샷 알림, `818adef` T-152 ⑤ 패널 스프링, 런처의 "명령 프롬프트"를 Ptyxis로 (2026-10-12) | `ready.ps1 -Check`(robinctl 시험 포함) 통과 | 묶음 검증: 터미널이 열리는 장면 전부(미션, 최소화, Alt+F4), 설치 테스트 snapshot-boot의 `snapshot booted` |
 
-`3ab6a33`까지 2026-10-12 묶음 75 검증(`verify -Installer robinos`)을 마치고 푸시했어요.
+`5b1facd`까지 2026-10-12 묶음 76 검증(`verify -Installer robinos`)을 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 

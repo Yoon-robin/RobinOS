@@ -317,7 +317,7 @@ PanelWindow {
         { win: "메모장", words: "메모장 notepad 워드패드 wordpad", app: "org.gnome.TextEditor" },
         { win: "작업 관리자", words: "작업 관리자 task manager taskmgr 리소스 모니터 resource monitor", app: "io.missioncenter.MissionCenter" },
         { win: "파일 탐색기", words: "파일 탐색기 explorer 내 pc 내 컴퓨터 this pc my computer", app: "org.gnome.Nautilus" },
-        { win: "명령 프롬프트", words: "명령 프롬프트 command prompt cmd powershell 파워셸 windows terminal wt 윈도우 터미널", app: "foot" },
+        { win: "명령 프롬프트", words: "명령 프롬프트 command prompt cmd powershell 파워셸 windows terminal wt 윈도우 터미널", app: "org.gnome.Ptyxis" },
         { win: "Edge", words: "edge 엣지 internet explorer 인터넷 익스플로러 chrome 크롬", app: "firefox" },
         { win: "사진 앱", words: "사진 photos 사진 보기 image viewer", app: "org.gnome.Loupe" },
         { win: "반디집", words: "반디집 bandizip 알집 7-zip 7zip winrar 압축 풀기", app: "org.gnome.FileRoller" },

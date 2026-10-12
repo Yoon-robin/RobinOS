@@ -206,6 +206,7 @@
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-10-12 (오후 2시) | `cc7ea3b` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 14.4분) | 통과. 묶음 74: 라이브 BIOS 부팅 메뉴의 RobinOS 스플래시와 색. VMware와 QEMU(BIOS)로 직접 켜서 메뉴 화면도 확인했어요 |
 | 2026-10-12 (오후) | `6113f35` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.8분, 테스트 14.5분) | 통과. 부팅 테스트 79장, 설치 테스트 다섯 단계. 묶음 73: 환영 마법사 첫 화면과 T-151 화면 문구. 설치본 부팅 메뉴의 한글 한 줄 소개가 Unifont로 깨지지 않고 나오고(`installed-01-grub-first-boot.png`), 로그인 화면 아래 줄도 새 문구예요(`rollback-02-sddm.png`) |
 | 2026-10-12 | `8be98ca` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 3.5분, 테스트 14.7분) | 통과. 부팅 테스트 70장, 설치 테스트 다섯 단계. 집에서 쌓인 290개 커밋을 받고, WSL `setup`으로 Quickshell 0.3.2와 `which`를 맞춘 뒤 처음 돈 묶음 검증이에요. 부팅 테스트 화면은 소개 영상(`promo/intro/`)에도 썼어요 |
 | 2026-10-10 (아침) | `030455d` 테스트 ISO | 설치 테스트 windows(9.1분) | 다섯 단계 통과. 윈도우 파티션, EFI 파일, C: 그대로, GRUB 메뉴에 Windows Boot Manager. 새벽 뒤로 바뀐 것(LLMNR 끄기, 앱 제거, 설치 테스트의 UDP 확인)이 윈도우 옆 설치 경로에서도 문제없음 |
