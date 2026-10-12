@@ -292,6 +292,60 @@ FloatingWindow {
         }
     }
 
+    // One setting with a switch: a title, a line under it, and the switch on the right
+    component SwitchRow: Rectangle {
+        id: switchRow
+
+        property string title
+        property string desc
+        property bool checked
+        signal toggled
+
+        Layout.fillWidth: true
+        implicitHeight: Math.max(64, rowText.implicitHeight + 24)
+        radius: Theme.radius
+        color: "transparent"
+        border.width: 1
+        border.color: Theme.border
+
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            spacing: 16
+
+            ColumnLayout {
+                id: rowText
+
+                Layout.fillWidth: true
+                spacing: 2
+
+                Text {
+                    text: switchRow.title
+                    color: Theme.fg
+                    font.family: Theme.font
+                    font.pixelSize: 13
+                    font.weight: Font.Medium
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: switchRow.desc
+                    color: Theme.muted
+                    font.family: Theme.font
+                    font.pixelSize: 12
+                    wrapMode: Text.WordWrap
+                }
+            }
+
+            Switch {
+                checked: switchRow.checked
+                label: switchRow.title
+                onToggled: switchRow.toggled()
+            }
+        }
+    }
+
     Component {
         id: appearancePage
 
@@ -507,6 +561,26 @@ FloatingWindow {
                             onToggled: Theme.setReduceTransparency(!Theme.reduceTransparency)
                         }
                     }
+                }
+            }
+
+            // T-161, like Windows' 접근성 and macOS' 손쉬운 사용
+            Group {
+                title: "손쉬운 사용"
+                hint: "화면 확대: Win + 더하기(+)로 확대, Win + 빼기(-)로 축소, Win + Esc로 원래대로. 마우스 포인터 둘레를 크게 보여 줘요. 바와 창 전체를 크게 하려면 빠른 설정의 화면 배율을 써요."
+
+                SwitchRow {
+                    title: "움직임 줄이기"
+                    desc: "창과 패널이 열리고 닫힐 때 움직이지 않고 바로 바뀌어요."
+                    checked: Theme.reduceMotion
+                    onToggled: Theme.setReduceMotion(!Theme.reduceMotion)
+                }
+
+                SwitchRow {
+                    title: "앱 글자 크게"
+                    desc: "파일, 텍스트 편집기, 설정 같은 앱의 글자를 125%로 키워요."
+                    checked: Theme.largeText
+                    onToggled: Theme.setLargeText(!Theme.largeText)
                 }
             }
 

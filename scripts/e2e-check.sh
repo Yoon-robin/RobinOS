@@ -18,6 +18,8 @@
 #   dark            dark mode, the same way
 #   recorded        a screen recording (Win+Alt+R twice) left a playable video
 #   windows-app     opening an .exe shows the "윈도우 프로그램" window
+#   zoomed          Win+Plus twice: the screen is zoomed to 2x around the pointer
+#   unzoomed        Win+Esc: back to 1x
 #   shell-restarted a new shell (qs) runs and answers over IPC
 
 set -uo pipefail
@@ -107,6 +109,15 @@ case "${name}" in
     seconds="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "${file:-/nonexistent}" 2>/dev/null | cut -d. -f1)"
     check "file=${file:-none} seconds=${seconds:-none} recording=$(pgrep -x wf-recorder >/dev/null && echo still || echo stopped)" \
       bash -c "[ -n '${file}' ] && [ '${seconds:-0}' -ge 1 ] && ! pgrep -x wf-recorder >/dev/null"
+    ;;
+  zoomed | unzoomed)
+    # Win+Plus twice zooms to 2x, Win+Esc back to 1x (T-161)
+    factor="$(hyprctl getoption cursor:zoom_factor 2>/dev/null | awk '/^float/ { print $2 }')"
+    if [[ "${name}" == zoomed ]]; then
+      check "zoom_factor=${factor:-none}" awk -v f="${factor:-0}" 'BEGIN { exit !(f >= 1.9) }'
+    else
+      check "zoom_factor=${factor:-none}" awk -v f="${factor:-0}" 'BEGIN { exit !(f > 0.99 && f < 1.01) }'
+    fi
     ;;
   windows-app)
     # Opening an .exe brought up the shell's WindowsApp window (T-159)

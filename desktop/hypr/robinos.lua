@@ -381,6 +381,18 @@ local function snap_down()
     hl.dispatch(hl.dsp.global("robinos:minimize"))
 end
 
+-- Windows' Magnifier keys (T-161): Win+Plus zooms in around the pointer, Win+Minus
+-- zooms out, Win+Esc goes back to normal
+local zoom = 1
+local function set_zoom(value)
+    zoom = math.max(1, math.min(value, 5))
+    hl.config({ cursor = { zoom_factor = zoom } })
+end
+
+hl.bind(mainMod .. " + equal",  function() set_zoom(zoom + 0.5) end, { description = "화면 확대 (윈도우의 돋보기 Win+더하기)" })
+hl.bind(mainMod .. " + minus",  function() set_zoom(zoom - 0.5) end, { description = "화면 축소" })
+hl.bind(mainMod .. " + Escape", function() set_zoom(1) end,          { description = "확대 끄기" })
+
 hl.bind(mainMod .. " + left",  function() snap("left") end,  { description = "창을 화면 왼쪽 절반에" })
 hl.bind(mainMod .. " + right", function() snap("right") end, { description = "창을 화면 오른쪽 절반에" })
 hl.bind(mainMod .. " + up",    hl.dsp.window.fullscreen({ mode = "maximized", action = "set" }), { description = "최대화" })

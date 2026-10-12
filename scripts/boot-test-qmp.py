@@ -488,6 +488,17 @@ def main():
     wait_verdict("windows-app", start=start)
     keys(qmp, "esc")
     wait(2)
+    # Windows' Magnifier keys (T-161): Win+Plus twice is 2x around the pointer,
+    # Win+Esc goes back
+    move(qmp, 800, 300)
+    keys(qmp, "meta_l", "equal")
+    keys(qmp, "meta_l", "equal")
+    wait(2)
+    shot(qmp, "zoom")
+    check_scene(qmp, "zoomed")
+    keys(qmp, "meta_l", "esc")
+    wait(2)
+    check_scene(qmp, "unzoomed")
     # Win+V like Windows' clipboard history: copy something, then open the list
     type_text(qmp, "clear; wl-copy clipboard-test-robinos\n")
     wait(2)

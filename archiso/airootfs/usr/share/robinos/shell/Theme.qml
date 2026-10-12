@@ -82,9 +82,13 @@ Singleton {
     readonly property string font: "Geist"
     readonly property string mono: "Geist Mono"
 
-    readonly property int durFast: 120
-    readonly property int dur: 180
-    readonly property int durSpring: 260
+    // "움직임 줄이기" (Settings.qml, T-161) turns the shell's animations off
+    readonly property bool reduceMotion: saved.reduceMotion
+    // "앱 글자 크게": GTK apps' text at 125% (the shell itself grows with 화면 배율)
+    readonly property bool largeText: saved.largeText
+    readonly property int durFast: reduceMotion ? 0 : 120
+    readonly property int dur: reduceMotion ? 0 : 180
+    readonly property int durSpring: reduceMotion ? 0 : 260
 
     // Set by robinos-session when there is no GPU acceleration (most VMs):
     // the shell then skips shadow effects, and Hyprland turns off blur.
@@ -102,6 +106,18 @@ Singleton {
     function setReduceTransparency(value) {
         saved.reduceTransparency = value;
         store.writeAdapter();
+    }
+
+    function setReduceMotion(value) {
+        saved.reduceMotion = value;
+        store.writeAdapter();
+        applySystem();
+    }
+
+    function setLargeText(value) {
+        saved.largeText = value;
+        store.writeAdapter();
+        applySystem();
     }
 
     function setAccent(name) {
@@ -136,6 +152,9 @@ Singleton {
             "gsettings set org.gnome.desktop.interface gtk-theme '" + gtkTheme + "'",
             "gsettings set org.gnome.desktop.interface icon-theme '" + icons + "'",
             "gsettings set org.gnome.desktop.interface accent-color '" + gnomeAccent + "'",
+            "gsettings set org.gnome.desktop.interface enable-animations " + (reduceMotion ? "false" : "true"),
+            "gsettings set org.gnome.desktop.interface text-scaling-factor " + (largeText ? "1.25" : "1.0"),
+            "hyprctl eval 'hl.config({ animations = { enabled = " + (reduceMotion ? "false" : "true") + " } })'",
             "pkill -" + footSignal + " -x foot",
             // New foot windows: keep a small user config that includes the system one
             // and sets the starting theme (left alone once the user edits it).
@@ -168,6 +187,8 @@ Singleton {
             property bool dark: true
             property string accent: "red"
             property bool reduceTransparency: false
+            property bool reduceMotion: false
+            property bool largeText: false
         }
     }
 }

@@ -120,6 +120,7 @@ VM 창 크기를 바꾸면 VMware(`vmtoolsd`)나 QEMU(`virtio-gpu`)가 새 크�
 | `Super+drag` | 창 이동(왼쪽 버튼), 크기 조절(오른쪽 버튼) |
 | `Print`, `Shift+Print` 또는 `Super+Print` | `Print`는 영역, 나머지는 전체 화면을 찍어 사진 폴더의 `Screenshots`(`~/사진/Screenshots`, 영어 환경은 `~/Pictures/Screenshots`)와 클립보드에 저장. 알림을 누르면 사진이 열리고, "폴더 열기" 단추로 폴더를 열어요. 알림이 사라진 뒤에는 알림 센터에서 눌러도 열려요 |
 | `Super+Shift+S` | 영역 스크린샷 (윈도우의 캡처 도구 `Win+Shift+S`와 같아요) |
+| `Super+=`, `Super+-`, `Super+Esc` | 화면 확대, 축소, 원래대로 (윈도우의 돋보기 `Win+더하기`). 마우스 포인터 둘레를 0.5배씩 최대 5배까지 |
 | `Super+Alt+R` | 화면 녹화 시작, 한 번 더 누르면 멈춤 (윈도우의 `Win+Alt+R`). 녹화하는 동안 바에 빨간 점이 있고, 누르면 멈춰요. 파일은 `~/비디오/Screencasts` |
 | `Super+.` 또는 `Super+;` | 이모지: 런처에서 이모지를 찾아(하트, 웃음, ok처럼 한국어·영어로) `Enter`를 누르면 원래 창에 들어가고 클립보드에도 복사돼요 (윈도우의 `Win+.`와 같아요) |
 | `Super+V` | 클립보드 기록 (윈도우의 `Win+V`처럼 복사한 것 50개, 로그아웃하면 지워져요) |
