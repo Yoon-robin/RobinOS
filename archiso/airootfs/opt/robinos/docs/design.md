@@ -108,7 +108,7 @@
 - **Hyprland**: 창 관리(컴포지터). 설정은 Lua(`desktop/hypr/robinos.lua`).
 - **Quickshell**: 상단 바, 작업 표시줄(독), 런처, 빠른 설정, 알림, 볼륨 표시, 배경화면을 QML로 직접 그려요(`desktop/shell/`).
 - **hyprlock / hypridle**: 잠금 화면과 대기 정책
-- **foot**: 터미널. **Nautilus**: 파일. **Firefox**: 브라우저.
+- **Ptyxis**: 터미널(2026-10-12부터, T-154. foot은 대체용으로 남겨요). **Nautilus**: 파일. **Firefox**: 브라우저.
 
 ### 윈도우 사용자 배려
 
@@ -187,5 +187,5 @@ Hyprland 0.56은 `start-hyprland`(감시 프로세스)로 띄우라고 하고, �
 
 ## 미결정 사항
 
-- **창 제목 표시줄**: Hyprland에는 기본 제목 표시줄이 없고, xdg-decoration 요청에는 언제나 "서버가 그린다"고 답해요. GTK 앱과 Firefox는 자체 단추가 있어요. Qt 앱은 그 프로토콜을 보지 않게 해서 Adwaita 제목 표시줄을 그려요(T-029). foot은 `[csd] preferred=client`로 설정했지만 Hyprland의 답을 따라서 제목 표시줄이 없어요. foot의 제목 표시줄(hyprbars 플러그인 등)은 T-011에서 다뤄요. 제목 표시줄에는 최소화 단추를 두지 않아요(Hyprland 0.56은 앱의 최소화 요청을 처리하지 않아요). 최소화와 `Win+D`는 독과 `Super+D`로 해요(T-024).
+- **창 제목 표시줄**: Hyprland에는 기본 제목 표시줄이 없고, xdg-decoration 요청에는 언제나 "서버가 그린다"고 답해요. GTK 앱과 Firefox는 자체 단추가 있어요. foot은 이 답을 따라 제목 표시줄을 그리지 않아서 마우스로 옮길 수 없었어요. 그래서 기본 터미널을 제목 표시줄을 스스로 그리는 Ptyxis로 바꿨어요(2026-10-12 사용자 결정, T-154). Qt 앱은 그 프로토콜을 보지 않게 해서 Adwaita 제목 표시줄을 그려요(T-029). foot은 `[csd] preferred=client`로 설정했지만 Hyprland의 답을 따라서 제목 표시줄이 없어요. foot의 제목 표시줄(hyprbars 플러그인 등)은 T-011에서 다뤄요. 제목 표시줄에는 최소화 단추를 두지 않아요(Hyprland 0.56은 앱의 최소화 요청을 처리하지 않아요). 최소화와 `Win+D`는 독과 `Super+D`로 해요(T-024).
 - **화면 읽기(Orca)**: 2026-10-08 조사(T-040). Orca 51은 키 입력을 libatspi의 장치로 받는데, Wayland에서는 `org.freedesktop.a11y.Manager`의 `KeyboardMonitor`(GNOME의 Mutter가 제공)를 써요. Hyprland 0.56.2 소스에는 이 인터페이스가 없어서 Orca의 읽기 명령(Orca 키 조합, 화면 훑기)이 동작하지 않고, 앱이 보내는 포커스 변화만 읽을 수 있어요. 반쪽짜리 내레이터를 기본으로 넣지 않고, Hyprland나 별도 도구가 이 인터페이스를 제공하면 다시 봐요. 셸의 버튼에는 `Accessible.name`을 계속 붙여 둬요.

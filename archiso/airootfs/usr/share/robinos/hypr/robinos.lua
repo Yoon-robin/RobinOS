@@ -10,7 +10,7 @@
 local hypr_dir  = "/usr/share/robinos/hypr"
 local bin_dir   = "/usr/share/robinos/bin"
 
-local terminal    = "foot"
+local terminal    = "/usr/share/robinos/bin/robinos-terminal"
 local fileManager = "nautilus"
 local browser     = "firefox"
 

@@ -20,7 +20,7 @@ RobinOS의 데스크톱은 Hyprland 위에 직접 만든 Quickshell 셸이에요
 | 트레이 아이콘 | StatusNotifierItem (Quickshell `SystemTray`) | `desktop/shell/Bar.qml` |
 | 로그인 화면 | SDDM (Qt 6 테마) | `themes/sddm/robinos/` |
 | 잠금 화면과 대기 | hyprlock, hypridle | `desktop/hypr/hyprlock.conf`, `hypridle.conf` |
-| 터미널 | foot | `desktop/foot/foot.ini` |
+| 터미널 | Ptyxis (foot은 대체용) | `desktop/dconf/00-robinos`의 `[org/gnome/Ptyxis]`, foot은 `desktop/foot/foot.ini` |
 | 파일, 브라우저 | Nautilus, Firefox (원격 측정과 실험 기능은 꺼 둬요: `/etc/firefox/policies/policies.json`) | `desktop/firefox/` |
 | 파일을 여는 기본 앱 | `/etc/xdg/mimeapps.list` | `desktop/mime/` |
 | fastfetch 요약과 울새 그림 | fastfetch | `desktop/fastfetch/` |
@@ -133,7 +133,7 @@ VM 창 크기를 바꾸면 VMware(`vmtoolsd`)나 QEMU(`virtio-gpu`)가 새 크�
 
 독의 앱 아이콘은 윈도우 작업 표시줄처럼 동작해요. 앱이 꺼져 있으면 열고, 창이 뒤에 있으면 앞으로 가져오고, 이미 앞에 있으면 최소화하고, 최소화돼 있으면 원래 작업 공간으로 되돌려요. 창이 여러 개면 차례로 앞으로 가져와요. 최소화한 창은 숨은 작업 공간(`special:minimized`)에 있고, 독에는 계속 실행 중(점)으로 보여요. 셸 IPC로도 같은 동작을 할 수 있어요: `qs ipc -p /usr/share/robinos/shell call shell toggleApp foot`. 독에 고정된 앱은 터미널, 파일, 브라우저이고, Wireshark는 network 프로필로 설치한 뒤에 나타나요(`sudo robinctl profile network`). 독의 앱을 오른쪽 버튼으로 누르면 윈도우 작업 표시줄의 점프 목록처럼 메뉴가 떠요. "새 창"으로 그 앱을 하나 더 열고, "독에 고정"·"독에서 고정 풀기"로 실행 중인 다른 앱을 고정하거나 풀고(알림으로 알려 줘요), "창 닫기"(여러 개면 "창 N개 모두 닫기")로 그 앱의 창을 닫아요. 화살표와 `Enter`로도 골라요. 터미널, 파일, 브라우저는 늘 고정돼 있어요. 런처에서 앱을 오른쪽 버튼으로 누르면(키보드로는 메뉴 키나 `Shift+F10`) 시작 메뉴처럼 열기, 독에 고정·고정 풀기, 제거 메뉴가 떠요. 고정해도 런처는 열려 있어요. 고정한 앱은 셸 상태 폴더의 `desktop.json`에 남아서 다음 로그인에도 그대로예요. 켜져 있는 앱 아이콘 위에 마우스를 0.5초 올려 두면 그 앱의 창(4개까지)이 미리보기로 독 위에 떠요. 미리보기를 누르면 그 창으로 가요.
 
-GTK 앱, Firefox, Qt 앱(설치기, Wireshark 등)은 창 위에 제목 표시줄이 있어요. 단추는 최대화와 닫기 두 개예요. Hyprland가 앱의 최소화 요청을 아직 처리하지 않아서 최소화는 독에서 해요. 터미널(foot)에는 제목 표시줄이 없어요. `Alt+F4`나 `Super+Q`로 닫아요.
+터미널(Ptyxis), GTK 앱, Firefox, Qt 앱(설치기, Wireshark 등)은 창 위에 제목 표시줄이 있어서 끌어 옮길 수 있어요. 어느 창이든 `Win`을 누른 채 끌어도 옮겨지고, 오른쪽 버튼으로 끌면 크기가 바뀌어요. 단추는 최대화와 닫기 두 개예요. Hyprland가 앱의 최소화 요청을 아직 처리하지 않아서 최소화는 독에서 해요. 터미널(foot)에는 제목 표시줄이 없어요. `Alt+F4`나 `Super+Q`로 닫아요.
 
 마우스 없이도 쓸 수 있어요. 런처, 빠른 설정, 환영 마법사, 설치기에서 `Tab`으로 버튼과 선택지를 옮겨 다니고(포커스가 테두리로 보여요), `Enter`나 `Space`로 눌러요. 볼륨 같은 슬라이더는 화살표 키로 5%씩, `Home`과 `End`로 끝까지 움직여요.
 
@@ -197,7 +197,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 | 메모장, `notepad` | 텍스트 편집기 |
 | 작업 관리자, `taskmgr` | Mission Center |
 | 파일 탐색기, 내 PC, `explorer` | 파일 (Nautilus) |
-| 명령 프롬프트, `cmd`, `powershell`, Windows 터미널 | 터미널 (foot) |
+| 명령 프롬프트, `cmd`, `powershell`, Windows 터미널 | 터미널 (Ptyxis) |
 | Edge, 크롬, `chrome` | Firefox |
 | 사진 | 이미지 뷰어 (Loupe) |
 | 반디집, 알집, `7-zip` | 압축 관리자 |

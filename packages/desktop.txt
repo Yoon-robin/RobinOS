@@ -46,6 +46,7 @@ xdg-utils
 
 # Everyday apps for people coming from Windows
 foot
+ptyxis
 nautilus
 firefox
 firefox-i18n-ko

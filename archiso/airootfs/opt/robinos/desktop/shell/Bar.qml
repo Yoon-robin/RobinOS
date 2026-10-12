@@ -61,9 +61,9 @@ PanelWindow {
         return entry?.name ?? top.appId;
     }
 
-    // "Foot" means nothing to someone from Windows, and the shell's floating
-    // terminal (ShellState.runInTerminal) has no desktop entry at all
+    // "Ptyxis" and "Foot" mean nothing to someone from Windows
     readonly property var appNames: ({
+            "org.gnome.Ptyxis": "터미널",
             "foot": "터미널",
             "footclient": "터미널",
             "robinos-float": "터미널"

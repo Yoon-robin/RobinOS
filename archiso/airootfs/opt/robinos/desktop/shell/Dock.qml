@@ -45,7 +45,7 @@ PanelWindow {
         return (ShellState.isLive ? [
             { key: "installer", icon: "download", label: "RobinOS 설치", appIds: ["robinos-installer"], command: null }
         ] : []).concat([
-            { icon: "terminal", label: "터미널", appIds: ["foot", "footclient", "robinos-float"], command: ["foot"] },
+            { icon: "terminal", label: "터미널", appIds: ShellState.terminalAppIds, command: ShellState.terminal },
             { icon: "folder", label: "파일", appIds: ["org.gnome.Nautilus"], command: ["nautilus", "--new-window"] },
             { icon: "globe", label: "브라우저", appIds: ["firefox"], command: ["firefox"] },
             { icon: "network", label: "Wireshark", appIds: ["org.wireshark.Wireshark", "wireshark"], command: ["wireshark"], desktopId: "org.wireshark.Wireshark" }

@@ -292,7 +292,7 @@ def main():
     # same shell function as this IPC call. The focused terminal minimizes itself, and
     # a background job brings it back a few seconds later.
     ipc = "qs ipc -p /usr/share/robinos/shell call shell "
-    type_text(qmp, "clear; (sleep 6; " + ipc + "toggleApp foot) & " + ipc + "toggleApp foot\n")
+    type_text(qmp, "clear; (sleep 6; " + ipc + "toggleApp org.gnome.Ptyxis) & " + ipc + "toggleApp org.gnome.Ptyxis\n")
     wait(3)
     shot(qmp, "minimized")
     wait(7)

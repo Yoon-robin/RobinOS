@@ -20,7 +20,7 @@ PopupMenu {
         const scanned = DesktopEntries.applications.values.length;
         const has = id => scanned >= 0 && !!DesktopEntries.byId(id);
         return [
-            { icon: "terminal", title: "터미널", run: () => Quickshell.execDetached(["foot"]) },
+            { icon: "terminal", title: "터미널", run: () => Quickshell.execDetached(ShellState.terminal) },
             { icon: "activity", title: "작업 관리자", hint: "Ctrl+Shift+Esc", run: () => Quickshell.execDetached(["missioncenter"]) },
             { icon: "folder", title: "파일 탐색기", hint: "Win+E", run: () => Quickshell.execDetached(["nautilus", "--new-window"]) },
             { icon: "sliders", title: "설정", hint: "Win+I", run: () => ShellState.openSettings("") },

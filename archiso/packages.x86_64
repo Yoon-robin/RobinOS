@@ -66,6 +66,7 @@ libnotify
 xdg-user-dirs
 xdg-utils
 foot
+ptyxis
 nautilus
 firefox
 firefox-i18n-ko

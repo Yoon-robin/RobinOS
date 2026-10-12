@@ -1172,16 +1172,22 @@ Singleton {
         Quickshell.execDetached(command);
     }
 
-    // Runs a shell snippet in a floating foot window and waits for Enter before closing.
+    // The terminal (T-154). Ptyxis draws its own title bar, so its windows can be
+    // dragged with the mouse; Hyprland never lets foot draw one (XDGDecoration.cpp).
+    // foot stays installed, and its windows still count as the terminal.
+    readonly property var terminal: ["/usr/share/robinos/bin/robinos-terminal"]
+    readonly property var terminalAppIds: ["org.gnome.Ptyxis", "foot", "footclient", "robinos-float"]
+
+    // Runs a shell snippet in a terminal window and waits for Enter before closing.
     function runInTerminal(script) {
-        Quickshell.execDetached(["foot", "--app-id=robinos-float", "--title=RobinOS", "sh", "-c",
-                                 script + "; printf '\\n\\033[2mEnter를 누르면 창이 닫혀요\\033[0m'; read _"]);
+        Quickshell.execDetached(terminal.concat(["-T", "RobinOS", "--", "sh", "-c",
+                                 script + "; printf '\\n\\033[2mEnter를 누르면 창이 닫혀요\\033[0m'; read _"]));
     }
 
     // Opens a regular terminal that runs a command first and then stays at the prompt.
     // ROBINOS_NO_GREETING keeps ~/.bashrc from printing fastfetch over the output.
     function openTerminal(script) {
-        Quickshell.execDetached(["foot", "env", "ROBINOS_NO_GREETING=1", "bash", "-c", script + "; exec bash"]);
+        Quickshell.execDetached(terminal.concat(["--", "env", "ROBINOS_NO_GREETING=1", "bash", "-c", script + "; exec bash"]));
     }
 
     // Windows admin tools' jobs as commands (the launcher's Windows names, Win+X)

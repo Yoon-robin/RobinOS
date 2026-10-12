@@ -92,6 +92,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 지금: 셸 창(학습 센터, 설치기)과 GTK·Qt 앱은 제목 표시줄을 끌면 돼요. foot 터미널은 제목 표시줄이 없어서 `Win`+왼쪽 끌기(이동), `Win`+오른쪽 끌기(크기)만 돼요(`robinos.lua`의 `hl.dsp.window.drag`). `desktop/foot/foot.ini`에 `[csd] preferred=client`가 있는데 Hyprland가 xdg-decoration에 "서버가 그린다"고 답해서 foot이 제목 표시줄을 그리지 않아요(design.md "창 제목 표시줄")
 - 찾은 것(2026-10-12): Hyprland 0.56.2 소스(`src/protocols/XDGDecoration.cpp`)에서 `xdgModeOnRequestCSD()`가 앱이 무엇을 요청하든 `MODE_SERVER_SIDE`를 돌려줘요. 설정으로 바꿀 수 없어서 foot은 언제나 제목 표시줄을 그리지 않아요
 - 할 것: 비교: hyprbars 플러그인(Hyprland 버전마다 다시 빌드해야 해서 롤링 업데이트에 약해요), 제목 표시줄을 스스로 그리는 터미널(GNOME 콘솔·Ptyxis 등, foot의 테마 전환·힌트를 옮겨야 해요), 셸이 그리는 얇은 끌기 막대 ④ 제품 방향이 바뀌는 선택(터미널 교체)이면 사용자 확인 필요로
+- 한 것(2026-10-12, `work/batch74`): 기본 터미널을 Ptyxis로. `ShellState.terminal`(`ptyxis --new-window`) 하나를 독, 런처(터미널 앱 실행 포함), Win+X, 바탕 화면 메뉴, 미션·업데이트 터미널(`openTerminal`, `runInTerminal`)이 같이 써요. Hyprland `Win+Enter`도 Ptyxis. dconf 기본값 `[org/gnome/Ptyxis]`: 다크·라이트를 셸 선택대로(`interface-style='system'`), 지난 창 복원 끄기, 100×28. foot은 대체용으로 남기고 런처에서는 숨겨요. 패키지 목록(설치본, 라이브)에 ptyxis. 부팅 테스트의 최소화 장면은 `org.gnome.Ptyxis`로
+- 남은 것: 묶음 검증. RobinOS zinc 팔레트(Ptyxis 기본은 GNOME 팔레트), 이미 설치한 시스템에 ptyxis 깔기(`robinos` 패키지 의존성 또는 `robinctl update` 안내)
 - 완료 기준: 처음 쓰는 사람이 단축키 없이 터미널 창을 마우스로 옮기고 닫을 수 있음. 부팅 테스트에 끌어서 옮기는 장면
 
 ### T-153 스냅샷으로 켰을 때 알려 주고 화면에서 되돌리기
@@ -158,7 +160,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: 채점 테스트(가짜 API 응답으로), 설치 테스트 -Lab에서 한 문제를 실제로 풀고 채점
 
 ### T-011 다음 버전 후보 (백로그 1~7에서 쓸 만한 일이 없을 때 꺼내요)
-- foot 제목 표시줄(hyprbars). 학습 센터, 네트워크 랩, 입문 CTF는 이미 들어갔어요(최소화와 `Win+D`는 T-024, Qt 앱 제목 표시줄은 T-029)
+- 학습 센터, 네트워크 랩, 입문 CTF는 이미 들어갔어요(최소화와 `Win+D`는 T-024, Qt 앱 제목 표시줄은 T-029, 터미널 제목 표시줄은 T-154)
 
 ## 완료
 
