@@ -1,0 +1,16 @@
+{
+  "name": "robinos-intro",
+  "private": true,
+  "type": "module",
+  "description": "RobinOS intro video: a web page animated with GSAP, recorded frame by frame in headless Chrome into an mp4",
+  "scripts": {
+    "fonts": "node fonts.mjs",
+    "preview": "node preview.mjs",
+    "music": "node music.mjs",
+    "render": "node render.mjs",
+    "render:draft": "node render.mjs --fps=30 --draft"
+  },
+  "dependencies": {
+    "gsap": "3.15.0"
+  }
+}

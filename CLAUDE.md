@@ -34,6 +34,7 @@ powershell -ExecutionPolicy Bypass -File scripts/sync-archiso-files.ps1         
 
 - `archiso/airootfs/opt/robinos`와 `usr/share/robinos`는 원본이 아니라 동기화 스크립트가 만드는 사본이에요. 원본(`bin/`, `desktop/`, `scripts/` 등)을 고쳐요. 데스크톱 파일의 설치 위치는 `desktop/install-map.txt`예요.
 - `packages/apps.txt`는 설치본에만 들어가요. 라이브 ISO는 깃허브 첨부 한도(2GiB) 때문에 `archiso/packages.x86_64`에 넣지 않아요.
+- `promo/intro/`는 소개 영상의 소스예요. GSAP 웹 페이지를 헤드리스 크롬으로 한 프레임씩 찍어 mp4로 만들어요. 결과물(`out/`)과 글꼴은 git에 없고, 방법은 그 폴더의 README에 있어요.
 - `practice/`는 학습 미션 연습 프로그램의 소스예요. 각 `build.sh`가 만든 압축본이 `bin/robinctl` 안에 들어 있어서, 소스를 고치면 다시 만들어 넣어요.
 
 ## 이 환경에서 자주 걸리는 것

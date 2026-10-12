@@ -1,0 +1,151 @@
+/* RobinOS intro video. Colors and radii follow desktop/shell/Theme.qml (zinc, dark).
+   No CSS transitions or animations: the recorder freezes the GSAP timeline on
+   every frame, and anything CSS moves by itself would differ between frames. */
+
+@font-face { font-family: "Pretendard"; src: url("fonts/Pretendard.woff2") format("woff2"); font-weight: 45 920; }
+@font-face { font-family: "Geist"; src: url("fonts/Geist.woff2") format("woff2"); font-weight: 100 900; }
+@font-face { font-family: "Geist Mono"; src: url("fonts/GeistMono.woff2") format("woff2"); font-weight: 100 900; }
+
+:root {
+  --bg: #09090b;
+  --raised: #18181b;
+  --secondary: #27272a;
+  --fg: #fafafa;
+  --fg-soft: #e4e4e7;
+  --muted: #a1a1aa;
+  --subtle: #71717a;
+  --border: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --accent: #e5484d;
+  --success: #4ade80;
+  --sans: "Pretendard", "Geist", sans-serif;
+  --mono: "Geist Mono", "Pretendard", monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+body { font-family: var(--sans); color: var(--fg); -webkit-font-smoothing: antialiased; }
+
+#stage {
+  position: absolute; left: 0; top: 0;
+  width: 1920px; height: 1080px;
+  overflow: hidden; background: var(--bg);
+  transform-origin: 0 0;
+}
+
+/* ── backdrop: the desktop's dot grid and one soft accent light ── */
+.bg { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 0%, #121214 0%, var(--bg) 60%); }
+.grid {
+  position: absolute; inset: -48px;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.075) 1px, transparent 1.6px);
+  background-size: 24px 24px;
+}
+.glow {
+  position: absolute; left: 260px; top: 40px; width: 1400px; height: 1000px;
+  background: radial-gradient(closest-side, rgba(229, 72, 77, 0.17), rgba(229, 72, 77, 0) 72%);
+  filter: blur(30px);
+}
+.vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(0, 0, 0, 0.6) 100%); }
+.black { position: absolute; inset: 0; background: #000; opacity: 0; }
+
+.scene { position: absolute; inset: 0; visibility: hidden; }
+
+/* ── type ── */
+.head.center { position: absolute; left: 0; right: 0; top: 96px; text-align: center; }
+.head.side { position: absolute; left: 150px; top: 330px; width: 600px; }
+.eyebrow { font: 500 26px/1 var(--mono); color: var(--muted); letter-spacing: -0.01em; margin-bottom: 22px; }
+.eyebrow b { color: var(--accent); font-weight: 600; }
+.h { font: 700 62px/1.24 var(--sans); letter-spacing: -0.03em; color: var(--fg); word-break: keep-all; text-wrap: balance; }
+.head.side .h { font-size: 60px; }
+.sub { font: 500 30px/1.45 var(--sans); color: var(--muted); margin-top: 24px; letter-spacing: -0.015em; word-break: keep-all; text-wrap: balance; }
+.w { display: inline-block; white-space: pre; }
+
+/* ── real screens in a window frame ── */
+.shot {
+  position: absolute; overflow: hidden; border-radius: 18px; background: var(--bg);
+  box-shadow: 0 0 0 1px var(--border-strong), 0 60px 140px -40px rgba(0, 0, 0, 0.95), 0 20px 50px -20px rgba(0, 0, 0, 0.8);
+}
+.shot.wide { left: 320px; top: 296px; width: 1280px; height: 720px; }
+.shot.side { left: 820px; top: 228px; width: 980px; height: 551px; }
+.shot.low { left: 370px; top: 340px; width: 1180px; height: 664px; }
+.cam { position: absolute; left: 0; top: 0; width: 1600px; height: 900px; transform-origin: 0 0; }
+.cam img { display: block; width: 1600px; height: 900px; }
+
+/* ── keycaps (shadcn Kbd, a little taller so they can be pressed) ── */
+.combos {
+  position: absolute; left: 260px; right: 260px; top: 400px;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px 40px;
+}
+.combo {
+  display: flex; align-items: center; gap: 14px;
+  padding: 26px 32px; border-radius: 22px;
+  background: rgba(24, 24, 27, 0.62); box-shadow: 0 0 0 1px var(--border);
+}
+.combo .lbl { font: 600 34px/1 var(--sans); color: var(--fg-soft); margin-left: 16px; letter-spacing: -0.02em; }
+.combo i, .chip-kbd i { font: 400 30px/1 var(--mono); color: var(--subtle); font-style: normal; }
+.key { display: inline-block; padding-bottom: 5px; border-radius: 13px; background: #050506; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06); }
+kbd {
+  display: inline-block; min-width: 82px; text-align: center;
+  padding: 14px 22px 12px; border-radius: 12px;
+  font: 600 34px/1 var(--mono); color: var(--fg);
+  background: linear-gradient(180deg, #2c2c30, #1c1c1f);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+.chip-kbd {
+  position: absolute; left: 28px; bottom: 26px; display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; border-radius: 16px; background: rgba(9, 9, 11, 0.82); box-shadow: 0 0 0 1px var(--border-strong), 0 16px 40px -12px rgba(0, 0, 0, 0.9);
+}
+.chip-kbd kbd { min-width: 60px; font-size: 26px; padding: 10px 16px 9px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 0 0 1px rgba(255, 255, 255, 0.12), 0 3px 0 #050506; }
+
+/* ── terminal (foot: no title bar, rounded window, zinc) ── */
+.term {
+  position: absolute; left: 330px; top: 310px; width: 1260px; height: 440px;
+  border-radius: 18px; background: #0b0b0d; padding: 44px 52px;
+  box-shadow: 0 0 0 1px var(--border-strong), 0 60px 140px -40px rgba(0, 0, 0, 0.95);
+}
+.term-body { font: 400 34px/1.7 var(--mono); color: var(--fg-soft); }
+.line { height: 1.7em; white-space: pre; }
+.ps { color: var(--muted); }
+.ps b { color: var(--accent); font-weight: 400; }
+.line strong { color: var(--fg); font-weight: 700; }
+.cmd { color: var(--success); font-weight: 700; }
+.dim { color: var(--muted); }
+.caret { display: inline-block; width: 0.58em; height: 1.1em; margin-left: 2px; vertical-align: -0.2em; background: var(--fg-soft); }
+
+/* ── from power-on: three real screens in a row ── */
+.strip { position: absolute; left: 0; right: 0; top: 420px; display: flex; justify-content: center; gap: 36px; }
+.shot.mini { position: relative; width: 520px; height: 293px; }
+.tile p { margin-top: 22px; text-align: center; font: 600 26px/1 var(--sans); color: var(--muted); letter-spacing: -0.015em; }
+
+/* ── dark → light: the light screen is wiped in over the dark one ── */
+.wipe { position: absolute; inset: 0; clip-path: inset(0 100% 0 0); }
+.divider { position: absolute; top: 0; bottom: 0; left: 0; width: 2px; margin-left: -1px; background: rgba(255, 255, 255, 0.9); box-shadow: 0 0 24px 2px rgba(255, 255, 255, 0.45); opacity: 0; }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px; border-radius: 999px;
+  font: 600 21px/1 var(--sans); color: var(--fg-soft); box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+/* the snapshot row of the boot menu (screenshot coordinates) */
+.row-light {
+  position: absolute; left: 198px; top: 331px; width: 672px; height: 38px; border-radius: 6px;
+  background: rgba(229, 72, 77, 0.16); box-shadow: inset 0 0 0 1.5px rgba(229, 72, 77, 0.7); opacity: 0;
+}
+
+/* ── lockups ── */
+.lockup { position: absolute; left: 0; right: 0; top: 372px; height: 260px; display: flex; align-items: center; justify-content: center; gap: 14px; }
+.mark-slot { width: 260px; height: 260px; flex: none; }
+.mark-slot svg { width: 100%; height: 100%; overflow: visible; }
+.word { font: 600 156px/1 "Geist", sans-serif; letter-spacing: -0.05em; color: var(--fg); padding-bottom: 10px; }
+.tagline { position: absolute; left: 0; right: 0; top: 690px; text-align: center; font: 500 40px/1.3 var(--sans); color: var(--muted); letter-spacing: -0.02em; }
+.lockup.end { top: 330px; }
+.end-meta { position: absolute; left: 0; right: 0; top: 660px; display: flex; justify-content: center; align-items: center; gap: 22px; }
+.url { font: 500 34px/1 var(--mono); color: var(--fg-soft); letter-spacing: -0.01em; }
+.badge.ver { font-size: 24px; padding: 10px 18px; color: var(--fg); }
+
+/* ── built on ── */
+.chips { position: absolute; left: 0; right: 0; top: 500px; display: flex; justify-content: center; gap: 18px; }
+.chip {
+  padding: 18px 30px; border-radius: 999px; font: 600 34px/1 var(--sans); letter-spacing: -0.02em; color: var(--fg-soft);
+  background: rgba(24, 24, 27, 0.7); box-shadow: inset 0 0 0 1px var(--border-strong);
+}
