@@ -1,36 +1,32 @@
 // RobinOS intro video: one paused GSAP timeline.
 //   preview: index.html          (click or Space = play/pause, ←/→ = 2 s, ?t=12 starts at 12 s)
 //   render:  index.html?render   (render.mjs calls __video.seek(t) for every frame and captures it)
-// Everything that changes by itself (typing, carets, window contents that follow
-// a window's size) is computed from t in ambient(), never by CSS, so a frozen
-// frame is always the same.
+// Everything that changes by itself (typing, carets, counting, drifting light)
+// is computed from t in ambient(), never by CSS, so a frozen frame is always
+// the same. Times come from cues.js in beats; b(n) turns them into seconds.
 import { gsap } from "./node_modules/gsap/index.js";
 import { CustomEase } from "./node_modules/gsap/CustomEase.js";
-import { FPS, BEAT, TYPE, TYPE_FAST, DURATION, T, EV, WORKSPACES, TYPING, KEYS } from "./cues.js";
+import { FPS, BEAT, TYPE, DURATION, SONG, S, TYPING, PRESSES, ENTERS, b } from "./cues.js";
 
 gsap.registerPlugin(CustomEase);
-
-// RobinOS's own animation curves (desktop/hypr/robinos.lua)
-CustomEase.create("quint", "0.23, 1, 0.32, 1");          // easeOutQuint: borders, layers, workspaces
-CustomEase.create("almostLinear", "0.5, 0.5, 0.75, 1");  // fades
-// hl.curve("easy"): spring, mass 1, stiffness 238.12, dampening 24.21 → ζ 0.78, a ~2% overshoot.
-// Closed form of that spring over 0.5 s.
+// Keynote-style curves: a long, soft landing for reveals, a quick lift for exits
+CustomEase.create("land", "0.16, 1, 0.3, 1");
+CustomEase.create("lift", "0.7, 0, 0.84, 0");
+CustomEase.create("glide", "0.65, 0, 0.35, 1");
+// RobinOS's own window spring (hl.curve "easy" in desktop/hypr/robinos.lua):
+// mass 1, stiffness 238.12, damping 24.21, closed form over 0.5 s
 const SPRING_TIME = 0.5;
 const spring = (() => {
   const w0 = Math.sqrt(238.1191), zeta = 24.21279333 / (2 * w0), wd = w0 * Math.sqrt(1 - zeta * zeta);
-  const a = zeta * w0 * SPRING_TIME, b = wd * SPRING_TIME;
-  return (p) => (p >= 1 ? 1 : 1 - Math.exp(-a * p) * (Math.cos(b * p) + (a / b) * Math.sin(b * p)));
+  const a = zeta * w0 * SPRING_TIME, c = wd * SPRING_TIME;
+  return (p) => (p >= 1 ? 1 : 1 - Math.exp(-a * p) * (Math.cos(c * p) + (a / c) * Math.sin(c * p)));
 })();
 
 const params = new URLSearchParams(location.search);
 const RENDER = params.has("render");
 const q = (s, root = document) => root.querySelector(s);
 const qa = (s, root = document) => [...root.querySelectorAll(s)];
-
-// Stage geometry: the desktop is the real shell at 1.6x
-const W = 1920, H = 1080, BAR = 58, STRIP = 128;
-const AREA_H = H - BAR - STRIP;               // 894
-const GAP_OUT = 16, GAP_IN = 13;               // gaps_out 10, 2 × gaps_in 4 (x1.6)
+const W = 1920, H = 1080;
 
 // ── the RobinOS mark in parts (assets/brand/robinos-mark.svg without its tile) ──
 let markCount = 0;
@@ -51,20 +47,25 @@ function markSvg() {
   </g>
 </svg>`;
 }
-const GLYPH = '<svg viewBox="0 0 256 256"><g fill="#fff"><circle cx="122" cy="138" r="64"/><circle cx="168" cy="92" r="38"/><path d="M200 76 L238 92 L200 106 Z"/><path d="M78 164 L26 190 C20 193 22 202 29 201 L96 186 Z"/></g><circle cx="178" cy="88" r="10" fill="#E5484D"/></svg>';
-const ICONS = {
-  network: '<rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/>',
-  volume: '<path d="M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5z"/><path d="M16 9a5 5 0 0 1 0 6"/>',
-  bell: '<path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/><path d="M3.3 15.3A1 1 0 0 0 4 17h16a1 1 0 0 0 .7-1.7C19.4 14 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.4 6-2.7 7.3"/>',
-};
 
-function barHtml() {
-  return `<div class="bar-left"><span class="logo-pill"><i class="logo-ico">${GLYPH}</i>RobinOS</span>
-    <span class="wsnums"><i class="ws-pill"></i>${[1, 2, 3, 4, 5].map((n) => `<span data-n="${n}">${n}</span>`).join("")}</span>
-    <span class="title"></span></div>
-    <div class="bar-center">10월 12일 (월) 오전 9:41</div>
-    <div class="bar-right"><span class="ime">A</span>${["network", "volume", "bell"].map((k) => `<svg viewBox="0 0 24 24">${ICONS[k]}</svg>`).join("")}</div>`;
+// ── words: every word (or letter) becomes an inline block that can move on its own ──
+function splitWords(el, letters = false) {
+  for (const node of [...el.childNodes]) {
+    if (node.nodeType === Node.ELEMENT_NODE) { splitWords(node, letters); continue; }
+    if (node.nodeType !== Node.TEXT_NODE) continue;
+    const frag = document.createDocumentFragment();
+    for (const part of node.textContent.split(letters ? /()/ : /(\s+)/)) {
+      if (!part) continue;
+      if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(part)); continue; }
+      const w = document.createElement("span");
+      w.className = "w";
+      w.textContent = part;
+      frag.appendChild(w);
+    }
+    node.replaceWith(frag);
+  }
 }
+const wordsOf = (el) => (el.classList?.contains("w") ? [el] : qa(".w", el));
 
 // ── real screens, cropped from the 1600x900 test screenshots ──
 function cropInfo(el) {
@@ -84,369 +85,422 @@ function applyCrop(el, s) {
 function setupCrops() {
   for (const el of qa(".crop")) {
     const { w, h } = cropInfo(el), fit = el.dataset.fit;
-    if (fit === "stage") {        // fills the screen above the prompt
-      const s = Math.min(W / w, (H - STRIP) / h);
+    if (fit === "display") {        // fills the booting display (1200x675)
+      const s = Math.min(1200 / w, 675 / h);
       applyCrop(el, s);
-      Object.assign(el.style, { left: `${(W - w * s) / 2}px`, top: `${(H - STRIP - h * s) / 2}px` });
-    } else if (fit === "cover") { // the whole stage
-      const s = Math.max(W / w, H / h);
+      Object.assign(el.style, { left: `${(1200 - w * s) / 2}px`, top: `${(675 - h * s) / 2}px` });
+    } else if (fit === "tile") {    // a bento tile: under the label, may run off the bottom edge
+      const tile = el.parentElement, [, , tw, th] = tile.dataset.rect.split(",").map(Number);
+      const aw = tw - 64, ah = th - 108;
+      const s = Math.min(aw / w, (ah * 1.25) / h);
       applyCrop(el, s);
-      Object.assign(el.style, { left: `${(W - w * s) / 2}px`, top: `${(H - h * s) / 2}px` });
-    } else if (fit !== "win") {
+      const top = h * s > ah ? 80 : 80 + (ah - h * s) / 2;
+      Object.assign(el.style, { left: `${(tw - w * s) / 2}px`, top: `${top}px` });
+    } else {
       applyCrop(el, Number(el.dataset.scale || 1));
     }
   }
 }
-// A crop inside a window follows the window's size (contain, centered)
-function fitWindowCrops() {
-  for (const el of qa('.crop[data-fit="win"]')) {
-    const win = el.parentElement, { w, h } = cropInfo(el);
-    const ww = win.offsetWidth, wh = win.offsetHeight;
-    if (!ww || !wh) continue;
-    const s = Math.min((ww - 24) / w, (wh - 24) / h);
-    if (el._s !== s) applyCrop(el, s);
-    el.style.left = `${(ww - w * s) / 2}px`;
-    el.style.top = `${(wh - h * s) / 2}px`;
-  }
-}
-// Layers sit where the real shell puts them: centered in the work area, or under the bar on the right
-function placeLayer(layer, where) {
-  const crop = q(".crop", layer), w = crop.offsetWidth, h = crop.offsetHeight;
-  Object.assign(layer.style, { width: `${w}px`, height: `${h}px` });
-  if (where === "center") Object.assign(layer.style, { left: `${(W - w) / 2}px`, top: `${(AREA_H - h) / 2}px` });
-  if (where === "right") Object.assign(layer.style, { left: `${W - GAP_OUT - w}px`, top: "10px" });
-  if (where === "center-left") Object.assign(layer.style, { left: `${(W - w) / 2 - 120}px`, top: `${(AREA_H - h) / 2}px` });
-}
-
-// Hyprland's dwindle layout: each new window splits the last one along its longer side
-function dwindle(n) {
-  const rects = [{ x: GAP_OUT, y: GAP_OUT, w: W - 2 * GAP_OUT, h: AREA_H - 2 * GAP_OUT }];
-  for (let i = 1; i < n; i++) {
-    const r = rects[i - 1];
-    if (r.w >= r.h) {
-      const w = (r.w - GAP_IN) / 2;
-      rects[i - 1] = { ...r, w };
-      rects.push({ x: r.x + w + GAP_IN, y: r.y, w, h: r.h });
-    } else {
-      const h = (r.h - GAP_IN) / 2;
-      rects[i - 1] = { ...r, h };
-      rects.push({ x: r.x, y: r.y + h + GAP_IN, w: r.w, h });
-    }
-  }
-  return rects;
-}
-const css = (r) => ({ left: r.x, top: r.y, width: r.w, height: r.h });
-
-// ── motion vocabulary: RobinOS's own animations ──
-const tl = gsap.timeline({ paused: true });
-
-// Scenes (children of the stage) are shown with visibility. Anything inside a
-// scene uses autoAlpha instead: a child set to visibility: visible would stay
-// on screen after its scene is hidden.
-function show(el, at) { tl.set(el, { visibility: "visible" }, at); }
-function hide(el, at) { tl.set(el, { visibility: "hidden" }, at); }
-function on(el, at) { tl.set(el, { autoAlpha: 1 }, at); }
-function off(el, at) { tl.set(el, { autoAlpha: 0 }, at); }
-// windowsIn: popin 92% with the "easy" spring, plus fadeIn (almostLinear)
-function windowIn(win, at, rect) {
-  gsap.set(win, { ...css(rect), autoAlpha: 0 });
-  tl.fromTo(win, { scale: 0.92 }, { scale: 1, duration: SPRING_TIME, ease: spring, immediateRender: false }, at);
-  tl.fromTo(win, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.17, ease: "almostLinear", immediateRender: false }, at);
-  tl.to(win, { "--bd": 0.22, duration: 0.4, ease: "quint" }, at); // the new window is active
-}
-// windows: moving or resizing follows the same spring
-function windowTo(win, at, rect) {
-  tl.to(win, { ...css(rect), duration: SPRING_TIME, ease: spring }, at);
-}
-function inactive(win, at) { tl.to(win, { "--bd": 0.08, duration: 0.4, ease: "quint" }, at); }
-// windowsOut: popin 92%, linear, 0.14 s
-function windowOut(win, at) {
-  tl.to(win, { scale: 0.92, autoAlpha: 0, duration: 0.14, ease: "none" }, at);
-}
-// layersIn: fade with easeOutQuint (launcher, panels); layersOut: linear and quick
-function layerIn(layer, at) { tl.fromTo(layer, { autoAlpha: 0, scale: 0.985 }, { autoAlpha: 1, scale: 1, duration: 0.4, ease: "quint", immediateRender: false }, at); }
-function layerOut(layer, at) { tl.to(layer, { autoAlpha: 0, duration: 0.15, ease: "none" }, at); }
-
-// ── scenes ──
-function build() {
-  const logo = q("#logo"), boot = q("#boot"), desk = q("#desk"), light = q("#light"), reboot = q("#reboot");
-  const strip = q("#strip"), blackOut = q("#black-out");
-  [desk, light, reboot, boot].forEach((el) => gsap.set(el, { visibility: "hidden" }));
-  qa(".win, .layer").forEach((el) => gsap.set(el, { autoAlpha: 0 }));
-
-  // 1. The prompt: ">" and the cursor, the robin lands on it, "RobinOS" typed after it
-  {
-    gsap.set(logo, { visibility: "visible" });
-    hide(logo, T.boot);
-    show(logo, T.end);
-    const svg = q("svg", logo), chev = q(".m-chev", svg), robin = q(".m-robin", svg);
-    gsap.set([chev, robin, q(".url", logo)], { autoAlpha: 0 });
-    for (const [prompt, land] of [[EV.prompt, EV.land], [EV.endPrompt, EV.endLand]]) {
-      tl.set(chev, { autoAlpha: 1 }, prompt);
-      tl.fromTo(robin, { y: -90, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.42, ease: "quint", immediateRender: false }, land - 0.42);
-      tl.fromTo(robin, { scaleY: 0.93, transformOrigin: "50% 100%" }, { scaleY: 1, duration: SPRING_TIME, ease: spring, immediateRender: false }, land);
-    }
-    tl.set(robin, { autoAlpha: 0 }, T.boot);
-    tl.set(chev, { autoAlpha: 0 }, T.boot);
-    tl.set(q(".url", logo), { autoAlpha: 1 }, EV.url);
-    tl.to(blackOut, { opacity: 1, duration: DURATION - EV.fadeOut, ease: "none" }, EV.fadeOut);
-  }
-
-  // 2. Boot: hard cuts on the beat — boot menu, login (password typed), the real desktop
-  {
-    show(boot, T.boot);
-    hide(boot, T.ws1);
-    const grub = q("#boot-grub"), login = q("#boot-login"), shot = q("#boot-desktop");
-    gsap.set([grub, login, shot], { autoAlpha: 0 });
-    on(grub, T.boot); off(grub, T.login);
-    on(login, T.login); off(login, T.desktopShot);
-    on(shot, T.desktopShot);
-  }
-
-  // The narrator strip slides up with the boot and leaves with the desktop
-  gsap.set(strip, { yPercent: 100 });
-  tl.to(strip, { yPercent: 0, duration: 0.45, ease: "quint" }, T.boot);
-  tl.to(strip, { yPercent: 100, duration: 0.35, ease: "none" }, EV.barOut);
-
-  // 3. The desktop: the bar comes down, workspaces slide like Hyprland's slidefade 12%
-  const bar = q("#bar");
-  show(desk, T.ws1);
-  hide(desk, EV.powerOff);
-  show(desk, T.ws5);
-  hide(desk, T.end);
-  gsap.set(bar, { yPercent: -100 });
-  tl.to(bar, { yPercent: 0, duration: 0.4, ease: "quint" }, T.ws1);
-  tl.to(bar, { yPercent: -100, duration: 0.3, ease: "none" }, EV.barOut);
-
-  const wsEls = qa(".ws", desk);
-  gsap.set(wsEls, { autoAlpha: 0 });
-  WORKSPACES.forEach((w, i) => {
-    const el = wsEls[w.n - 1];
-    if (i === 0) { on(el, w.at); }
-    else {
-      const prev = wsEls[WORKSPACES[i - 1].n - 1];
-      const slide = W * 0.12;
-      tl.to(prev, { x: -slide, autoAlpha: 0, duration: 0.45, ease: "quint" }, w.at);
-      tl.fromTo(el, { x: slide, autoAlpha: 0 }, { x: 0, autoAlpha: 1, duration: 0.45, ease: "quint", immediateRender: false }, w.at);
-    }
-  });
-  // Bar: the active workspace pill and the focused window's title
-  for (const b of [bar, q("#bar-light")]) {
-    b.innerHTML = barHtml();
-  }
-  const pillX = (n) => (n - 1) * 41;
-  for (const b of [bar, q("#bar-light")]) {
-    const pill = q(".ws-pill", b), nums = qa(".wsnums span", b), title = q(".title", b);
-    gsap.set(pill, { x: 0 });
-    nums[0].classList.add("on");
-    WORKSPACES.forEach((w) => {
-      tl.to(pill, { x: pillX(w.n), duration: 0.4, ease: "quint" }, w.at);
-      nums.forEach((s, i) => tl.set(s, { className: i === w.n - 1 ? "on" : "" }, w.at));
-      tl.set(title, { textContent: w.title }, w.at);
-    });
-  }
-
-  // Workspace 1: the launcher finds Notepad by its Windows name, then Windows shortcuts
-  {
-    const L = q("#l-launcher"), result = q("#l-launcher-result"), typing = q(".search-type", L);
-    placeLayer(L, "center");
-    gsap.set(result, { autoAlpha: 0 });
-    layerIn(L, EV.launcher + 0.08);
-    tl.set(typing, { autoAlpha: 1 }, EV.launcherType);
-    gsap.set(typing, { autoAlpha: 0 });
-    tl.set(result, { autoAlpha: 1 }, EV.launcherResult);
-    tl.set(typing, { autoAlpha: 0 }, EV.launcherResult);
-    layerOut(L, EV.launcherClose);
-    for (const [id, at, out] of [["#l-alttab", EV.altTab, EV.altTabOut], ["#l-clipboard", EV.clipboard, EV.clipboardOut], ["#l-emoji", EV.emoji, EV.emojiOut]]) {
-      const layer = q(id);
-      placeLayer(layer, "center");
-      layerIn(layer, at + 0.08);
-      layerOut(layer, out);
-    }
-  }
-
-  // Workspace 2: a terminal answers a Windows command; the mission window splits the workspace
-  {
-    const t1 = q("#w-term1"), mission = q("#w-mission");
-    windowIn(t1, EV.term1, dwindle(1)[0]);
-    gsap.set(qa('[data-at="hint"]', t1), { autoAlpha: 0 });
-    tl.set(qa('[data-at="hint"]', t1), { autoAlpha: 1 }, EV.hint);
-    const two = dwindle(2);
-    windowTo(t1, EV.missionOpen, two[0]);
-    inactive(t1, EV.missionOpen);
-    windowIn(mission, EV.missionOpen + 0.02, two[1]);
-  }
-
-  // Workspace 3: launcher and quick settings over a terminal; the pointer turns on light mode
-  {
-    const t3 = q("#w-term3"), L3 = q("#l-launcher3"), qs = q("#l-qs");
-    windowIn(t3, EV.ws3Term, dwindle(1)[0]);
-    placeLayer(L3, "center-left");
-    placeLayer(qs, "right");
-    layerIn(L3, EV.ws3Launcher + 0.08);
-    layerIn(qs, EV.quickSettings + 0.08);
-    // The light copy, same layout
-    const t3l = q("#w-term3-light"), L3l = q("#l-launcher3-light");
-    gsap.set(t3l, { ...css(dwindle(1)[0]), autoAlpha: 1 });
-    placeLayer(L3l, "center-left");
-    gsap.set(L3l, { autoAlpha: 1 });
-    gsap.set(q("#bar-light"), { yPercent: 0 });
-
-    // Dark mode tile in the quick settings screenshot: (1424..1580, 168..226) → its center on the stage
-    const s = q(".crop", qs)._s;
-    const tile = { x: parseFloat(qs.style.left) + (1502 - 1246) * s, y: BAR + parseFloat(qs.style.top) + (197 - 40) * s };
-    const pointer = q("#pointer");
-    gsap.set(pointer, { x: 980, y: 760, autoAlpha: 0 });
-    tl.set(pointer, { autoAlpha: 1 }, EV.pointer - 0.2);
-    tl.to(pointer, { x: tile.x - 6, y: tile.y - 4, duration: 0.55, ease: "quint" }, EV.pointer);
-    tl.to(pointer, { scale: 0.86, duration: 0.07, ease: "none" }, EV.themeClick - 0.05);
-    tl.to(pointer, { scale: 1, duration: 0.15, ease: "quint" }, EV.themeClick + 0.05);
-    // Clicking toggles the theme: the panel closes, light spreads from the tile
-    layerOut(qs, EV.themeClick);
-    show(light, EV.themeClick);
-    const at = (r) => `circle(${r}px at ${tile.x}px ${tile.y}px)`;
-    gsap.set(light, { clipPath: at(0) });
-    tl.to(light, { clipPath: at(2300), duration: 0.75, ease: "quint" }, EV.themeClick);
-    tl.to(light, { clipPath: at(0), duration: 0.5, ease: "quint" }, EV.themeBack);
-    hide(light, EV.themeBack + 0.5);
-    tl.set(pointer, { autoAlpha: 0 }, EV.themeBack + 0.5);
-  }
-
-  // Workspace 4: an update, a reboot, and the snapshots it left in the boot menu
-  {
-    const t4 = q("#w-term4");
-    windowIn(t4, EV.term4, dwindle(1)[0]);
-    tl.set(blackOut, { opacity: 1 }, EV.powerOff);
-    tl.set(blackOut, { opacity: 0 }, EV.grub);
-    show(reboot, EV.grub);
-    hide(reboot, T.ws5);
-    const menu = q("#grub-menu"), pick = q("#grub-pick");
-    gsap.set(pick, { autoAlpha: 0 });
-    on(pick, EV.grubEnter);
-    off(menu, EV.grubEnter);
-  }
-
-  // Workspace 5: real panels tile in one per beat, then everything closes
-  {
-    const wins = ["#w-cal", "#w-sound", "#w-emoji", "#w-qs"].map((id) => q(id));
-    wins.forEach((win, i) => {
-      const at = EV.tiles[i], rects = dwindle(i + 1);
-      for (let j = 0; j < i; j++) { windowTo(wins[j], at, rects[j]); inactive(wins[j], at); }
-      windowIn(win, at, rects[i]);
-    });
-    wins.forEach((win, i) => windowOut(win, EV.allClose + i * 0.03));
-  }
-
-  tl.to({}, { duration: 0 }, DURATION); // the timeline is exactly DURATION long
-}
-
-// ── keys at the right of the prompt ──
-function buildKeys() {
-  const box = q("#keys");
-  KEYS.forEach((k, i) => {
-    const set = document.createElement("div");
-    set.className = "keyset";
-    set.innerHTML = k.keys.map((key) => `<span class="cap"><kbd>${key}</kbd></span>`).join("<i>+</i>").replaceAll("<i>+</i>", k.keys[0] === "↓" ? "" : "<i>+</i>");
-    box.appendChild(set);
-    const end = Math.min(KEYS[i + 1]?.at ?? Infinity, k.at + 1.6);
-    tl.fromTo(set, { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.18, ease: "quint", immediateRender: false }, k.at);
-    qa("kbd", set).forEach((kbd, j) => {
-      tl.to(kbd, { y: 4, duration: 0.05, ease: "none" }, k.at + 0.04 + j * 0.06);
-      tl.to(kbd, { y: 0, duration: 0.16, ease: "quint" }, k.at + 0.18 + j * 0.06);
-    });
-    tl.to(set, { autoAlpha: 0, duration: 0.15, ease: "none" }, end - 0.15);
-  });
-}
-
-// ── typing and carets, from t ──
-const targets = {};
-function setupTyping() {
-  for (const ev of TYPING) (targets[ev.target] ??= []).push(ev);
-  for (const list of Object.values(targets)) list.sort((a, b) => a.at - b.at);
-  // The two names on the prompt: a hidden copy keeps the layout still while the name is typed
-  const name = q("#logo .name");
-  name.innerHTML = '<span class="ghost">RobinOS</span><span class="typed" data-type="logo-name"></span>';
-}
-function typedAt(target, t) {
-  const list = targets[target];
-  if (!list) return { text: "", typing: false, since: 0 };
-  let ev = null;
-  for (const e of list) if (e.at <= t) ev = e;
-  if (!ev) return { text: "", typing: false, since: 0 };
-  const step = ev.fast ? TYPE_FAST : TYPE;
-  const n = Math.min(ev.text.length, Math.floor((t - ev.at) / step) + 1);
-  return { text: ev.text.slice(0, n), typing: n < ev.text.length, since: ev.at + ev.text.length * step };
-}
-// Terminal carets blink at the beat's eighth (as a cursor blinks), and stay solid while typing
-const blinkOn = (t) => Math.floor(t / (BEAT / 2)) % 2 === 0;
-const CARET_HIDE = { "term1-1": EV.hint };
-
-function ambient(t) {
-  for (const el of qa("[data-type]")) {
-    const { text } = typedAt(el.dataset.type, t);
-    if (el.textContent !== text) el.textContent = text;
-  }
-  for (const el of qa("[data-caret]")) {
-    const id = el.dataset.caret, target = { "term1-1": "term1-cmd1", "term1-2": "term1-cmd2", term4: "term4-cmd", caption: "caption" }[id];
-    const { typing } = typedAt(target, t);
-    let on = typing || blinkOn(t);
-    if (CARET_HIDE[id] !== undefined && t >= CARET_HIDE[id]) on = false;
-    el.style.opacity = on ? 1 : 0;
-  }
-  // The prompt's own cursor (the mark's bar) blinks until the robin lands on it
-  const cursor = q("#logo .m-cursor");
-  const waiting = (t >= EV.prompt && t < EV.land) || (t >= EV.endPrompt && t < EV.endLand);
-  cursor.style.opacity = t < EV.prompt ? 0 : waiting ? (blinkOn(t) ? 1 : 0) : 1;
-  // Login: five dots
-  const dots = Math.max(0, Math.min(5, Math.floor((t - EV.passwordDots) / TYPE) + 1));
-  const pw = q("#pw");
-  const want = t >= EV.passwordDots ? "•".repeat(dots) : "";
-  if (pw.textContent !== want) pw.textContent = want;
-  pw.style.opacity = t >= EV.passwordDots ? 1 : 0;
-  fitWindowCrops();
-}
-
-// The login screenshot has a placeholder in the password field; a patch in the field's own color covers it
-async function sampleColors() {
-  const sample = async (src, x, y) => {
+// Read one pixel of a screenshot, to cover printed text with its own background
+const images = {};
+async function sample(src, x, y) {
+  if (!images[src]) {
     const img = new Image();
     img.src = `assets/${src}`;
     await img.decode();
     const c = document.createElement("canvas");
     c.width = 1600; c.height = 900;
-    const g = c.getContext("2d");
-    g.drawImage(img, 0, 0);
-    const [r, gr, b] = g.getImageData(x, y, 1, 1).data;
-    return `rgb(${r}, ${gr}, ${b})`;
-  };
-  // login.png password field (634..966, 544..584), cropped from x 53 at 1.2857x (cover)
-  const s = 1080 / 840, pw = q("#pw");
+    c.getContext("2d", { willReadFrequently: true }).drawImage(img, 0, 0);
+    images[src] = c.getContext("2d", { willReadFrequently: true });
+  }
+  const [r, g, bl] = images[src].getImageData(x, y, 1, 1).data;
+  return `rgb(${r}, ${g}, ${bl})`;
+}
+async function setupPatches() {
+  // Boot menu lines about security are covered (design.md T-151: the product text will change)
+  const s = 1200 / 1600;
+  for (const p of qa(".patch")) {
+    const [x, y, w, h] = p.dataset.rect.split(",").map(Number);
+    Object.assign(p.style, { left: `${x * s}px`, top: `${y * s}px`, width: `${w * s}px`, height: `${h * s}px`, background: await sample(p.dataset.patch, x + 2, y + 2) });
+  }
+  // login.png password field (634..966, 544..584): dots are typed into a patch of the field's color
+  const ls = Math.min(1200 / 1493, 675 / 840), pw = q("#pw");
   Object.assign(pw.style, {
-    left: `${(640 - 53) * s + (W - 1493 * s) / 2}px`, top: `${548 * s}px`, width: `${320 * s}px`, height: `${32 * s}px`,
-    paddingLeft: `${10 * s}px`, background: await sample("login.png", 900, 564), borderRadius: "6px",
+    left: `${(640 - 53) * ls + (1200 - 1493 * ls) / 2}px`, top: `${548 * ls + (675 - 840 * ls) / 2}px`,
+    width: `${320 * ls}px`, height: `${32 * ls}px`, paddingLeft: `${10 * ls}px`,
+    background: await sample("login.png", 900, 564), borderRadius: "5px",
   });
   // launcher-dark.png search field (520..1060, 165..195): covered while "notepad" is typed
-  const L = q("#l-launcher"), ls = Number(q(".crop", L).dataset.scale), st = q(".search-type", L);
+  const card = q("#c-launcher"), cs = Number(q(".crop", card).dataset.scale), st = q("#search-type");
   Object.assign(st.style, {
-    left: `${(522 - 480) * ls}px`, top: `${(166 - 153) * ls}px`, width: `${(1060 - 522) * ls}px`, height: `${28 * ls}px`,
+    left: `${(522 - 480) * cs}px`, top: `${(166 - 153) * cs}px`, width: `${(1060 - 522) * cs}px`, height: `${28 * cs}px`,
     background: await sample("launcher-dark.png", 800, 168),
   });
 }
 
+// ── the timeline ──
+const tl = gsap.timeline({ paused: true });
+// Scenes are shown with visibility; anything inside a scene uses autoAlpha
+// (a child set to visibility: visible would stay on screen after its scene is hidden).
+function scene(el, from, to) {
+  gsap.set(el, { visibility: "hidden" });
+  tl.set(el, { visibility: "visible" }, b(from));
+  if (to !== undefined) tl.set(el, { visibility: "hidden" }, b(to));
+}
+// Words rise out of a blur and settle (one per beat, or a quick ripple)
+function reveal(target, at, { stagger = 0.07, dur = 1.05, y = 46, blur = 18, scale = 0.97 } = {}) {
+  const ws = Array.isArray(target) ? target : wordsOf(target);
+  tl.fromTo(ws, { autoAlpha: 0, y, scale, filter: `blur(${blur}px)` },
+    { autoAlpha: 1, y: 0, scale: 1, filter: "blur(0px)", duration: dur, ease: "land", stagger, immediateRender: false }, at);
+}
+function conceal(target, at, { stagger = 0.025, dur = 0.42, y = -26 } = {}) {
+  const ws = Array.isArray(target) ? target : wordsOf(target);
+  tl.to(ws, { autoAlpha: 0, y, filter: "blur(14px)", duration: dur, ease: "lift", stagger }, at);
+}
+// Something solid (a screen, a card) arrives from depth and lands
+function arrive(el, at, from = {}, dur = 1.15) {
+  tl.fromTo(el, { autoAlpha: 0, y: 90, z: -240, rotationX: 18, filter: "blur(14px)", ...from },
+    { autoAlpha: 1, y: 0, z: 0, rotationX: 0, rotationY: 0, x: 0, scale: 1, filter: "blur(0px)", duration: dur, ease: "land", immediateRender: false }, at);
+}
+function leave(el, at, to = {}, dur = b(1)) {
+  tl.to(el, { autoAlpha: 0, filter: "blur(18px)", duration: dur, ease: "lift", ...to }, at);
+}
+
+// The soft lights move to a new place for every scene
+const GLOW_AT = [
+  [S.logo, [[960, 520], [760, 700], [1180, 380]], 0.55],
+  [S.hero, [[960, 470], [520, 820], [1440, 300]], 1],
+  [S.screen, [[960, 860], [360, 260], [1560, 520]], 0.85],
+  [S.familiar, [[1330, 560], [1650, 940], [380, 180]], 0.85],
+  [S.terminal, [[760, 640], [1500, 420], [300, 900]], 0.8],
+  [S.bento, [[960, 640], [300, 300], [1640, 820]], 0.8],
+  [S.finale, [[960, 470], [640, 760], [1300, 300]], 1],
+];
+function buildGlows() {
+  const glows = qa(".glow");
+  gsap.set("#glows", { opacity: 0 });
+  GLOW_AT.forEach(([beat, pts, level], i) => {
+    const at = b(beat);
+    glows.forEach((g, j) => {
+      const [x, y] = pts[j], to = { x: x - 960, y: y - 540 };
+      if (i === 0) gsap.set(g, to);
+      else tl.to(g, { ...to, duration: 2.2, ease: "glide" }, at - 0.3);
+    });
+    tl.to("#glows", { opacity: level, duration: i === 0 ? b(4) : 0.6, ease: i === 0 ? "sine.inOut" : "power2.out" }, at);
+  });
+}
+
+function build() {
+  const blackOut = q("#black-out"), vignette = q(".vignette");
+  buildGlows();
+
+  // 0–8: the chevron draws, the cursor appears, the robin lands on it, the name rises
+  {
+    const el = q("#s-logo");
+    scene(el, S.logo, S.hero);
+    const lockup = q(".lockup", el), slot = q(".mark-slot", el), svg = q("svg", el);
+    const chev = q(".m-chev", svg), cursor = q(".m-cursor", svg), robin = q(".m-robin", svg);
+    const wm = q(".wordmark", el), letters = wordsOf(q(".wm-text", wm)), sweep = q(".wm-sweep", wm);
+    const len = chev.getTotalLength();
+    // (hidden until it draws: a round cap on a zero-length dash still paints a dot)
+    gsap.set(chev, { strokeDasharray: len, strokeDashoffset: len, autoAlpha: 0 });
+    gsap.set(cursor, { scaleX: 0, transformOrigin: "0% 50%" });
+    gsap.set(robin, { autoAlpha: 0 });
+    gsap.set(letters, { autoAlpha: 0 });
+    // The mark starts alone in the middle and makes room for the name
+    gsap.set(slot, { x: (wm.offsetWidth + 4) / 2 });
+    tl.set(chev, { autoAlpha: 1 }, b(0.5));
+    tl.to(chev, { strokeDashoffset: 0, duration: b(1.2), ease: "glide" }, b(0.5));
+    tl.to(cursor, { scaleX: 1, duration: b(0.9), ease: "land" }, b(1.5));
+    tl.fromTo(robin, { y: -170, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.42, ease: "power2.in", immediateRender: false }, b(3) - 0.42);
+    tl.fromTo(robin, { scaleY: 0.88, scaleX: 1.05, transformOrigin: "50% 100%" }, { scaleY: 1, scaleX: 1, duration: SPRING_TIME, ease: spring, immediateRender: false }, b(3));
+    tl.to(slot, { x: 0, duration: b(1.8), ease: "glide" }, b(3.7));
+    reveal(letters, b(4.1), { stagger: 0.045, dur: 1.2, y: 60, blur: 16 });
+    tl.fromTo(sweep, { backgroundPosition: "100% 0" }, { backgroundPosition: "0% 0", duration: b(1.6), ease: "power2.inOut", immediateRender: false }, b(5.8));
+    tl.to(lockup, { scale: 1.14, autoAlpha: 0, filter: "blur(24px)", duration: b(0.85), ease: "lift" }, b(7.15));
+  }
+
+  // 8–16: the statement, word by word on the beat
+  {
+    const el = q("#s-hero");
+    scene(el, S.hero, S.screen);
+    const hero = q(".hero", el), h1 = q("h1", el);
+    const [w1, w2, w3, w4] = wordsOf(h1);
+    gsap.set(wordsOf(hero), { autoAlpha: 0 });
+    reveal(q(".eyebrow", el), b(8), { dur: 0.9 });
+    [[w1, 8], [w2, 8.5], [w3, 10], [w4, 10.5]].forEach(([w, at]) => reveal([w], b(at), { y: 70, blur: 24, scale: 0.92, dur: 1.2 }));
+    reveal(q(".sub", el), b(12), { stagger: 0.06 });
+    tl.fromTo(h1, { letterSpacing: "-0.02em" }, { letterSpacing: "-0.055em", duration: b(7), ease: "power2.out", immediateRender: false }, b(8));
+    tl.fromTo(hero, { scale: 1 }, { scale: 1.04, duration: b(7), ease: "none", immediateRender: false }, b(8));
+    tl.to(hero, { scale: 1.3, autoAlpha: 0, filter: "blur(30px)", duration: b(1), ease: "lift" }, b(15));
+  }
+
+  // 16–24: a screen rises from lying flat and boots: boot menu → login → desktop
+  {
+    const el = q("#s-screen");
+    scene(el, S.screen, S.familiar);
+    const display = q("#display"), grub = q("#sc-grub"), login = q("#sc-login"), desk = q("#sc-desk"), flash = q("#sc-flash");
+    const caption = q("#screen-caption");
+    gsap.set([login, desk], { autoAlpha: 0 });
+    gsap.set(wordsOf(caption), { autoAlpha: 0 });
+    tl.fromTo(display, { autoAlpha: 0, y: 420, z: -300, rotationX: 68, transformOrigin: "50% 100%" },
+      { autoAlpha: 1, y: 0, z: 0, rotationX: 0, duration: b(2.6), ease: "land", immediateRender: false }, b(16));
+    tl.to(display, { rotationY: -3, y: -10, duration: b(4.5), ease: "sine.inOut" }, b(18.6));
+    tl.set(grub, { autoAlpha: 0 }, b(18));
+    tl.set(login, { autoAlpha: 1 }, b(18));
+    // Enter on the password, then the desktop
+    tl.fromTo(desk, { autoAlpha: 0, scale: 1.04 }, { autoAlpha: 1, scale: 1, duration: 0.6, ease: "land", immediateRender: false }, b(ENTERS[0]) + 0.08);
+    tl.fromTo(flash, { opacity: 0.32 }, { opacity: 0, duration: 0.7, ease: "power2.out", immediateRender: false }, b(ENTERS[0]) + 0.08);
+    reveal(caption, b(20.5), { stagger: 0.08 });
+    conceal(caption, b(22.9));
+    leave(display, b(23), { scale: 1.85, y: 60 });
+  }
+
+  // 24–36: Windows habits: keycaps on the left, real panels landing in a deck on the right
+  {
+    const el = q("#s-familiar");
+    scene(el, S.familiar, S.terminal);
+    const h2 = q("h2", el), items = qa(".sub-item", el);
+    gsap.set(wordsOf(el), { autoAlpha: 0 });
+    reveal(q(".line", h2), b(24));
+    reveal(q(".line.grad", h2), b(24.5), { y: 60, blur: 22 });
+    // Keycaps for each shortcut, pressed on its beat
+    const row = q("#keyrow"), sets = [];
+    PRESSES.forEach((p, i) => {
+      const set = document.createElement("div");
+      set.className = "keyset";
+      set.innerHTML = p.keys.map((k) => `<span class="cap${k === "Space" ? " wide" : ""}">${k}</span>`).join("<i>+</i>");
+      row.appendChild(set);
+      sets.push(set);
+      gsap.set(set, { autoAlpha: 0 });
+      const at = b(p.at);
+      tl.fromTo(set, { autoAlpha: 0, y: 50, filter: "blur(10px)" }, { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 0.55, ease: "land", immediateRender: false }, at - 0.32);
+      qa(".cap", set).forEach((cap, j) => {
+        gsap.set(cap, { "--press": 0 });
+        tl.to(cap, { "--press": 1, duration: 0.07, ease: "power2.out" }, at + j * 0.08);
+        tl.to(cap, { "--press": 0, duration: 0.45, ease: "land" }, at + 0.3 + j * 0.03);
+      });
+      const end = i + 1 < PRESSES.length ? b(PRESSES[i + 1].at) - 0.5 : b(35);
+      tl.to(set, { autoAlpha: 0, y: -24, filter: "blur(8px)", duration: 0.3, ease: "lift" }, end);
+      // The line that goes with it; the one before steps back
+      reveal(items[i], at + 0.05, { stagger: 0.05, dur: 0.9, y: 30, blur: 12 });
+      gsap.set(items[i], { color: "#fafafa" });
+      if (i > 0) tl.to(items[i - 1], { color: "#52525b", duration: 0.5, ease: "power2.out" }, at);
+    });
+
+    // The deck: each panel lands in front, the earlier ones step back and up
+    const cards = ["#c-launcher", "#c-alttab", "#c-emoji"].map((id) => q(id, el));
+    const CX = 1380, CY = 570;
+    cards.forEach((c, i) => {
+      const crop = q(".crop", c), w = crop.offsetWidth, h = crop.offsetHeight;
+      Object.assign(c.style, { width: `${w}px`, height: `${h}px`, left: `${CX - w / 2}px`, top: `${CY - h / 2}px` });
+      gsap.set(c, { autoAlpha: 0, rotationY: -10, rotationX: 4 });
+      const at = b(PRESSES[i].at) + 0.06;
+      tl.fromTo(c, { autoAlpha: 0, y: 110, z: -320, rotationY: -28, rotationX: 16, filter: "blur(14px)" },
+        { autoAlpha: 1, y: 0, z: 0, rotationY: -10, rotationX: 4, filter: "blur(0px)", duration: 1.1, ease: "land", immediateRender: false }, at);
+      for (let j = 0; j < i; j++) {
+        const depth = i - j;
+        tl.to(cards[j], { x: 110 * depth, y: -130 * depth, z: -340 * depth, rotationY: -14, autoAlpha: depth === 1 ? 0.5 : 0.22, filter: `blur(${2 * depth}px)`, duration: 1.0, ease: "land" }, at);
+      }
+    });
+    const result = q("#c-launcher-result"), typing = q("#search-type");
+    gsap.set([result, typing], { autoAlpha: 0 });
+    tl.set(typing, { autoAlpha: 1 }, b(TYPING[0].at));
+    const found = b(TYPING[0].at) + TYPING[0].text.length * TYPE + 0.12;
+    tl.set(result, { autoAlpha: 1 }, found);
+    tl.set(typing, { autoAlpha: 0 }, found);
+    // Slow drift of the whole deck, then everything leaves toward the camera
+    tl.fromTo(q("#deck"), { rotationY: 0 }, { rotationY: -4, duration: b(10), ease: "none", immediateRender: false }, b(25));
+    conceal(h2, b(34.9));
+    conceal(items, b(34.95), { stagger: 0.03 });
+    cards.forEach((c, i) => tl.to(c, { z: 700, autoAlpha: 0, filter: "blur(18px)", duration: b(1), ease: "lift" }, b(35) + (2 - i) * 0.04));
+  }
+
+  // 36–48: the terminal answers a Windows command, then 45 missions
+  {
+    const el = q("#s-terminal");
+    scene(el, S.terminal, S.theme);
+    const term = q("#term"), head = q("#term-head"), count = q("#count");
+    gsap.set(wordsOf(el), { autoAlpha: 0 });
+    gsap.set([q("#hint1"), q("#hint2"), q(".num", count)], { autoAlpha: 0 });
+    arrive(term, b(36), { rotationX: 16, scale: 0.95 });
+    const enter = b(ENTERS[1]);
+    for (const [id, dt] of [["#hint1", 0.06], ["#hint2", b(0.5)]]) {
+      tl.fromTo(q(id), { autoAlpha: 0, y: 18, filter: "blur(8px)" }, { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 0.7, ease: "land", immediateRender: false }, enter + dt);
+    }
+    tl.to(term, { scale: 1.035, duration: b(5), ease: "none" }, b(38.3));
+    reveal(q("span", head), b(40));
+    reveal(q(".grad", head), b(40.5), { y: 56, blur: 20 });
+    conceal(head, b(43.3));
+    tl.to(term, { x: -500, y: 10, scale: 0.62, rotationY: 20, duration: b(1.6), ease: "glide" }, b(43.4));
+    tl.fromTo(q(".num", count), { autoAlpha: 0, scale: 0.8, filter: "blur(24px)" }, { autoAlpha: 1, scale: 1, filter: "blur(0px)", duration: 1.2, ease: "land", immediateRender: false }, b(44));
+    reveal(q(".count-label", count), b(44.5));
+    reveal(q(".count-sub", count), b(45), { stagger: 0.05 });
+    leave(term, b(47.15), { y: -40 }, b(0.85));
+    leave(count, b(47.2), { y: -40 }, b(0.8));
+  }
+
+  // 48–52: the breakdown: a dark launcher, then light spreads out from the middle
+  {
+    const dark = q("#s-theme"), light = q("#s-theme-light");
+    scene(dark, S.theme, S.rollback);
+    scene(light, S.theme + 1.6, S.rollback);
+    gsap.set(wordsOf(dark), { autoAlpha: 0 });
+    gsap.set(wordsOf(q("#day-word")), { autoAlpha: 0 });
+    arrive(q(".theme-card", dark), b(48), { y: 40, z: -160, rotationX: 10 }, 1.3);
+    for (const s of [dark, light]) tl.fromTo(s, { scale: 1 }, { scale: 1.04, duration: b(3.4), ease: "none", immediateRender: false }, b(48));
+    reveal(q("#night-word"), b(48.5));
+    const at = (r) => `circle(${r}px at 960px 410px)`;
+    gsap.set(light, { clipPath: at(0) });
+    tl.to(light, { clipPath: at(1500), duration: 1.25, ease: "power3.inOut" }, b(S.theme + 1.6));
+    tl.to(vignette, { opacity: 0, duration: 0.8, ease: "power2.out" }, b(S.theme + 1.8));
+    reveal(q("#day-word"), b(50.6));
+    leave([q(".theme-card", light), q(".theme-caption", light)], b(51.35), { y: -40 }, 0.4);
+  }
+
+  // 52–60: snapshots on a timeline, a rollback, and the real boot menu that offers it
+  {
+    const el = q("#s-rollback");
+    scene(el, S.rollback, S.bento);
+    const head = q("#rb-head"), line = q("#timeline"), nodes = qa(".node", el), now = q("#now");
+    const track = q(".track", el), fill = q("#track-fill"), rewind = q("#rewind"), card = q("#bootcard"), caption = q("#rb-caption");
+    gsap.set(wordsOf(el), { autoAlpha: 0 });
+    gsap.set([...nodes, now, card], { autoAlpha: 0 });
+    reveal(q("span", head), b(52), { y: 60, blur: 22 });
+    reveal(q(".grad", head), b(52.5), { y: 60, blur: 22 });
+    tl.fromTo(track, { scaleX: 0 }, { scaleX: 1, duration: b(1.6), ease: "glide", immediateRender: false }, b(52.5));
+    tl.fromTo(fill, { scaleX: 0 }, { scaleX: 1, duration: b(1.6), ease: "power2.inOut", immediateRender: false }, b(53));
+    nodes.forEach((n, i) => {
+      const at = b(53 + i * 0.75);
+      tl.fromTo(n, { autoAlpha: 0, y: 24, scale: 0.7 }, { autoAlpha: 1, y: 0, scale: 1, duration: SPRING_TIME, ease: spring, immediateRender: false }, at);
+      tl.set(n, { attr: { class: "node on" } }, at);
+    });
+    tl.fromTo(now, { autoAlpha: 0, y: -30 }, { autoAlpha: 1, y: 0, duration: SPRING_TIME, ease: spring, immediateRender: false }, b(54.6));
+    // Roll back: the arrow draws, "now" slides back to before the update
+    const paths = qa("path", rewind);
+    paths.forEach((p) => { const l = p.getTotalLength(); gsap.set(p, { strokeDasharray: l, strokeDashoffset: l }); });
+    gsap.set(rewind, { autoAlpha: 0 });
+    tl.set(rewind, { autoAlpha: 1 }, b(55.5));
+    tl.to(paths[0], { strokeDashoffset: 0, duration: 0.45, ease: "power2.inOut" }, b(55.5));
+    tl.to(paths[1], { strokeDashoffset: 0, duration: 0.2, ease: "power2.out" }, b(55.5) + 0.4);
+    tl.to(now, { x: -630, duration: b(1), ease: "glide" }, b(56));
+    tl.to(fill, { scaleX: 0.5, duration: b(1), ease: "glide" }, b(56));
+    tl.set(nodes[2], { attr: { class: "node gone" } }, b(56.4));
+    tl.to(rewind, { autoAlpha: 0, duration: 0.3, ease: "none" }, b(57));
+    // The real boot menu: the snapshot list, "pre" (before the update) highlighted
+    tl.to(line, { y: -160, scale: 0.84, duration: b(1.2), ease: "glide" }, b(57));
+    arrive(card, b(57.2), { y: 180, rotationX: 30, z: -200 }, 1.2);
+    reveal(caption, b(58), { stagger: 0.05 });
+    conceal([...wordsOf(head), ...wordsOf(caption)], b(59.2), { stagger: 0.015 });
+    tl.to(el, { scale: 0.9, autoAlpha: 0, duration: b(0.75), ease: "lift" }, b(59.25));
+    tl.to(vignette, { opacity: 1, duration: 0.8, ease: "power2.out" }, b(59.6));
+  }
+
+  // 60–72: everyday screens as a bento grid
+  {
+    const el = q("#s-bento");
+    scene(el, S.bento, S.finale);
+    const head = q("#bento-head"), tiles = qa(".tile", el), grid = q("#bento");
+    gsap.set(wordsOf(el), { autoAlpha: 0 });
+    tiles.forEach((t) => {
+      const [x, y, w, h] = t.dataset.rect.split(",").map(Number);
+      Object.assign(t.style, { left: `${x}px`, top: `${y}px`, width: `${w}px`, height: `${h}px` });
+      gsap.set(t, { autoAlpha: 0 });
+    });
+    reveal(q("span", head), b(60));
+    reveal(q(".grad", head), b(60.5), { y: 56, blur: 20 });
+    tiles.forEach((t, i) => arrive(t, b(61 + i * 0.5), { y: 140, z: -380, rotationX: 24 }, 1.2));
+    tl.fromTo(grid, { scale: 1, rotationX: 0 }, { scale: 1.035, rotationX: 3, duration: b(9), ease: "none", immediateRender: false }, b(61));
+    conceal(head, b(70.4));
+    tiles.forEach((t, i) => tl.to(t, { z: -700, autoAlpha: 0, filter: "blur(16px)", duration: b(1.2), ease: "lift" }, b(70.5) + Math.abs(i - 2.5) * 0.05));
+  }
+
+  // 72–80: the end: a ring of light, the mark and the name, the address
+  {
+    const el = q("#s-finale");
+    scene(el, S.finale);
+    const slot = q(".mark-slot", el), letters = wordsOf(q(".wm-text", el)), sweep = q(".wm-sweep", el);
+    gsap.set(wordsOf(el), { autoAlpha: 0 });
+    gsap.set([slot, q("#url")], { autoAlpha: 0 });
+    tl.fromTo("#ring", { scale: 0.3, opacity: 1 }, { scale: 3.4, opacity: 0, duration: 1.6, ease: "land", immediateRender: false }, b(72));
+    tl.fromTo(slot, { autoAlpha: 0, scale: 0.8, filter: "blur(20px)" }, { autoAlpha: 1, scale: 1, filter: "blur(0px)", duration: 1.2, ease: "land", immediateRender: false }, b(72));
+    reveal(letters, b(72.25), { stagger: 0.04, dur: 1.2, y: 60, blur: 16 });
+    reveal(q(".tagline", el), b(73.5), { stagger: 0.08 });
+    tl.fromTo("#url", { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 1, ease: "land", immediateRender: false }, b(74.5));
+    tl.fromTo(sweep, { backgroundPosition: "100% 0" }, { backgroundPosition: "0% 0", duration: b(1.6), ease: "power2.inOut", immediateRender: false }, b(74.6));
+    tl.fromTo(q(".lockup", el), { scale: 1 }, { scale: 1.03, duration: b(8), ease: "none", immediateRender: false }, b(72));
+    tl.to(blackOut, { opacity: 1, duration: DURATION - b(78.4), ease: "power1.in" }, b(78.4));
+  }
+
+  tl.to({}, { duration: 0 }, DURATION); // the timeline is exactly DURATION long
+}
+
+// ── typing, carets, counting and light, from t ──
+const blinkOn = (t) => Math.floor(t / (BEAT / 2)) % 2 === 0;
+function typedAt(target, t) {
+  const ev = TYPING.find((e) => e.target === target);
+  if (!ev || t < b(ev.at)) return { text: "", typing: false };
+  const n = Math.min(ev.text.length, Math.floor((t - b(ev.at)) / TYPE) + 1);
+  return { text: ev.text.slice(0, n), typing: n < ev.text.length };
+}
+const inGroove = (t) => (t >= b(SONG.drop1) && t < b(SONG.breakdown)) || (t >= b(SONG.drop2) && t < b(SONG.finale));
+const easeOutExpo = (p) => (p >= 1 ? 1 : 1 - Math.pow(2, -10 * p));
+let glowEls, logoCursor, typeEls, searchCaret, cmdCaret, pwEl, countEl, beatEl;
+
+function ambient(t) {
+  for (const el of typeEls) {
+    const { text } = typedAt(el.dataset.type, t);
+    if (el.textContent !== text) el.textContent = text;
+  }
+  const search = typedAt("search", t);
+  searchCaret.style.opacity = search.typing || blinkOn(t) ? 1 : 0;
+  const cmd = typedAt("cmd", t);
+  cmdCaret.style.opacity = t >= b(ENTERS[1]) ? 0 : cmd.typing || blinkOn(t) ? 1 : 0;
+  // The prompt's cursor blinks until the robin lands on it
+  logoCursor.style.opacity = t >= b(2.4) && t < b(3) && !blinkOn(t) ? 0 : 1;
+  // Five password dots, one per 32nd note
+  const dotsAt = b(18.5), dots = t >= dotsAt ? Math.min(5, Math.floor((t - dotsAt) / TYPE) + 1) : 0;
+  const want = "•".repeat(dots);
+  if (pwEl.textContent !== want) pwEl.textContent = want;
+  // 45 missions, counted up with a long landing
+  const n = Math.round(45 * easeOutExpo(Math.max(0, Math.min(1, (t - b(44)) / b(4)))));
+  if (countEl.textContent !== String(n)) countEl.textContent = String(n);
+  // Light: a slow drift, and a breath on every kick while the beat plays
+  glowEls.forEach((g, i) => {
+    const w = g.offsetWidth, h = g.offsetHeight;
+    g.style.left = `${960 - w / 2 + Math.sin(t * (0.21 + i * 0.07) + i * 2.1) * 140}px`;
+    g.style.top = `${540 - h / 2 + Math.cos(t * (0.17 + i * 0.05) + i * 1.3) * 90}px`;
+  });
+  const phase = (t / BEAT) % 1;
+  const pulse = inGroove(t) ? Math.exp(-phase * 5) : t >= b(SONG.finale) ? Math.exp(-(t - b(SONG.finale)) * 1.5) : 0;
+  beatEl.style.transform = `scale(${1 + 0.035 * pulse})`;
+  beatEl.style.opacity = 0.82 + 0.18 * pulse;
+}
+
 async function init() {
   qa("[data-mark]").forEach((el) => { el.innerHTML = markSvg(); });
-  setupTyping();
-  await document.fonts.load('600 46px "Pretendard"');
-  await document.fonts.load('600 150px "Geist"');
-  await document.fonts.load('400 30px "Geist Mono"');
+  await document.fonts.load('760 176px "Pretendard"');
+  await document.fonts.load('650 156px "Geist"');
+  await document.fonts.load('400 36px "Geist Mono"');
   await document.fonts.ready;
+  qa("[data-words]").forEach((el) => splitWords(el));
+  qa(".wm-text").forEach((el) => splitWords(el, true));
   setupCrops();
-  await sampleColors();
-  // Make sure every screenshot is decoded before the first frame
+  await setupPatches();
+  // Every screenshot is decoded before the first frame
   const srcs = [...new Set(qa(".crop").map((el) => el.dataset.src))];
   await Promise.all(srcs.map((src) => { const i = new Image(); i.src = `assets/${src}`; return i.decode().catch(() => {}); }));
+  glowEls = qa(".glow");
+  logoCursor = q("#s-logo .m-cursor");
+  typeEls = qa("[data-type]");
+  searchCaret = q("#search-type .caret");
+  cmdCaret = q("#cmd-caret");
+  pwEl = q("#pw");
+  countEl = q("#count-num");
+  beatEl = q("#glow-beat");
+  // Scenes must be visible while they are measured; the timeline hides them again
+  qa(".scene").forEach((s) => (s.style.visibility = "visible"));
   build();
-  buildKeys();
   tl.seek(0, false);
   ambient(0);
 
@@ -466,8 +520,8 @@ async function init() {
 
   // Preview: fit the window; click or Space plays with sound
   const fit = () => {
-    const s = Math.min(innerWidth / 1920, innerHeight / 1080);
-    stage.style.transform = `translate(${(innerWidth - 1920 * s) / 2}px, ${(innerHeight - 1080 * s) / 2}px) scale(${s})`;
+    const s = Math.min(innerWidth / W, innerHeight / H);
+    stage.style.transform = `translate(${(innerWidth - W * s) / 2}px, ${(innerHeight - H * s) / 2}px) scale(${s})`;
   };
   fit();
   addEventListener("resize", fit);
