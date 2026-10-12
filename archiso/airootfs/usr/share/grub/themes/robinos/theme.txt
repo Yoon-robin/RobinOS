@@ -23,16 +23,6 @@ terminal-border: "0"
   color = "#FAFAFA"
 }
 
-+ label {
-  left = 190
-  top = 124
-  width = 760
-  height = 30
-  text = "쓰다 보면 리눅스를 알게 되는 OS"
-  font = "Unifont Regular 16"
-  color = "#A1A1AA"
-}
-
 + boot_menu {
   left = 10%
   top = 30%

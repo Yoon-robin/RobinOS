@@ -48,7 +48,7 @@ def text_path(path, wght, text, size, x, y, tracking=0.0):
 
 
 BG, WHITE, WING, GREY, RED = "#09090B", "#FAFAFA", "#E4E4E7", "#A1A1AA", "#E5484D"
-TAGLINE = "쓰다 보면 리눅스를 알게 되는 OS"
+TAGLINE = "처음 쓰는 리눅스"
 
 
 def robin(cid):
@@ -142,13 +142,13 @@ def lockup():
 
 def boot_splash():
     """Background of the live ISO's BIOS boot menu (syslinux vesamenu, 640x480).
-    The lockup sits above the menu box, which syslinux draws from row 10 (y 160) down;
-    the bottom rows hold syslinux's help text, so they stay empty.
+    The mark and the name sit above the menu box, which syslinux draws from row 10
+    (y 160) down; the bottom rows hold syslinux's help text, so they stay empty.
+    Screens carry the name only, no tagline (docs/brand.md).
     PNG: rsvg-convert -w 640 -h 480 robinos-boot-splash.svg -o themes/syslinux/splash.png"""
     word, ww = text_path(GEIST, 700, "RobinOS", 38, 0, 0, tracking=-0.02)
-    tag, tw = text_path(PRETENDARD, 500, TAGLINE, 14, 0, 0)
     mark_size, gap = 64, 14
-    width = mark_size + gap + max(ww, tw)
+    width = mark_size + gap + ww
     x0 = (640 - width) / 2
     tx = x0 + mark_size + gap
     return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" width="640" height="480">
@@ -166,8 +166,7 @@ def boot_splash():
     {robin("robinos-splash-bird")}
     </g>
   </g>
-  <g transform="translate({tx:.1f} 80)"><path d="{word}" fill="{WHITE}"/></g>
-  <g transform="translate({tx + 1:.1f} 101)"><path d="{tag}" fill="{GREY}"/></g>
+  <g transform="translate({tx:.1f} 86)"><path d="{word}" fill="{WHITE}"/></g>
 </svg>
 """
 

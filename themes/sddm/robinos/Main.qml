@@ -482,28 +482,6 @@ Rectangle {
     }
 
     Row {
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 28
-        spacing: 8
-
-        Glyph {
-            anchors.verticalCenter: parent.verticalCenter
-            name: "terminal"
-            size: 14
-            color: root.muted
-        }
-
-        Text {
-            anchors.verticalCenter: parent.verticalCenter
-            text: "쓰다 보면 리눅스를 알게 되는 OS"
-            color: root.muted
-            font.family: root.font
-            font.pixelSize: 12
-        }
-    }
-
-    Row {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.margins: 20

@@ -228,8 +228,7 @@ function build() {
     const [w1, w2, w3] = wordsOf(h1);
     gsap.set(wordsOf(hero), { autoAlpha: 0 });
     reveal(q(".eyebrow", el), b(8), { dur: 0.9 });
-    [[w1, 8], [w2, 10], [w3, 10.75]].forEach(([w, at]) => reveal([w], b(at), { y: 70, blur: 24, scale: 0.92, dur: 1.2 }));
-    reveal(q(".sub", el), b(12), { stagger: 0.06 });
+    [[w1, 8], [w2, 8.5], [w3, 10]].forEach(([w, at]) => reveal([w], b(at), { y: 70, blur: 24, scale: 0.92, dur: 1.2 }));
     tl.fromTo(h1, { letterSpacing: "-0.02em" }, { letterSpacing: "-0.055em", duration: b(7), ease: "power2.out", immediateRender: false }, b(8));
     tl.fromTo(hero, { scale: 1 }, { scale: 1.04, duration: b(7), ease: "none", immediateRender: false }, b(8));
     tl.to(hero, { scale: 1.3, autoAlpha: 0, filter: "blur(30px)", duration: b(1), ease: "lift" }, b(15));
