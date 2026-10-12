@@ -1140,6 +1140,8 @@ Singleton {
     // database, so it never locks pacman. The live session doesn't check.
 
     property int updateCount: 0
+    // The kernel is among them: the computer restarts afterwards (T-162)
+    property bool updateKernel: false
     property real lastUpdateCheck: 0
 
     // At most every ten minutes, unless the timer asks
@@ -1155,11 +1157,16 @@ Singleton {
     Process {
         id: updateProc
 
-        command: ["sh", "-c", "checkupdates 2>/dev/null | wc -l"]
+        // One "name old -> new" line per package
+        command: ["sh", "-c", "checkupdates 2>/dev/null"]
         stdout: StdioCollector {
             id: updateOut
 
-            onStreamFinished: root.updateCount = parseInt(updateOut.text.trim()) || 0
+            onStreamFinished: {
+                const lines = updateOut.text.split("\n").filter(line => line.trim() !== "");
+                root.updateCount = lines.length;
+                root.updateKernel = lines.some(line => /^linux(-lts|-zen|-hardened)? /.test(line));
+            }
         }
     }
 

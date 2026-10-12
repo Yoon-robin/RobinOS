@@ -317,7 +317,7 @@ PanelWindow {
 
                     Text {
                         Layout.fillWidth: true
-                        text: "업데이트 " + ShellState.updateCount + "개가 있어요"
+                        text: "업데이트 " + ShellState.updateCount + "개가 있어요" + (ShellState.updateKernel ? " · 끝나면 다시 시작" : "")
                         color: Theme.fg
                         font.family: Theme.font
                         font.pixelSize: 13
