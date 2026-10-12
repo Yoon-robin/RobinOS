@@ -18,9 +18,15 @@ foot_args=(foot)
 foot_args+=("$@")
 
 if command -v ptyxis >/dev/null 2>&1; then
-  args=(ptyxis --new-window)
-  [[ -n "${title}" ]] && args+=(-T "${title}")
-  (($#)) && args+=(-- "$@")
+  # A command opens its own new window; --new-window with it would open a second,
+  # empty one (the boot test's mission terminal, 2026-10-12)
+  if (($#)); then
+    args=(ptyxis)
+    [[ -n "${title}" ]] && args+=(-T "${title}")
+    args+=(-- "$@")
+  else
+    args=(ptyxis --new-window)
+  fi
   # Ptyxis is installed but doesn't start (a broken GTK, no GPU driver): foot
   # still gives a terminal. Only a failure right away counts; the first Ptyxis
   # runs until its last window closes, and ending it later (a logout) is no
