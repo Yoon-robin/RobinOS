@@ -88,10 +88,12 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 2026-10-12 목적 결정("처음 쓰는 리눅스", [design.md](design.md))으로 순서를 다시 봤어요. 화면이 그 목적을 말하게 하는 일(T-151)과 실제 PC에서 켜지는 것이 먼저예요. 학습 기능(터미널 힌트, 미션)은 이제 목적의 중심이라, 윈도우 기능 따라 하기보다 앞에 둬요.
 
 ### T-155 부팅 테스트에 성공 조건 넣기
-- 상태: 할 일 (먼저)
+- 상태: 진행 중
 - 출처: ChatGPT 세 번째 검토(2026-10-12). 묶음 77이 "통과"로 나왔는데 라이브 ISO에서 터미널이 하나도 안 열렸어요. 스크린샷만 찍는 테스트는 화면이 틀려도 통과해요
 - 한 것(2026-10-12): 멈춘 시나리오는 실패(종료 코드 1, WHPX·TCG 실행기 둘 다), 터미널을 연 뒤 "활성 창이 Ptyxis"일 때만 남는 `logger` 표시를 시리얼 로그에서 확인(`expect_serial`), 안 열리면 tty3 진단, 키·포인터 QMP 명령이 오류로 답하면 실패(`Qmp.act`), `build-iso.sh`가 빌드한 airootfs의 `/usr/share/robinos/bin`과 `/usr/local/bin`이 모두 실행 가능한지 확인
-- 할 것: 장면마다 게스트 안에서 확인하고 통과했을 때만 `logger -t robinos-e2e "scenario=<이름> status=PASS"`를 남기기. 후보: 최대화(`hyprctl clients -j`의 fullscreen, at, size가 바·독 사이), 학습 미션 터미널의 출력, 테마 바꾸기(저장된 값과 GTK 설정), 셸 재시작(새 Quickshell과 IPC 응답), 새 터미널을 열 때 창이 하나만 늘어나는지. 결과를 장면별로 모아 하나라도 실패면 전체 실패
+- 한 것(2026-10-13 집 PC): `scripts/e2e-check.sh`(ISO의 `/opt/robinos/scripts`)가 장면마다 VM 안에서 상태를 확인해 `robinos-e2e: scenario=<이름> status=PASS|FAIL <근거>`를 저널에 남기고, `boot-test-qmp.py`의 `check_scene`이 시리얼 로그에서 결과를 모아 하나라도 실패면 끝에 실패. 장면: 터미널(Ptyxis), 미션 1, 최대화(`fullscreen` 1, 바 아래·독 위, 화면 70% 넘게)와 되돌리기, 새 터미널이 창 하나만 늘리기, 셸 다시 띄우기(새 `qs`와 IPC 응답), 라이트·다크(저장된 값과 GTK `color-scheme`). 가짜 hyprctl로 판정 시험. [testing.md](testing.md) "상태로 판정하는 장면"
+- 남은 것: 묶음 검증에서 아홉 장면이 PASS인지. 일부러 망가뜨린 ISO로 실패하는 것 확인. 학습 미션 터미널의 출력도 장면으로
+- 처음 할 것(기록): 장면마다 게스트 안에서 확인하고 통과했을 때만 `logger -t robinos-e2e "scenario=<이름> status=PASS"`를 남기기. 후보: 최대화(`hyprctl clients -j`의 fullscreen, at, size가 바·독 사이), 학습 미션 터미널의 출력, 테마 바꾸기(저장된 값과 GTK 설정), 셸 재시작(새 Quickshell과 IPC 응답), 새 터미널을 열 때 창이 하나만 늘어나는지. 결과를 장면별로 모아 하나라도 실패면 전체 실패
 - 완료 기준: 위 장면이 화면이 아니라 상태로 판정되고, 일부러 망가뜨린 ISO(실행 권한 빼기 등)에서 테스트가 실패하는 것을 한 번 확인
 
 ### T-156 설치본 펌웨어와 펌웨어 업데이트

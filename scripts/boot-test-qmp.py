@@ -170,6 +170,34 @@ def diagnose_on_tty(qmp, tag, commands):
     shot(qmp, "tty-diagnose-done")
 
 
+# Verdicts of scripts/e2e-check.sh, scene name -> "PASS ...", "FAIL ..." or "missing"
+results = {}
+
+
+def check_scene(qmp, name, timeout=30):
+    """Types `e2e-check.sh <name>` into the focused terminal, which checks the scene's
+    state inside the guest and logs "scenario=<name> status=PASS|FAIL" (T-155). The
+    scenario goes on after a failure; main() fails the test at the end."""
+    type_text(qmp, f"clear; bash /opt/robinos/scripts/e2e-check.sh {name}\n")
+    marker = f"scenario={name} status=".encode()
+    path = os.path.join(OUT, "serial.log")
+    deadline = time.time() + timeout * SPEED
+    while time.time() < deadline:
+        with open(path, "rb") as f:
+            data = f.read()
+        at = data.find(marker)
+        if at != -1:
+            end = data.find(b"\n", at)
+            line = data[at:end if end != -1 else len(data)].decode(errors="replace").strip()
+            results[name] = line.split("status=", 1)[1]
+            print(f"check: {line}", flush=True)
+            return results[name].startswith("PASS")
+        time.sleep(1)
+    results[name] = "missing (no verdict in the serial log)"
+    print(f"check: scenario={name} missing", flush=True)
+    return False
+
+
 # The desktop session's environment, for commands started from tty3
 SESSION_ENV = "XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus"
 
@@ -295,9 +323,9 @@ def main():
     wait(6)
     # The terminal really opened, runs what is typed, and is Ptyxis (not the foot
     # fallback): the marker is logged only after the check passes
-    type_text(qmp, "hyprctl activewindow -j | grep -q org.gnome.Ptyxis && logger -t robinos-boot-test terminal-ptyxis\n")
+    type_text(qmp, "bash /opt/robinos/scripts/e2e-check.sh terminal\n")
     try:
-        expect_serial("terminal-ptyxis")
+        expect_serial("scenario=terminal status=PASS")
     except RuntimeError:
         diagnose_on_tty(qmp, "robinos-diag", [
             "ls -l /usr/share/robinos/bin/robinos-terminal; command -v ptyxis foot",
@@ -340,6 +368,7 @@ def main():
     # Solve mission 1, so the launcher's learning entry shows "1/45" in light-launcher
     type_text(qmp, "mkdir -p ~/practice/notes && robinctl learn check 1 >/dev/null\n")
     wait(1)
+    check_scene(qmp, "mission-1")
     # Title bar buttons (desktop/dconf) as GTK, Firefox and Qt apps read them
     type_text(qmp, "clear; gdbus call --session --dest org.freedesktop.portal.Desktop"
               " --object-path /org/freedesktop/portal/desktop --method org.freedesktop.portal.Settings.ReadOne"
@@ -364,11 +393,13 @@ def main():
     keys(qmp, "meta_l", "up")
     wait(2)
     shot(qmp, "snap-maximized")
+    check_scene(qmp, "maximized")
     keys(qmp, "meta_l", "down")
     wait(1)
     keys(qmp, "meta_l", "down")
     wait(2)
     shot(qmp, "snap-restored")
+    check_scene(qmp, "restored")
     # Win+Ctrl+Right/Left like Windows' virtual desktops: an empty workspace 2, and back
     keys(qmp, "meta_l", "ctrl", "right")
     wait(2)
@@ -378,10 +409,14 @@ def main():
     # Win+Ctrl+D like Windows' new virtual desktop goes to the first empty workspace
     # (2); Win+Ctrl+F4 closes it and brings the terminal opened there to workspace 1.
     # Alt+F4 then closes one of the two terminals, so one is left as before.
+    check_scene(qmp, "count-save")
     keys(qmp, "meta_l", "ctrl", "d")
     wait(2)
     keys(qmp, "meta_l", "ret")
     wait(4)
+    # Win+Enter opens one terminal window, not two (--new-window with a command
+    # once left an empty extra window, 2026-10-12)
+    check_scene(qmp, "one-more")
     type_text(qmp, "echo moved-from-workspace-2\n")
     wait(1)
     shot(qmp, "workspace-new")
@@ -598,6 +633,7 @@ def main():
     type_text(qmp, "clear; pkill -x qs; sleep 4; grep -a robinos-shell .local/state/robinos/shell.log\n")
     wait(7)
     shot(qmp, "shell-restarted")
+    check_scene(qmp, "shell-restarted")
 
     # A file GTK apps noted as opened (recently-used.xbel): the empty launcher lists it
     # under "최근 파일" in light-launcher, like the Start menu's recommended files
@@ -612,6 +648,7 @@ def main():
     type_text(qmp, "robinctl learn\n")
     wait(2)
     shot(qmp, "light-terminal")
+    check_scene(qmp, "light")
     keys(qmp, "meta_l", "spc")
     wait(3)
     shot(qmp, "light-launcher")
@@ -678,6 +715,7 @@ def main():
     wait(2)
     type_text(qmp, "qs ipc -p /usr/share/robinos/shell call shell setDark true\n")
     wait(3)
+    check_scene(qmp, "dark")
 
     keys(qmp, "meta_l", "l")
     wait(5)
@@ -690,6 +728,13 @@ def main():
         qmp.execute("quit")
     except RuntimeError:
         pass  # QEMU closes the socket while quitting
+
+    print("\nScene checks (e2e-check.sh):", flush=True)
+    for name, verdict in results.items():
+        print(f"  {name}: {verdict}", flush=True)
+    failed = [name for name, verdict in results.items() if not verdict.startswith("PASS")]
+    if failed:
+        raise RuntimeError(f"scene checks failed: {', '.join(failed)}")
 
 
 if __name__ == "__main__":

@@ -88,6 +88,19 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 boot-test
 ```
 
+### 상태로 판정하는 장면
+
+스크린샷만 찍는 테스트는 화면이 틀려도 통과해요(2026-10-12: 터미널이 하나도 안 열렸는데 "통과"). 그래서 꼭 동작해야 하는 장면은 찍은 뒤 터미널에 `bash /opt/robinos/scripts/e2e-check.sh <장면>`을 쳐서 VM 안의 상태로 확인해요. 결과는 저널을 거쳐 `serial.log`에 `scenario=<장면> status=PASS|FAIL <근거>`로 남고, 테스트 끝에 모아서 보여 줘요. 하나라도 `FAIL`이거나 결과가 없으면 부팅 테스트가 실패해요.
+
+| 장면 | 확인하는 것 |
+|---|---|
+| `terminal` | `Super+Enter`로 연 창이 Ptyxis예요. 실패하면 tty3에서 진단하고 바로 멈춰요 |
+| `mission-1` | `robinctl learn check 1`이 통과해요 |
+| `maximized`, `restored` | `Super+↑` 뒤 창이 최대화(`fullscreen` 1)돼서 바 아래, 독 위에 있고 화면의 70% 넘게 차지해요. `Super+↓` 두 번 뒤에는 최대화가 풀려요 |
+| `count-save`, `one-more` | 새 작업 공간에서 `Super+Enter`를 누르면 Ptyxis 창이 딱 하나 늘어나요 |
+| `shell-restarted` | 셸을 끈 뒤 새 `qs`가 돌고 IPC에 답해요 |
+| `light`, `dark` | 셸이 저장한 값(`appearance.json`)과 GTK 설정(`color-scheme`)이 둘 다 바뀌어요 |
+
 스크린샷과 `serial.log`는 `build\boot-test`에 생겨요. 테스트는 `robinos.debug`를 붙여 부팅해서 `robinos-session`이 Hyprland와 셸 출력을 저널로 보내고, 그 내용이 `serial.log`에 남아요. 셸이 안 뜨면 여기서 QML 오류를 찾으세요.
 
 Windows용 QEMU가 준비돼 있으면 WHPX 가속으로 돌아요([build-environment.md](build-environment.md)). 없으면 WSL 안에서 소프트웨어 에뮬레이션(TCG)으로 돌고, 기다리는 시간을 4배로 늘려요. TCG에서는 VM이 느려서 키 입력이 반복될 수 있으니, 이상한 결과가 나오면 테스트 탓인지 먼저 가려요.
