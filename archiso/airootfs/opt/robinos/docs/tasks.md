@@ -10,7 +10,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 작업 | 시작 | 대상 | 결과 위치 | 상태 |
 |---|---|---|---|---|
-| (없음) | | | | |
+| "환영 마법사 첫 화면을 새 목적으로" (2026-10-12) | `Welcome.qml` 첫 화면 설명 한 줄("쓰다 보면 리눅스를 알게 되는 OS예요."). qmllint 통과 | 다음 묶음 검증(`verify -Installer robinos`)의 환영 마법사 장면. T-151 화면 문구와 함께 | | |
 
 ## 정기 점검
 
@@ -41,7 +41,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (없음) | | |
+| "환영 마법사 첫 화면을 새 목적으로" (2026-10-12) | `Welcome.qml` 첫 화면 설명 한 줄("쓰다 보면 리눅스를 알게 되는 OS예요."). qmllint 통과 | 다음 묶음 검증(`verify -Installer robinos`)의 환영 마법사 장면. T-151 화면 문구와 함께 |
 
 `e82be3c`까지 2026-10-12 묶음 72 검증(`verify` 빌드·부팅 테스트, 설치 테스트는 시험 고친 뒤 다시)을 마치고 푸시했어요.
 
@@ -77,7 +77,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ### T-151 정체성 문구를 화면에
 - 상태: 진행 중
 - 출처: 설계 점검(2026-10-10) "정체성 문구". 2026-10-12에 목적을 "쓰다 보면 리눅스를 알게 되는 OS"로 정해서(design.md "목적 결정") 화면에 넣을 말이 생겼어요
-- 한 것(2026-10-12): 로고 한 줄 소개를 "쓰다 보면 리눅스를 알게 되는 OS"로 바꾸고 `build-logo.py`로 SVG를 다시 만듦, 환영 마법사 첫 화면 문구
+- 한 것(2026-10-12): 로고 한 줄 소개를 "쓰다 보면 리눅스를 알게 되는 OS"로 바꾸고 `build-logo.py`로 SVG를 다시 만듦(푸시함), 환영 마법사 첫 화면 문구(푸시 대기)
 - 남은 것: 로그인·잠금 화면의 "허가받은 환경에서만 쓰는 보안 학습용 시스템이에요"를 새 한 줄 소개로(윤리 안내는 학습 센터·랩·motd·ethics.md에 그대로), 설치본 부팅 메뉴의 "Security Learning Workstation"과 "Use only for legal learning, CTF practice, and authorized testing.", 라이브 부팅 메뉴 이름 "RobinOS Security Learning Live"(`scripts/customize-iso-boot.sh`, testing.md), 터미널 인사 "RobinOS 보안 학습 환경"(`desktop/bash/robinos-bashrc.sh`, fastfetch가 없을 때), `config/robinos.toml`의 `purpose = "security-learning"`(읽는 코드가 없는지 먼저 확인). README의 학습 센터 스크린샷이 "1 / 40"이라 다시 찍기. 끝나면 소개 영상의 부팅 메뉴를 가린 부분을 새 스크린샷으로 바꾸기
 - 완료 기준: 부팅 테스트의 SDDM·잠금 화면 장면, 설치 테스트의 부팅 메뉴 스크린샷, README 로고
 

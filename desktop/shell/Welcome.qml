@@ -18,7 +18,7 @@ PanelWindow {
     property string goal: "basics"
 
     readonly property var steps: [
-        { title: "RobinOS에 오신 걸 환영해요", desc: "윈도우에서 넘어와 매일 쓰는 컴퓨터예요. 쓰다 보면 리눅스와 보안 실력이 늘어요. 몇 가지만 고르면 바로 시작할 수 있어요." },
+        { title: "RobinOS에 오신 걸 환영해요", desc: "쓰다 보면 리눅스를 알게 되는 OS예요. 몇 가지만 고르면 바로 시작할 수 있어요." },
         { title: "화면 모양을 골라요", desc: "나중에 빠른 설정(Win+S)에서 언제든 바꿀 수 있어요." },
         { title: "한/영 전환 키를 골라요", desc: "한/영 키와 오른쪽 Alt로는 언제나 한/영을 바꿀 수 있어요. 함께 쓸 단축키를 하나 더 고르세요." },
         { title: "무엇부터 해 볼까요?", desc: "고른 것은 마지막에 바로 열려요. 나머지도 런처에서 언제든 시작할 수 있어요." },
