@@ -70,7 +70,7 @@ FloatingWindow {
                     spacing: 2
 
                     Text {
-                        text: root.program ? root.program.name + "는 윈도우용 설치 파일이에요" : "윈도우 프로그램은 바로 실행되지 않아요"
+                        text: root.program ? root.program.name + " 윈도우용 설치 파일이에요" : "윈도우 프로그램은 바로 실행되지 않아요"
                         color: Theme.fg
                         font.family: Theme.font
                         font.pixelSize: 17
