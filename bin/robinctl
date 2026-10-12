@@ -44,6 +44,7 @@ robinctl - RobinOS 관리 도구
   robinctl snapshot list                스냅샷 목록
   robinctl snapshot setup [--dry-run]   스냅샷 설정 (Btrfs 루트, 처음 한 번)
   robinctl snapshot rollback <번호>     그 스냅샷으로 시스템 되돌리기
+  robinctl snapshot booted              스냅샷으로 켰으면 그 번호와 설명
   robinctl profile list                 보안 실습 프로필 보기 (network, web, ...)
   robinctl profile <이름> [--dry-run]   그 프로필의 도구 설치 (security는 전부)
   robinctl packages core                기본 패키지 목록
@@ -392,8 +393,10 @@ doctor() {
     check_line "업데이트 자동 스냅샷 (snap-pac)" "${snap_pac}" "sudo robinctl snapshot setup"
     check_line "부팅 메뉴 스냅샷 (grub-btrfs)" "${grub_btrfs}" "sudo robinctl snapshot setup"
   elif [[ "${fstype}" == "overlay" ]] && root_on_btrfs; then
-    printf '  루트 파일 시스템: 스냅샷으로 부팅한 상태예요. 바꾼 내용은 재부팅하면 사라져요.\n'
-    printf '    이 상태로 되돌리려면: sudo robinctl snapshot rollback <번호>\n'
+    local booted
+    booted="$(snapshot_booted)" && booted="${booted%%$'\t'*}" || booted="<번호>"
+    printf '  루트 파일 시스템: 스냅샷 %s번으로 부팅한 상태예요. 바꾼 내용은 재부팅하면 사라져요.\n' "${booted}"
+    printf '    이 상태로 되돌리려면: sudo robinctl snapshot rollback %s\n' "${booted}"
   else
     printf '  루트 파일 시스템: %s (스냅샷은 Btrfs 설치에서만 써요)\n' "${fstype}"
   fi
@@ -746,6 +749,17 @@ snapshot_setup() {
 # Makes snapshot N the system: the current @ is kept as @.broken-<time> and a
 # writable copy of the snapshot becomes @. Takes effect after a reboot. Works
 # from the normal system or after booting the snapshot from the GRUB menu.
+# The snapshot this system was started from in the boot menu's "RobinOS snapshots"
+# (grub-btrfs puts rootflags=subvol=@snapshots/N/snapshot on the kernel line):
+# "N<TAB>description". Nothing, and status 1, on a normal start.
+snapshot_booted() {
+  local number description
+  number="$(sed -E -n 's:.*rootflags=([^ ]*,)?subvol=/?@snapshots/([0-9]+)/snapshot.*:\2:p' "${ROBINOS_CMDLINE:-/proc/cmdline}")"
+  [[ -n "${number}" ]] || return 1
+  description="$(sed -n 's:.*<description>\(.*\)</description>.*:\1:p' "${ROBINOS_SNAPSHOT_DIR:-/.snapshots}/${number}/info.xml" 2>/dev/null)"
+  printf '%s\t%s\n' "${number}" "${description}"
+}
+
 snapshot_rollback() {
   local number="${1:-}"
   [[ "${number}" =~ ^[0-9]+$ ]] ||
@@ -3766,8 +3780,11 @@ main() {
         rollback)
           snapshot_rollback "${2:-}" "${3:-}"
           ;;
+        booted)
+          snapshot_booted
+          ;;
         *)
-          die "사용법: robinctl snapshot create|list|setup|rollback"
+          die "사용법: robinctl snapshot create|list|setup|rollback|booted"
           ;;
       esac
       ;;

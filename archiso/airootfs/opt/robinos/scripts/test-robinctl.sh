@@ -592,6 +592,17 @@ said "audit ends with a count or an all-clear" "살펴볼"
 # The test's home is chmod 777 (root owns it, so the learner can't tighten it)
 said "audit says the home folder is open to others" "홈 폴더 권한이 777"
 
+printf '%s\n' "snapshot booted: the snapshot the boot menu started, from the kernel line"
+SNAPS="${WORK}/snaps"
+mkdir -p "${SNAPS}/7"
+printf '<snapshot><description>pacman -S cowsay</description></snapshot>\n' >"${SNAPS}/7/info.xml"
+printf 'BOOT_IMAGE=/@/boot/vmlinuz-linux root=UUID=x rw rootflags=subvol=@\n' >"${WORK}/cmdline-normal"
+printf 'BOOT_IMAGE=/@snapshots/7/snapshot/boot/vmlinuz-linux root=UUID=x rw rootflags=subvol=@snapshots/7/snapshot\n' >"${WORK}/cmdline-snap"
+booted() { ROBINOS_CMDLINE="${WORK}/cmdline-$1" ROBINOS_SNAPSHOT_DIR="${SNAPS}" bash "${ROBINCTL}" snapshot booted; }
+check "a normal start is no snapshot" fail booted normal
+check "a snapshot start gives its number" 0 booted snap
+said "with its description" "pacman -S cowsay"
+
 printf '%s\n' "app remove: RobinOS's own apps stay, others go through pacman"
 APPS="${WORK}/apps"
 mkdir -p "${APPS}"

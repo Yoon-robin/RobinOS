@@ -703,6 +703,10 @@ def phase_snapshot_boot(con, qmp):
             and fstype != "overlay":
         raise RuntimeError(f"/ is {fstype}, not the overlay grub-btrfs-overlayfs should give")
     con.run("robinctl doctor | tail -n 3", check=False)
+    # What the desktop's notice reads (robinos-snapshot-notice, T-153)
+    _, booted = con.capture("robinctl snapshot booted")
+    if booted.strip().split("\t")[0] != str(pre):
+        raise RuntimeError(f"robinctl snapshot booted says {booted.strip()!r}, not snapshot {pre}")
 
     log(f"rolling back to snapshot {pre} from inside it")
     con.run(f"robinctl snapshot rollback {pre} --yes")

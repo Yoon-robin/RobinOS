@@ -97,9 +97,10 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: 처음 쓰는 사람이 단축키 없이 터미널 창을 마우스로 옮기고 닫을 수 있음. 부팅 테스트에 끌어서 옮기는 장면
 
 ### T-153 스냅샷으로 켰을 때 알려 주고 화면에서 되돌리기
-- 상태: 할 일
+- 상태: 진행 중
 - 출처: ChatGPT 검토(2026-10-12). [recovery.md](recovery.md)대로 부팅 메뉴에서 스냅샷을 골라 켜면 그 상태는 임시예요(grub-btrfs 오버레이). 완전히 되돌리려면 `sudo robinctl snapshot rollback`을 쳐야 하는데, 처음 쓰는 사람은 이미 되돌려졌다고 생각하기 쉬워요
 - 할 것: 셸이 스냅샷으로 켠 것을 알아채면(`/proc/cmdline`의 `rootflags=subvol=@snapshots/...` 또는 `robinctl snapshot status`) 바 아래에 알림: "업데이트 전 상태로 켰어요(임시). 이 상태로 되돌릴까요?" [되돌리기] [그냥 둘게요]. 되돌리기는 관리자 확인 뒤 `robinctl snapshot rollback`을 돌리고 다시 시작을 권해요
+- 한 것(2026-10-12, `work/batch74`): `robinctl snapshot booted`(커널 줄의 `rootflags=subvol=@snapshots/N/snapshot`에서 번호, `/.snapshots/N/info.xml`에서 설명), `desktop/bin/robinos-snapshot-notice`(로그인 때 Hyprland가 실행. 알림 "스냅샷 N번으로 켰어요"와 [이 상태로 되돌리기] [나중에], 되돌리기는 pkexec 비밀번호 창으로 `robinctl snapshot rollback N --yes`, 끝나면 [지금 다시 시작]). doctor도 번호를 말해요. test-robinctl.sh에 가짜 커널 줄 시험, 설치 테스트 snapshot-boot 단계에서 번호 확인. 남은 것: 설치 테스트에서 알림과 단추를 화면으로 확인(그 단계는 콘솔 로그인이라 데스크톱이 없어요)
 - 완료 기준: 터미널 없이 이전 상태로 돌아가고 다시 켜도 유지됨. 설치 테스트 rollback 단계에 알림과 버튼 장면
 
 ### T-152 shadcn × macOS: 질감과 움직임

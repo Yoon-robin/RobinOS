@@ -99,6 +99,8 @@ hl.on("hyprland.start", function()
     -- Keeps the shell running and falls back to software drawing when Qt can't use the GPU
     hl.exec_cmd(bin_dir .. "/robinos-shell")
     hl.exec_cmd(bin_dir .. "/robinos-vm-display")
+    -- Started from a snapshot in the boot menu: say so and offer to keep it (T-153)
+    hl.exec_cmd(bin_dir .. "/robinos-snapshot-notice")
     hl.exec_cmd("fcitx5 -d --replace")
     hl.exec_cmd("hypridle -c " .. hypr_dir .. "/hypridle.conf")
     hl.exec_cmd("systemctl --user start hyprpolkitagent.service")

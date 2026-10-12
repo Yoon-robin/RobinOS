@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# After a start from a snapshot in the boot menu (docs/recovery.md), says so and
+# offers to keep that state (docs/tasks.md T-153). Without it, someone new to Linux
+# thinks the system is already back the way it was, and the next start brings the
+# broken state again. Started with the session (desktop/hypr/robinos.lua).
+set -uo pipefail
+
+robinctl="$(command -v robinctl)" || exit 0
+line="$("${robinctl}" snapshot booted)" || exit 0
+number="${line%%$'\t'*}"
+description=""
+[[ "${line}" == *$'\t'* ]] && description="${line#*$'\t'}"
+
+# The shell's notification server starts together with this script
+sleep 4
+
+body="지금은 임시 상태예요. 다시 켜면 원래 시스템으로 돌아가요."
+[[ -n "${description}" ]] && body="${body} 스냅샷: ${description}"
+action="$(notify-send --app-name=RobinOS --urgency=critical \
+  --action=rollback="이 상태로 되돌리기" --action=later="나중에" \
+  "스냅샷 ${number}번으로 켰어요" "${body}")"
+[[ "${action}" == "rollback" ]] || exit 0
+
+# pkexec asks for the password in a window (hyprpolkitagent): no terminal needed
+log="${XDG_RUNTIME_DIR:-/tmp}/robinos-rollback.log"
+if pkexec "${robinctl}" snapshot rollback "${number}" --yes >"${log}" 2>&1; then
+  action="$(notify-send --app-name=RobinOS --urgency=critical --action=reboot="지금 다시 시작" \
+    "스냅샷 ${number}번으로 되돌렸어요" \
+    "다시 시작하면 그 상태로 켜져요. 지금 시스템은 @.broken-<시각>으로 남겨 뒀어요.")"
+  [[ "${action}" == "reboot" ]] && systemctl reboot
+else
+  notify-send --app-name=RobinOS --urgency=critical "되돌리지 못했어요" \
+    "터미널에서 sudo robinctl snapshot rollback ${number}로 다시 해 보세요. 기록: ${log}"
+fi
