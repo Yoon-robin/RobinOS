@@ -18,8 +18,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-10-12 (오후 4시) | `3b08949` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 14.9분) | 통과. 묶음 77·78: Ptyxis 터미널, 스냅샷 알림과 바의 "스냅샷 N · 임시", 패널 스프링. 처음 두 번은 "통과"였지만 터미널 장면에 창이 없었어요: 새 스크립트가 profiledef.sh의 file_permissions에 없어 라이브에서 644였고, boot-test-qmp.py가 멈춰도 0으로 끝나서 검증이 실패를 못 봤어요. 둘 다 고치고(정적 검증이 권한 목록 확인, 멈춘 시나리오는 실패, 터미널이 안 열리면 tty3 진단) 미션 터미널의 빈 창 하나(--new-window와 명령을 같이 줌)도 고친 뒤 통과. 스크린샷에서 Ptyxis 창과 미션 내용 확인 |
 | 2026-10-12 (오후 3시) | `5b1facd` 테스트 ISO | robin PC에서 `verify -Installer robinos` | 통과. 묶음 76: Spotlight 같은 런처, 제어 센터 같은 빠른 설정, 환영 화면 "망가져도 되돌리기", 디자인 문서, 설정 창(`light-settings`, `light-settings-about`: Win+I로 열리고 정보 페이지에 버전·CPU·메모리) |
-| 2026-10-12 (오후 2시 반) | `3ab6a33` 테스트 ISO | robin PC에서 `verify -Installer robinos` | 통과. 묶음 75: T-152 ①②(유리, 배경화면 빛), 부팅·로그인·잠금 화면은 이름만, 라이브 하드웨어 시계 LOCAL. 설치본 부팅 메뉴는 "RobinOS"만, 로그인 화면 아래 줄 없음, 환영 화면 뒤에 빨강 빛. VMware(GPU) 라이브에서 시계가 바로 맞는 것도 확인 |
 
 ## 품질 점검 기록
 
@@ -41,9 +41,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| `576fac8` T-154 Ptyxis, `4a54583` T-153 스냅샷 알림, `818adef` T-152 ⑤ 패널 스프링, 런처의 "명령 프롬프트"를 Ptyxis로 (2026-10-12) | `ready.ps1 -Check`(robinctl 시험 포함) 통과 | 묶음 검증: 터미널이 열리는 장면 전부(미션, 최소화, Alt+F4), 설치 테스트 snapshot-boot의 `snapshot booted` |
+| `d734c21` 최대화 단추와 셸 창 높이, 터미널 한글 폭(fontconfig) (2026-10-12) | `ready.ps1 -Check` 통과 | 묶음 검증: `learn-center-maximized` 장면, 미션 터미널의 한글 간격 |
 
-`5b1facd`까지 2026-10-12 묶음 76 검증(`verify -Installer robinos`)을 마치고 푸시했어요.
+`3b08949`까지 2026-10-12 묶음 77·78 검증(`verify -Installer robinos`)을 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
