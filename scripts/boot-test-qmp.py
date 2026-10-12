@@ -175,16 +175,21 @@ def diagnose_on_tty(qmp, tag, commands):
 results = {}
 
 
-def check_scene(qmp, name, timeout=30):
+def check_scene(qmp, name, label=None, timeout=30):
     """Types `e2e-check.sh <name>` into the focused terminal, which checks the scene's
     state inside the guest and logs "scenario=<name> status=PASS|FAIL" (T-155). The
-    scenario goes on after a failure; main() fails the test at the end."""
+    scenario goes on after a failure; main() fails the test at the end. label names
+    the result when a scene is checked more than once; only the serial log written
+    after the command was typed counts."""
+    label = label or name
+    path = os.path.join(OUT, "serial.log")
+    start = os.path.getsize(path) if os.path.exists(path) else 0
     type_text(qmp, f"clear; bash /opt/robinos/scripts/e2e-check.sh {name}\n")
     marker = f"scenario={name} status=".encode()
-    path = os.path.join(OUT, "serial.log")
     deadline = time.time() + timeout * SPEED
     while time.time() < deadline:
         with open(path, "rb") as f:
+            f.seek(start)
             data = f.read()
         at = data.find(marker)
         if at != -1:
@@ -192,12 +197,12 @@ def check_scene(qmp, name, timeout=30):
             line = data[at:end if end != -1 else len(data)].decode(errors="replace")
             # The console colors the forwarded journal line; keep the words only
             line = re.sub(r"\x1b\[[0-9;]*m", "", line).strip()
-            results[name] = line.split("status=", 1)[1]
-            print(f"check: {line}", flush=True)
-            return results[name].startswith("PASS")
+            results[label] = line.split("status=", 1)[1]
+            print(f"check: {label}: {line}", flush=True)
+            return results[label].startswith("PASS")
         time.sleep(1)
-    results[name] = "missing (no verdict in the serial log)"
-    print(f"check: scenario={name} missing", flush=True)
+    results[label] = "missing (no verdict in the serial log)"
+    print(f"check: {label}: missing", flush=True)
     return False
 
 
@@ -670,13 +675,16 @@ def main():
     keys(qmp, "esc")
     wait(2)
     # The learning center opened again after Alt+F4 closed it: mission 1 is ticked off
+    check_scene(qmp, "count-save", "count-save-mission")
     type_text(qmp, "clear; " + ipc + "learnCenter\n")
     wait(3)
     shot(qmp, "light-learn-center")
-    # Clicking a mission opens it in a terminal (mission 2's row)
+    # Clicking a mission opens it in a terminal (mission 2's row): one new Ptyxis
+    # window, which has the focus and takes commands after the mission text
     click(qmp, 800, 437)
     wait(4)
     shot(qmp, "learn-center-mission")
+    check_scene(qmp, "one-more", "mission-terminal")
     keys(qmp, "alt", "f4")  # the new terminal has the focus
     wait(2)
     # At the end of the list, the ten CTF challenges as one more group
