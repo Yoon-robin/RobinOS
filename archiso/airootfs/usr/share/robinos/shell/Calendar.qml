@@ -101,10 +101,10 @@ PanelWindow {
         anchors.topMargin: Theme.barHeight + 6
         width: 304
         height: content.implicitHeight + 28
-        radius: Theme.radiusLg
-        color: Theme.surface
+        radius: Theme.radiusPanel
+        color: Theme.glass
         border.width: 1
-        border.color: Theme.border
+        border.color: Theme.glassBorder
         opacity: root.revealed ? 1 : 0
         focus: true
 

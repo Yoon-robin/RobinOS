@@ -150,11 +150,13 @@ hl.config({
             color        = 0x66000000,
         },
 
+        -- Wide and soft, so the glass panels (Theme.glass, T-152) show the desktop's
+        -- colour without its detail
         blur = {
             enabled  = true,
-            size     = 6,
+            size     = 10,
             passes   = 3,
-            vibrancy = 0.17,
+            vibrancy = 0.22,
         },
     },
 
@@ -463,6 +465,15 @@ hl.layer_rule({
     name  = "robinos-launcher-blur",
     match = { namespace = "^robinos-launcher$" },
     blur  = true,
+})
+
+-- Floating panels are full-screen layers with one translucent card (Theme.glass);
+-- ignore_alpha keeps the blur under the card and off the clear area and the shadow
+hl.layer_rule({
+    name         = "robinos-panel-blur",
+    match        = { namespace = "^robinos-(quicksettings|calendar|connect|sound|notifications|toasts|osd|alttab|shortcuts|menu|desktopmenu|dockmenu|quicklinks)$" },
+    blur         = true,
+    ignore_alpha = 0.5,
 })
 
 hl.layer_rule({

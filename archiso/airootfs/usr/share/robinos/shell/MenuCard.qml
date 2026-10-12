@@ -19,10 +19,10 @@ Rectangle {
 
     width: 260
     height: list.implicitHeight + 12
-    radius: Theme.radiusLg
-    color: Theme.surface
+    radius: Theme.radiusPanel
+    color: Theme.glass
     border.width: 1
-    border.color: Theme.border
+    border.color: Theme.glassBorder
 
     layer.enabled: !Theme.lowPower
     layer.effect: MultiEffect {

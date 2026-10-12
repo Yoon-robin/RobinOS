@@ -123,10 +123,10 @@ PanelWindow {
         anchors.centerIn: parent
         width: Math.min(parent.width - 48, 1120)
         height: content.implicitHeight + 56
-        radius: Theme.radiusLg
-        color: Theme.surface
+        radius: Theme.radiusPanel
+        color: Theme.glass
         border.width: 1
-        border.color: Theme.border
+        border.color: Theme.glassBorder
         opacity: root.revealed ? 1 : 0
         scale: root.revealed ? 1 : 0.98
         focus: true

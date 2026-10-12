@@ -60,9 +60,9 @@ PanelWindow {
     Rectangle {
         anchors.fill: parent
         radius: height / 2
-        color: Theme.surface
+        color: Theme.glass
         border.width: 1
-        border.color: Theme.border
+        border.color: Theme.glassBorder
 
         RowLayout {
             anchors.fill: parent

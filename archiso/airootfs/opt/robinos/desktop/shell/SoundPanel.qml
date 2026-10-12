@@ -199,10 +199,10 @@ PanelWindow {
         anchors.rightMargin: 8
         width: 340
         height: Math.min(content.implicitHeight + 28, parent.height - Theme.barHeight - 120)
-        radius: Theme.radiusLg
-        color: Theme.surface
+        radius: Theme.radiusPanel
+        color: Theme.glass
         border.width: 1
-        border.color: Theme.border
+        border.color: Theme.glassBorder
         opacity: root.revealed ? 1 : 0
         focus: true
         clip: true

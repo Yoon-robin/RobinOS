@@ -755,10 +755,10 @@ PanelWindow {
         y: Math.round(parent.height * 0.17)
         width: 640
         height: column.implicitHeight
-        radius: Theme.radiusLg
-        color: Theme.surface
+        radius: Theme.radiusPanel
+        color: Theme.glass
         border.width: 1
-        border.color: Theme.border
+        border.color: Theme.glassBorder
         clip: true
         opacity: root.revealed ? 1 : 0
         scale: root.revealed ? 1 : 0.98

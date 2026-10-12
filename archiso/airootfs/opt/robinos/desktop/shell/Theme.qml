@@ -50,8 +50,16 @@ Singleton {
     readonly property color success: dark ? "#4ade80" : "#16a34a"
     readonly property color destructive: dark ? "#f87171" : "#dc2626"
     readonly property color destructiveSolid: "#dc2626"
-    readonly property color barBg: dark ? Qt.rgba(9 / 255, 9 / 255, 11 / 255, 0.72) : Qt.rgba(1, 1, 1, 0.78)
-    readonly property color dockBg: dark ? Qt.rgba(18 / 255, 18 / 255, 20 / 255, 0.82) : Qt.rgba(1, 1, 1, 0.85)
+    // Glass (T-152, shadcn x macOS): the bar, the dock and floating panels are
+    // translucent and Hyprland blurs the desktop behind them (robinos.lua layer
+    // rules). Without a GPU (lowPower) Hyprland has no blur, so they stay nearly solid.
+    readonly property color barBg: dark ? Qt.rgba(9 / 255, 9 / 255, 11 / 255, lowPower ? 0.72 : 0.55)
+                                        : Qt.rgba(1, 1, 1, lowPower ? 0.78 : 0.62)
+    readonly property color dockBg: dark ? Qt.rgba(18 / 255, 18 / 255, 20 / 255, lowPower ? 0.82 : 0.58)
+                                         : Qt.rgba(1, 1, 1, lowPower ? 0.85 : 0.64)
+    readonly property color glass: lowPower ? surface
+                                            : dark ? Qt.rgba(24 / 255, 24 / 255, 27 / 255, 0.70) : Qt.rgba(1, 1, 1, 0.72)
+    readonly property color glassBorder: dark ? Qt.rgba(1, 1, 1, 0.13) : Qt.rgba(0, 0, 0, 0.10)
     readonly property color scrim: dark ? Qt.rgba(0, 0, 0, 0.55) : Qt.rgba(0, 0, 0, 0.25)
     readonly property color shadow: dark ? Qt.rgba(0, 0, 0, 0.7) : Qt.rgba(0, 0, 0, 0.18)
 
@@ -59,6 +67,7 @@ Singleton {
     readonly property int radiusMd: 8
     readonly property int radius: 10
     readonly property int radiusLg: 14
+    readonly property int radiusPanel: 16
     readonly property int radiusDock: 18
 
     readonly property int barHeight: 36
