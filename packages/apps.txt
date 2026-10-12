@@ -21,6 +21,9 @@ baobab
 # App store for Flathub apps (flatpak ships the Flathub remote). Without
 # PackageKit it never touches pacman; robinctl update updates its apps too.
 gnome-software
+# Firmware updates (LVFS) for the PC's BIOS, SSD and devices; gnome-software
+# lists them under its updates when fwupd is installed
+fwupd
 
 # Video and music: GNOME's players ("동영상 재생 앱", "오디오 재생기"; "미디어
 # 플레이어", "그루브 음악" in the launcher). gst-libav plays H.264/AAC (MP4) through

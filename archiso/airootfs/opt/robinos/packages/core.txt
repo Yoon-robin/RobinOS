@@ -2,6 +2,11 @@
 base
 linux
 linux-firmware
+# Same hardware support as the live ISO: sound on recent Intel/AMD laptops (SOF),
+# Marvell Wi-Fi, and the wireless regulatory database for the local channels
+sof-firmware
+linux-firmware-marvell
+wireless-regdb
 networkmanager
 sudo
 git
