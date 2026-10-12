@@ -391,6 +391,11 @@ Singleton {
         learnCenterOpen = true;
     }
 
+    // Height free for a window between the bar and the dock on the first screen, so
+    // the shell's own windows open without the dock covering their bottom on small
+    // screens (a 1280x800 VM, 2026-10-12)
+    readonly property int windowRoom: (Quickshell.screens[0]?.height ?? 900) - Theme.barHeight - 96
+
     // ---- Settings (Settings.qml, Win+I) ----
 
     property bool settingsOpen: false

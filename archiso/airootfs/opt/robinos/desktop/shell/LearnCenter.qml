@@ -40,7 +40,7 @@ FloatingWindow {
     visible: ShellState.learnCenterOpen
     title: "학습 센터"
     implicitWidth: 760
-    implicitHeight: 660
+    implicitHeight: Math.max(520, Math.min(660, ShellState.windowRoom))
     minimumSize: Qt.size(620, 520)
     color: Theme.bg
 

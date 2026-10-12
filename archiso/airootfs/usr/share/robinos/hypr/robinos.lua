@@ -427,11 +427,10 @@ robinos.floatByDefault = hl.window_rule({
     float = true,
 })
 
-hl.window_rule({
-    name  = "suppress-maximize-events",
-    match = { class = ".*" },
-    suppress_event = "maximize",
-})
+-- Apps' own maximize requests are honoured (Hyprland's example config drops them):
+-- the maximize button on a title bar fills the space between the bar and the dock,
+-- like on Windows, and a second press (or Win+Down) brings the window back
+-- (2026-10-12: the learning center's button did nothing)
 
 hl.window_rule({
     name  = "fix-xwayland-drags",

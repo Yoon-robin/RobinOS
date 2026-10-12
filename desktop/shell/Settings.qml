@@ -27,7 +27,7 @@ FloatingWindow {
     visible: ShellState.settingsOpen
     title: "설정"
     implicitWidth: 860
-    implicitHeight: 600
+    implicitHeight: Math.max(480, Math.min(600, ShellState.windowRoom))
     minimumSize: Qt.size(720, 480)
     color: Theme.bg
 

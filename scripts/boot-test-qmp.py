@@ -627,6 +627,13 @@ def main():
         click(qmp, 800, 500, "wheel-down")
     wait(1)
     shot(qmp, "learn-center-ctf")
+    # Its maximize button fills the space between the bar and the dock (Hyprland
+    # used to drop apps' maximize requests, 2026-10-12); Win+Down brings it back
+    click(qmp, 1120, 102)
+    wait(2)
+    shot(qmp, "learn-center-maximized")
+    keys(qmp, "meta_l", "down")
+    wait(2)
     # The learning center's own close button (its title bar, top right)
     click(qmp, 1156, 102)
     wait(2)
