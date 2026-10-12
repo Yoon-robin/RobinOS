@@ -87,6 +87,17 @@ sudo rm -rf "${WORK_DIR}"
 rm -f "${OUT_DIR}"/robinos-*.iso
 sudo mkarchiso -v -w "${WORK_DIR}" -o "${OUT_DIR}" "${ROOT_DIR}/build/archiso-profile" 2>&1 | tee "${LOG_FILE}"
 
+# Every RobinOS command in the built live system must be executable. mkarchiso sets
+# modes only from profiledef.sh's file_permissions, and a script missing there came
+# out 644: no terminal at all on the live ISO (2026-10-12)
+not_executable="$(sudo find "${WORK_DIR}/x86_64/airootfs/usr/share/robinos/bin" \
+  "${WORK_DIR}/x86_64/airootfs/usr/local/bin" -type f ! -perm -u+x 2>/dev/null || true)"
+if [[ -n "${not_executable}" ]]; then
+  printf 'error: not executable in the live ISO (add them to archiso/profiledef.sh file_permissions):\n%s\n' \
+    "${not_executable}" >&2
+  exit 1
+fi
+
 mapfile -t iso_files < <(find "${OUT_DIR}" -maxdepth 1 -type f -name 'robinos-*.iso' -print | sort)
 
 if [[ "${#iso_files[@]}" -eq 0 ]]; then

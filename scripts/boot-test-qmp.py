@@ -72,6 +72,14 @@ class Qmp:
                 continue
             return reply
 
+    def act(self, command, **arguments):
+        """execute() for input: a key or pointer event QEMU refused stops the test
+        instead of the scenario going on without it (third ChatGPT review)."""
+        reply = self.execute(command, **arguments)
+        if "error" in reply:
+            raise RuntimeError(f"QMP {command} failed: {reply['error']}")
+        return reply
+
 
 def wait(seconds):
     time.sleep(seconds * SPEED)
@@ -79,7 +87,7 @@ def wait(seconds):
 
 def keys(qmp, *names):
     """Press a key combination, e.g. keys(qmp, "meta_l", "spc")."""
-    qmp.execute("send-key", keys=[{"type": "qcode", "data": n} for n in names], **{"hold-time": 80})
+    qmp.act("send-key", keys=[{"type": "qcode", "data": n} for n in names], **{"hold-time": 80})
     # A slow (TCG) guest that falls behind sees the release late and auto-repeats
     # the key, so give it time to catch up between keys. Faster typing (20 ms a key)
     # left Shift stuck halfway through long text, so keep this pace.
@@ -88,7 +96,7 @@ def keys(qmp, *names):
 
 def hold(qmp, key, down):
     """Press (down=True) or let go of a key, for shots taken while it is held."""
-    qmp.execute("input-send-event", events=[{"type": "key", "data": {"down": down, "key": {"type": "qcode", "data": key}}}])
+    qmp.act("input-send-event", events=[{"type": "key", "data": {"down": down, "key": {"type": "qcode", "data": key}}}])
     time.sleep(0.15 * SPEED)
 
 
@@ -97,7 +105,7 @@ SCREEN = (1600, 900)  # the VGA mode in boot-test.sh and wsl-build.ps1
 
 def move(qmp, x, y):
     """Move the pointer to screen pixel (x, y) through the usb-tablet (absolute 0..32767)."""
-    qmp.execute("input-send-event", events=[
+    qmp.act("input-send-event", events=[
         {"type": "abs", "data": {"axis": "x", "value": round(x * 32767 / (SCREEN[0] - 1))}},
         {"type": "abs", "data": {"axis": "y", "value": round(y * 32767 / (SCREEN[1] - 1))}},
     ])
@@ -108,7 +116,7 @@ def click(qmp, x, y, button="left"):
     """Click at screen pixel (x, y)."""
     move(qmp, x, y)
     for down in (True, False):
-        qmp.execute("input-send-event", events=[{"type": "btn", "data": {"down": down, "button": button}}])
+        qmp.act("input-send-event", events=[{"type": "btn", "data": {"down": down, "button": button}}])
         time.sleep(0.1 * SPEED)
 
 
@@ -285,10 +293,11 @@ def main():
 
     keys(qmp, "meta_l", "ret")
     wait(6)
-    # The terminal (Ptyxis, robinos-terminal) really opened and runs what is typed
-    type_text(qmp, "logger -t robinos-boot-test terminal-open\n")
+    # The terminal really opened, runs what is typed, and is Ptyxis (not the foot
+    # fallback): the marker is logged only after the check passes
+    type_text(qmp, "hyprctl activewindow -j | grep -q org.gnome.Ptyxis && logger -t robinos-boot-test terminal-ptyxis\n")
     try:
-        expect_serial("terminal-open")
+        expect_serial("terminal-ptyxis")
     except RuntimeError:
         diagnose_on_tty(qmp, "robinos-diag", [
             "ls -l /usr/share/robinos/bin/robinos-terminal; command -v ptyxis foot",
