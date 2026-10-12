@@ -5,6 +5,7 @@ RobinOS에는 부팅 브랜딩의 첫 버전이 들어 있어요.
 ## 구성
 
 - GRUB 테마: `themes/grub/robinos`
+- 라이브 ISO의 BIOS 부팅 메뉴(syslinux) 배경과 색: `themes/syslinux` (`splash.png`, `colors.cfg`)
 - GRUB 기본 설정 스니펫: `config/grub/10-robinos-theme.cfg`
 - SDDM 테마: `themes/sddm/robinos`
 - 잠금 화면 배경화면: `assets/wallpapers/robinos-lock.svg`
@@ -60,7 +61,14 @@ scripts/prepare-archiso.sh
 - RobinOS GRUB 테마를 생성된 프로필의 `grub/themes/robinos`에 복사해요
 - GRUB 설정 파일이 있으면 `set theme=/grub/themes/robinos/theme.txt`를 추가해요
 - GRUB 메뉴 문구를 RobinOS로 바꿔요
-- Syslinux 메뉴 제목이 있으면 RobinOS로 바꿔요
-- systemd-boot 로더 항목이 있으면 이름을 바꿔요
+- Syslinux(BIOS) 메뉴 제목과 도움말을 RobinOS로 바꾸고, archiso의 Arch 로고 배경(`splash.png`)과 색을 `themes/syslinux`의 것으로 바꿔요
+- systemd-boot 로더 항목이 있으면 이름을 바꿔요(메모리 검사 항목은 그대로)
 
 archiso 라벨이나 부팅 경로 같은 저수준 부팅 매개변수는 건드리지 않아요.
+
+BIOS 메뉴 배경(640×480)은 `assets/brand/build-logo.py`가 만드는 `robinos-boot-splash.svg`를 PNG로 바꾼 거예요. 로고나 한 줄 소개를 바꾸면 다시 만들어요.
+
+```bash
+python3 assets/brand/build-logo.py /tmp/robinfonts assets/brand
+rsvg-convert -w 640 -h 480 assets/brand/robinos-boot-splash.svg -o themes/syslinux/splash.png
+```

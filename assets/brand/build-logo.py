@@ -140,11 +140,44 @@ def lockup():
 """
 
 
+def boot_splash():
+    """Background of the live ISO's BIOS boot menu (syslinux vesamenu, 640x480).
+    The lockup sits above the menu box, which syslinux draws from row 10 (y 160) down;
+    the bottom rows hold syslinux's help text, so they stay empty.
+    PNG: rsvg-convert -w 640 -h 480 robinos-boot-splash.svg -o themes/syslinux/splash.png"""
+    word, ww = text_path(GEIST, 700, "RobinOS", 38, 0, 0, tracking=-0.02)
+    tag, tw = text_path(PRETENDARD, 500, TAGLINE, 14, 0, 0)
+    mark_size, gap = 64, 14
+    width = mark_size + gap + max(ww, tw)
+    x0 = (640 - width) / 2
+    tx = x0 + mark_size + gap
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" width="640" height="480">
+  <defs>
+    <radialGradient id="robinos-splash-glow" cx="320" cy="60" r="300" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="{RED}" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="{RED}" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="640" height="480" fill="{BG}"/>
+  <rect width="640" height="480" fill="url(#robinos-splash-glow)"/>
+  <g transform="translate({x0:.1f} 40) scale({mark_size / 256})">
+    <rect width="256" height="256" rx="56" fill="#18181B"/>
+    <g transform="translate(-3 -7)">
+    {robin("robinos-splash-bird")}
+    </g>
+  </g>
+  <g transform="translate({tx:.1f} 80)"><path d="{word}" fill="{WHITE}"/></g>
+  <g transform="translate({tx + 1:.1f} 101)"><path d="{tag}" fill="{GREY}"/></g>
+</svg>
+"""
+
+
 if __name__ == "__main__":
     fonts, out = sys.argv[1], sys.argv[2]
     GEIST = f"{fonts}/Geist[wght].ttf"
     PRETENDARD = f"{fonts}/PretendardVariable.ttf"
     for name, svg in (("robinos-mark.svg", mark()), ("robinos-logo-horizontal.svg", horizontal()),
-                      ("robinos-logo.svg", lockup()), ("robinos-glyph.svg", glyph())):
+                      ("robinos-logo.svg", lockup()), ("robinos-glyph.svg", glyph()),
+                      ("robinos-boot-splash.svg", boot_splash())):
         open(f"{out}/{name}", "w", encoding="utf-8").write(svg)
         print(name, len(svg))
