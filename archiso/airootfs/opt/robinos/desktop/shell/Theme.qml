@@ -52,18 +52,19 @@ Singleton {
     readonly property color destructiveSolid: "#dc2626"
     // Glass (T-152, shadcn x macOS): the bar, the dock and floating panels are
     // translucent and Hyprland blurs the desktop behind them (robinos.lua layer
-    // rules). Without a GPU (lowPower) Hyprland has no blur, so they stay nearly solid.
-    readonly property color barBg: dark ? Qt.rgba(9 / 255, 9 / 255, 11 / 255, lowPower ? 0.72 : 0.55)
-                                        : Qt.rgba(1, 1, 1, lowPower ? 0.78 : 0.62)
-    readonly property color dockBg: dark ? Qt.rgba(18 / 255, 18 / 255, 20 / 255, lowPower ? 0.82 : 0.58)
-                                         : Qt.rgba(1, 1, 1, lowPower ? 0.85 : 0.64)
-    readonly property color glass: lowPower ? surface
+    // rules). Without a GPU (lowPower) Hyprland has no blur, so they stay nearly solid;
+    // the same when the user turns on "투명도 줄이기" in the settings (solid).
+    readonly property color barBg: dark ? Qt.rgba(9 / 255, 9 / 255, 11 / 255, solid ? 0.72 : 0.55)
+                                        : Qt.rgba(1, 1, 1, solid ? 0.78 : 0.62)
+    readonly property color dockBg: dark ? Qt.rgba(18 / 255, 18 / 255, 20 / 255, solid ? 0.82 : 0.58)
+                                         : Qt.rgba(1, 1, 1, solid ? 0.85 : 0.64)
+    readonly property color glass: solid ? surface
                                             : dark ? Qt.rgba(24 / 255, 24 / 255, 27 / 255, 0.70) : Qt.rgba(1, 1, 1, 0.72)
     readonly property color glassBorder: dark ? Qt.rgba(1, 1, 1, 0.13) : Qt.rgba(0, 0, 0, 0.10)
     // Tiles and buttons inside a glass panel (quick settings): a tint over the glass,
     // like Control Center's modules, instead of a solid block
-    readonly property color glassTile: lowPower ? secondary : dark ? Qt.rgba(1, 1, 1, 0.07) : Qt.rgba(0, 0, 0, 0.05)
-    readonly property color glassTileHover: lowPower ? secondaryHover : dark ? Qt.rgba(1, 1, 1, 0.13) : Qt.rgba(0, 0, 0, 0.09)
+    readonly property color glassTile: solid ? secondary : dark ? Qt.rgba(1, 1, 1, 0.07) : Qt.rgba(0, 0, 0, 0.05)
+    readonly property color glassTileHover: solid ? secondaryHover : dark ? Qt.rgba(1, 1, 1, 0.13) : Qt.rgba(0, 0, 0, 0.09)
     readonly property color scrim: dark ? Qt.rgba(0, 0, 0, 0.55) : Qt.rgba(0, 0, 0, 0.25)
     // Behind the launcher: the desktop stays in view, a little dimmer (like Spotlight)
     readonly property color scrimSoft: dark ? Qt.rgba(0, 0, 0, 0.28) : Qt.rgba(0, 0, 0, 0.10)
@@ -88,11 +89,19 @@ Singleton {
     // Set by robinos-session when there is no GPU acceleration (most VMs):
     // the shell then skips shadow effects, and Hyprland turns off blur.
     readonly property bool lowPower: Quickshell.env("ROBINOS_RENDER") === "software"
+    // "투명도 줄이기" (Settings.qml), like macOS' Reduce transparency
+    readonly property bool reduceTransparency: saved.reduceTransparency
+    readonly property bool solid: lowPower || reduceTransparency
 
     function setDark(value) {
         saved.dark = value;
         store.writeAdapter();
         applySystem();
+    }
+
+    function setReduceTransparency(value) {
+        saved.reduceTransparency = value;
+        store.writeAdapter();
     }
 
     function setAccent(name) {
@@ -158,6 +167,7 @@ Singleton {
 
             property bool dark: true
             property string accent: "red"
+            property bool reduceTransparency: false
         }
     }
 }

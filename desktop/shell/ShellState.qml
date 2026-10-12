@@ -391,6 +391,23 @@ Singleton {
         learnCenterOpen = true;
     }
 
+    // ---- Settings (Settings.qml, Win+I) ----
+
+    property bool settingsOpen: false
+    // The section to show when it opens ("appearance", "about"); "" keeps the last one
+    property string settingsSection: ""
+
+    function openSettings(section) {
+        launcherOpen = false;
+        quickSettingsOpen = false;
+        calendarOpen = false;
+        settingsSection = section ?? "";
+        // Already open (maybe behind other windows): map it again to bring it forward
+        if (settingsOpen)
+            settingsOpen = false;
+        settingsOpen = true;
+    }
+
     // ---- First-login welcome wizard (Welcome.qml) ----
 
     property bool welcomeOpen: false

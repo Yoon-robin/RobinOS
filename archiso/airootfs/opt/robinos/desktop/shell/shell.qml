@@ -63,6 +63,8 @@ ShellRoot {
 
     LearnCenter {}
 
+    Settings {}
+
     // Bound in robinos.lua with hl.dsp.global("robinos:<name>")
     GlobalShortcut {
         appid: "robinos"
@@ -104,6 +106,13 @@ ShellRoot {
         name: "quicksettings"
         description: "빠른 설정 열기/닫기"
         onPressed: ShellState.toggleQuickSettings(null)
+    }
+
+    GlobalShortcut {
+        appid: "robinos"
+        name: "settings"
+        description: "설정 열기"
+        onPressed: ShellState.openSettings("")
     }
 
     GlobalShortcut {
@@ -213,6 +222,10 @@ ShellRoot {
 
         function learnCenter(): void {
             ShellState.openLearnCenter();
+        }
+
+        function settings(): void {
+            ShellState.openSettings("");
         }
 
         function shortcuts(): void {

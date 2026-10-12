@@ -289,7 +289,8 @@ PanelWindow {
         { key: "doctor", group: "system", icon: "activity", title: "시스템 점검", subtitle: "robinctl doctor", mono: true, words: "doctor check 점검 진단" },
         { key: "audit", group: "system", icon: "shield", title: "보안 점검", subtitle: "robinctl audit · 열린 포트, 원격 접속, 권한, 암호화", words: "audit security 보안 점검 보안 센터 방화벽 firewall 포트 암호화" },
         { key: "screenshot", group: "system", icon: "scan", title: "영역 스크린샷", subtitle: "Win + Shift + S", words: "screenshot capture 스크린샷 캡처 화면 캡처" },
-        { key: "settings", group: "system", icon: "sliders", title: "빠른 설정", subtitle: "Win + S", words: "settings quick 설정 빠른 설정 테마 다크 모드" },
+        { key: "control", group: "system", icon: "sliders", title: "설정", subtitle: "Win + I · 개인 설정, 정보", words: "settings control panel 설정 제어판 개인 설정 테마 강조색 투명도 정보 버전 사양" },
+        { key: "settings", group: "system", icon: "sliders", title: "빠른 설정", subtitle: "Win + S", words: "settings quick 설정 빠른 설정 다크 모드" },
         { key: "sound", group: "system", icon: "volume", title: "소리 설정", subtitle: "출력 장치, 마이크, 앱별 음량", words: "sound audio volume mixer speaker headphones microphone mic 소리 음량 볼륨 믹서 스피커 이어폰 헤드폰 마이크 출력" },
         { key: "wifi", group: "system", icon: "wifi", title: "Wi-Fi 연결", subtitle: "주변 네트워크에 연결해요", words: "wifi wi-fi wireless network internet nmtui 와이파이 무선 네트워크 인터넷 연결" },
         { key: "bluetooth", group: "system", icon: "bluetooth", title: "블루투스 장치", subtitle: "이어폰, 마우스, 키보드를 연결해요", words: "bluetooth 블루투스 이어폰 에어팟 airpods 버즈 buds 헤드셋 무선 마우스 키보드 장치 페어링 pairing" },
@@ -343,7 +344,7 @@ PanelWindow {
         { win: "장치 관리자", words: "장치 관리자 device manager devmgmt 드라이버 driver", cmd: "devices" },
         { win: "시스템 정보", words: "시스템 정보 system information msinfo32 winver dxdiag 사양", cmd: "sysinfo" },
         { win: "Windows Update", words: "windows update 윈도우 업데이트 업데이트 확인", cmd: "update" },
-        { win: "제어판", words: "제어판 control panel 윈도우 설정 windows settings", cmd: "settings" }
+        { win: "제어판", words: "제어판 control panel 윈도우 설정 windows settings", cmd: "control" }
     ]
 
     function windowsHint(name) {
@@ -656,6 +657,9 @@ PanelWindow {
         case "screenshot":
             // Wait for the launcher to fade out, or it would be in the picture
             Quickshell.execDetached(["sh", "-c", "sleep 0.4; exec /usr/share/robinos/bin/robinos-screenshot region"]);
+            break;
+        case "control":
+            ShellState.openSettings("");
             break;
         case "settings":
             ShellState.toggleQuickSettings();

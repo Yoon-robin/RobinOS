@@ -580,6 +580,16 @@ def main():
     # The learning center's own close button (its title bar, top right)
     click(qmp, 1156, 102)
     wait(2)
+    # Settings (T-149) with Win+I like Windows: 개인 설정, then Down to 정보 (version,
+    # kernel, CPU, memory read from the system); Esc closes it
+    keys(qmp, "meta_l", "i")
+    wait(3)
+    shot(qmp, "light-settings")
+    keys(qmp, "down")
+    wait(2)
+    shot(qmp, "light-settings-about")
+    keys(qmp, "esc")
+    wait(2)
     keys(qmp, "meta_l", "s")
     wait(3)
     shot(qmp, "light-quick-settings")
