@@ -18,8 +18,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-10-12 (오후 2시) | `cc7ea3b` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 14.4분) | 통과. 묶음 74: 라이브 BIOS 부팅 메뉴의 RobinOS 스플래시와 색. VMware와 QEMU(BIOS)로 직접 켜서 메뉴 화면도 확인했어요 |
 | 2026-10-12 (오후) | `6113f35` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.8분, 테스트 14.5분) | 통과. 부팅 테스트 79장, 설치 테스트 다섯 단계. 묶음 73: 환영 마법사 첫 화면과 T-151 화면 문구. 설치본 부팅 메뉴의 한글 한 줄 소개가 Unifont로 깨지지 않고 나오고(`installed-01-grub-first-boot.png`), 로그인 화면 아래 줄도 새 문구예요(`rollback-02-sddm.png`) |
-| 2026-10-12 | `8be98ca` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 3.5분, 테스트 14.7분) | 통과. 부팅 테스트 70장, 설치 테스트 다섯 단계. 집에서 쌓인 290개 커밋을 받고, WSL `setup`으로 Quickshell 0.3.2와 `which`를 맞춘 뒤 처음 돈 묶음 검증이에요. 부팅 테스트 화면은 소개 영상(`promo/intro/`)에도 썼어요 |
 
 ## 품질 점검 기록
 
@@ -41,9 +41,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (없음) | | |
+| `9a2ddcf` T-152 ①②, `69ad501` 화면에는 이름만, `2eccde2` 라이브 하드웨어 시계 (2026-10-12) | 유리 재질·배경화면 빛, 부팅·로그인·잠금 화면의 소개 줄 빼기, 라이브 `/etc/adjtime` LOCAL. `ready.ps1 -Check` 통과 | 묶음 검증(`verify -Installer robinos`): 셸 장면(소프트웨어 렌더링이라 유리는 불투명), SDDM·잠금·부팅 메뉴, 라이브 시계 |
 
-`6113f35`까지 2026-10-12 묶음 73 검증(`verify -Installer robinos`)을 마치고 푸시했어요.
+`cc7ea3b`까지 2026-10-12 묶음 74 검증(`verify -Installer robinos`)을 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 

@@ -206,6 +206,7 @@
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-10-12 | `8be98ca` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 3.5분, 테스트 14.7분) | 통과. 부팅 테스트 70장, 설치 테스트 다섯 단계. 집에서 쌓인 290개 커밋을 받고, WSL `setup`으로 Quickshell 0.3.2와 `which`를 맞춘 뒤 처음 돈 묶음 검증이에요. 부팅 테스트 화면은 소개 영상(`promo/intro/`)에도 썼어요 |
 | 2026-10-10 (아침) | `030455d` 테스트 ISO | 설치 테스트 windows(9.1분) | 다섯 단계 통과. 윈도우 파티션, EFI 파일, C: 그대로, GRUB 메뉴에 Windows Boot Manager. 새벽 뒤로 바뀐 것(LLMNR 끄기, 앱 제거, 설치 테스트의 UDP 확인)이 윈도우 옆 설치 경로에서도 문제없음 |
 | 2026-10-10 (새벽) | `857383b` 테스트 ISO | 설치 테스트 archinstall(11.4분) | 다섯 단계 통과. 어제 저녁 뒤로 바뀐 설치 코드(openssh, baobab, wtype, 힌트)가 archinstall+post-install 경로에서도 문제없음(`ssh-keygen`, `baobab` 확인) |
 | 2026-10-08 | `933ca31` ISO, `e038f2a` 테스트 | ISO 빌드, 부팅 테스트(WHPX, 29장, 새 장면 `shell-restarted`), 설치 테스트 robinos(다섯 단계) | 통과. 셸을 끄면 1초 뒤 다시 뜸(`exited with 143` → `starting the shell`). 환영 마법사 단축키가 `Win`으로, 윈도우 명령 힌트가 새 문구로 나옴. 설치기 마무리가 "설치가 끝났어요"까지 감. 테스트 도중 WSL에 `cmp`가 없어 ISO를 매번 복사하던 것을 고침(`e038f2a`) |
