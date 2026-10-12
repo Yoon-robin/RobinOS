@@ -128,6 +128,8 @@
 
 ### 디자인: shadcn/ui와 일치
 
+2026-10-12부터 재질과 움직임은 macOS에서 가져와요(사용자 제안 "SHADCN과 mac os의 콜라보", T-152). 반투명 유리 패널과 블러, 색이 있는 배경화면, 스프링처럼 자리 잡는 패널이에요. 기준은 [brand.md](brand.md) "재질과 움직임"에 있어요.
+
 디자인 기준은 shadcn/ui의 zinc 팔레트예요. 토큰은 `desktop/shell/Theme.qml`이 원본이고, 같은 값을 [brand.md](brand.md), foot, hyprlock, qt6ct 팔레트, SDDM 테마가 따라요.
 
 | 영역 | 일치 수준 | 방법 |
