@@ -18,8 +18,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-10-13 (새벽 1시) | `57b40e4` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 3.4분, 테스트 15.0분) | 통과. 설치본에 `ufw` 켜짐(`Status: active`, mDNS 5353 규칙), `deja-dup`과 데스크톱 파일, 설치 테스트 다섯 단계, 부팅 테스트 82장. 라이브의 보안 점검이 "라이브 세션이라 방화벽은 꺼져 있어요"(스크린샷 확인). BitLocker 확인은 정적 검사(`test-robin-install.py`)뿐이고 설치 테스트 robinos의 지우기 확인 상자(같은 `ConfirmBox`)는 그대로 통과 |
 | 2026-10-13 (새벽) | `b80f5d0` 테스트 ISO | 집 PC(Blitz)에서 `verify -Installer robinos`(빌드 5.7분, 테스트 15.4분) | 통과. 학교에서 한 커밋들: 설치본에 `sof-firmware 2026.09.2`, `fwupd 2.1.8`(T-156), 터미널 한글 폭 규칙 뺀 뒤 Ptyxis 터미널 장면(`terminal-ptyxis` 시리얼 확인), 설치 테스트 다섯 단계, 부팅 테스트 82장 |
-| 2026-10-12 (오후 4시) | `3b08949` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 14.9분) | 통과. 묶음 77·78: Ptyxis 터미널, 스냅샷 알림과 바의 "스냅샷 N · 임시", 패널 스프링. 처음 두 번은 "통과"였지만 터미널 장면에 창이 없었어요: 새 스크립트가 profiledef.sh의 file_permissions에 없어 라이브에서 644였고, boot-test-qmp.py가 멈춰도 0으로 끝나서 검증이 실패를 못 봤어요. 둘 다 고치고(정적 검증이 권한 목록 확인, 멈춘 시나리오는 실패, 터미널이 안 열리면 tty3 진단) 미션 터미널의 빈 창 하나(--new-window와 명령을 같이 줌)도 고친 뒤 통과. 스크린샷에서 Ptyxis 창과 미션 내용 확인 |
 
 ## 품질 점검 기록
 
@@ -43,7 +43,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 |---|---|---|
 | (없음) | | |
 
-`b80f5d0`까지 2026-10-13 묶음 검증(`verify -Installer robinos`, 집 PC)을 마쳤어요.
+`57b40e4`까지 2026-10-13 묶음 검증(`verify -Installer robinos`, 집 PC)을 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -59,7 +59,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 출처: 설계 점검(2026-10-10) "보안 부팅". 문서 어디에도 없었어요
 - 한 것: install.md "보안 부팅 끄기"(BitLocker 복구 키 확인, 윈도우의 고급 시작 → UEFI 펌웨어 설정, 설치 뒤에도 꺼 둬야 하는 것), 준비 목록, README 내려받기 안내
 - 한 것(2026-10-12 집 PC): 설치기가 디스크의 `BitLocker` 파티션을 알아보고(`lsblk`의 FSTYPE) 디스크 카드에 "윈도우 있음 (BitLocker)", "윈도우 옆에 설치"의 확인 단계에서 "복구 키를 따로 적어 두었어요"에 체크해야 설치 시작. 백엔드도 계획에 `bitlocker_key_saved`가 없으면 디스크를 건드리기 전에 멈춰요. `test-robin-install.py`에 가짜 BitLocker 디스크 검사 여덟 개. 확인 상자는 `ConfirmBox` 하나로 합쳤어요(지우기 확인과 같이 써요)
-- 남은 것: 묶음 검증(설치 테스트 robinos에서 지우기 확인 상자가 그대로 동작). 설치 테스트 windows의 가짜 디스크에 BitLocker 서명(`-FVE-FS-`)을 넣은 장면. 다음 릴리스 노트에 보안 부팅 안내
+- 남은 것: 설치 테스트 windows의 가짜 디스크에 BitLocker 서명(`-FVE-FS-`)을 넣은 장면. 다음 릴리스 노트에 보안 부팅 안내
 - 완료 기준: 설치기 테스트(`test-robin-install.py`)에 가짜 BitLocker 파티션, 설치 테스트 windows에서 경고 장면
 
 ### T-025 VMware에서 쓰기
@@ -103,13 +103,14 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ### T-157 방화벽 켜기
 - 상태: 진행 중
 - 한 것(2026-10-13 집 PC): ufw를 골랐어요(`ufw status`, `ufw allow 22`처럼 명령이 말에 가까워서 미션에서 설명하기 쉬워요). `packages/core.txt`에 `ufw`, `post-install.sh`가 `/etc/ufw/ufw.conf`의 `ENABLED=yes`와 `ufw.service`로 켜요(설치기 chroot에서 `ufw enable`을 하면 라이브 커널에 규칙이 들어가서요). 기본값이 들어오는 연결은 막고 나가는 연결은 그대로, ufw의 before.rules가 DHCP·ping·mDNS(프린터 찾기)를 열어 둬요. `robinctl audit`은 설치본에서 방화벽이 꺼져 있으면 경고(라이브는 괜찮다고). 설치 테스트에서 `ufw` 켜짐과 mDNS 규칙 확인
-- 남은 것: 묶음 검증. 보안 기초 미션에 "방화벽 규칙 보기". 웹 보안 랩(Docker)이 그대로 되는지 실제로 띄워 보기
+- 2026-10-13 묶음 검증 통과(설치본에서 ufw 켜짐, mDNS 규칙)
+- 남은 것: 보안 기초 미션에 "방화벽 규칙 보기". 웹 보안 랩(Docker)이 그대로 되는지 실제로 띄워 보기
 - 출처: 다른 OS와 비교(2026-10-12). Fedora는 firewalld가 켜져 있고, Mint는 환영 화면 체크리스트에서 방화벽을 켜게 해요. RobinOS는 방화벽이 꺼져 있는데 `robinctl audit`은 괜찮다고 해요
 - 할 것: 들어오는 연결은 막고 나가는 연결은 그대로 두는 기본값(ufw나 firewalld 중 하나, 학습 미션에서 설명하기 쉬운 쪽). 프린터 찾기(mDNS)는 열어 두기. `robinctl audit`이 방화벽이 꺼져 있으면 알려 주기. 보안 기초 미션에 "방화벽 규칙 보기" 하나
 - 완료 기준: 설치 테스트에서 방화벽이 켜져 있고, 네트워크 프린터 찾기와 웹 보안 랩이 그대로 동작
 
 ### T-158 개인 파일 백업
-- 상태: 검증 대기
+- 상태: 완료 (2026-10-13 묶음 검증. USB 디스크에 백업하고 되살리기는 실기기 확인 때 같이 봐요)
 - 한 것(2026-10-12 집 PC): `deja-dup`을 `packages/apps.txt`에, 런처에서 "백업", "파일 히스토리", "Time Machine"으로 찾으면 Déjà Dup(윈도우의 파일 히스토리에 해당), [recovery.md](recovery.md) "스냅샷과 백업", 설치 테스트에서 `pacman -Q deja-dup`과 데스크톱 파일 확인
 - 출처: 다른 OS와 비교(2026-10-12). 스냅샷은 시스템만 되돌리고 개인 파일은 지켜 주지 않아요. Mint는 백업 도구, GNOME 계열은 Déjà Dup, 윈도우는 "Windows 백업", macOS는 Time Machine이 있어요
 - 할 것: Déjà Dup(`deja-dup`)을 `packages/apps.txt`에 넣고 런처에서 "백업", "파일 히스토리", "Time Machine"으로 찾게 하기. 환영 화면이나 [recovery.md](recovery.md)에 스냅샷과 백업의 차이를 한 줄로
