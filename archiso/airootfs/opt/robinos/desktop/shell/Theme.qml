@@ -60,6 +60,10 @@ Singleton {
     readonly property color glass: lowPower ? surface
                                             : dark ? Qt.rgba(24 / 255, 24 / 255, 27 / 255, 0.70) : Qt.rgba(1, 1, 1, 0.72)
     readonly property color glassBorder: dark ? Qt.rgba(1, 1, 1, 0.13) : Qt.rgba(0, 0, 0, 0.10)
+    // Tiles and buttons inside a glass panel (quick settings): a tint over the glass,
+    // like Control Center's modules, instead of a solid block
+    readonly property color glassTile: lowPower ? secondary : dark ? Qt.rgba(1, 1, 1, 0.07) : Qt.rgba(0, 0, 0, 0.05)
+    readonly property color glassTileHover: lowPower ? secondaryHover : dark ? Qt.rgba(1, 1, 1, 0.13) : Qt.rgba(0, 0, 0, 0.09)
     readonly property color scrim: dark ? Qt.rgba(0, 0, 0, 0.55) : Qt.rgba(0, 0, 0, 0.25)
     // Behind the launcher: the desktop stays in view, a little dimmer (like Spotlight)
     readonly property color scrimSoft: dark ? Qt.rgba(0, 0, 0, 0.28) : Qt.rgba(0, 0, 0, 0.10)
@@ -69,6 +73,7 @@ Singleton {
     readonly property int radiusMd: 8
     readonly property int radius: 10
     readonly property int radiusLg: 14
+    readonly property int radiusTile: 12
     readonly property int radiusPanel: 16
     readonly property int radiusDock: 18
 

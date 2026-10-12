@@ -85,6 +85,9 @@ PanelWindow {
         border.color: Theme.glassBorder
         opacity: root.revealed ? 1 : 0
         focus: true
+        // Grows out of its corner under the bar and settles, like a spring (T-152)
+        transformOrigin: Item.TopRight
+        scale: root.revealed ? 1 : 0.96
 
         transform: Translate {
             y: root.revealed ? 0 : -6
@@ -96,6 +99,10 @@ PanelWindow {
 
         Behavior on opacity {
             NumberAnimation { duration: Theme.durFast; easing.type: Easing.OutCubic }
+        }
+
+        Behavior on scale {
+            NumberAnimation { duration: Theme.durSpring; easing.type: Easing.OutBack; easing.overshoot: 0.9 }
         }
 
         layer.enabled: !Theme.lowPower
@@ -210,7 +217,7 @@ PanelWindow {
                         implicitHeight: 34
                         radius: Theme.radiusMd
                         color: danger ? (powerMouse.containsMouse ? "#b91c1c" : Theme.destructiveSolid)
-                                      : (powerMouse.containsMouse ? Theme.secondaryHover : Theme.secondary)
+                                      : (powerMouse.containsMouse ? Theme.glassTileHover : Theme.glassTile)
 
                         Accessible.role: Accessible.Button
                         Accessible.name: modelData.title
@@ -275,7 +282,7 @@ PanelWindow {
                 Layout.fillWidth: true
                 implicitHeight: 40
                 radius: Theme.radiusMd
-                color: updateMouse.containsMouse ? Theme.secondaryHover : Theme.secondary
+                color: updateMouse.containsMouse ? Theme.glassTileHover : Theme.glassTile
 
                 Accessible.role: Accessible.Button
                 Accessible.name: "업데이트 " + ShellState.updateCount + "개 설치하기"
@@ -463,7 +470,7 @@ PanelWindow {
                         Layout.fillWidth: true
                         implicitHeight: 30
                         radius: Theme.radiusMd
-                        color: selected ? Theme.primary : (modeMouse.containsMouse ? Theme.secondaryHover : Theme.secondary)
+                        color: selected ? Theme.primary : (modeMouse.containsMouse ? Theme.glassTileHover : Theme.glassTile)
 
                         Accessible.role: Accessible.RadioButton
                         Accessible.name: "전원 모드 " + modelData.title
@@ -533,7 +540,7 @@ PanelWindow {
                         Layout.fillWidth: true
                         implicitHeight: 30
                         radius: Theme.radiusMd
-                        color: selected ? Theme.primary : (scaleMouse.containsMouse ? Theme.secondaryHover : Theme.secondary)
+                        color: selected ? Theme.primary : (scaleMouse.containsMouse ? Theme.glassTileHover : Theme.glassTile)
 
                         Accessible.role: Accessible.RadioButton
                         Accessible.name: "화면 배율 " + Math.round(modelData * 100) + "%"

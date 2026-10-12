@@ -18,8 +18,8 @@ Rectangle {
     signal detailRequested()
 
     implicitHeight: 58
-    radius: Theme.radius
-    color: checked ? Theme.primary : mouse.containsMouse ? Theme.secondaryHover : Theme.secondary
+    radius: Theme.radiusTile
+    color: checked ? Theme.primary : mouse.containsMouse ? Theme.glassTileHover : Theme.glassTile
     opacity: enabled ? 1 : 0.5
 
     Accessible.role: Accessible.CheckBox
