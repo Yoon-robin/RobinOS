@@ -91,6 +91,9 @@ function Invoke-WhpxBootTest {
         # Start-Process joins the arguments with spaces, so quote the ones that have them
         $qemuArgs = @(
             "-machine", "q35", "-accel", "whpx", "-m", "6144", "-smp", "4",
+            # The hardware clock in local time, as on a PC that runs Windows (the live
+            # ISO reads it that way, archiso/airootfs/etc/adjtime)
+            "-rtc", "base=localtime",
             "-kernel", "`"vm\$base\boot\x86_64\vmlinuz-linux`"",
             "-initrd", "`"vm\$base\boot\x86_64\initramfs-linux.img`"",
             "-append", "`"$kernelArgs`"",

@@ -62,6 +62,7 @@ RobinOS 릴리스 열쇠 지문: `D8EB 0C49 5CBF 5B2B BB57 EACC FD9B 53B8 B79E 9
 - 한국어 화면(`ko_KR.UTF-8`), 서울 시간대, 한글 입력, RobinOS 데스크톱과 테마를 설치해요.
 - 업데이트 전후 자동 스냅샷과 부팅 메뉴의 스냅샷 항목을 설정해요([recovery.md](recovery.md)).
 - 부트로더는 GRUB이에요. 윈도우 옆에 설치하면 부팅 메뉴에 윈도우도 나오고, 윈도우와 시계가 어긋나지 않게 하드웨어 시계를 지역 시간으로 둬요.
+- 라이브 USB도 하드웨어 시계를 지역 시간으로 읽어요(`/etc/adjtime`). 윈도우 PC에서 라이브로 써 보고 윈도우로 돌아가도 시계가 9시간 어긋나지 않아요.
 - NVIDIA 그래픽 카드가 있으면 GTX 16, RTX 20 이후 카드에는 NVIDIA 드라이버(`nvidia-open`)를 설치해요. 노트북처럼 인텔·AMD 그래픽과 함께 있어도 마찬가지예요. 그보다 오래된 카드(GTX 10 이전)는 기본 드라이버(nouveau)로 돌아가서 화면이 느릴 수 있어요. 실제 NVIDIA 카드에서는 아직 확인 전이에요.
 - VMware, QEMU 같은 가상 머신에서는 게스트 도구(`open-vm-tools`, `qemu-guest-agent`)를 설치해요.
 - 라이브 ISO에는 없는 앱(`packages/apps.txt`)을 더 설치해요. 지금은 프린터(CUPS와 프린터 설정 앱), 오피스(LibreOffice, 한국어), 앱 스토어(GNOME 소프트웨어, Flathub), 디스크 관리(GNOME 디스크), 동영상·음악 재생(Showtime, Decibels, MP4 코덱)이에요. LibreOffice만 150MB쯤 더 내려받아요.
