@@ -263,6 +263,23 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
     }
 }
 
+# mkarchiso copies airootfs without the files' modes and sets only what profiledef.sh's
+# file_permissions lists. Every script desktop/install-map.txt installs as 755 under
+# /usr/share/robinos/bin must be listed there, or it can't run on the live ISO
+# (2026-10-12: robinos-terminal was 644 on the live ISO, so no terminal opened).
+$profiledef = Get-Content (Join-Path $root "archiso/profiledef.sh") -Raw
+foreach ($line in Get-Content (Join-Path $root "desktop/install-map.txt")) {
+    $fields = $line.Trim() -split "\s+"
+    if ($fields.Count -ge 3 -and $fields[2] -eq "755" -and $fields[1] -like "/usr/share/robinos/bin/*") {
+        $name = Split-Path -Leaf $fields[1]
+        foreach ($target in @($fields[1], "/opt/robinos/desktop/bin/$name")) {
+            if (-not $profiledef.Contains("[`"$target`"]=`"0:0:755`"")) {
+                Add-Error "archiso/profiledef.sh: file_permissions has no [`"$target`"]=`"0:0:755`" (the live ISO would get it as 644)"
+            }
+        }
+    }
+}
+
 if ($errors.Count -gt 0) {
     Write-Host ""
     Write-Host "Validation failed:" -ForegroundColor Red
