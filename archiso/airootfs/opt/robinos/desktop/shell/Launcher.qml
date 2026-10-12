@@ -338,6 +338,7 @@ PanelWindow {
         { win: "Microsoft Store", words: "microsoft store 마이크로소프트 스토어 앱 스토어 app store 프로그램 설치 앱 설치 flathub", app: "org.gnome.Software" },
         { win: "미디어 플레이어", words: "미디어 플레이어 media player windows media player wmp 영화 및 tv movies tv 동영상 비디오 video mp4 영상", app: "org.gnome.Showtime" },
         { win: "그루브 음악", words: "그루브 음악 groove music 음악 노래 music audio 오디오 mp3", app: "org.gnome.Decibels" },
+        { win: "팩스 및 스캔", words: "팩스 및 스캔 windows fax and scan 스캔 스캐너 scan scanner 스캐너 앱 문서 스캔", app: "org.gnome.SimpleScan" },
         { win: "장치 및 프린터", words: "장치 및 프린터 devices and printers 프린터 printer 인쇄 print", app: "system-config-printer" },
         { win: "배경 화면", words: "배경 화면 바탕 화면 바탕화면 desktop background 개인 설정 personalization", cmd: "wallpaper" },
         { win: "Windows 보안", words: "windows 보안 windows security defender 디펜더 보안 센터 security center 백신 바이러스 antivirus 방화벽 firewall wf.msc", cmd: "audit" },

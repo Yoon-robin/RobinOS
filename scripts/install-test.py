@@ -588,6 +588,8 @@ def phase_installed(con, qmp):
     con.run("systemctl is-active ufw && LC_ALL=C ufw status verbose | head -n 4"
             " && LC_ALL=C ufw status | grep -q '^Status: active'"
             " && iptables -S ufw-before-input | grep -q 'dport 5353'")
+    # Scanners, "팩스 및 스캔" in the launcher (T-165)
+    con.run("pacman -Q sane sane-airscan simple-scan && test -f /usr/share/applications/org.gnome.SimpleScan.desktop")
     # Backups of personal files, "백업" in the launcher (T-158)
     con.run("pacman -Q deja-dup && test -f /usr/share/applications/org.gnome.DejaDup.desktop")
     # The shell's update dot asks checkupdates: 0 = updates, 2 = none, 1 = it failed

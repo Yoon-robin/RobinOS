@@ -207,12 +207,15 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 | 블루투스 및 장치, 이어폰 | 블루투스 연결 창 |
 | Acrobat, `pdf` | 문서 뷰어 (Evince) |
 | 캡처 도구, `snipping tool` | 영역 스크린샷 명령 (`Super+Shift+S`) |
+| Xbox Game Bar, 화면 녹화, `screen recording` | 화면 녹화 명령 (`Super+Alt+R`) |
 | 계산기, `calc` | 계산기 |
 | 디스크 관리, USB 포맷 | 디스크 (GNOME 디스크, 설치본에만 있어요) |
 | 저장소, 디스크 정리, `cleanmgr` | 디스크 사용량 분석 (baobab, 설치본에만 있어요) |
 | 워드, 엑셀, 파워포인트, 오피스 | LibreOffice Writer, Calc, Impress (설치본에만 있어요) |
 | Microsoft Store, 스토어, 앱 설치 | GNOME 소프트웨어 (설치본에만 있어요) |
 | 장치 및 프린터, 프린터, `printer` | 프린터 설정 (설치본에만 있어요) |
+| 팩스 및 스캔, 스캐너, `scan` | 문서 스캐너 앱 (설치본에만 있어요) |
+| 파일 히스토리, 백업, `Time Machine` | 백업 앱 Déjà Dup (설치본에만 있어요) |
 | 미디어 플레이어, 영화 및 TV, 동영상 | 동영상 재생 앱 (Showtime, 설치본에만 있어요) |
 | 그루브 음악, 음악 | 오디오 재생기 (Decibels, 설치본에만 있어요) |
 | 제어판, `control panel` | 빠른 설정 |

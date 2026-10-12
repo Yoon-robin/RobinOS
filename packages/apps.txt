@@ -7,6 +7,11 @@
 cups
 nss-mdns
 system-config-printer
+# Scanners: SANE drivers (sane-airscan finds network scanners and most new
+# USB ones without a driver) and GNOME's scan app ("팩스 및 스캔" in the launcher)
+sane
+sane-airscan
+simple-scan
 
 # Office: LibreOffice's stable branch with the Korean interface and help
 # ("워드", "엑셀", "파워포인트" in the launcher). About 150 MiB to download.

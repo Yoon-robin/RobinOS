@@ -160,7 +160,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: 방식과 위험(남는 것과 지워지는 것)을 [recovery.md](recovery.md)에 정리
 
 ### T-165 휴대폰 연결과 스캐너
-- 상태: 할 일 (나중)
+- 상태: 진행 중 (스캐너 먼저)
+- 한 것(2026-10-13 집 PC): 스캐너. `sane`, `sane-airscan`(드라이버 없이 네트워크·요즘 USB 스캐너), `simple-scan`을 `packages/apps.txt`에, 런처에서 "팩스 및 스캔"(윈도우 이름)으로 찾기, 설치 테스트에서 패키지와 데스크톱 파일 확인
+- 남은 것: 묶음 검증. 휴대폰 연결(KDE Connect와 LocalSend 중 고르기)
 - 출처: 다른 OS와 비교(2026-10-12). Zorin Connect(알림, 문자, 파일), Mint Warpinator(아이폰 앱도 있음), 윈도우 "휴대폰과 연결". 스캐너는 대부분 기본으로 돼요
 - 할 것: 휴대폰은 KDE Connect(크기 큼)와 LocalSend(Flathub, 아이폰도 됨) 중 고르기. 스캐너는 `sane`과 `simple-scan`을 `packages/apps.txt`에 넣고 런처에서 "팩스 및 스캔"으로
 - 완료 기준: 고른 것을 설치본에 넣고 런처에서 열려요
