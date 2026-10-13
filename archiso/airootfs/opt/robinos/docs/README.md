@@ -47,6 +47,7 @@
 - [release.md](release.md): 릴리스 체크리스트
 - [release-notes-v0.1.md](release-notes-v0.1.md): v0.1 프리뷰 릴리스 노트
 - [release-notes-v0.2.md](release-notes-v0.2.md): v0.2 프리뷰 릴리스 노트
+- [release-notes-v0.3.md](release-notes-v0.3.md): v0.3 프리뷰 릴리스 노트
 - [../themes/README.md](../themes/README.md): 테마 파일
 
 작업 관리
