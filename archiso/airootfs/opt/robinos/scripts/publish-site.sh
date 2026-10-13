@@ -22,7 +22,7 @@ for f in site/index.html site/.nojekyll; do
   git cat-file -e "HEAD:${f}" 2>/dev/null || { printf '%s가 커밋에 없어요\n' "${f}" >&2; exit 1; }
 done
 
-commit="$(git subtree split --prefix site HEAD)"
+commit="$(git subtree split -q --prefix site HEAD)"
 printf 'site/ → gh-pages: %s\n' "${commit}"
 if [[ "${1:-}" == "--dry-run" ]]; then
   git ls-tree -r --name-only "${commit}" | sed 's/^/  /'
