@@ -316,22 +316,22 @@ PanelWindow {
     // same job here. Searching "메모장" or "notepad" finds the text editor and says so.
     readonly property var windowsNames: [
         { win: "메모장", words: "메모장 notepad 워드패드 wordpad", app: "org.gnome.TextEditor" },
-        { win: "작업 관리자", words: "작업 관리자 task manager taskmgr 리소스 모니터 resource monitor", app: "io.missioncenter.MissionCenter" },
-        { win: "파일 탐색기", words: "파일 탐색기 explorer 내 pc 내 컴퓨터 this pc my computer", app: "org.gnome.Nautilus" },
-        { win: "명령 프롬프트", words: "명령 프롬프트 command prompt cmd powershell 파워셸 windows terminal wt 윈도우 터미널", app: "org.gnome.Ptyxis" },
+        { win: "작업 관리자", linux: "ps aux, top", learn: 31, words: "작업 관리자 task manager taskmgr 리소스 모니터 resource monitor", app: "io.missioncenter.MissionCenter" },
+        { win: "파일 탐색기", linux: "ls, cd", learn: 1, words: "파일 탐색기 explorer 내 pc 내 컴퓨터 this pc my computer", app: "org.gnome.Nautilus" },
+        { win: "명령 프롬프트", linux: "bash", learn: 1, words: "명령 프롬프트 command prompt cmd powershell 파워셸 windows terminal wt 윈도우 터미널", app: "org.gnome.Ptyxis" },
         { win: "Edge", words: "edge 엣지 internet explorer 인터넷 익스플로러 chrome 크롬", app: "firefox" },
         { win: "사진 앱", words: "사진 photos 사진 보기 image viewer", app: "org.gnome.Loupe" },
         { win: "반디집", words: "반디집 bandizip 알집 7-zip 7zip winrar 압축 풀기", app: "org.gnome.FileRoller" },
         { win: "볼륨 믹서", words: "볼륨 믹서 volume mixer 소리 설정 sound settings 사운드", cmd: "sound" },
-        { win: "네트워크 및 인터넷", words: "네트워크 및 인터넷 network and internet 네트워크 연결 network connections ncpa.cpl ncpa", cmd: "wifi" },
+        { win: "네트워크 및 인터넷", linux: "ip a", learn: 6, words: "네트워크 및 인터넷 network and internet 네트워크 연결 network connections ncpa.cpl ncpa", cmd: "wifi" },
         { win: "블루투스 및 장치", words: "블루투스 및 장치 bluetooth and devices 장치 추가 add device", cmd: "bluetooth" },
         { win: "Acrobat Reader", words: "acrobat 아크로뱃 adobe reader pdf 뷰어", app: "org.gnome.Evince" },
         { win: "캡처 도구", words: "캡처 도구 snipping tool 캡처 스크린샷 screenshot", cmd: "screenshot" },
         { win: "Xbox Game Bar", words: "xbox game bar 게임 바 화면 녹화 녹화 screen recording", cmd: "record" },
         { win: "계산기", words: "계산기 calc calculator", app: "org.gnome.Calculator" },
-        { win: "저장소", words: "저장소 저장 공간 storage 디스크 정리 disk cleanup cleanmgr 용량 디스크 사용량 disk usage 공간 확보", app: "org.gnome.baobab" },
+        { win: "저장소", linux: "df -h, du -sh", learn: 33, words: "저장소 저장 공간 storage 디스크 정리 disk cleanup cleanmgr 용량 디스크 사용량 disk usage 공간 확보", app: "org.gnome.baobab" },
         { win: "파일 히스토리", words: "파일 히스토리 file history windows 백업 windows backup 백업 backup 복원 되살리기 restore time machine 타임머신 개인 파일", app: "org.gnome.DejaDup" },
-        { win: "디스크 관리", words: "디스크 관리 disk management diskmgmt 포맷 format usb 파티션 partition", app: "org.gnome.DiskUtility" },
+        { win: "디스크 관리", linux: "lsblk", learn: 33, words: "디스크 관리 disk management diskmgmt 포맷 format usb 파티션 partition", app: "org.gnome.DiskUtility" },
         { win: "Word", words: "워드 word 문서 작성 docx 오피스 office", app: "libreoffice-writer" },
         { win: "Excel", words: "엑셀 excel 스프레드시트 spreadsheet xlsx 오피스 office", app: "libreoffice-calc" },
         { win: "PowerPoint", words: "파워포인트 powerpoint ppt pptx 프레젠테이션 발표 오피스 office", app: "libreoffice-impress" },
@@ -342,8 +342,8 @@ PanelWindow {
         { win: "장치 및 프린터", words: "장치 및 프린터 devices and printers 프린터 printer 인쇄 print", app: "system-config-printer" },
         { win: "배경 화면", words: "배경 화면 바탕 화면 바탕화면 desktop background 개인 설정 personalization", cmd: "wallpaper" },
         { win: "Windows 보안", words: "windows 보안 windows security defender 디펜더 보안 센터 security center 백신 바이러스 antivirus 방화벽 firewall wf.msc", cmd: "audit" },
-        { win: "이벤트 뷰어", words: "이벤트 뷰어 event viewer eventvwr 이벤트 로그 event log", cmd: "logs" },
-        { win: "서비스", words: "서비스 services services.msc", cmd: "services" },
+        { win: "이벤트 뷰어", linux: "journalctl", learn: 35, words: "이벤트 뷰어 event viewer eventvwr 이벤트 로그 event log", cmd: "logs" },
+        { win: "서비스", linux: "systemctl", learn: 34, words: "서비스 services services.msc", cmd: "services" },
         { win: "작업 스케줄러", words: "작업 스케줄러 task scheduler taskschd 예약 작업", cmd: "timers" },
         { win: "장치 관리자", words: "장치 관리자 device manager devmgmt 드라이버 driver", cmd: "devices" },
         { win: "시스템 정보", words: "시스템 정보 system information msinfo32 winver dxdiag 사양", cmd: "sysinfo" },
@@ -351,8 +351,20 @@ PanelWindow {
         { win: "제어판", words: "제어판 control panel 윈도우 설정 windows settings", cmd: "control" }
     ]
 
+    // "윈도우의 작업 관리자에 해당해요 · 터미널: ps aux, top"
     function windowsHint(name) {
-        return "윈도우의 " + name + "에 해당해요";
+        return "윈도우의 " + name.win + "에 해당해요" + (name.linux ? " · 터미널: " + name.linux : "");
+    }
+
+    // The learning mission that practises the Linux side of a Windows name (T-169)
+    function missionItem(name) {
+        return {
+            kind: "mission",
+            icon: "graduation-cap",
+            title: "학습 미션 " + name.learn + " · 터미널에서 직접 해 봐요",
+            subtitle: "명령: " + name.linux,
+            number: name.learn
+        };
     }
 
     function appItem(entry) {
@@ -476,6 +488,7 @@ PanelWindow {
             const shownApps = {};
             const shownCmds = {};
             const known = [];
+            const lessons = [];
             if (q.length >= 2 || /[^\x00-\x7f]/.test(q)) {
                 for (const name of windowsNames.filter(w => matches(w.words, q))) {
                     let item = null;
@@ -492,14 +505,18 @@ PanelWindow {
                         }
                     }
                     if (item) {
-                        item.subtitle = windowsHint(name.win);
+                        item.subtitle = windowsHint(name);
                         known.push(item);
+                        if (name.learn && !lessons.some(l => l.number === name.learn))
+                            lessons.push(missionItem(name));
                     }
                 }
             }
             if (known.length > 0) {
                 out.push({ kind: "header", title: "윈도우에서 쓰던 이름" });
                 for (const item of known)
+                    out.push(item);
+                for (const item of lessons)
                     out.push(item);
             }
 
@@ -642,6 +659,11 @@ PanelWindow {
         if (item.kind === "web") {
             // A term starting with "-" would read as a Firefox option (-P opens profiles)
             Quickshell.execDetached(["firefox", "--search", item.query.startsWith("-") ? " " + item.query : item.query]);
+            return;
+        }
+
+        if (item.kind === "mission") {
+            ShellState.openTerminal("robinctl learn show " + item.number);
             return;
         }
 
@@ -950,7 +972,7 @@ PanelWindow {
                                 border.color: Theme.border
 
                                 Icon {
-                                    visible: ["cmd", "clip", "file", "calc", "web"].indexOf(row.modelData.kind) !== -1
+                                    visible: ["cmd", "clip", "file", "calc", "web", "mission"].indexOf(row.modelData.kind) !== -1
                                     anchors.centerIn: parent
                                     name: row.modelData.icon ?? ""
                                     size: 15

@@ -278,6 +278,12 @@ def main():
     type_text(qmp, "notepad")
     wait(2)
     shot(qmp, "launcher-windows-name")
+    # A Windows name with a Linux side (T-169): the app, "터미널: ps aux, top" and
+    # learning mission 31 under it
+    keys(qmp, "ctrl", "a")
+    type_text(qmp, "taskmgr")
+    wait(2)
+    shot(qmp, "launcher-windows-mission")
     # Math like the Start menu's search: the result first, Enter copies it
     keys(qmp, "ctrl", "a")
     type_text(qmp, "(12+3)*4")

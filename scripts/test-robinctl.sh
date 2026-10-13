@@ -734,10 +734,24 @@ printf '%s\n' "Windows command hints (robinos-hints.sh)"
 # would start the Windows programs through WSL's interop
 hint() { bash -c ". '${HINTS}'; command_not_found_handle '$1'" 2>&1; }
 for pair in "ipconfig:ip a" "IPCONFIG.EXE:ip a" "dir:ls -l" "tasklist:ps aux" "notepad:gnome-text-editor" \
-    "calc:gnome-calculator" "taskmgr:missioncenter" "start:xdg-open" "clip:wl-copy" "powercfg:powerprofilesctl" "ncpa.cpl:nmtui" "doskey:alias" "eventvwr:journalctl -b" "services.msc:systemctl" "diskmgmt.msc:gnome-disks" "nslookup:getent hosts" \n    "certutil:sha256sum" "cipher:gpg -c" "runas:sudo" "netsh:nmcli" "sc:systemctl status"; do
+    "calc:gnome-calculator" "taskmgr:missioncenter" "start:xdg-open" "clip:wl-copy" "powercfg:powerprofilesctl" "ncpa.cpl:nmtui" "doskey:alias" "eventvwr:journalctl -b" "services.msc:systemctl" "diskmgmt.msc:gnome-disks" "nslookup:getent hosts" \
+    "certutil:sha256sum" "cipher:gpg -c" "runas:sudo" "netsh:nmcli" "sc:systemctl status"; do
   out="$(hint "${pair%%:*}")"
   if [[ "${out}" == *"${pair#*:}"* ]]; then ok "hint for ${pair%%:*}"; else bad "hint for ${pair%%:*}: ${out}"; fi
 done
+# Each Windows command with a mission (T-169) shows its hint and the mission to try,
+# and the mission numbers exist (learn_title in robinctl)
+out="$(hint ipconfig)"
+if [[ "${out}" == *"학습 미션 6"*"robinctl learn show 6"* ]]; then ok "ipconfig points to mission 6"; else bad "ipconfig mission: ${out}"; fi
+missions_total="$(sed -n '/^learn_title()/,/^}/p' "${ROBINCTL}" | grep -cE '^ +[0-9]+\) printf')"
+while read -r cmds number; do
+  for c in ${cmds//|/ }; do
+    out="$(hint "${c}")"
+    [[ "${out}" == *"robinctl learn show ${number}"* ]] || bad "mission link for ${c}: ${out}"
+  done
+  ((number >= 1 && number <= missions_total)) || bad "mission ${number} for ${cmds} is not one of the ${missions_total} missions"
+done < <(sed -n '/^__robinos_hint_mission()/,/^}/p' "${HINTS}" | sed -nE "s/^ +([a-z.|]+)\) +printf '([0-9]+)'.*/\1 \2/p")
+ok "every mission link has a hint and a real mission (${missions_total} missions)"
 out="$(hint "surely-not-a-command-xyz")"
 if [[ "${out}" == *"명령을 찾을 수 없어요"* ]]; then ok "unknown commands say so"; else bad "unknown command: ${out}"; fi
 # Apps the hints send people to must be installed by RobinOS
