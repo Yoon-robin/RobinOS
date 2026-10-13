@@ -472,14 +472,69 @@ def make_data_partition(con):
             " && echo robinos-data > /tmp/data/marker.txt && umount /tmp/data")
 
 
-def show_installer(con, qmp):
-    """The installer's second step on this disk, as the live desktop draws it."""
-    con.run(f"runuser -u robin -- env {SESSION_ENV} qs ipc -p /usr/share/robinos/shell call shell installer",
-            check=False)
+INSTALLER_IPC = f"runuser -u robin -- env {SESSION_ENV} qs ipc -p /usr/share/robinos/shell call shell "
+
+
+def installer_state(con):
+    """What the wizard on the live desktop says about itself (Installer.testState)."""
+    _, text = con.capture(INSTALLER_IPC + "installerState", timeout=60)
+    for line in text.splitlines():
+        if line.strip().startswith("{"):
+            return json.loads(line.strip())
+    raise RuntimeError(f"the installer answered no state: {text!r}")
+
+
+def wait_installer(con, what, test, timeout=90):
+    """Polls the wizard's state until test(state) holds."""
+    deadline = time.time() + timeout * SPEED
+    state = None
+    while time.time() < deadline:
+        state = installer_state(con)
+        if test(state):
+            log(f"installer: {what}: {state}")
+            return state
+        sleep(3)
+    raise RuntimeError(f"the installer never got to: {what}; last state {state}")
+
+
+def drive_installer(con, qmp):
+    """The installer as a person uses it, with the keyboard, up to the last question:
+    the partition made in Disk Management is preselected, the wizard cannot go on
+    before the files that go are confirmed, and it does after. Nothing is
+    installed; the installation itself is robin-install's, run next."""
+    con.run(INSTALLER_IPC + "installer", check=False)
     sleep(5)
-    qmp.keys("ret")
-    sleep(10)
+    qmp.keys("ret")  # the first page: what you need
+    state = wait_installer(con, "step 2, the disk and the partition",
+                           lambda st: st["step"] == 1 and st["disk"] == "/dev/vda")
     shot(qmp, "installer-partitions")
+    if state["mode"] != "partition" or state["partition"] != "/dev/vda4" or not state["canNext"]:
+        raise RuntimeError(f"the installer didn't preselect the Data partition: {state}")
+    qmp.keys("ret")
+    wait_installer(con, "step 3, the user", lambda st: st["step"] == 2 and not st["canNext"])
+    # Tab goes to the first field: user name, then the computer name (kept), the
+    # password and its repeat
+    qmp.keys("tab")
+    qmp.type_text("robin")
+    qmp.keys("tab")  # (keys() with several names presses them together)
+    qmp.keys("tab")
+    qmp.type_text(PASSWORD)
+    qmp.keys("tab")
+    qmp.type_text(PASSWORD)
+    state = wait_installer(con, "the user and password are in", lambda st: st["user"] == "robin" and st["canNext"])
+    shot(qmp, "installer-user")
+    qmp.keys("ret")
+    state = wait_installer(con, "step 4, the confirmation", lambda st: st["step"] == 3)
+    if state["canNext"] or state["eraseConfirmed"]:
+        raise RuntimeError(f"the installer lets 설치 시작 through before the files that go are confirmed: {state}")
+    shot(qmp, "installer-confirm")
+    # The first thing Tab reaches is the check box "the files of this partition are erased"
+    qmp.keys("tab")
+    qmp.keys("spc")
+    state = wait_installer(con, "the erase is confirmed", lambda st: st["eraseConfirmed"])
+    if not state["canNext"] or state["partition"] != "/dev/vda4" or state["mode"] != "partition":
+        raise RuntimeError(f"the confirmed installer is not ready for the Data partition: {state}")
+    shot(qmp, "installer-confirmed")
     qmp.keys("alt", "f4")
     sleep(2)
 
@@ -514,7 +569,7 @@ def phase_live(con, qmp):
         make_data_partition(con)
         con.put_file("/root/disks-check.py", DISKS_CHECK)
         con.run("PYTHONIOENCODING=utf-8 python3 /root/disks-check.py")
-        show_installer(con, qmp)
+        drive_installer(con, qmp)
         install_with_robin_install(con, mode="partition", partition="/dev/vda4")
         check_windows_kept(con, before)
         # The partition got RobinOS's name and the Linux type, so a next install knows it

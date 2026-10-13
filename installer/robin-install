@@ -66,6 +66,12 @@ WINDOWS_DATA_TYPE = "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7"
 WINDOWS_RECOVERY_TYPE = "de94bba4-06d1-4d40-a16a-bfd50179d6ac"
 WINDOWS_TYPES = {WINDOWS_RESERVED_TYPE, WINDOWS_DATA_TYPE, WINDOWS_RECOVERY_TYPE}
 LINUX_TYPE = "0fc63daf-8483-4772-8e79-3d69d8477de4"
+# File systems a partition can have and still be offered; anything else (zfs,
+# LDM, LVM, RAID, LUKS, swap, ReFS...) is somebody's, and not offered
+PLAIN_FILESYSTEMS = ("btrfs", "ext2", "ext3", "ext4", "xfs", "f2fs", "exfat", "vfat", "ntfs")
+# GPT attributes: required by the platform (bit 0), read-only (60), hidden (62),
+# no drive letter (63). OEM recovery partitions have them; Disk Management's don't
+GPT_HIDDEN_FLAGS = (1 << 0) | (1 << 60) | (1 << 62) | (1 << 63)
 # The GPT name robin-install gives its partition
 ROBINOS_LABEL = "RobinOS"
 SUBVOLUMES = [("@", ""), ("@home", "home"), ("@log", "var/log"),
@@ -149,13 +155,22 @@ def package_list(name):
 # ---- Disks ----
 
 def live_disk():
-    """The disk the ISO booted from (a USB stick); never offered as a target."""
+    """The whole disk the ISO booted from (a USB stick); never offered as a target.
+    The boot medium can be a partition, or a mapped device on top of one (Ventoy
+    maps the ISO's place in its data partition), so go up to the disk."""
     try:
-        source = output("findmnt", "-no", "SOURCE", "/run/archiso/bootmnt").strip()
-        parent = output("lsblk", "-no", "PKNAME", source).strip().splitlines()
-        return "/dev/" + parent[0] if parent and parent[0] else source
+        device = output("findmnt", "-no", "SOURCE", "/run/archiso/bootmnt").strip()
     except (subprocess.CalledProcessError, FileNotFoundError):
         return None
+    for _ in range(8):
+        try:
+            fields = output("lsblk", "-dno", "TYPE,PKNAME", device).split()
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            return device
+        if len(fields) < 2 or fields[0] == "disk":
+            return device
+        device = "/dev/" + fields[1]
+    return device
 
 
 def parted_table(disk):
@@ -184,6 +199,22 @@ def is_robinos(part):
     return part.get("partlabel") == ROBINOS_LABEL and (part.get("parttype") or "").lower() == LINUX_TYPE
 
 
+def windows_in_tree(root):
+    """Whether a mounted NTFS volume looks like Windows' system or recovery volume."""
+    # ntfs-3g matches names case by case, Windows doesn't: compare folded
+    names = {name.casefold(): name for name in os.listdir(root)}
+    # The boot manager, the recovery folder and an upgrade in progress sit on
+    # Windows' partitions, system or recovery
+    if any(name in names for name in ("bootmgr", "recovery", "$windows.~bt")):
+        return True
+    for system in ("windows", "winnt"):
+        if system in names:
+            inner = {name.casefold() for name in os.listdir(os.path.join(root, names[system]))}
+            if "system32" in inner:
+                return True
+    return False
+
+
 def windows_inside(path):
     """Whether an NTFS partition holds Windows (True), doesn't (False) or can't be
     read (None). Looked at read-only, so a Windows that hibernated stays as it is."""
@@ -194,7 +225,7 @@ def windows_inside(path):
         if result.returncode != 0:
             return None
         try:
-            return any(os.path.isdir(os.path.join(mount, name, "System32")) for name in ("Windows", "WINDOWS"))
+            return windows_in_tree(mount)
         finally:
             subprocess.run(["umount", mount], capture_output=True)
     except (OSError, subprocess.TimeoutExpired):
@@ -206,20 +237,54 @@ def windows_inside(path):
             pass
 
 
+def holders(path):
+    """The devices stacked on a partition (encryption, LVM, RAID...), from sysfs."""
+    try:
+        return os.listdir(f"/sys/class/block/{os.path.basename(path)}/holders")
+    except OSError:
+        return []
+
+
+def is_blank(path):
+    """Whether the start of a partition is all zeros: nothing was ever put there."""
+    try:
+        with open(path, "rb") as f:
+            return not any(f.read(1024 * 1024))
+    except OSError:
+        return False
+
+
+def gpt_flags(part):
+    try:
+        return int(str(part.get("partflags") or "0"), 0)
+    except ValueError:
+        return 0
+
+
 def partition_usable(part, kind):
     """(usable, why not): can RobinOS be installed into this partition? Only ones
-    that are big enough and not in use, and never Windows' own."""
+    that are big enough, not in use, of a kind of file system that is plain data,
+    and never Windows' own or a hidden one (recovery). Whatever isn't clearly
+    fine is no: the next step erases it."""
     if kind in ("efi", "system"):
         return False, "윈도우나 부팅에 쓰는 파티션이에요"
     if int(part.get("size") or 0) < MIN_SIZE:
         return False, "40GB보다 작아요"
-    if any(part.get("mountpoints") or []):
+    if any(part.get("mountpoints") or []) or part.get("children") or holders(part["path"]):
         return False, "지금 쓰고 있어요"
+    if gpt_flags(part) & GPT_HIDDEN_FLAGS:
+        return False, "숨겨진 파티션이에요(복구용일 수 있어요)"
     fstype = part.get("fstype") or ""
     if fstype == "BitLocker":
         return False, "BitLocker로 잠겨 있어요"
-    if fstype in ("swap", "crypto_LUKS", "LVM2_member", "linux_raid_member"):
-        return False, f"{fstype} 형식이라 고를 수 없어요"
+    if kind != "robinos":
+        if fstype == "":
+            # Nothing recognised: an unformatted partition, or one that holds
+            # something blkid can't read (a damaged Windows, a mapped device)
+            if not is_blank(part["path"]):
+                return False, "형식을 알 수 없어요"
+        elif fstype not in PLAIN_FILESYSTEMS:
+            return False, f"{fstype} 형식이라 고를 수 없어요"
     if fstype == "ntfs":
         inside = windows_inside(part["path"])
         if inside is None:
@@ -247,7 +312,8 @@ def segment(part):
     usable, reason = partition_usable(part, kind)
     return {"kind": kind, "name": name, "size": int(part.get("size") or 0), "path": part["path"],
             "number": int(part.get("partn") or 0), "fstype": part.get("fstype") or "",
-            "label": part.get("label") or "", "usable": usable, "reason": reason}
+            "label": part.get("label") or "", "uuid": part.get("partuuid") or "",
+            "usable": usable, "reason": reason}
 
 
 def disk_layout(dev, parts):
@@ -273,7 +339,7 @@ def disk_layout(dev, parts):
 
 def list_disks():
     data = json.loads(output("lsblk", "-J", "-b", "-o",
-                             "NAME,PATH,SIZE,TYPE,MODEL,TRAN,RM,RO,PTTYPE,PARTTYPE,PARTLABEL,PARTN,FSTYPE,LABEL,MOUNTPOINTS"))
+                             "NAME,PATH,SIZE,TYPE,MODEL,SERIAL,WWN,TRAN,RM,RO,PTTYPE,PARTTYPE,PARTLABEL,PARTN,PARTUUID,PARTFLAGS,FSTYPE,LABEL,MOUNTPOINTS"))
     live = live_disk()
     disks = []
     for dev in data.get("blockdevices", []):
@@ -299,6 +365,9 @@ def list_disks():
         gpt = dev.get("pttype") == "gpt" and esp is not None
         disks.append({
             "path": dev["path"],
+            # What tells this disk from another one that got the same name, so the
+            # disk that was shown and confirmed is the one that gets erased
+            "id": f"{int(dev.get('size') or 0)}:{(dev.get('serial') or '').strip()}:{(dev.get('wwn') or '').strip()}",
             "size": int(dev.get("size") or 0),
             "model": (dev.get("model") or "").strip(),
             "transport": dev.get("tran") or "",
@@ -316,6 +385,13 @@ def list_disks():
             "can_partition": gpt and bool(installable),
         })
     return disks
+
+
+def check_same_disk(plan, disk):
+    """The disk that was shown and confirmed must be the one that gets erased: it
+    can be pulled out and another plugged in under the same name meanwhile."""
+    if plan.get("disk_id") and plan["disk_id"] != disk["id"]:
+        raise InstallError(f"{disk['path']}가 보여 드린 디스크와 달라요. 설치기를 닫고 다시 열어 주세요")
 
 
 def windows_elsewhere(disks, path):
@@ -351,9 +427,16 @@ def read_plan(path):
             plan = json.load(f)
         os.remove(path)  # it holds the password
 
+    if not isinstance(plan, dict):
+        raise InstallError("설치 계획이 올바르지 않아요")
     for key in ("disk", "mode", "user", "password", "hostname", "timezone"):
         if not plan.get(key):
             raise InstallError(f"설치 계획에 {key} 항목이 없어요")
+        if not isinstance(plan[key], str):
+            raise InstallError(f"설치 계획의 {key} 항목이 올바르지 않아요")
+    for key in ("disk_id", "partition_uuid"):
+        if plan.get(key) is not None and not isinstance(plan[key], str):
+            raise InstallError(f"설치 계획의 {key} 항목이 올바르지 않아요")
     # An earlier plan format: "alongside" plus the RobinOS partition to replace
     if plan.get("replace") and plan["mode"] == "alongside":
         plan["mode"], plan["partition"] = "partition", plan.pop("replace")
@@ -384,6 +467,13 @@ def read_plan(path):
 def prepare_disk(plan, disk):
     """Partitions and formats; returns (esp, root) partition paths."""
     progress(2, "디스크 준비")
+    # Changing the boot order can make Windows ask for the BitLocker recovery key;
+    # without it the Windows files cannot be opened again. That holds for a
+    # BitLocker Windows next to RobinOS and for one on another disk, even when
+    # this disk is erased
+    if (plan.get("bitlocker_elsewhere") or (plan["mode"] != "whole" and disk["bitlocker"])) \
+            and plan.get("bitlocker_key_saved") is not True:
+        raise InstallError("윈도우 드라이브가 BitLocker로 잠겨 있어요. 복구 키를 따로 적어 둔 뒤 다시 설치해요")
     if plan["mode"] == "whole":
         if not disk["can_whole"]:
             raise InstallError("디스크가 40GB보다 작아요")
@@ -397,10 +487,6 @@ def prepare_disk(plan, disk):
     else:
         if disk["pttype"] != "gpt" or not disk["esp"]:
             raise InstallError("이 방식으로 설치하려면 GPT 디스크에 EFI 파티션이 있어야 해요")
-        # Changing the boot order can make Windows ask for the BitLocker recovery
-        # key; without it the Windows files cannot be opened again
-        if disk["bitlocker"] and plan.get("bitlocker_key_saved") is not True:
-            raise InstallError("윈도우 드라이브가 BitLocker로 잠겨 있어요. 복구 키를 따로 적어 둔 뒤 다시 설치해요")
         if plan["mode"] == "partition":
             # Into a partition that exists: one made in Disk Management, or an
             # earlier RobinOS one. It must be one `disks` offers, checked again now
@@ -409,6 +495,8 @@ def prepare_disk(plan, disk):
                 raise InstallError(f"고른 파티션을 찾지 못했어요: {plan['partition']}")
             if not chosen["usable"]:
                 raise InstallError(f"{chosen['path']}에는 설치할 수 없어요: {chosen['reason']}")
+            if plan.get("partition_uuid") and plan["partition_uuid"] != chosen["uuid"]:
+                raise InstallError(f"{chosen['path']}가 보여 드린 파티션과 달라요. 설치기를 닫고 다시 열어 주세요")
             # Named and typed like the ones robin-install makes, so a next install
             # finds it as RobinOS's own
             number = str(chosen["number"])
@@ -692,6 +780,8 @@ def install(plan_path):
     disk = next((d for d in disks if d["path"] == plan["disk"]), None)
     if disk is None:
         raise InstallError(f"설치할 수 없는 디스크예요: {plan['disk']}")
+    check_same_disk(plan, disk)
+    plan["bitlocker_elsewhere"] = any(d["bitlocker"] for d in disks if d["path"] != disk["path"] and not d["removable"])
     plan["dual_boot"] = (plan["mode"] != "whole" and disk["windows"]) or windows_elsewhere(disks, disk["path"])
     say(f"# RobinOS 설치: {disk['path']} ({disk['model'] or '이름 없음'}), 방식 {plan['mode']}"
         + (", 윈도우와 함께 부팅" if plan["dual_boot"] else ""))
@@ -734,7 +824,7 @@ def main():
             log_file = open(LOG_FILE, "a") if os.geteuid() == 0 else None
             install(sys.argv[2])
             return 0
-        except (InstallError, subprocess.CalledProcessError, OSError, KeyError, ValueError) as error:
+        except (InstallError, subprocess.CalledProcessError, OSError, KeyError, ValueError, TypeError, AttributeError) as error:
             say(f"@@ error {error}")
             stop_keyring_agent()
             subprocess.run(["umount", "-R", TARGET], capture_output=True)

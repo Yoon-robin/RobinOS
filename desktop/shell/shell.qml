@@ -59,7 +59,9 @@ ShellRoot {
 
     Welcome {}
 
-    Installer {}
+    Installer {
+        id: installerWindow
+    }
 
     LearnCenter {}
 
@@ -220,6 +222,11 @@ ShellRoot {
 
         function installer(): void {
             ShellState.openInstaller();
+        }
+
+        // The installer's state as JSON, without the password (VM test)
+        function installerState(): string {
+            return installerWindow.testState();
         }
 
         function learnCenter(): void {

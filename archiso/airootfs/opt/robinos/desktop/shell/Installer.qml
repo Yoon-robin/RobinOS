@@ -44,6 +44,11 @@ FloatingWindow {
     readonly property int maxSizeGb: disk !== null ? Math.floor(disk.free / gib) : 0
     readonly property var chosenPartition: disk !== null && partitionPath !== ""
                                            ? (disk.partitions ?? []).find(p => p.path === partitionPath) ?? null : null
+    // BitLocker on a disk that stays, this one next to RobinOS or another one: a
+    // changed boot order can make Windows ask for its recovery key
+    readonly property bool bitlockerAtRisk: disk !== null
+                                            && ((mode !== "whole" && disk.bitlocker)
+                                                || disks.some(d => d.path !== diskPath && d.bitlocker && !d.removable))
     // Windows ends up in the GRUB menu (robin-install decides the same way)
     readonly property bool dualBoot: disk !== null
                                      && ((mode !== "whole" && disk.windows)
@@ -73,7 +78,7 @@ FloatingWindow {
                 return eraseConfirmed;
             if (mode === "partition" && !eraseConfirmed)
                 return false;
-            return !(disk && disk.bitlocker) || recoveryConfirmed;
+            return !bitlockerAtRisk || recoveryConfirmed;
         default:
             return false;
         }
@@ -223,6 +228,16 @@ FloatingWindow {
         mode = d.can_alongside ? "alongside" : d.can_partition ? "partition" : d.can_whole ? "whole" : "";
     }
 
+    // What the wizard shows, for the VM test (scripts/install-test.py asks through
+    // `qs ipc call shell installerState`); the password is not in it
+    function testState() {
+        return JSON.stringify({
+            step: step, mode: mode, disk: diskPath, partition: partitionPath, sizeGb: sizeGb,
+            canNext: canNext, eraseConfirmed: eraseConfirmed, recoveryConfirmed: recoveryConfirmed,
+            bitlockerAtRisk: bitlockerAtRisk, user: userField.text, installing: installing
+        });
+    }
+
     function chooseMode(key) {
         mode = key;
         eraseConfirmed = false;
@@ -343,8 +358,13 @@ FloatingWindow {
                 plan.partition = root.partitionPath;
             else if (root.mode === "alongside")
                 plan.size_gb = root.sizeGb;
-            if (root.mode !== "whole" && root.disk && root.disk.bitlocker)
+            if (root.bitlockerAtRisk)
                 plan.bitlocker_key_saved = root.recoveryConfirmed;
+            // So robin-install can tell that these are the disk and partition that were shown
+            if (root.disk)
+                plan.disk_id = root.disk.id;
+            if (root.mode === "partition" && root.chosenPartition)
+                plan.partition_uuid = root.chosenPartition.uuid;
             installProc.write(JSON.stringify(plan) + "\n");
             // robin-install reads the plan until end of input
             installProc.stdinEnabled = false;
@@ -1175,7 +1195,7 @@ FloatingWindow {
                         // A BitLocker drive asks for its recovery key once the boot
                         // order changes; without the key Windows' files are gone
                         ConfirmBox {
-                            visible: root.mode !== "whole" && root.disk !== null && root.disk.bitlocker
+                            visible: root.bitlockerAtRisk
                             checked: root.recoveryConfirmed
                             label: "윈도우 드라이브가 BitLocker로 잠겨 있어요. 설치한 뒤 윈도우가 복구 키를 물을 수 있어요. 복구 키(aka.ms/myrecoverykey)를 따로 적어 두었어요"
                             onToggled: root.recoveryConfirmed = !root.recoveryConfirmed
