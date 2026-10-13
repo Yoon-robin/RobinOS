@@ -674,6 +674,11 @@ said "preview warns about a metered connection" "데이터 요금이 드는 연�
 printf '#!/bin/sh\nexit 2\n' >"${PREVIEW_BIN}/checkupdates"
 check "update preview with nothing new" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --preview
 said "preview says everything is current" "모두 최신이에요"
+# checkupdates exits 1 when it cannot look: that is not "up to date"
+printf '#!/bin/sh\nexit 1\n' >"${PREVIEW_BIN}/checkupdates"
+check "update preview when checkupdates fails" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --preview
+said "a failed look is not called up to date" "확인하지 못했어요"
+if grep -q "모두 최신이에요" "${WORK}/out"; then bad "a failed look says everything is current"; else ok "a failed look doesn't say everything is current"; fi
 
 printf '%s\n' "Web lab (robinctl lab) with stand-in docker, sudo and systemctl"
 FAKE="${WORK}/fake"

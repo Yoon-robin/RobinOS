@@ -612,7 +612,8 @@ def phase_installed(con, qmp):
     con.run("pacman -Q deja-dup && test -f /usr/share/applications/org.gnome.DejaDup.desktop")
     # The shell's update dot asks checkupdates: 0 = updates, 2 = none, 1 = it failed
     con.run("checkupdates | tail -n 3; rc=${PIPESTATUS[0]}; echo checkupdates=$rc; [ $rc -ne 1 ]")
-    con.run("flatpak remotes --system", check=False)
+    # (the flatpak package ships /usr/share/flatpak/remotes.d/flathub.flatpakrepo)
+    con.run("flatpak remotes --system | grep -qw flathub")
     # What the default install opens to the network (docs/ethics.md): CUPS only on
     # localhost, no sshd; Avahi's 5353/udp is the one service the LAN can reach
     con.run("ss -Htuln", check=False)

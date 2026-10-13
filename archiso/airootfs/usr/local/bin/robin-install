@@ -36,8 +36,9 @@ clock stays in local time.
 Output: the commands and their output, plus lines for the GUI:
   @@ <percent> <message>     progress
   @@ error <message>         the install stopped
-A copy goes to /var/log/robin-install.log. pacstrap runs with LC_ALL=C.UTF-8:
-the live session is Korean, and the progress reads pacman's English lines.
+A copy goes to /var/log/robin-install.log. While the packages come in, the bar
+moves with pacman's lines (PacmanProgress); pacstrap runs with LC_ALL=C.UTF-8
+because those lines are the English ones.
 """
 
 import json
@@ -415,22 +416,27 @@ def gpu_drivers(devices=PCI_DEVICES):
 
 
 class PacmanProgress:
-    """Turns pacman's lines (no progress bars, as it isn't on a terminal) into
-    progress: downloading takes 12-42%, installing 42-70%.
+    """Turns pacman's lines into progress: downloading takes 12-42%, installing
+    42-70%. Piped, pacman has no progress bars and no "(3/987)" counters (those
+    are for a terminal), so the packages are counted from these lines:
 
       Packages (987) a-1.0-1 b-2.0-1 ...      the transaction's size
        linux-6.17.1.arch1-1-x86_64 downloading...
-      (  1/987) installing a
+      installing a...
     Database downloads (" core downloading...") come before the package list
-    and don't count."""
+    and don't count. The lines are pacman's English ones: pacstrap runs with
+    LC_ALL=C.UTF-8, as the live session is Korean."""
 
     TOTAL = re.compile(r"^Packages \((\d+)\)")
     DOWNLOAD = re.compile(r"^ \S+ downloading\.\.\.$")
-    INSTALL = re.compile(r"\(\s*(\d+)/(\d+)\) installing ")
+    INSTALL = re.compile(r"^installing \S+\.\.\.$")
+    # On a terminal pacman does print the counter; take it as it is
+    COUNTED = re.compile(r"\(\s*(\d+)/(\d+)\) installing ")
 
     def __init__(self):
         self.total = 0
         self.downloaded = 0
+        self.installed = 0
 
     def feed(self, line):
         """(percent, message) to show for this line, or None."""
@@ -444,11 +450,16 @@ class PacmanProgress:
                 return (12 + 30 * self.downloaded // self.total,
                         f"패키지 내려받기 ({self.downloaded}/{self.total})")
             return None
-        match = self.INSTALL.search(line)
+        match = self.COUNTED.search(line)
         if match:
             done, total = int(match.group(1)), int(match.group(2))
-            if done % 10 == 0 or done == total:
-                return 42 + 28 * done // total, f"패키지 설치 ({done}/{total})"
+        elif self.total and self.INSTALL.match(line):
+            self.installed = min(self.installed + 1, self.total)
+            done, total = self.installed, self.total
+        else:
+            return None
+        if done % 10 == 0 or done == total:
+            return 42 + 28 * done // total, f"패키지 설치 ({done}/{total})"
         return None
 
 

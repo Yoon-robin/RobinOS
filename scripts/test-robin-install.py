@@ -127,7 +127,7 @@ except robin.InstallError:
 check("BitLocker without the recovery key confirmed: refused", refused, True)
 check("refused before touching the disk", ran, [])
 
-print("pacman progress (the live session is Korean; pacstrap runs in C.UTF-8)")
+print("pacman progress (piped, pacman prints \"installing name...\" without counters)")
 pacman = robin.PacmanProgress()
 check("database downloads before the package list don't count", pacman.feed(" core downloading..."), None)
 check("the package list starts the download step", pacman.feed("Packages (40) a-1-1 b-1-1"), (12, "패키지 내려받기 (0/40)"))
@@ -135,9 +135,14 @@ shown = [pacman.feed(f" pkg{n}-1-1-x86_64 downloading...") for n in range(40)]
 check("downloads report every tenth package", [s for s in shown if s],
       [(19, "패키지 내려받기 (10/40)"), (27, "패키지 내려받기 (20/40)"),
        (34, "패키지 내려받기 (30/40)"), (42, "패키지 내려받기 (40/40)")])
-check("installing takes 42-70%", pacman.feed("( 20/40) installing glibc"), (56, "패키지 설치 (20/40)"))
-check("the last package reaches 70%", pacman.feed("(40/40) installing zstd"), (70, "패키지 설치 (40/40)"))
 check("other lines show nothing", pacman.feed(":: Processing package changes..."), None)
+check("checking steps with a counter show nothing", pacman.feed("(40/40) checking keys in keyring..."), None)
+shown = [pacman.feed(f"installing pkg{n}...") for n in range(40)]
+check("installing takes 42-70%, a tenth at a time", [s for s in shown if s],
+      [(49, "패키지 설치 (10/40)"), (56, "패키지 설치 (20/40)"),
+       (63, "패키지 설치 (30/40)"), (70, "패키지 설치 (40/40)")])
+check("a terminal's counter is taken as it is", robin.PacmanProgress().feed("( 20/40) installing glibc"),
+      (56, "패키지 설치 (20/40)"))
 
 print("Disk picture and an earlier RobinOS partition")
 MIB = 1024**2

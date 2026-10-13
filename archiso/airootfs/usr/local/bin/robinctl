@@ -410,10 +410,18 @@ doctor() {
 # throwaway copy of the package databases (checkupdates), so stopping here leaves
 # the system's own databases as they were. Returns 1 when the person stops.
 update_preview() {
-  local mode="$1" db list count bytes metered next
+  local mode="$1" db list count bytes metered next rc
   have_cmd checkupdates || return 0
   db="$(mktemp -d)"
-  list="$(CHECKUPDATES_DB="${db}" checkupdates 2>/dev/null || true)"
+  # checkupdates: 0 = updates, 2 = none, 1 = it could not look (no network, a
+  # mirror down). Only 2 means "up to date"; 1 must not look like it
+  rc=0
+  list="$(CHECKUPDATES_DB="${db}" checkupdates 2>/dev/null)" || rc=$?
+  if [[ "${rc}" -eq 1 ]]; then
+    printf '업데이트가 있는지 확인하지 못했어요. 인터넷 연결을 확인해 주세요. 계속하면 pacman이 다시 시도해요.\n'
+    rm -rf "${db}"
+    return 0
+  fi
   if [[ -z "${list}" ]]; then
     printf '시스템 패키지는 모두 최신이에요.\n'
     rm -rf "${db}"

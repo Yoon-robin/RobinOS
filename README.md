@@ -10,7 +10,7 @@ RobinOS는 처음 쓰는 리눅스예요. 리눅스를 처음 써 보는 사람�
 
 Arch Linux 위에 셸, 설치기, 업데이트 저장소, 스냅샷 복구를 RobinOS가 직접 만들어 얹었어요. 목적과 설계는 [docs/design.md](docs/design.md), 왜 만드는지는 [docs/vision.md](docs/vision.md)에 있어요.
 
-**내려받기**: 최신 프리뷰는 [v0.2.0](https://github.com/Yoon-robin/RobinOS/releases/tag/v0.2.0)이에요(2026-10-10). 아직 VM에서만 검증한 프리뷰라 중요한 자료는 꼭 백업하세요. USB에 담기 전에 체크섬과 서명을 확인하는 방법은 [docs/install.md](docs/install.md)의 "내려받은 ISO 확인하기"에 있어요. 대부분의 PC는 USB로 켜기 전에 펌웨어 설정에서 **보안 부팅(Secure Boot)을 꺼야 해요**(같은 문서의 "보안 부팅 끄기").
+**내려받기**: 최신 프리뷰는 [v0.3.0](https://github.com/Yoon-robin/RobinOS/releases/tag/v0.3.0)이에요(2026-10-13, [무엇이 바뀌었나](docs/release-notes-v0.3.md)). VM에서 검증했고 실제 PC는 아직 몇 대만 확인한 프리뷰라 중요한 자료는 꼭 백업하세요. USB에 담기 전에 체크섬과 서명을 확인하는 방법은 [docs/install.md](docs/install.md)의 "내려받은 ISO 확인하기"에 있어요. 대부분의 PC는 USB로 켜기 전에 펌웨어 설정에서 **보안 부팅(Secure Boot)을 꺼야 해요**(같은 문서의 "보안 부팅 끄기").
 
 ## 화면
 

@@ -32,6 +32,8 @@ fcitx5-qt
 brightnessctl
 bluez
 bluez-utils
+# Thunderbolt docks and drives ask for approval through bolt (the live ISO has it too)
+bolt
 upower
 power-profiles-daemon
 
