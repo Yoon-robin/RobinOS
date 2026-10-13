@@ -1580,3 +1580,154 @@ h3 {
   font-family: var(--mono);
   font-size: 14px;
 }
+
+/* ==== Motion-graphic pass (2026-10-13): shorter copy, words and screens that arrive ==== */
+
+.section-title {
+  max-width: 900px;
+  margin-bottom: 52px;
+}
+
+.section-sub {
+  margin: -32px 0 32px;
+  font-size: 18px;
+  color: var(--muted);
+}
+
+/* Heading words rise out of a blur one after another (main.js splits them) */
+.kinetic .w {
+  display: inline-block;
+}
+
+.js .kinetic .w {
+  opacity: 0;
+  transform: translateY(0.45em);
+  filter: blur(10px);
+  transition: opacity 800ms var(--ease), transform 900ms var(--ease), filter 800ms var(--ease);
+  transition-delay: calc(var(--w, 0) * 70ms);
+}
+
+.js .kinetic.in .w {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+.kinetic.in .mark {
+  background-size: 100% 0.08em;
+}
+
+/* Screens open like a curtain from the top */
+.js .wipe {
+  clip-path: inset(0 0 100% 0);
+  transform: scale(1.06);
+  transition: clip-path 1100ms var(--ease), transform 1500ms var(--ease);
+}
+
+.js .wipe.in {
+  clip-path: inset(0);
+  transform: none;
+}
+
+.js .tile:hover .wipe.in {
+  transform: scale(1.04);
+}
+
+.tile > h3 {
+  margin: 0;
+  padding: 26px 28px 20px;
+  font-size: 19px;
+  letter-spacing: -0.02em;
+}
+
+.hint {
+  margin-left: 8px;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--subtle);
+}
+
+/* Real counts, counted up as they arrive */
+.stats {
+  width: var(--wrap);
+  margin: 170px auto 0;
+  padding: 56px 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  border-block: 1px solid var(--line);
+}
+
+.stat b {
+  display: block;
+  font-size: clamp(64px, 9vw, 132px);
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.055em;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat span {
+  display: block;
+  margin-top: 12px;
+  font-size: 16px;
+  color: var(--muted);
+}
+
+.tags {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tags li {
+  padding: 7px 15px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+#start .steps {
+  margin-top: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js .kinetic .w,
+  .js .wipe {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    clip-path: none;
+    transition: none;
+  }
+
+  .kinetic .mark {
+    background-size: 100% 0.08em;
+  }
+}
+
+@media (max-width: 900px) {
+  .stats {
+    grid-template-columns: 1fr;
+    gap: 36px;
+    margin-top: 120px;
+  }
+}
+
+/* The older .lists rules made the tags a column */
+.lists .tags {
+  display: flex;
+  gap: 8px;
+}
+
+.lists .tags li {
+  font-size: 15px;
+  color: var(--fg);
+}
