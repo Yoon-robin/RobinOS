@@ -150,10 +150,15 @@ FloatingWindow {
     minimumSize: Qt.size(680, 600)
     color: Theme.bg
 
+    // Opened again, it starts over with the disks as they are now (a partition may
+    // have been made meanwhile); only a running install stays on its page
     onVisibleChanged: {
         if (!visible) {
             ShellState.installerOpen = false;
-        } else if (step === 0) {
+        } else if (step !== 4) {
+            step = 0;
+            eraseConfirmed = false;
+            recoveryConfirmed = false;
             refreshDisks();
         }
     }

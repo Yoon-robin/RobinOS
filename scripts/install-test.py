@@ -497,6 +497,23 @@ def wait_installer(con, what, test, timeout=90):
     raise RuntimeError(f"the installer never got to: {what}; last state {state}")
 
 
+def show_free_space(con, qmp):
+    """The installer on a disk with about 44 GB free next to Windows: the free space is
+    offered, RobinOS gets all of it until the slider says less."""
+    qmp.keys("esc")  # the welcome wizard of the first login is on top and takes the keys
+    sleep(3)
+    con.run(INSTALLER_IPC + "installer", check=False)
+    sleep(5)
+    qmp.keys("ret")
+    state = wait_installer(con, "the free space is offered",
+                           lambda st: st["step"] == 1 and st["disk"] == "/dev/vda")
+    shot(qmp, "installer-free-space")
+    if state["mode"] != "alongside" or state["sizeGb"] < 40 or not state["canNext"]:
+        raise RuntimeError(f"the installer didn't offer the free space with a size: {state}")
+    qmp.keys("alt", "f4")
+    sleep(2)
+
+
 def drive_installer(con, qmp):
     """The installer as a person uses it, with the keyboard, up to the last question:
     the partition made in Disk Management is preselected, the wizard cannot go on
@@ -563,6 +580,7 @@ def phase_live(con, qmp):
         make_windows_disk(con)
         before = windows_state(con)
         use_checkout_installer(con)
+        show_free_space(con, qmp)
         # The free space with a size: 41 of the ~44 GB become RobinOS's partition,
         # which then counts as an earlier RobinOS one; remove it again
         con.put_file("/root/size-check.py", SIZE_CHECK)

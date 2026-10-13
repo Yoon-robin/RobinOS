@@ -188,6 +188,7 @@ a {
 }
 
 .nav-link {
+  padding: 6px 4px;
   color: var(--muted);
   font-size: 14px;
   text-decoration: none;
@@ -235,6 +236,7 @@ a {
 }
 
 .more {
+  padding: 6px 2px;
   color: var(--link);
   font-size: 17px;
   text-decoration: none;
@@ -665,6 +667,11 @@ kbd {
   font-size: 15px;
 }
 
+.end-meta,
+.end-note {
+  text-wrap: balance;
+}
+
 .end-note {
   margin: 4px 0 0;
   color: var(--muted);
@@ -700,11 +707,14 @@ kbd {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px 22px;
-  margin-bottom: 12px;
+  gap: 0 14px;
+  margin-bottom: 8px;
 }
 
+/* Tall enough to hit with a finger (24 px at least, WCAG 2.2) */
 .footer-links a {
+  display: inline-block;
+  padding: 7px 8px;
   color: var(--muted);
   text-decoration: none;
 }

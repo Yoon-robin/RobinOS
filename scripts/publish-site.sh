@@ -22,6 +22,14 @@ for f in site/index.html site/.nojekyll; do
   git cat-file -e "HEAD:${f}" 2>/dev/null || { printf '%s가 커밋에 없어요\n' "${f}" >&2; exit 1; }
 done
 
+# The download button names a release; a new version must not leave it dangling
+tag="$(git show HEAD:site/index.html | grep -o 'releases/tag/v[0-9.]*' | head -n 1 | cut -d/ -f3)"
+if [[ -n "${tag}" ]] && command -v gh >/dev/null 2>&1; then
+  gh release view "${tag}" --repo Yoon-robin/RobinOS >/dev/null 2>&1 \
+    || { printf '내려받기 단추의 릴리스 %s가 없어요. site/index.html을 고쳐요.\n' "${tag}" >&2; exit 1; }
+  printf '내려받기 단추의 릴리스: %s\n' "${tag}"
+fi
+
 commit="$(git subtree split -q --prefix site HEAD)"
 printf 'site/ → gh-pages: %s\n' "${commit}"
 if [[ "${1:-}" == "--dry-run" ]]; then
