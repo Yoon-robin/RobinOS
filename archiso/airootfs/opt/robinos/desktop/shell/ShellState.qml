@@ -1074,6 +1074,9 @@ Singleton {
     // CriticalPowerAction puts the laptop to sleep or turns it off.
 
     readonly property var battery: UPower.displayDevice
+    readonly property bool hasBattery: battery.ready && battery.isLaptopBattery
+    // A laptop off the charger (the installer asks to plug it in)
+    readonly property bool unplugged: hasBattery && battery.state === UPowerDeviceState.Discharging
     // The lowest level already warned about since the battery last charged
     property int batteryWarned: 100
 

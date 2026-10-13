@@ -20,17 +20,24 @@ file. A plan file is deleted after reading. The plan:
     "timezone": "Asia/Seoul",
     "bitlocker_key_saved": true  needed for "alongside" when Windows is on
                               BitLocker: the person has its recovery key
+    "replace": "/dev/nvme0n1p5"  optional, "alongside" only: install into this
+                              earlier RobinOS partition (`disks` lists it as
+                              "robinos") instead of the free space, e.g. after an
+                              install that stopped half way
   }
 
 Layout: GPT; the EFI system partition on /efi (Windows' own one in
 "alongside"); Btrfs with @ on /, @home, @log, @pkg and @snapshots on
 /.snapshots. /boot stays inside @, so every snapshot carries its kernel
-(docs/recovery.md). UEFI only.
+(docs/recovery.md). UEFI only. When Windows is on this PC (next to RobinOS, or
+on another fixed disk), its boot manager goes in the GRUB menu and the hardware
+clock stays in local time.
 
 Output: the commands and their output, plus lines for the GUI:
   @@ <percent> <message>     progress
   @@ error <message>         the install stopped
-A copy goes to /var/log/robin-install.log.
+A copy goes to /var/log/robin-install.log. pacstrap runs with LC_ALL=C.UTF-8:
+the live session is Korean, and the progress reads pacman's English lines.
 """
 
 import json
@@ -45,12 +52,13 @@ TARGET = "/mnt"
 LOG_FILE = "/var/log/robin-install.log"
 MIN_SIZE = 40 * 1024**3
 ESP_TYPE = "c12a7328-f81f-11d2-ba4b-00a0c93ec93b"
-# Microsoft reserved, basic data and recovery partitions
-WINDOWS_TYPES = {
-    "e3c9e316-0b5c-4db8-817d-f92df00215ae",
-    "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7",
-    "de94bba4-06d1-4d40-a16a-bfd50179d6ac",
-}
+WINDOWS_RESERVED_TYPE = "e3c9e316-0b5c-4db8-817d-f92df00215ae"
+WINDOWS_DATA_TYPE = "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7"
+WINDOWS_RECOVERY_TYPE = "de94bba4-06d1-4d40-a16a-bfd50179d6ac"
+WINDOWS_TYPES = {WINDOWS_RESERVED_TYPE, WINDOWS_DATA_TYPE, WINDOWS_RECOVERY_TYPE}
+LINUX_TYPE = "0fc63daf-8483-4772-8e79-3d69d8477de4"
+# The GPT name robin-install gives its partition
+ROBINOS_LABEL = "RobinOS"
 SUBVOLUMES = [("@", ""), ("@home", "home"), ("@log", "var/log"),
               ("@pkg", "var/cache/pacman/pkg"), ("@snapshots", ".snapshots")]
 MOUNT_OPTIONS = "noatime,compress=zstd:1"
@@ -89,12 +97,12 @@ def progress(percent, message):
     say(f"@@ {percent} {message}")
 
 
-def run(*cmd, input=None, on_line=None):
+def run(*cmd, input=None, on_line=None, env=None):
     """Runs a command, streaming its output; raises InstallError on failure."""
     say("$ " + shlex.join(cmd))
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE if input else subprocess.DEVNULL,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
-                            errors="replace")
+                            errors="replace", env=env)
     if input:
         proc.stdin.write(input)
         proc.stdin.close()
@@ -141,20 +149,74 @@ def live_disk():
         return None
 
 
-def free_spaces(disk):
-    """[(start, end, size)] in bytes from `parted -m ... print free`."""
-    spaces = []
+def parted_table(disk):
+    """The disk from start to end, from `parted -m ... print free`:
+    [("part", number, size)] and [("free", 0, size)] in disk order, in bytes."""
+    rows = []
     for line in output("parted", "-m", "-s", disk, "unit", "B", "print", "free").splitlines():
         fields = line.rstrip(";").split(":")
-        if len(fields) >= 5 and fields[4] == "free":
-            start, end, size = (int(field.rstrip("B")) for field in fields[1:4])
-            spaces.append((start, end, size))
-    return spaces
+        if len(fields) < 5 or not fields[0].isdigit():
+            continue  # "BYT;" and the disk's own line
+        size = int(fields[3].rstrip("B"))
+        if fields[4] == "free":
+            rows.append(("free", 0, size))
+        else:
+            rows.append(("part", int(fields[0]), size))
+    return rows
+
+
+def free_spaces(disk):
+    """Sizes of the free blocks on a disk, in bytes."""
+    return [size for kind, _, size in parted_table(disk) if kind == "free"]
+
+
+def is_robinos(part):
+    """A partition an earlier robin-install made (its GPT name), finished or not."""
+    return part.get("partlabel") == ROBINOS_LABEL and (part.get("parttype") or "").lower() == LINUX_TYPE
+
+
+def segment(part):
+    """How the installer's disk picture shows a partition."""
+    parttype = (part.get("parttype") or "").lower()
+    if parttype == ESP_TYPE:
+        kind, name = "efi", "EFI"
+    elif is_robinos(part):
+        kind, name = "robinos", "RobinOS"
+    elif parttype == WINDOWS_RECOVERY_TYPE:
+        kind, name = "system", "윈도우 복구"
+    elif parttype == WINDOWS_RESERVED_TYPE:
+        kind, name = "system", "윈도우 예약"
+    elif part.get("fstype") in ("ntfs", "BitLocker") or parttype in WINDOWS_TYPES:
+        kind, name = "windows", part.get("label") or "윈도우"
+    else:
+        kind, name = "other", part.get("label") or part.get("fstype") or "파티션"
+    return {"kind": kind, "name": name, "size": int(part.get("size") or 0), "path": part["path"]}
+
+
+def disk_layout(dev, parts):
+    """The disk picture: partitions and free blocks in disk order. Alignment gaps
+    under 64 MiB are left out; a disk without a partition table is one free block."""
+    size = int(dev.get("size") or 0)
+    if not dev.get("pttype"):
+        return [{"kind": "free", "name": "빈 공간", "size": size, "path": ""}]
+    by_number = {int(p["partn"]): p for p in parts if p.get("partn")}
+    try:
+        table = parted_table(dev["path"])
+    except subprocess.CalledProcessError:
+        return [segment(p) for p in parts]
+    layout = []
+    for kind, number, part_size in table:
+        if kind == "free":
+            if part_size >= 64 * 1024**2:
+                layout.append({"kind": "free", "name": "빈 공간", "size": part_size, "path": ""})
+        elif number in by_number:
+            layout.append(segment(by_number[number]))
+    return layout
 
 
 def list_disks():
     data = json.loads(output("lsblk", "-J", "-b", "-o",
-                             "NAME,PATH,SIZE,TYPE,MODEL,TRAN,RM,RO,PTTYPE,PARTTYPE,FSTYPE,LABEL"))
+                             "NAME,PATH,SIZE,TYPE,MODEL,TRAN,RM,RO,PTTYPE,PARTTYPE,PARTLABEL,PARTN,FSTYPE,LABEL"))
     live = live_disk()
     disks = []
     for dev in data.get("blockdevices", []):
@@ -168,12 +230,14 @@ def list_disks():
                       or (p.get("parttype") or "").lower() in WINDOWS_TYPES for p in parts)
         # blkid names an encrypted Windows volume "BitLocker"
         bitlocker = any(p.get("fstype") == "BitLocker" for p in parts)
+        robinos = next(({"path": p["path"], "size": int(p.get("size") or 0)} for p in parts if is_robinos(p)), None)
         largest_free = 0
         if dev.get("pttype") == "gpt":
             try:
-                largest_free = max((size for _, _, size in free_spaces(dev["path"])), default=0)
+                largest_free = max(free_spaces(dev["path"]), default=0)
             except subprocess.CalledProcessError:
                 pass
+        room = largest_free >= MIN_SIZE or (robinos is not None and robinos["size"] >= MIN_SIZE)
         disks.append({
             "path": dev["path"],
             "size": int(dev.get("size") or 0),
@@ -185,10 +249,18 @@ def list_disks():
             "windows": windows,
             "bitlocker": bitlocker,
             "free": largest_free,
+            "robinos": robinos,
+            "layout": disk_layout(dev, parts),
             "can_whole": int(dev.get("size") or 0) >= MIN_SIZE,
-            "can_alongside": dev.get("pttype") == "gpt" and esp is not None and largest_free >= MIN_SIZE,
+            "can_alongside": dev.get("pttype") == "gpt" and esp is not None and room,
         })
     return disks
+
+
+def windows_elsewhere(disks, path):
+    """Windows installed on another fixed disk of this PC: an EFI partition next to
+    NTFS. A data disk formatted NTFS has no EFI partition and doesn't count."""
+    return any(d["path"] != path and d["windows"] and d["esp"] and not d["removable"] for d in disks)
 
 
 def partitions(disk):
@@ -227,8 +299,11 @@ def read_plan(path):
         raise InstallError("사용자 이름은 영어 소문자로 시작하고 소문자, 숫자, -, _만 쓸 수 있어요")
     if not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9-]{0,62}", plan["hostname"]):
         raise InstallError("컴퓨터 이름은 영어, 숫자, -만 쓸 수 있어요")
-    if not os.path.isfile(f"/usr/share/zoneinfo/{plan['timezone']}"):
+    if (not re.fullmatch(r"[A-Za-z0-9_+-]+(/[A-Za-z0-9_+-]+)*", plan["timezone"])
+            or not os.path.isfile(f"/usr/share/zoneinfo/{plan['timezone']}")):
         raise InstallError(f"알 수 없는 시간대예요: {plan['timezone']}")
+    if plan.get("replace") and plan["mode"] != "alongside":
+        raise InstallError("이전 RobinOS 파티션은 윈도우 옆에 설치할 때만 다시 써요")
     return plan
 
 
@@ -252,14 +327,25 @@ def prepare_disk(plan, disk):
         # key; without it the Windows files cannot be opened again
         if disk["bitlocker"] and plan.get("bitlocker_key_saved") is not True:
             raise InstallError("윈도우 드라이브가 BitLocker로 잠겨 있어요. 복구 키를 따로 적어 둔 뒤 다시 설치해요")
-        before = set(partitions(disk["path"]).values())
-        # 0:0:0 = next number, the largest free block, all of it
-        run("sgdisk", "-n", "0:0:0", "-t", "0:8300", "-c", "0:RobinOS", disk["path"])
-        settle(disk["path"])
-        new = set(partitions(disk["path"]).values()) - before
-        if len(new) != 1:
-            raise InstallError("새 파티션을 찾지 못했어요")
-        esp, root = disk["esp"], new.pop()
+        if plan.get("replace"):
+            # The person chose to install over the earlier RobinOS partition
+            earlier = disk["robinos"]
+            if earlier is None or earlier["path"] != plan["replace"]:
+                raise InstallError(f"다시 쓸 RobinOS 파티션을 찾지 못했어요: {plan['replace']}")
+            if earlier["size"] < MIN_SIZE:
+                raise InstallError("이전 RobinOS 파티션이 40GB보다 작아요")
+            esp, root = disk["esp"], earlier["path"]
+        else:
+            if disk["free"] < MIN_SIZE:
+                raise InstallError("빈 공간이 40GB보다 적어요")
+            before = set(partitions(disk["path"]).values())
+            # 0:0:0 = next number, the largest free block, all of it
+            run("sgdisk", "-n", "0:0:0", "-t", "0:8300", "-c", f"0:{ROBINOS_LABEL}", disk["path"])
+            settle(disk["path"])
+            new = set(partitions(disk["path"]).values()) - before
+            if len(new) != 1:
+                raise InstallError("새 파티션을 찾지 못했어요")
+            esp, root = disk["esp"], new.pop()
     run("mkfs.btrfs", "-f", "-L", "RobinOS", root)
     return esp, root
 
@@ -328,21 +414,58 @@ def gpu_drivers(devices=PCI_DEVICES):
     return []
 
 
-def install_packages():
-    progress(12, "패키지 설치")
-    guest_packages, guest_services = guest_tools()
-    packages = (package_list("core") + package_list("desktop") + package_list("apps")
-                + ["amd-ucode", "intel-ucode"] + gpu_drivers() + guest_packages)
-    counter = re.compile(r"\(\s*(\d+)/(\d+)\) installing")
+class PacmanProgress:
+    """Turns pacman's lines (no progress bars, as it isn't on a terminal) into
+    progress: downloading takes 12-42%, installing 42-70%.
 
-    def on_line(line):
-        match = counter.search(line)
+      Packages (987) a-1.0-1 b-2.0-1 ...      the transaction's size
+       linux-6.17.1.arch1-1-x86_64 downloading...
+      (  1/987) installing a
+    Database downloads (" core downloading...") come before the package list
+    and don't count."""
+
+    TOTAL = re.compile(r"^Packages \((\d+)\)")
+    DOWNLOAD = re.compile(r"^ \S+ downloading\.\.\.$")
+    INSTALL = re.compile(r"\(\s*(\d+)/(\d+)\) installing ")
+
+    def __init__(self):
+        self.total = 0
+        self.downloaded = 0
+
+    def feed(self, line):
+        """(percent, message) to show for this line, or None."""
+        match = self.TOTAL.match(line)
+        if match:
+            self.total = int(match.group(1))
+            return 12, f"패키지 내려받기 (0/{self.total})"
+        if self.total and self.DOWNLOAD.match(line):
+            self.downloaded = min(self.downloaded + 1, self.total)
+            if self.downloaded % 10 == 0 or self.downloaded == self.total:
+                return (12 + 30 * self.downloaded // self.total,
+                        f"패키지 내려받기 ({self.downloaded}/{self.total})")
+            return None
+        match = self.INSTALL.search(line)
         if match:
             done, total = int(match.group(1)), int(match.group(2))
             if done % 10 == 0 or done == total:
-                progress(12 + 58 * done // total, f"패키지 설치 ({done}/{total})")
+                return 42 + 28 * done // total, f"패키지 설치 ({done}/{total})"
+        return None
 
-    run("pacstrap", "-K", TARGET, *packages, on_line=on_line)
+
+def install_packages():
+    progress(12, "패키지 목록 받기")
+    guest_packages, guest_services = guest_tools()
+    packages = (package_list("core") + package_list("desktop") + package_list("apps")
+                + ["amd-ucode", "intel-ucode"] + gpu_drivers() + guest_packages)
+    pacman = PacmanProgress()
+
+    def on_line(line):
+        shown = pacman.feed(line)
+        if shown:
+            progress(*shown)
+
+    run("pacstrap", "-K", TARGET, *packages, on_line=on_line,
+        env={**os.environ, "LC_ALL": "C.UTF-8"})
     for service in guest_services:
         chroot("systemctl", "enable", service)
     fstab = without_subvolid(output("genfstab", "-U", TARGET))
@@ -377,7 +500,7 @@ def configure_system(plan):
     progress(72, "시스템 설정")
     chroot("ln", "-sf", f"/usr/share/zoneinfo/{plan['timezone']}", "/etc/localtime")
     # Windows keeps the hardware clock in local time; agree with it when sharing the PC
-    chroot("hwclock", "--systohc", "--localtime" if plan["mode"] == "alongside" else "--utc")
+    chroot("hwclock", "--systohc", "--localtime" if plan["dual_boot"] else "--utc")
 
     with open(f"{TARGET}/etc/locale.gen") as f:
         locale_gen = f.read()
@@ -418,7 +541,7 @@ def install_robinos(plan):
         run("cp", "-a", "/usr/share/fonts/robinos", f"{TARGET}/usr/share/fonts/")
 
     progress(80, "부트로더 (GRUB)")
-    if plan["mode"] == "alongside":
+    if plan["dual_boot"]:
         write("/etc/default/grub.d/20-robinos-dual-boot.cfg", "# Windows in the GRUB menu\nGRUB_DISABLE_OS_PROBER=false\n")
     chroot("grub-install", "--target=x86_64-efi", "--efi-directory=/efi", "--boot-directory=/boot",
            "--bootloader-id=RobinOS")
@@ -433,7 +556,7 @@ def install_robinos(plan):
     progress(85, "RobinOS 데스크톱과 스냅샷")
     chroot("env", f"SUDO_USER={plan['user']}", f"{ROBINOS}/scripts/post-install.sh", "--yes")
 
-    if plan["mode"] == "alongside":
+    if plan["dual_boot"]:
         progress(95, "부팅 메뉴에 윈도우 넣기")
         grub_mkconfig_with_udev()
 
@@ -469,10 +592,13 @@ def install(plan_path):
         raise InstallError("UEFI 모드로 부팅한 컴퓨터에만 설치할 수 있어요")
 
     plan = read_plan(plan_path)
-    disk = next((d for d in list_disks() if d["path"] == plan["disk"]), None)
+    disks = list_disks()
+    disk = next((d for d in disks if d["path"] == plan["disk"]), None)
     if disk is None:
         raise InstallError(f"설치할 수 없는 디스크예요: {plan['disk']}")
-    say(f"# RobinOS 설치: {disk['path']} ({disk['model'] or '이름 없음'}), 방식 {plan['mode']}")
+    plan["dual_boot"] = (plan["mode"] == "alongside" and disk["windows"]) or windows_elsewhere(disks, disk["path"])
+    say(f"# RobinOS 설치: {disk['path']} ({disk['model'] or '이름 없음'}), 방식 {plan['mode']}"
+        + (", 윈도우와 함께 부팅" if plan["dual_boot"] else ""))
 
     subprocess.run(["umount", "-R", TARGET], capture_output=True)
     esp, root = prepare_disk(plan, disk)

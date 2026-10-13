@@ -435,7 +435,14 @@ def phase_live(con, qmp):
     if INSTALLER == "windows":
         make_windows_disk(con)
         before = windows_state(con)
-        install_with_robin_install(con, mode="alongside")
+        # An install that stopped half way left its partition in the free space;
+        # the installer offers it again ("replace") instead of failing for room
+        con.run("sgdisk -n 0:0:0 -t 0:8300 -c 0:RobinOS /dev/vda > /dev/null && partprobe /dev/vda && udevadm settle")
+        use_checkout_installer(con)
+        con.run("robin-install disks | python3 -c 'import json,sys; d=json.load(sys.stdin)[0];"
+                " print(d[\"robinos\"], d[\"can_alongside\"], [s[\"kind\"] for s in d[\"layout\"]]);"
+                " assert d[\"robinos\"][\"path\"] == \"/dev/vda4\" and d[\"can_alongside\"]'")
+        install_with_robin_install(con, mode="alongside", replace="/dev/vda4")
         check_windows_kept(con, before)
     elif INSTALLER == "robinos":
         install_with_robin_install(con)
@@ -460,15 +467,22 @@ def phase_live(con, qmp):
     con.wait_closed(180)
 
 
-def install_with_robin_install(con, mode="whole"):
-    """installer/robin-install from this checkout; leaves the target on /mnt."""
+def use_checkout_installer(con):
+    """The live system runs installer/robin-install from this checkout, not the ISO's."""
     con.run("cp -r /share/robinos/. /opt/robinos/"
             " && chmod +x /opt/robinos/bin/* /opt/robinos/installer/* /opt/robinos/scripts/*.sh"
             " /opt/robinos/scripts/*.py /opt/robinos/desktop/bin/*"
             " && install -m755 /opt/robinos/installer/robin-install /usr/local/bin/robin-install")
+
+
+def install_with_robin_install(con, mode="whole", replace=None):
+    """installer/robin-install from this checkout; leaves the target on /mnt."""
+    use_checkout_installer(con)
     con.run("robin-install disks", check=False)
     plan = {"disk": "/dev/vda", "mode": mode, "user": "robin", "password": PASSWORD,
             "hostname": "robinos", "timezone": "Asia/Seoul"}
+    if replace:
+        plan["replace"] = replace
     con.put_file("/root/plan.json", json.dumps(plan))
     con.run("chmod 600 /root/plan.json")
 
@@ -478,6 +492,10 @@ def install_with_robin_install(con, mode="whole"):
     con.run("grep '^@@' /root/robin-install.out", check=False)
     if status != 0:
         raise RuntimeError(f"robin-install failed with {status}")
+    # The bar moves while packages install (42-70%): pacman spoke Korean in the
+    # live session and the progress stood at 12% until 72% (2026-10-13)
+    con.run("grep -Eq '^@@ (4[3-9]|5[0-9]|6[0-9]) ' /root/robin-install.out")
+    con.run("grep -Ec '^@@ (1[3-9]|2[0-9]|3[0-9]|4[01]) ' /root/robin-install.out", check=False)
 
     con.run(f"mount -o subvol=@ {ROOT_PART} /mnt && mount /dev/vda1 /mnt/efi")
     # robin-install locks root; the test logs in on the serial console as root
@@ -604,8 +622,13 @@ def phase_installed(con, qmp):
     # Arch's os-release back (pacman hook; SNAP_PAC_SKIP keeps the snapshot list
     # as the later phases expect). The user's ~/.bashrc loads the RobinOS prompt.
     con.run("SNAP_PAC_SKIP=y pacman -S --noconfirm filesystem > /dev/null"
-            " && (. /etc/os-release && [ \"$ID\" = robinos ] && [ \"$ID_LIKE\" = arch ] && echo \"$PRETTY_NAME\")",
+            " && (. /etc/os-release && [ \"$ID\" = robinos ] && [ \"$ID_LIKE\" = arch ] && echo \"$PRETTY_NAME\")"
+            # and the text console's login prompt too (it said "Arch Linux")
+            " && head -n 1 /etc/issue && grep -q '^RobinOS ' /etc/issue && ! grep -q Arch /etc/issue",
             timeout=600)
+    # Compressed swap in RAM (zram-generator), so a full memory slows down
+    # instead of apps getting killed
+    con.run("swapon --show && swapon --show=NAME --noheadings | grep -qx /dev/zram0")
     con.run("grep -q robinos-bashrc.sh /etc/skel/.bashrc && grep -l robinos-bashrc.sh /home/*/.bashrc")
     # which isn't in Arch's base; the where hint and learning mission 27 need it.
     # ssh-keygen (mission 38) and gpg (mission 40, CTF 8) for the security missions,

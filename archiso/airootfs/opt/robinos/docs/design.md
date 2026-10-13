@@ -156,7 +156,7 @@ Calamares를 쓰지 않은 이유예요.
 
 - Arch 공식 저장소에 없어요. AUR에서 빌드해 RobinOS 전용 저장소를 운영해야 하고, 그 저장소의 서명과 갱신까지 맡아야 해요.
 - Qt Widgets 기반이라 shadcn/ui 기준의 셸과 모양을 맞추기 어려워요. 자체 화면은 셸의 `Theme`, 버튼, 입력 칸을 그대로 써요.
-- RobinOS에 필요한 설치는 하나로 정해져 있어요(GPT, Btrfs 하위 볼륨, `/efi`, GRUB, 스냅샷 설정). 백엔드는 500줄 남짓이고, VM 설치 테스트(`wsl-build.ps1 install-test -Installer robinos`)가 설치부터 스냅샷 되돌리기까지 확인해요.
+- RobinOS에 필요한 설치는 하나로 정해져 있어요(GPT, Btrfs 하위 볼륨, `/efi`, GRUB, 스냅샷 설정). 백엔드는 650줄 남짓이고, VM 설치 테스트(`wsl-build.ps1 install-test -Installer robinos`)가 설치부터 스냅샷 되돌리기까지 확인해요.
 
 ### VM 대응: 렌더링 자동 전환
 

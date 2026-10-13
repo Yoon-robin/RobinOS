@@ -2,7 +2,7 @@
 
 iso_name="robinos"
 iso_label="ROBINOS_$(date +%Y%m)"
-iso_publisher="RobinOS <https://example.invalid/robinos>"
+iso_publisher="RobinOS <https://github.com/Yoon-robin/RobinOS>"
 iso_application="RobinOS Live ISO"
 iso_version="$(date +%Y.%m.%d)"
 install_dir="robinos"

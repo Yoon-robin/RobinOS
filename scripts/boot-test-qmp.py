@@ -5,7 +5,7 @@ Usage: boot-test-qmp.py <qmp-socket | tcp:host:port> <output-dir> [speed]
 
 speed multiplies every wait (1 with KVM, about 4 with TCG). The scenario:
 boot -> welcome wizard (every step, then its missions terminal) -> desktop ->
-launcher (search, Windows app name) -> installer (first two steps) -> quick settings
+launcher (search, Windows app name) -> installer (first three steps, the time zone list) -> quick settings
 (also with Tab) -> terminal with a Windows command and the first learning mission
 -> minimize and restore the terminal -> Super+D twice -> kill the shell and see
 it come back -> light mode (terminal,
@@ -307,6 +307,21 @@ def main():
     keys(qmp, "ret")
     wait(4)
     shot(qmp, "installer-disk")
+    # The blank disk is chosen ("디스크 전체 사용"), so Enter goes on to the user
+    keys(qmp, "ret")
+    wait(3)
+    shot(qmp, "installer-user")
+    # Tab past the user, computer and two password fields to the time zone
+    for _ in range(5):
+        keys(qmp, "tab")
+        wait(0.4)
+    keys(qmp, "ret")
+    wait(2)
+    type_text(qmp, "tokyo")
+    wait(2)
+    shot(qmp, "installer-timezone")
+    keys(qmp, "esc")
+    wait(1)
     keys(qmp, "alt", "f4")
     wait(2)
 

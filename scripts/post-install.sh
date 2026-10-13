@@ -102,6 +102,13 @@ run dconf update
 run fc-cache -f
 # fastfetch and hostnamectl say RobinOS (a pacman hook keeps it after upgrades)
 run /usr/share/robinos/bin/robinos-os-release
+# The text console's login prompt (Ctrl+Alt+F3) said "Arch Linux 6.x (tty3)".
+# pacman keeps an edited /etc/issue across filesystem upgrades (it is in backup=)
+if [[ "${DRY_RUN}" == "true" ]]; then
+  printf '[dry-run] /etc/issue: RobinOS\n'
+else
+  printf 'RobinOS \\r (\\l)\n\n' >/etc/issue
+fi
 
 # New users get the defaults from /etc/skel; copy them for the user running sudo too.
 if [[ -n "${SUDO_USER:-}" && "${SUDO_USER}" != "root" ]]; then

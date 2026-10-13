@@ -85,7 +85,18 @@ printf 'Building RobinOS ISO...\n'
 # drop old ISOs (2.5 GB each) so out/ holds just this build.
 sudo rm -rf "${WORK_DIR}"
 rm -f "${OUT_DIR}"/robinos-*.iso
-sudo mkarchiso -v -w "${WORK_DIR}" -o "${OUT_DIR}" "${ROOT_DIR}/build/archiso-profile" 2>&1 | tee "${LOG_FILE}"
+# mkarchiso labels the ISO's EFI system partition ARCHISO_EFI, and Windows shows
+# that as a drive next to the ISO's own when the USB stick is plugged in
+# (2026-10-13, found on a real PC). A copy of mkarchiso labels it ROBINOS_EFI;
+# nothing looks the partition up by its label.
+mkarchiso_bin="${ROOT_DIR}/build/mkarchiso"
+sed 's/-n ARCHISO_EFI)/-n ROBINOS_EFI)/' "$(command -v mkarchiso)" >"${mkarchiso_bin}"
+grep -q -- '-n ROBINOS_EFI)' "${mkarchiso_bin}" || {
+  printf 'error: mkarchiso no longer labels its EFI partition "-n ARCHISO_EFI)"; update scripts/build-iso.sh\n' >&2
+  exit 1
+}
+chmod 755 "${mkarchiso_bin}"
+sudo "${mkarchiso_bin}" -v -w "${WORK_DIR}" -o "${OUT_DIR}" "${ROOT_DIR}/build/archiso-profile" 2>&1 | tee "${LOG_FILE}"
 
 # Every RobinOS command in the built live system must be executable. mkarchiso sets
 # modes only from profiledef.sh's file_permissions, and a script missing there came
@@ -104,6 +115,21 @@ if [[ "${#iso_files[@]}" -eq 0 ]]; then
   printf 'error: no RobinOS ISO found in %s\n' "${OUT_DIR}" >&2
   exit 1
 fi
+
+# The labels a person sees when the USB stick is plugged into Windows
+for iso in "${iso_files[@]}"; do
+  efi_start="$(sfdisk -d "${iso}" 2>/dev/null | awk -F'[=,]' '/type= *ef/ {gsub(/ /, "", $2); print $2; exit}')"
+  if [[ -z "${efi_start}" ]]; then
+    printf 'error: no EFI system partition in %s\n' "${iso}" >&2
+    exit 1
+  fi
+  efi_label="$(blkid -p -O "$((efi_start * 512))" -s LABEL -o value "${iso}" || true)"
+  if [[ "${efi_label}" != "ROBINOS_EFI" ]]; then
+    printf 'error: the EFI partition of %s is labelled "%s", not ROBINOS_EFI\n' "${iso}" "${efi_label}" >&2
+    exit 1
+  fi
+  printf 'EFI partition label: %s\n' "${efi_label}"
+done
 
 (
   cd "${OUT_DIR}"
