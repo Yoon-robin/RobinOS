@@ -143,7 +143,7 @@
       return lines;
     }
     if (linux.has(name))
-      return [`<span class="g">${esc(name)}</span>: 리눅스 명령이에요. RobinOS 터미널에서는 그대로 돼요. 이 페이지에서는 실행하지 않아요.`];
+      return [`<span class="g">${esc(name)}</span>: 리눅스 명령이라 RobinOS 터미널에서는 바로 돼요. 이 페이지에서는 실행하지 않아요.`];
     if (!hints)
       return [`<span class="d">명령 표를 불러오지 못했어요. 잠시 뒤에 다시 해 보세요.</span>`];
     return [`bash: ${esc(word)}: 명령을 찾을 수 없어요`];
