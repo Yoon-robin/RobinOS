@@ -59,6 +59,7 @@
   --subtle: #8b8b94;
   --accent: #e5484d;
   --accent-soft: rgba(229, 72, 77, 0.10);
+  --ok: #4ade80;
   --shadow: 0 40px 90px -40px rgba(229, 72, 77, 0.30), 0 20px 50px -24px rgba(0, 0, 0, 0.7);
   --shadow-big: 0 80px 160px -60px rgba(229, 72, 77, 0.45), 0 40px 80px -40px rgba(0, 0, 0, 0.85);
   --light-1: rgba(229, 72, 77, 0.42);
@@ -94,6 +95,7 @@
     --subtle: #63636b;
     --accent: #d23c43;
     --accent-soft: rgba(210, 60, 67, 0.08);
+    --ok: #15803d;
     --shadow: 0 34px 70px -34px rgba(24, 24, 27, 0.30), 0 12px 28px -18px rgba(24, 24, 27, 0.18);
     --shadow-big: 0 70px 120px -50px rgba(120, 30, 34, 0.35), 0 30px 60px -30px rgba(24, 24, 27, 0.30);
     --light-1: rgba(229, 72, 77, 0.22);
@@ -509,12 +511,43 @@ h1 {
 
 /* ---- Marquee: Windows names beside what they are here ---- */
 .marquee {
+  position: relative;
   margin-top: 120px;
-  padding: 30px 0;
+  padding: 58px 0 30px;
   border-block: 1px solid var(--line);
   overflow: hidden;
+}
+
+.mq-row {
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
   mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+
+/* Stops everything that moves on its own (WCAG 2.2.2): the light, the marquee, the ring */
+.motion-toggle {
+  position: absolute;
+  top: 14px;
+  right: calc((100% - min(1180px, 100% - 48px)) / 2);
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 200ms var(--ease), border-color 200ms var(--ease);
+}
+
+.motion-toggle:hover {
+  color: var(--fg);
+  border-color: var(--accent);
+}
+
+html.paused .aurora i,
+html.paused .mq-track,
+html.paused .ring {
+  animation-play-state: paused;
 }
 
 .mq-row + .mq-row {
@@ -1103,13 +1136,6 @@ h3 {
 }
 
 /* ---- Start ---- */
-.start {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.8fr);
-  gap: 72px;
-  align-items: start;
-}
-
 .steps {
   list-style: none;
   margin: 44px 0 0;
@@ -1129,31 +1155,103 @@ h3 {
   color: var(--muted);
 }
 
-.start-aside {
+/* ---- Before you install: checks and questions ---- */
+.before {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 56px;
+  align-items: start;
+}
+
+.checks {
   padding: 30px 28px;
   border-radius: 20px;
   background: var(--surface);
   border: 1px solid var(--line);
 }
 
-.start-aside h3 {
+.checks h3 {
+  font-size: 16px;
+  margin-bottom: 14px;
+}
+
+.checks dl {
+  margin: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.checks dl > div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.checks dt {
+  font-weight: 600;
   font-size: 15px;
 }
 
-.start-aside ul {
-  margin: 8px 0 26px;
-  padding-left: 18px;
+.checks dd {
+  margin: 0;
+}
+
+.checks .ok,
+.checks .no {
+  align-self: start;
+  padding: 1px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.checks .ok {
+  color: var(--ok);
+  border: 1px solid color-mix(in srgb, var(--ok) 45%, transparent);
+}
+
+.checks .no {
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.checks .why {
+  grid-column: 1 / -1;
+  font-size: 13px;
   color: var(--muted);
 }
 
-.start-aside p {
-  margin: 8px 0 0;
+.checks-more {
+  margin: 18px 0 0;
+  font-size: 14px;
+}
+
+.faq {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 30px 32px;
+}
+
+.faq dt {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+.faq dd {
+  margin: 0;
   font-size: 15px;
   color: var(--muted);
 }
 
-.start-aside a {
-  color: var(--fg);
+.release-info {
+  margin-top: 22px !important;
+  font-size: 13px !important;
+  color: var(--subtle) !important;
 }
 
 /* ---- Finale: the ring of light from the intro video ---- */
@@ -1305,6 +1403,10 @@ h3 {
   .mq-track .dup {
     display: none;
   }
+
+  .motion-toggle {
+    display: none;
+  }
 }
 
 /* ---- Tablets and phones: one column ---- */
@@ -1341,7 +1443,7 @@ h3 {
 
   .learn,
   .everyday,
-  .start,
+  .before,
   .story {
     grid-template-columns: 1fr;
     gap: 44px;
@@ -1385,9 +1487,40 @@ h3 {
   }
 }
 
+@media (max-height: 640px) and (min-width: 901px) {
+  .story {
+    grid-template-columns: 1fr;
+  }
+
+  .story-view {
+    display: none;
+  }
+
+  .story-steps li {
+    min-height: 0;
+    padding-bottom: 30px;
+  }
+
+  .js .story-steps li {
+    opacity: 1;
+  }
+
+  .step-img {
+    display: block;
+    margin-top: 16px;
+    max-width: 760px;
+    border-radius: 12px;
+    border: 1px solid var(--line-strong);
+  }
+}
+
 @media (max-width: 560px) {
   :root {
     --wrap: min(1180px, 100% - 32px);
+  }
+
+  .faq {
+    grid-template-columns: 1fr;
   }
 
   .rise .ln > span {

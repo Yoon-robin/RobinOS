@@ -1,12 +1,15 @@
 // RobinOS landing page. Sections rise in as they scroll into view, the nav marks
-// the section on screen, the desktop in the hero leans toward the pointer, the
-// bento borders follow the pointer, the rollback screen follows the step being
-// read, and the terminal answers Windows commands with the same table the RobinOS
-// terminal uses (hints.json, made by scripts/build-site.py from
-// desktop/bash/robinos-hints.sh). No scroll listeners: IntersectionObserver,
-// pointer events and CSS scroll timelines only. Reduced motion turns it all off.
+// the section on screen, the bento borders follow the pointer, the rollback
+// screen follows the step being read, and the terminal answers Windows commands
+// with the same table the RobinOS terminal uses (hints.json, made by
+// scripts/build-site.py from desktop/bash/robinos-hints.sh). No scroll listeners:
+// IntersectionObserver, pointer events and CSS scroll timelines only. Reduced
+// motion (read live) turns it all off, and the "움직임 멈추기" button stops what
+// moves on its own.
+window.robinosReady = true; // index.html shows everything if this never runs
 (() => {
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let reduce = motionQuery.matches;
   const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   const canObserve = "IntersectionObserver" in window;
 
@@ -25,6 +28,30 @@
     }, { rootMargin: "0px 0px -10% 0px" });
     items.forEach((el) => seen.observe(el));
   }
+  motionQuery.addEventListener("change", (event) => {
+    reduce = event.matches;
+    if (reduce)
+      items.forEach((el) => el.classList.add("in"));
+  });
+
+  // ---- "움직임 멈추기": pauses the light, the marquee and the ring ----
+  const toggle = document.getElementById("motion-toggle");
+  if (toggle) {
+    const root = document.documentElement;
+    const set = (paused) => {
+      root.classList.toggle("paused", paused);
+      toggle.setAttribute("aria-pressed", String(paused));
+      toggle.textContent = paused ? "움직임 다시 켜기" : "움직임 멈추기";
+    };
+    let saved = false;
+    try { saved = localStorage.getItem("robinos-paused") === "1"; } catch { /* storage blocked */ }
+    set(saved);
+    toggle.addEventListener("click", () => {
+      const paused = !root.classList.contains("paused");
+      set(paused);
+      try { localStorage.setItem("robinos-paused", paused ? "1" : "0"); } catch { /* storage blocked */ }
+    });
+  }
 
   // ---- Current section in the nav ----
   const links = new Map([...document.querySelectorAll(".nav-links a")].map((a) => [a.hash.slice(1), a]));
@@ -42,36 +69,13 @@
     });
   }
 
-  // ---- Hero: the desktop leans a little toward the pointer ----
-  const hero = document.getElementById("top");
-  const tilt = document.querySelector(".stage-tilt");
-  if (hero && tilt && finePointer && !reduce) {
-    let frame = 0;
-    hero.addEventListener("pointermove", (event) => {
-      if (frame)
-        return;
-      frame = requestAnimationFrame(() => {
-        frame = 0;
-        const r = hero.getBoundingClientRect();
-        const x = (event.clientX - r.left) / r.width - 0.5;
-        const y = (event.clientY - r.top) / r.height - 0.5;
-        tilt.style.setProperty("--ry", `${(x * 6).toFixed(2)}deg`);
-        tilt.style.setProperty("--rx", `${(-y * 4).toFixed(2)}deg`);
-      });
-    });
-    hero.addEventListener("pointerleave", () => {
-      tilt.style.setProperty("--ry", "0deg");
-      tilt.style.setProperty("--rx", "0deg");
-    });
-  }
-
   // ---- Bento: the light on each tile follows the pointer ----
   const bento = document.getElementById("bento");
   if (bento && finePointer) {
     const tiles = [...bento.querySelectorAll(".tile")];
     let frame = 0;
     bento.addEventListener("pointermove", (event) => {
-      if (frame)
+      if (frame || reduce)
         return;
       frame = requestAnimationFrame(() => {
         frame = 0;
@@ -106,6 +110,7 @@
   const form = document.getElementById("hint-form");
   const input = document.getElementById("hint-cmd");
   const out = document.getElementById("hint-out");
+  const status = document.getElementById("hint-status");
   if (!form || !input || !out)
     return;
 
@@ -157,6 +162,12 @@
       return;
     const mine = ++run;
     const command = typed.trim();
+    // Screen readers hear the finished answer once, not every typed letter
+    if (status) {
+      const plain = document.createElement("div");
+      plain.innerHTML = lines.join(" ");
+      status.textContent = plain.textContent.replace(/\s+/g, " ").trim();
+    }
     if (reduce) {
       out.innerHTML = prompt + esc(command) + "\n" + lines.join("\n");
       return;
