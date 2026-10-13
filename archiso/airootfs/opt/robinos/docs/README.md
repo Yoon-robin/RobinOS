@@ -9,6 +9,7 @@
 | 제품 방향, 설계 결정, v0.1 범위와 항목별 상태 | [design.md](design.md) |
 | 지금 할 일, 진행 중인 작업, 푸시 대기 커밋, 사용자 확인이 필요한 것 | [tasks.md](tasks.md) (오래된 완료 기록은 [done.md](done.md)) |
 | 빠져 있거나 반쯤인 기능 전체(영역별 표, 우선순위) | [unfinished.md](unfinished.md) |
+| 비슷한 OS 사례(Omarchy, Zorin, 하모니카 등)와 RobinOS가 가져올 것 | [references.md](references.md) |
 | 장기 단계 (0~6단계) | [roadmap.md](roadmap.md) |
 | 루프 작업 절차 (Claude가 회차마다 따르는 순서) | [loop.md](loop.md) |
 | 검사 방법, 바꾼 것에 따라 돌릴 검사 | [testing.md](testing.md) |
@@ -54,6 +55,7 @@
 작업 관리
 - [tasks.md](tasks.md): 작업 목록
 - [unfinished.md](unfinished.md): 미완성 기능 전체 목록
+- [references.md](references.md): 비슷한 OS 사례와 가져올 것
 - [done.md](done.md): 오래된 완료 기록
 - [roadmap.md](roadmap.md): 장기 로드맵
 - [loop.md](loop.md): 루프 작업 절차
