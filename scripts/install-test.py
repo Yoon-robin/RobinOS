@@ -502,6 +502,9 @@ def drive_installer(con, qmp):
     the partition made in Disk Management is preselected, the wizard cannot go on
     before the files that go are confirmed, and it does after. Nothing is
     installed; the installation itself is robin-install's, run next."""
+    # The welcome wizard of the first login is on top and takes the keys: Esc skips it
+    qmp.keys("esc")
+    sleep(3)
     con.run(INSTALLER_IPC + "installer", check=False)
     sleep(5)
     qmp.keys("ret")  # the first page: what you need
