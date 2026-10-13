@@ -221,8 +221,9 @@ robin.settle = lambda path: None
 disk = robin.list_disks()[0]
 esp, root = robin.prepare_disk({"mode": "partition", "partition": "/dev/nvme0n1p4"}, disk)
 check("into the earlier RobinOS partition", (esp, root), ("/dev/nvme0n1p1", "/dev/nvme0n1p4"))
-check("it gets the RobinOS name and the Linux type, and only it is formatted", ran,
+check("it gets the RobinOS name and the Linux type, and only it is wiped and formatted", ran,
       [("sgdisk", "-t", "4:8300", "-c", "4:RobinOS", "/dev/nvme0n1"),
+       ("wipefs", "-a", "/dev/nvme0n1p4"),
        ("mkfs.btrfs", "-f", "-L", "RobinOS", "/dev/nvme0n1p4")])
 ran.clear()
 esp, root = robin.prepare_disk({"mode": "partition", "partition": "/dev/nvme0n1p6"}, disk)

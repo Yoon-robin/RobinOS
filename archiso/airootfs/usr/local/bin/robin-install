@@ -520,20 +520,25 @@ def prepare_disk(plan, disk):
             if len(new) != 1:
                 raise InstallError("새 파티션을 찾지 못했어요")
             esp, root = disk["esp"], new.pop()
+    # The old file system's signatures must go: a partition from Disk Management is
+    # NTFS, and a leftover NTFS boot sector lets mount take the new Btrfs for NTFS
+    # ("btrfs subvolume create: Inappropriate ioctl for device", seen in the VM test)
+    run("wipefs", "-a", root)
     run("mkfs.btrfs", "-f", "-L", "RobinOS", root)
+    settle(disk["path"])
     return esp, root
 
 
 def mount_target(esp, root):
     progress(8, "Btrfs 하위 볼륨")
-    run("mount", root, TARGET)
+    run("mount", "-t", "btrfs", root, TARGET)
     for name, _ in SUBVOLUMES:
         run("btrfs", "subvolume", "create", f"{TARGET}/{name}")
     run("umount", TARGET)
     for name, path in SUBVOLUMES:
         where = os.path.join(TARGET, path) if path else TARGET
         os.makedirs(where, exist_ok=True)
-        run("mount", "-o", f"{MOUNT_OPTIONS},subvol=/{name}", root, where)
+        run("mount", "-t", "btrfs", "-o", f"{MOUNT_OPTIONS},subvol=/{name}", root, where)
     os.makedirs(f"{TARGET}/efi", exist_ok=True)
     run("mount", esp, f"{TARGET}/efi")
 
