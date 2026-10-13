@@ -152,6 +152,16 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test -Lab
 
 설치 테스트는 VM을 켤 때마다 `scripts/install-test.py`를 새로 읽어요. 테스트가 도는 동안 이 파일을 고치면 남은 단계가 바뀐 확인으로 돌아서, 아직 설치하지 않은 것을 찾다가 실패할 수 있어요. 고칠 게 있으면 테스트가 끝난 뒤에 고쳐요.
 
+## 파티션 부팅 테스트
+
+[install.md](install.md)의 "USB 없이 켜 보기"가 되는지 봐요. ISO의 파일을 FAT32 "기본 데이터" 파티션(EFI 시스템 파티션이 아니에요) 하나뿐인 디스크에 복사하고, CD 없이 UEFI로 켜서 라이브가 로그인 프롬프트까지 오면 통과예요. 확인용으로 복사본의 GRUB 설정에만 `console=ttyS0`을 붙여요. ISO의 부트로더나 archiso 훅을 바꿨을 때 돌려요.
+
+```bash
+wsl.exe -d archlinux -u root -e bash -lc 'cd /mnt/c/.../RobinOS && PARTITION_BOOT_OUT=/root/partition-boot bash scripts/partition-boot-test.sh /root/RobinOS/out/robinos-*.iso'
+```
+
+루프 장치를 쓰니 결과 폴더는 WSL의 리눅스 파일 시스템(`PARTITION_BOOT_OUT`)에 둬요. KVM이 없으면 TCG로 돌아서 몇 분 걸려요. 실제 PC의 펌웨어가 `bcdedit`로 만든 부팅 항목을 받아 주는지는 VM으로 알 수 없어요.
+
 ## VM에서 직접 써 보기
 
 자동 테스트로 보기 어려운 것은 VM을 직접 띄워서 확인해요. Arch Linux(WSL 셸: `scripts/wsl-build.ps1 shell`)에서 실행해요.
