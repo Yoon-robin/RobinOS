@@ -606,7 +606,7 @@ PanelWindow {
 
                     Repeater {
                         model: [
-                            { key: "basics", icon: "graduation-cap", title: "리눅스 기초", desc: "터미널에서 미션 5개를 풀며 기본 명령을 익혀요" },
+                            { key: "basics", icon: "graduation-cap", title: "리눅스 기초", desc: "윈도우에서 하던 폴더 정리, IP 확인을 터미널로 해 봐요" },
                             { key: "web", icon: "flask", title: "웹 보안", desc: "내 컴퓨터 안의 Juice Shop과 DVWA로 연습해요" },
                             { key: "explore", icon: "globe", title: "먼저 둘러볼게요", desc: "학습은 나중에 런처에서 시작해도 돼요" }
                         ]
@@ -758,7 +758,7 @@ PanelWindow {
                     Text {
                         Layout.fillWidth: true
                         Layout.topMargin: 4
-                        text: "런처에서는 \"메모장\", \"제어판\"처럼 윈도우 이름으로 찾아도 돼요. 단축키 전체는 Win+F1로 언제든 볼 수 있어요."
+                        text: "런처에서는 \"메모장\", \"작업 관리자\"처럼 윈도우 이름으로 찾아도 돼요. 터미널에 ipconfig 같은 윈도우 명령을 치면 리눅스 명령과 연습할 미션을 알려 줘요. 단축키 전체는 Win+F1로 언제든 볼 수 있어요."
                         color: Theme.muted
                         font.family: Theme.font
                         font.pixelSize: 13
