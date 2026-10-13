@@ -59,3 +59,13 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 publish-repo
 
 - `SHA256SUMS`, `SHA256SUMS.sig`, 공개 열쇠(`keys/robinos-release.asc`)와 함께 GitHub 릴리스에 올려요.
 - 릴리스 노트에는 v0.1 범위([design.md](design.md))에서 바뀐 점과 알려진 한계를 적어요.
+
+## 웹사이트
+
+랜딩 페이지는 `site/`에 있어요(HTML, CSS, JS 하나씩과 `assets/`). GitHub Pages가 `gh-pages` 브랜치를 https://yoon-robin.github.io/RobinOS/ 로 무료로 보여 줘요. GitHub Actions는 쓰지 않아요.
+
+- 고치고 커밋한 뒤 `bash scripts/publish-site.sh`로 올려요. `site/`만 떼어 낸 커밋을 `gh-pages`에 밀어 넣어요(`--dry-run`이면 올릴 파일만 보여 줘요).
+- 처음 한 번은 저장소 Settings → Pages에서 "Deploy from a branch", `gh-pages`, `/ (root)`를 골라요.
+- 미리 보기: `python -m http.server 8642 --directory site` 뒤 http://127.0.0.1:8642
+- 화면 사진(`site/assets/screens/`)은 부팅 테스트 스크린샷(`build/boot-test`)에서 골라 복사해요. 링크 미리 보기 그림(`site/assets/og.png`, 1200×630)은 첫 화면을 헤드리스 크롬으로 찍은 거예요.
+- 문구는 [design.md](design.md)의 목적과 컨셉을 따르고, 아직 안 되는 것을 된다고 쓰지 않아요(실제 PC 확인 전에는 "미리 보기").

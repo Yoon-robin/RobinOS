@@ -18,6 +18,7 @@
 | 데스크톱 구성, 단축키, 셸 기능 | [desktop.md](desktop.md) |
 | 릴리스 절차, 서명, RobinOS 패키지 저장소 | [release.md](release.md) |
 | CTF 시작하기, 입문 CTF, 다음 연습장 | [ctf.md](ctf.md) |
+| 웹사이트(랜딩 페이지)와 올리는 법 | `site/` (올리기: `scripts/publish-site.sh`, [release.md](release.md) "웹사이트") |
 | 디자인 토큰 | `desktop/shell/Theme.qml` (코드가 원본, [brand.md](brand.md)의 표는 사본) |
 
 ## 문서 목록
