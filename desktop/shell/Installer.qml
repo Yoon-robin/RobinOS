@@ -16,9 +16,13 @@ FloatingWindow {
     property var disks: []
     property bool disksLoading: false
     property string diskPath: ""
+    // "alongside" (a new partition in the free space, sizeGb big), "partition"
+    // (one that exists, partitionPath) or "whole"
     property string mode: ""
-    // Ticked on the confirm step: the files that go (the whole disk, or an
-    // earlier RobinOS partition) and the BitLocker recovery key
+    property int sizeGb: 0
+    property string partitionPath: ""
+    // Ticked on the confirm step: the files that go (the whole disk, or the
+    // partition chosen) and the BitLocker recovery key
     property bool eraseConfirmed: false
     property bool recoveryConfirmed: false
     property string timezone: "Asia/Seoul"
@@ -36,12 +40,13 @@ FloatingWindow {
     readonly property real minSize: 40 * gib
     readonly property var disk: disks.find(d => d.path === diskPath) ?? null
     readonly property bool installing: step === 4
-    // "alongside" goes into an earlier RobinOS partition when the disk has one
-    // big enough: a reinstall, or a second try after an install that stopped
-    readonly property string replacePath: mode === "alongside" && replaceable(disk) ? disk.robinos.path : ""
+    // The most RobinOS can take of the free space, in whole GB
+    readonly property int maxSizeGb: disk !== null ? Math.floor(disk.free / gib) : 0
+    readonly property var chosenPartition: disk !== null && partitionPath !== ""
+                                           ? (disk.partitions ?? []).find(p => p.path === partitionPath) ?? null : null
     // Windows ends up in the GRUB menu (robin-install decides the same way)
     readonly property bool dualBoot: disk !== null
-                                     && ((mode === "alongside" && disk.windows)
+                                     && ((mode !== "whole" && disk.windows)
                                          || disks.some(d => d.path !== diskPath && d.windows && d.esp && !d.removable))
 
     readonly property bool userValid: /^[a-z_][a-z0-9_-]{0,31}$/.test(userField.text) && userField.text !== "root"
@@ -54,13 +59,21 @@ FloatingWindow {
             // Every package comes from the internet
             return ShellState.online;
         case 1:
-            return disk !== null && (mode === "whole" ? disk.can_whole : mode === "alongside" && disk.can_alongside);
+            if (disk === null)
+                return false;
+            if (mode === "whole")
+                return disk.can_whole;
+            if (mode === "alongside")
+                return disk.can_alongside && sizeGb >= 40 && sizeGb <= maxSizeGb;
+            return mode === "partition" && disk.can_partition && chosenPartition !== null && chosenPartition.usable;
         case 2:
             return userValid && hostValid && passwordValid;
         case 3:
             if (mode === "whole")
                 return eraseConfirmed;
-            return (!(disk && disk.bitlocker) || recoveryConfirmed) && (replacePath === "" || eraseConfirmed);
+            if (mode === "partition" && !eraseConfirmed)
+                return false;
+            return !(disk && disk.bitlocker) || recoveryConfirmed;
         default:
             return false;
         }
@@ -148,8 +161,9 @@ FloatingWindow {
         return (d.model !== "" ? d.model : "디스크") + " · " + gb(d.size);
     }
 
-    function replaceable(d) {
-        return d !== null && d.robinos !== undefined && d.robinos !== null && d.robinos.size >= minSize;
+    // What a partition is called in the list and in the questions
+    function partitionName(part) {
+        return part.kind === "robinos" ? "이전 RobinOS" : part.label !== "" ? part.label : part.name;
     }
 
     function zoneName(id) {
@@ -161,17 +175,32 @@ FloatingWindow {
     function afterLayout(d) {
         if (d === null)
             return [];
+        const layout = d.layout ?? [];
         if (mode === "whole")
             return [{ kind: "efi", name: "EFI", size: gib, path: "" },
                     { kind: "new", name: "RobinOS", size: Math.max(d.size - gib, 0), path: "" }];
+        if (mode === "partition")
+            return layout.map(s => s.path !== "" && s.path === partitionPath
+                                   ? { kind: "new", name: "RobinOS", size: s.size, path: s.path } : s);
+        // The free space: RobinOS first, then what is left of the block (under
+        // 1 GB left means robin-install takes all of it)
+        const want = sizeGb * gib;
+        const out = [];
         let placed = false;
-        return (d.layout ?? []).map(s => {
-            const target = replacePath !== "" ? s.path === replacePath : s.kind === "free" && s.size === d.free;
-            if (placed || !target)
-                return s;
+        for (const s of layout) {
+            if (placed || s.kind !== "free" || s.size !== d.free) {
+                out.push(s);
+                continue;
+            }
             placed = true;
-            return { kind: "new", name: "RobinOS", size: s.size, path: s.path };
-        });
+            if (want <= 0 || s.size - want < gib) {
+                out.push({ kind: "new", name: "RobinOS", size: s.size, path: "" });
+            } else {
+                out.push({ kind: "new", name: "RobinOS", size: want, path: "" });
+                out.push({ kind: "free", name: "빈 공간", size: s.size - want, path: "" });
+            }
+        }
+        return out;
     }
 
     function refreshDisks() {
@@ -185,8 +214,13 @@ FloatingWindow {
         diskPath = d.path;
         eraseConfirmed = false;
         recoveryConfirmed = false;
+        // All of the free space until the slider says less
+        sizeGb = Math.floor(d.free / gib);
+        // An earlier RobinOS partition is the likeliest one to put it in again
+        const usable = (d.partitions ?? []).filter(p => p.usable);
+        partitionPath = usable.length > 0 ? (usable.find(p => p.kind === "robinos") ?? usable[0]).path : "";
         // Keep Windows by default when it is possible
-        mode = d.can_alongside ? "alongside" : d.can_whole ? "whole" : "";
+        mode = d.can_alongside ? "alongside" : d.can_partition ? "partition" : d.can_whole ? "whole" : "";
     }
 
     function chooseMode(key) {
@@ -305,9 +339,11 @@ FloatingWindow {
                 hostname: hostField.text,
                 timezone: root.timezone
             };
-            if (root.replacePath !== "")
-                plan.replace = root.replacePath;
-            if (root.mode === "alongside" && root.disk && root.disk.bitlocker)
+            if (root.mode === "partition")
+                plan.partition = root.partitionPath;
+            else if (root.mode === "alongside")
+                plan.size_gb = root.sizeGb;
+            if (root.mode !== "whole" && root.disk && root.disk.bitlocker)
                 plan.bitlocker_key_saved = root.recoveryConfirmed;
             installProc.write(JSON.stringify(plan) + "\n");
             // robin-install reads the plan until end of input
@@ -606,17 +642,16 @@ FloatingWindow {
                         Repeater {
                             model: root.disk === null ? [] : [
                                 { key: "alongside", enabled: root.disk.can_alongside,
-                                  title: root.replaceable(root.disk)
-                                         ? (root.disk.windows ? "윈도우 옆에 다시 설치" : "RobinOS 다시 설치")
-                                         : "윈도우 옆에 설치",
-                                  desc: root.replaceable(root.disk)
-                                        ? "이전에 설치한 RobinOS 파티션(" + root.gb(root.disk.robinos.size) + ")에 다시 설치해요. 그 파티션의 파일만 지워지고"
-                                          + (root.disk.windows ? " 윈도우와 파일은 그대로예요." : " 다른 파티션은 그대로예요.")
-                                        : root.disk.can_alongside
-                                          ? "빈 공간 " + root.gb(root.disk.free) + "에 설치해요. 윈도우와 파일은 그대로예요. 켤 때 부팅 메뉴에서 골라요."
-                                          : root.disk.windows
-                                            ? "빈 공간이 40GB보다 적어요. 윈도우의 '디스크 관리'에서 C: 드라이브를 '볼륨 축소'로 40GB 이상 줄인 뒤 다시 찾아 주세요."
-                                            : "윈도우가 있고 빈 공간이 40GB 이상인 디스크에서 쓸 수 있어요." },
+                                  title: root.disk.windows ? "윈도우 옆에 설치" : "빈 공간에 설치",
+                                  desc: root.disk.can_alongside
+                                        ? "빈 공간 " + root.gb(root.disk.free) + " 중에서 RobinOS가 쓸 크기를 정해요. 윈도우와 파일은 그대로예요. 켤 때 부팅 메뉴에서 골라요."
+                                        : root.disk.windows
+                                          ? "빈 공간이 40GB보다 적어요. 윈도우의 '디스크 관리'에서 C: 드라이브를 '볼륨 축소'로 40GB 이상 줄인 뒤 다시 찾거나, 아래처럼 미리 만든 파티션에 설치해요."
+                                          : "GPT 디스크에 EFI 파티션과 40GB 이상의 빈 공간이 있을 때 쓸 수 있어요." },
+                                { key: "partition", enabled: root.disk.can_partition, title: "만들어 둔 파티션에 설치",
+                                  desc: root.disk.can_partition
+                                        ? "윈도우 디스크 관리 등에서 미리 만든 파티션이나 이전 RobinOS가 있던 파티션에 설치해요. 그 파티션의 파일은 지워지고 다른 파티션은 그대로예요."
+                                        : "고를 수 있는 파티션이 없어요. 40GB 이상이고 쓰고 있지 않아야 하고, 윈도우가 들어 있는 파티션은 고를 수 없어요." },
                                 { key: "whole", enabled: root.disk.can_whole, title: "디스크 전체 사용",
                                   desc: root.disk.can_whole ? "이 디스크의 모든 파일과 운영체제가 지워지고 RobinOS만 남아요."
                                                             : "40GB보다 작은 디스크에는 설치할 수 없어요." }
@@ -655,6 +690,16 @@ FloatingWindow {
 
                                 FocusRing {
                                     baseRadius: modeCard.radius
+                                }
+
+                                // Under the card's contents, so the slider and the
+                                // partition rows get their own clicks
+                                MouseArea {
+                                    id: modeMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: modeCard.modelData.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                    onClicked: modeCard.choose()
                                 }
 
                                 RowLayout {
@@ -705,15 +750,157 @@ FloatingWindow {
                                             font.pixelSize: 13
                                             wrapMode: Text.WordWrap
                                         }
-                                    }
-                                }
 
-                                MouseArea {
-                                    id: modeMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: modeCard.modelData.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                    onClicked: modeCard.choose()
+                                        // How much of the free space RobinOS gets
+                                        RowLayout {
+                                            visible: modeCard.selected && modeCard.modelData.key === "alongside"
+                                                     && modeCard.modelData.enabled && root.maxSizeGb > 40
+                                            Layout.fillWidth: true
+                                            Layout.topMargin: 8
+                                            spacing: 12
+
+                                            Text {
+                                                text: "RobinOS에 줄 크기"
+                                                color: Theme.fg
+                                                font.family: Theme.font
+                                                font.pixelSize: 13
+                                                font.weight: Font.Medium
+                                            }
+
+                                            QsSlider {
+                                                Layout.fillWidth: true
+                                                label: "RobinOS에 줄 크기"
+                                                value: (root.sizeGb - 40) / Math.max(root.maxSizeGb - 40, 1)
+                                                onMoved: v => root.sizeGb = Math.round(40 + v * (root.maxSizeGb - 40))
+                                            }
+
+                                            Text {
+                                                Layout.preferredWidth: 56
+                                                horizontalAlignment: Text.AlignRight
+                                                text: root.sizeGb + "GB"
+                                                color: Theme.fg
+                                                font.family: Theme.mono
+                                                font.pixelSize: 13
+                                            }
+                                        }
+
+                                        Text {
+                                            visible: modeCard.selected && modeCard.modelData.key === "alongside"
+                                                     && modeCard.modelData.enabled && root.maxSizeGb > 40
+                                            Layout.fillWidth: true
+                                            text: root.disk.free - root.sizeGb * root.gib < root.gib
+                                                  ? "빈 공간을 모두 써요"
+                                                  : "남는 빈 공간 " + root.gb(root.disk.free - root.sizeGb * root.gib)
+                                            color: Theme.muted
+                                            font.family: Theme.font
+                                            font.pixelSize: 12
+                                        }
+
+                                        // The partitions that could take RobinOS, and why the others can't
+                                        Repeater {
+                                            model: modeCard.selected && modeCard.modelData.key === "partition" && root.disk !== null
+                                                   ? (root.disk.partitions ?? [])
+                                                         .filter(p => p.size >= root.minSize && p.kind !== "efi" && p.kind !== "system")
+                                                         .sort((a, b) => (b.usable ? 1 : 0) - (a.usable ? 1 : 0))
+                                                   : []
+
+                                            Rectangle {
+                                                id: partRow
+
+                                                required property var modelData
+                                                readonly property bool picked: modelData.usable && root.partitionPath === modelData.path
+
+                                                Layout.fillWidth: true
+                                                Layout.topMargin: 6
+                                                implicitHeight: 46
+                                                radius: Theme.radiusMd
+                                                color: partMouse.containsMouse && modelData.usable ? Theme.hover : "transparent"
+                                                border.width: 1
+                                                border.color: picked ? Theme.fg : Theme.border
+                                                opacity: modelData.usable ? 1 : 0.5
+
+                                                Accessible.role: Accessible.RadioButton
+                                                Accessible.name: root.partitionName(modelData) + " " + root.gb(modelData.size)
+                                                Accessible.checked: picked
+
+                                                activeFocusOnTab: modelData.usable
+                                                Keys.onPressed: event => {
+                                                    if (modelData.usable && Keyboard.activates(event)) {
+                                                        root.partitionPath = modelData.path;
+                                                        root.eraseConfirmed = false;
+                                                        event.accepted = true;
+                                                    }
+                                                }
+
+                                                FocusRing {
+                                                    baseRadius: partRow.radius
+                                                }
+
+                                                RowLayout {
+                                                    anchors.fill: parent
+                                                    anchors.leftMargin: 10
+                                                    anchors.rightMargin: 10
+                                                    spacing: 10
+
+                                                    Rectangle {
+                                                        implicitWidth: 14
+                                                        implicitHeight: 14
+                                                        radius: 7
+                                                        color: "transparent"
+                                                        border.width: 1
+                                                        border.color: partRow.picked ? Theme.fg : Theme.borderStrong
+
+                                                        Rectangle {
+                                                            anchors.centerIn: parent
+                                                            visible: partRow.picked
+                                                            width: 6
+                                                            height: 6
+                                                            radius: 3
+                                                            color: Theme.fg
+                                                        }
+                                                    }
+
+                                                    ColumnLayout {
+                                                        Layout.fillWidth: true
+                                                        spacing: 1
+
+                                                        Text {
+                                                            Layout.fillWidth: true
+                                                            text: root.partitionName(partRow.modelData) + " · " + root.gb(partRow.modelData.size)
+                                                                  + (partRow.modelData.fstype !== "" ? " · " + partRow.modelData.fstype : "")
+                                                            color: Theme.fg
+                                                            font.family: Theme.font
+                                                            font.pixelSize: 13
+                                                            font.weight: Font.Medium
+                                                            elide: Text.ElideRight
+                                                        }
+
+                                                        Text {
+                                                            Layout.fillWidth: true
+                                                            text: partRow.modelData.path + (partRow.modelData.usable ? "" : " · " + partRow.modelData.reason)
+                                                            color: Theme.muted
+                                                            font.family: Theme.mono
+                                                            font.pixelSize: 11
+                                                            elide: Text.ElideRight
+                                                        }
+                                                    }
+                                                }
+
+                                                MouseArea {
+                                                    id: partMouse
+                                                    anchors.fill: parent
+                                                    hoverEnabled: true
+                                                    cursorShape: partRow.modelData.usable ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                                    onClicked: {
+                                                        if (partRow.modelData.usable) {
+                                                            root.partitionPath = partRow.modelData.path;
+                                                            root.eraseConfirmed = false;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -925,8 +1112,9 @@ FloatingWindow {
                             model: [
                                 { label: "디스크", value: root.disk ? root.diskLabel(root.disk) + " (" + root.disk.path + ")" : "" },
                                 { label: "설치 방식", value: root.mode === "whole" ? "디스크 전체 사용"
-                                                             : root.replacePath !== "" ? "이전 RobinOS 파티션에 다시 설치 (" + root.replacePath + ")"
-                                                             : "윈도우 옆에 설치 (빈 공간 " + (root.disk ? root.gb(root.disk.free) : "") + ")" },
+                                                             : root.mode === "partition" && root.chosenPartition
+                                                               ? "만들어 둔 파티션에 설치 (" + root.partitionName(root.chosenPartition) + ", " + root.chosenPartition.path + ")"
+                                                               : "빈 공간에 설치 (RobinOS에 " + root.sizeGb + "GB)" },
                                 { label: "부팅 메뉴", value: root.dualBoot ? "RobinOS와 윈도우, 켤 때 골라요" : "RobinOS" },
                                 { label: "사용자", value: userField.text },
                                 { label: "컴퓨터 이름", value: hostField.text },
@@ -976,16 +1164,18 @@ FloatingWindow {
                         }
 
                         ConfirmBox {
-                            visible: root.replacePath !== ""
+                            visible: root.mode === "partition" && root.chosenPartition !== null
                             checked: root.eraseConfirmed
-                            label: "이전 RobinOS 파티션(" + root.replacePath + ")의 파일이 모두 지워지는 걸 이해했어요"
+                            label: root.chosenPartition === null ? ""
+                                   : root.partitionName(root.chosenPartition) + " (" + root.chosenPartition.path + ", " + root.gb(root.chosenPartition.size)
+                                     + ")의 파일이 모두 지워지는 걸 이해했어요"
                             onToggled: root.eraseConfirmed = !root.eraseConfirmed
                         }
 
                         // A BitLocker drive asks for its recovery key once the boot
                         // order changes; without the key Windows' files are gone
                         ConfirmBox {
-                            visible: root.mode === "alongside" && root.disk !== null && root.disk.bitlocker
+                            visible: root.mode !== "whole" && root.disk !== null && root.disk.bitlocker
                             checked: root.recoveryConfirmed
                             label: "윈도우 드라이브가 BitLocker로 잠겨 있어요. 설치한 뒤 윈도우가 복구 키를 물을 수 있어요. 복구 키(aka.ms/myrecoverykey)를 따로 적어 두었어요"
                             onToggled: root.recoveryConfirmed = !root.recoveryConfirmed

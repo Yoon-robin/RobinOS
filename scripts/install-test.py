@@ -415,6 +415,75 @@ def check_windows_kept(con, before):
     log("Windows partitions, its EFI files and C: are unchanged")
 
 
+# The robin-install the live system runs is this checkout's, loaded as a module so
+# the test can call its functions (the file has no .py)
+LOAD_INSTALLER = """
+import importlib.machinery, importlib.util
+loader = importlib.machinery.SourceFileLoader("ri", "/usr/local/bin/robin-install")
+ri = importlib.util.module_from_spec(importlib.util.spec_from_loader("ri", loader))
+loader.exec_module(ri)
+"""
+
+# prepare_disk with a size: sgdisk must really make a partition of that size in the
+# free space (the unit tests only see the arguments), and robin-install's own
+# lsblk columns must work on the live system's util-linux
+SIZE_CHECK = LOAD_INSTALLER + """
+import subprocess
+disk = next(d for d in ri.list_disks() if d["path"] == "/dev/vda")
+free = disk["free"] // ri.GIB
+print("free space:", free, "GB")
+assert disk["can_alongside"] and not disk["can_partition"], (disk["can_alongside"], disk["can_partition"])
+esp, root = ri.prepare_disk({"mode": "alongside", "size_gb": 41}, disk)
+size = int(subprocess.check_output(["lsblk", "-bno", "SIZE", root]).split()[0])
+print(root, size)
+assert abs(size - 41 * ri.GIB) <= 1048576, size
+after = next(d for d in ri.list_disks() if d["path"] == "/dev/vda")
+print("left over:", after["free"] // ri.GIB, "GB")
+assert after["free"] < 40 * ri.GIB and after["free"] >= (free - 42) * ri.GIB
+earlier = [p for p in after["partitions"] if p["kind"] == "robinos"]
+print("earlier RobinOS:", earlier)
+assert len(earlier) == 1 and earlier[0]["usable"] and earlier[0]["path"] == root
+assert after["can_partition"] and not after["can_alongside"]
+"""
+
+# What robin-install offers when Disk Management made a "Data" partition (NTFS)
+# next to Windows' own C:
+DISKS_CHECK = LOAD_INSTALLER + """
+import json, subprocess
+disk = json.loads(subprocess.check_output(["robin-install", "disks"]))[0]
+by = {p["path"]: p for p in disk["partitions"]}
+print({path: (p["kind"], p["fstype"], p["label"], p["usable"], p["reason"]) for path, p in by.items()})
+assert disk["can_partition"] and not disk["can_alongside"]
+assert by["/dev/vda4"]["usable"] and by["/dev/vda4"]["fstype"] == "ntfs" and by["/dev/vda4"]["label"] == "Data"
+for path in ("/dev/vda1", "/dev/vda2", "/dev/vda3"):
+    assert not by[path]["usable"] and by[path]["reason"], path
+assert ri.windows_inside("/dev/vda3") is True
+assert ri.windows_inside("/dev/vda4") is False
+"""
+
+SESSION_ENV = "XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus"
+
+
+def make_data_partition(con):
+    """A partition like Disk Management's "New Simple Volume": NTFS, named Data."""
+    con.run("sgdisk -n 4:0:+41G -t 4:0700 -c '4:Basic data partition' /dev/vda > /dev/null"
+            " && partprobe /dev/vda && udevadm settle && mkfs.ntfs -Q -L Data /dev/vda4 > /dev/null"
+            " && mkdir -p /tmp/data && mount -t ntfs-3g /dev/vda4 /tmp/data"
+            " && echo robinos-data > /tmp/data/marker.txt && umount /tmp/data")
+
+
+def show_installer(con, qmp):
+    """The installer's second step on this disk, as the live desktop draws it."""
+    con.run(f"runuser -u robin -- env {SESSION_ENV} qs ipc -p /usr/share/robinos/shell call shell installer",
+            check=False)
+    sleep(5)
+    qmp.keys("ret")
+    sleep(10)
+    shot(qmp, "installer-partitions")
+    qmp.keys("alt", "f4")
+    sleep(2)
+
+
 # ---- Phases ----
 
 def phase_live(con, qmp):
@@ -435,15 +504,22 @@ def phase_live(con, qmp):
     if INSTALLER == "windows":
         make_windows_disk(con)
         before = windows_state(con)
-        # An install that stopped half way left its partition in the free space;
-        # the installer offers it again ("replace") instead of failing for room
-        con.run("sgdisk -n 0:0:0 -t 0:8300 -c 0:RobinOS /dev/vda > /dev/null && partprobe /dev/vda && udevadm settle")
         use_checkout_installer(con)
-        con.run("robin-install disks | python3 -c 'import json,sys; d=json.load(sys.stdin)[0];"
-                " print(d[\"robinos\"], d[\"can_alongside\"], [s[\"kind\"] for s in d[\"layout\"]]);"
-                " assert d[\"robinos\"][\"path\"] == \"/dev/vda4\" and d[\"can_alongside\"]'")
-        install_with_robin_install(con, mode="alongside", replace="/dev/vda4")
+        # The free space with a size: 41 of the ~44 GB become RobinOS's partition,
+        # which then counts as an earlier RobinOS one; remove it again
+        con.put_file("/root/size-check.py", SIZE_CHECK)
+        con.run("PYTHONIOENCODING=utf-8 python3 /root/size-check.py")
+        con.run("sgdisk -d 4 /dev/vda > /dev/null && partprobe /dev/vda && udevadm settle")
+        # What Disk Management leaves behind (an NTFS partition) is offered, Windows' own is not
+        make_data_partition(con)
+        con.put_file("/root/disks-check.py", DISKS_CHECK)
+        con.run("PYTHONIOENCODING=utf-8 python3 /root/disks-check.py")
+        show_installer(con, qmp)
+        install_with_robin_install(con, mode="partition", partition="/dev/vda4")
         check_windows_kept(con, before)
+        # The partition got RobinOS's name and the Linux type, so a next install knows it
+        con.run("sgdisk -i 4 /dev/vda | grep -q \"Partition name: 'RobinOS'\""
+                " && sgdisk -i 4 /dev/vda | grep -qi '0FC63DAF-8483-4772-8E79-3D69D8477DE4'")
     elif INSTALLER == "robinos":
         install_with_robin_install(con)
     else:
@@ -475,14 +551,14 @@ def use_checkout_installer(con):
             " && install -m755 /opt/robinos/installer/robin-install /usr/local/bin/robin-install")
 
 
-def install_with_robin_install(con, mode="whole", replace=None):
+def install_with_robin_install(con, mode="whole", partition=None):
     """installer/robin-install from this checkout; leaves the target on /mnt."""
     use_checkout_installer(con)
     con.run("robin-install disks", check=False)
     plan = {"disk": "/dev/vda", "mode": mode, "user": "robin", "password": PASSWORD,
             "hostname": "robinos", "timezone": "Asia/Seoul"}
-    if replace:
-        plan["replace"] = replace
+    if partition:
+        plan["partition"] = partition
     con.put_file("/root/plan.json", json.dumps(plan))
     con.run("chmod 600 /root/plan.json")
 
