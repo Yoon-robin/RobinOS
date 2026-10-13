@@ -13,15 +13,66 @@ window.robinosReady = true; // index.html shows everything if this never runs
   const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   const canObserve = "IntersectionObserver" in window;
 
-  // ---- Entrance ----
-  const items = document.querySelectorAll(".reveal");
+  // ---- Headings arrive word by word: split them into words once ----
+  document.querySelectorAll(".kinetic").forEach((heading) => {
+    let n = 0;
+    const split = (node) => {
+      for (const child of [...node.childNodes]) {
+        if (child.nodeType === Node.ELEMENT_NODE) {
+          split(child);
+          continue;
+        }
+        if (child.nodeType !== Node.TEXT_NODE)
+          continue;
+        const frag = document.createDocumentFragment();
+        for (const part of child.textContent.split(/(\s+)/)) {
+          if (!part)
+            continue;
+          if (/^\s+$/.test(part)) {
+            frag.append(part);
+            continue;
+          }
+          const word = document.createElement("span");
+          word.className = "w";
+          word.style.setProperty("--w", n++);
+          word.textContent = part;
+          frag.append(word);
+        }
+        child.replaceWith(frag);
+      }
+    };
+    split(heading);
+  });
+
+  // ---- Real counts count up from zero when they arrive ----
+  const countUp = (el) => {
+    const to = Number(el.dataset.to);
+    if (reduce || !to) {
+      el.textContent = String(to);
+      return;
+    }
+    const start = performance.now();
+    const step = (now) => {
+      const t = Math.min(1, (now - start) / 1400);
+      el.textContent = String(Math.round(to * (1 - Math.pow(1 - t, 3))));
+      if (t < 1)
+        requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+
+  // ---- Entrance: blocks rise, headings type in, screens open, counts run ----
+  const items = document.querySelectorAll(".reveal, .kinetic, .wipe, .count");
   if (reduce || !canObserve) {
     items.forEach((el) => el.classList.add("in"));
   } else {
+    document.querySelectorAll(".count").forEach((el) => { el.textContent = "0"; });
     const seen = new IntersectionObserver((entries) => {
       for (const entry of entries) {
         if (entry.isIntersecting) {
           entry.target.classList.add("in");
+          if (entry.target.classList.contains("count"))
+            countUp(entry.target);
           seen.unobserve(entry.target);
         }
       }
@@ -30,8 +81,10 @@ window.robinosReady = true; // index.html shows everything if this never runs
   }
   motionQuery.addEventListener("change", (event) => {
     reduce = event.matches;
-    if (reduce)
+    if (reduce) {
       items.forEach((el) => el.classList.add("in"));
+      document.querySelectorAll(".count").forEach((el) => { el.textContent = el.dataset.to; });
+    }
   });
 
   // ---- "움직임 멈추기": pauses the light, the marquee and the ring ----
