@@ -1,253 +1,63 @@
-// RobinOS landing page. Sections rise in as they scroll into view, the nav marks
-// the section on screen, the bento borders follow the pointer, the rollback
-// screen follows the step being read, and the terminal answers Windows commands
-// with the same table the RobinOS terminal uses (hints.json, made by
-// scripts/build-site.py from desktop/bash/robinos-hints.sh). No scroll listeners:
-// IntersectionObserver, pointer events and CSS scroll timelines only. Reduced
-// motion (read live) turns it all off, and the "움직임 멈추기" button stops what
-// moves on its own.
+// RobinOS landing page. Titles and the terminal rows arrive once as they scroll
+// into view (IntersectionObserver), and the tour's arrows page through the
+// screens. Everything else moves in CSS. Reduced motion (read live) shows the
+// end state at once.
 window.robinosReady = true; // index.html shows everything if this never runs
 (() => {
   const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-  let reduce = motionQuery.matches;
-  const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   const canObserve = "IntersectionObserver" in window;
 
-  // ---- Headings arrive word by word: split them into words once ----
-  document.querySelectorAll(".kinetic").forEach((heading) => {
-    let n = 0;
-    const split = (node) => {
-      for (const child of [...node.childNodes]) {
-        if (child.nodeType === Node.ELEMENT_NODE) {
-          split(child);
-          continue;
-        }
-        if (child.nodeType !== Node.TEXT_NODE)
-          continue;
-        const frag = document.createDocumentFragment();
-        for (const part of child.textContent.split(/(\s+)/)) {
-          if (!part)
-            continue;
-          if (/^\s+$/.test(part)) {
-            frag.append(part);
-            continue;
-          }
-          const word = document.createElement("span");
-          word.className = "w";
-          word.style.setProperty("--w", n++);
-          word.textContent = part;
-          frag.append(word);
-        }
-        child.replaceWith(frag);
-      }
-    };
-    split(heading);
-  });
-
-  // ---- Real counts count up from zero when they arrive ----
-  const countUp = (el) => {
-    const to = Number(el.dataset.to);
-    if (reduce || !to) {
-      el.textContent = String(to);
-      return;
-    }
-    const start = performance.now();
-    const step = (now) => {
-      const t = Math.min(1, (now - start) / 1400);
-      el.textContent = String(Math.round(to * (1 - Math.pow(1 - t, 3))));
-      if (t < 1)
-        requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  };
-
-  // ---- Entrance: blocks rise, headings type in, screens open, counts run ----
-  const items = document.querySelectorAll(".reveal, .kinetic, .wipe, .count");
-  if (reduce || !canObserve) {
-    items.forEach((el) => el.classList.add("in"));
+  // ---- Arrivals ----
+  const items = document.querySelectorAll(".fade, .cmd-rows");
+  const showAll = () => items.forEach((el) => el.classList.add("in"));
+  if (motionQuery.matches || !canObserve) {
+    showAll();
   } else {
-    document.querySelectorAll(".count").forEach((el) => { el.textContent = "0"; });
     const seen = new IntersectionObserver((entries) => {
       for (const entry of entries) {
         if (entry.isIntersecting) {
           entry.target.classList.add("in");
-          if (entry.target.classList.contains("count"))
-            countUp(entry.target);
           seen.unobserve(entry.target);
         }
       }
-    }, { rootMargin: "0px 0px -10% 0px" });
+    }, { rootMargin: "0px 0px -12% 0px" });
     items.forEach((el) => seen.observe(el));
   }
   motionQuery.addEventListener("change", (event) => {
-    reduce = event.matches;
-    if (reduce) {
-      items.forEach((el) => el.classList.add("in"));
-      document.querySelectorAll(".count").forEach((el) => { el.textContent = el.dataset.to; });
-    }
+    if (event.matches)
+      showAll();
   });
 
-  // ---- "움직임 멈추기": pauses the light, the marquee and the ring ----
-  const toggle = document.getElementById("motion-toggle");
-  if (toggle) {
-    const root = document.documentElement;
-    const set = (paused) => {
-      root.classList.toggle("paused", paused);
-      toggle.setAttribute("aria-pressed", String(paused));
-      toggle.textContent = paused ? "움직임 다시 켜기" : "움직임 멈추기";
-    };
-    let saved = false;
-    try { saved = localStorage.getItem("robinos-paused") === "1"; } catch { /* storage blocked */ }
-    set(saved);
-    toggle.addEventListener("click", () => {
-      const paused = !root.classList.contains("paused");
-      set(paused);
-      try { localStorage.setItem("robinos-paused", paused ? "1" : "0"); } catch { /* storage blocked */ }
-    });
-  }
-
-  // ---- Current section in the nav ----
-  const links = new Map([...document.querySelectorAll(".nav-links a")].map((a) => [a.hash.slice(1), a]));
-  if (canObserve && links.size) {
-    const spy = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting)
-          links.forEach((a, id) => a.classList.toggle("is-active", id === entry.target.id));
-      }
-    }, { rootMargin: "-45% 0px -50% 0px" });
-    links.forEach((_, id) => {
-      const section = document.getElementById(id);
-      if (section)
-        spy.observe(section);
-    });
-  }
-
-  // ---- Bento: the light on each tile follows the pointer ----
-  const bento = document.getElementById("bento");
-  if (bento && finePointer) {
-    const tiles = [...bento.querySelectorAll(".tile")];
-    let frame = 0;
-    bento.addEventListener("pointermove", (event) => {
-      if (frame || reduce)
-        return;
-      frame = requestAnimationFrame(() => {
-        frame = 0;
-        for (const tile of tiles) {
-          const r = tile.getBoundingClientRect();
-          tile.style.setProperty("--mx", `${event.clientX - r.left}px`);
-          tile.style.setProperty("--my", `${event.clientY - r.top}px`);
-        }
-      });
-    });
-  }
-
-  // ---- Rollback: the screen follows the step being read ----
-  const story = document.getElementById("story");
-  if (story && canObserve) {
-    const steps = [...story.querySelectorAll(".story-steps li")];
-    const shots = [...story.querySelectorAll(".story-frame img")];
-    const show = (index) => {
-      steps.forEach((li, i) => li.classList.toggle("is-on", i === index));
-      shots.forEach((img, i) => img.classList.toggle("is-on", i === index));
-    };
-    const watch = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting)
-          show(steps.indexOf(entry.target));
-      }
-    }, { rootMargin: "-48% 0px -48% 0px" });
-    steps.forEach((li) => watch.observe(li));
-  }
-
-  // ---- Terminal hints ----
-  const form = document.getElementById("hint-form");
-  const input = document.getElementById("hint-cmd");
-  const out = document.getElementById("hint-out");
-  const status = document.getElementById("hint-status");
-  if (!form || !input || !out)
+  // ---- Tour: the arrows move one screen; they grey out at either end ----
+  const track = document.getElementById("tour");
+  const prev = document.getElementById("tour-prev");
+  const next = document.getElementById("tour-next");
+  if (!track || !prev || !next)
     return;
-
-  // Commands that already are Linux: the page says so instead of "not found"
-  const linux = new Set(["ls", "cd", "pwd", "ip", "ps", "top", "htop", "cat", "echo", "clear", "mkdir", "rm",
-    "cp", "mv", "grep", "sudo", "pacman", "nano", "vim", "man", "less", "find", "chmod", "chown", "kill",
-    "df", "du", "free", "uname", "whoami", "id", "ssh", "ping", "curl", "wget", "systemctl", "journalctl",
-    "robinctl", "tar", "touch", "head", "tail", "which", "history", "exit", "ss", "lsblk", "fastfetch"]);
-
-  let hints = null;
-  const ready = fetch("hints.json")
-    .then((r) => (r.ok ? r.json() : null))
-    .then((data) => { hints = data; })
-    .catch(() => {});
-
-  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const prompt = '<span class="p">robin@robinos ~ &gt;</span> ';
-  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-  // The lines the shell would print, as HTML
-  function answer(typed) {
-    // Like the shell: the first word, lower case, without ".exe"
-    const word = typed.trim().split(/\s+/)[0] || "";
-    const name = word.toLowerCase().replace(/\.exe$/, "");
-    if (!name)
-      return [];
-    const hint = hints && hints[name];
-    if (hint) {
-      const lines = [
-        `<b>${esc(word)}</b> 명령은 윈도우용이에요. 리눅스에서는`,
-        `  <span class="g">${esc(hint.linux)}</span>  <span class="d">${esc(hint.what)}</span>`
-      ];
-      if (hint.mission)
-        lines.push(`  <span class="d">직접 해 보기: 학습 미션 ${hint.mission} →</span> robinctl learn show ${hint.mission}`);
-      return lines;
-    }
-    if (linux.has(name))
-      return [`<span class="g">${esc(name)}</span>: 리눅스 명령이라 RobinOS 터미널에서는 바로 돼요. 이 페이지에서는 실행하지 않아요.`];
-    if (!hints)
-      return [`<span class="d">명령 표를 불러오지 못했어요. 잠시 뒤에 다시 해 보세요.</span>`];
-    return [`bash: ${esc(word)}: 명령을 찾을 수 없어요`];
-  }
-
-  let run = 0;
-  async function show(typed) {
-    await ready;
-    const lines = answer(typed);
-    if (!lines.length)
-      return;
-    const mine = ++run;
-    const command = typed.trim();
-    // Screen readers hear the finished answer once, not every typed letter
-    if (status) {
-      const plain = document.createElement("div");
-      plain.innerHTML = lines.join(" ");
-      status.textContent = plain.textContent.replace(/\s+/g, " ").trim();
-    }
-    if (reduce) {
-      out.innerHTML = prompt + esc(command) + "\n" + lines.join("\n");
-      return;
-    }
-    // Type the command, then let the answer's lines appear one after another
-    for (let i = 0; i <= command.length; i++) {
-      if (mine !== run)
-        return;
-      out.innerHTML = prompt + esc(command.slice(0, i)) + '<span class="caret"></span>';
-      await sleep(i === 0 ? 120 : 34);
-    }
-    await sleep(160);
-    if (mine !== run)
-      return;
-    out.innerHTML = prompt + esc(command) + "\n"
-      + lines.map((line, n) => `<span class="row" style="--n: ${n}">${line}</span>`).join("\n");
-  }
-
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
-    show(input.value || input.placeholder);
+  const shots = track.querySelectorAll(".tour-item");
+  const step = () => {
+    const first = shots[0];
+    const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+    return first ? first.getBoundingClientRect().width + gap : track.clientWidth;
+  };
+  const go = (direction) => track.scrollBy({
+    left: direction * step(),
+    behavior: motionQuery.matches ? "auto" : "smooth",
   });
+  prev.addEventListener("click", () => go(-1));
+  next.addEventListener("click", () => go(1));
 
-  form.querySelectorAll("[data-cmd]").forEach((button) => {
-    button.addEventListener("click", () => {
-      input.value = button.dataset.cmd;
-      show(button.dataset.cmd);
-    });
-  });
+  if (canObserve && shots.length) {
+    const ends = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        const full = entry.intersectionRatio > 0.9;
+        if (entry.target === shots[0])
+          prev.disabled = full;
+        if (entry.target === shots[shots.length - 1])
+          next.disabled = full;
+      }
+    }, { root: track, threshold: [0, 0.9, 1] });
+    ends.observe(shots[0]);
+    ends.observe(shots[shots.length - 1]);
+  }
 })();

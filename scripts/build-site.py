@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Builds the generated parts of the landing page (site/).
+"""Checks and builds the generated parts of the landing page (site/).
 
-1. site/hints.json: the Windows command hints from desktop/bash/robinos-hints.sh,
-   so the page's terminal answers exactly like the RobinOS terminal does.
+1. The command pairs on the page (`data-win` → `data-linux` in site/index.html)
+   must match the Windows command hints in desktop/bash/robinos-hints.sh, so the
+   page shows exactly what the RobinOS terminal answers.
 2. site/assets/fonts/Pretendard-*.woff2: Pretendard cut down to the characters the
    page uses (fontTools), so the page loads a few dozen KB instead of a megabyte.
    The full subset fonts come from the checksum-verified font cache that
@@ -14,7 +15,6 @@ Run after changing the page's text or the hints:
 """
 
 import argparse
-import json
 import pathlib
 import re
 import sys
@@ -32,6 +32,7 @@ def function_body(text, name):
 
 
 def parse_hints():
+    """Windows command -> Linux command, from __robinos_windows_hint."""
     text = HINTS.read_text(encoding="utf-8")
     hints = {}
     # `    ipconfig)            printf '%s' 'ip a|IP 주소와 ...' ;;` (or "..." quotes)
@@ -40,30 +41,37 @@ def parse_hints():
         m = line_re.match(line)
         if not m:
             continue
-        linux, _, what = m.group(3).partition("|")
+        linux = m.group(3).partition("|")[0]
         for name in m.group(1).split("|"):
-            hints[name] = {"linux": linux, "what": what}
-    mission_re = re.compile(r"^\s+([a-z0-9.|+]+)\)\s+printf '(\d+)' ;;$")
-    for line in function_body(text, "__robinos_hint_mission").splitlines():
-        m = mission_re.match(line)
-        if not m:
-            continue
-        for name in m.group(1).split("|"):
-            if name in hints:
-                hints[name]["mission"] = int(m.group(2))
+            hints[name] = linux
     if len(hints) < 40:
         sys.exit(f"build-site: only {len(hints)} hints parsed from {HINTS}, the format changed")
     return hints
 
 
-def page_text(hints):
-    """Every character the page can show: the HTML, the script's strings, the hints."""
-    parts = [(SITE / "index.html").read_text(encoding="utf-8"),
-             (SITE / "main.js").read_text(encoding="utf-8"),
-             (SITE / "404.html").read_text(encoding="utf-8")]
-    for name, hint in hints.items():
-        parts += [name, hint["linux"], hint["what"]]
-    return "".join(parts)
+def check_pairs(hints):
+    html = (SITE / "index.html").read_text(encoding="utf-8")
+    pair_re = re.compile(r'data-win="([^"]+)">([^<]+)</span>.*?data-linux="([^"]+)">([^<]+)</span>', re.S)
+    pairs = [pair_re.search(li) for li in re.findall(r"<li[^>]*>.*?</li>", html, re.S)]
+    pairs = [m for m in pairs if m]
+    if not pairs:
+        sys.exit("build-site: no data-win/data-linux pairs found in site/index.html")
+    bad = []
+    for m in pairs:
+        win, win_text, linux, linux_text = m.groups()
+        if win != win_text or linux != linux_text:
+            bad.append(f"{win}: the shown text differs from the data attributes")
+        elif hints.get(win) != linux:
+            bad.append(f"{win} → {linux} on the page, but robinos-hints.sh says {hints.get(win)!r}")
+    if bad:
+        sys.exit("build-site: " + "; ".join(bad))
+    print(f"site/index.html: {len(pairs)} command pairs match robinos-hints.sh")
+
+
+def page_text():
+    """Every character the page can show: the HTML, the script, the 404 page."""
+    return "".join((SITE / name).read_text(encoding="utf-8")
+                   for name in ("index.html", "main.js", "404.html"))
 
 
 def subset_fonts(source, text):
@@ -93,13 +101,9 @@ def main():
     parser.add_argument("--fonts", help="folder with Pretendard-<weight>.subset.woff2")
     args = parser.parse_args()
 
-    hints = parse_hints()
-    out = SITE / "hints.json"
-    out.write_text(json.dumps(hints, ensure_ascii=False, sort_keys=True, indent=0) + "\n", encoding="utf-8")
-    print(f"{out.relative_to(ROOT)}: {len(hints)} commands, "
-          f"{sum('mission' in h for h in hints.values())} with a mission")
+    check_pairs(parse_hints())
     if args.fonts:
-        subset_fonts(args.fonts, page_text(hints))
+        subset_fonts(args.fonts, page_text())
 
 
 if __name__ == "__main__":
