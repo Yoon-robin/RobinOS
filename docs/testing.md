@@ -130,7 +130,13 @@ WHPX가 필요해요. TCG에서는 `build`, `boot-test`, `install-test`를 차�
 
 - `archinstall` (기본): [install.md](install.md)의 방법 A예요. archinstall로 Arch를 설치하고(기본 Btrfs 구성, GRUB, EFI는 `/boot`) `scripts/post-install.sh --yes`를 실행해요.
 - `robinos`: RobinOS 설치기 백엔드(`installer/robin-install`)로 디스크 전체에 설치해요(EFI는 `/efi`).
-- `windows`: 윈도우가 깔린 것처럼 꾸민 64GB 디스크(100MB EFI 파티션과 그 안의 윈도우 부팅 관리자 자리, MSR, 20GB NTFS "C:", 나머지 빈 공간)에 RobinOS 설치기로 "윈도우 옆에 설치"해요. 설치 뒤 윈도우 파티션 세 개의 위치와 C:의 앞부분이 그대로인지, 윈도우 부팅 파일이 남아 있고 `EFI/RobinOS`만 더해졌는지, 하드웨어 시계가 지역 시간인지 확인해요.
+- `windows`: 윈도우가 깔린 것처럼 꾸민 64GB 디스크(100MB EFI 파티션과 그 안의 윈도우 부팅 관리자 자리, MSR, 20GB NTFS "C:", 나머지 빈 공간)에 RobinOS 설치기로 설치해요. 순서는 이래요.
+  1. 빈 공간(약 44GB)이 있는 때의 설치 화면을 찍어요(`installer-free-space`): "윈도우 옆에 설치"가 고르는 중이고 크기가 빈 공간 전부인지.
+  2. 크기를 정해 보기: 진짜 `sgdisk`로 41GB 파티션이 만들어지는지, 남은 빈 공간이 2GB인지, 그 파티션이 "이전 RobinOS"로 알아봐지는지. 그다음 지워요.
+  3. 윈도우 디스크 관리가 남기는 것처럼 41GB NTFS "Data" 파티션을 만들고, 설치기가 그 파티션은 내놓고 윈도우가 든 C:(`windows_inside`가 읽기 전용 마운트로 확인)는 내놓지 않는지 봐요.
+  4. 설치 화면을 키보드로 확인 단계까지 몰아요(`qs ipc call shell installerState`로 상태를 읽어요): Data 파티션이 미리 골라져 있는지, 지울 파티션을 체크하기 전에는 "설치 시작"이 안 열리고 체크하면 열리는지. 설치 시작은 누르지 않아요.
+  5. `robin-install`로 그 파티션에 설치해요(`mode: partition`). 파티션 이름이 RobinOS, 형식이 리눅스로 바뀌었는지, 윈도우 파티션 세 개의 위치와 C:의 앞부분이 그대로인지, 윈도우 부팅 파일이 남아 있고 `EFI/RobinOS`만 더해졌는지, 하드웨어 시계가 지역 시간인지, GRUB 메뉴에 윈도우가 나오는지 확인해요.
+  화면 스크린샷(`live-0N-installer-*`)은 다음 시험이 폴더를 비우기 전에 챙겨 둬요.
 
 설치한 뒤 확인하는 것:
 
