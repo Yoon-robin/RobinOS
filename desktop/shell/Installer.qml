@@ -196,7 +196,8 @@ FloatingWindow {
         return JSON.stringify({
             step: step, mode: mode, disk: diskPath, partition: partitionPath, sizeGb: sizeGb,
             canNext: canNext, eraseConfirmed: eraseConfirmed, recoveryConfirmed: recoveryConfirmed,
-            bitlockerAtRisk: bitlockerAtRisk, user: userField.text, installing: installing
+            bitlockerAtRisk: bitlockerAtRisk, user: userField.text, installing: installing,
+            percent: Math.round(percent * 100), stage: stage, succeeded: succeeded, error: errorText
         });
     }
 

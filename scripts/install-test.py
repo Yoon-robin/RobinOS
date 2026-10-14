@@ -514,11 +514,12 @@ def show_free_space(con, qmp):
     sleep(2)
 
 
-def drive_installer(con, qmp):
+def drive_installer(con, qmp, install=False):
     """The installer as a person uses it, with the keyboard, up to the last question:
     the partition made in Disk Management is preselected, the wizard cannot go on
-    before the files that go are confirmed, and it does after. Nothing is
-    installed; the installation itself is robin-install's, run next."""
+    before the files that go are confirmed, and it does after. With install=True the
+    last button is pressed too, and the wizard itself installs: `sudo robin-install run -`
+    with its plan, its progress bar, its finished page (the whole path a person takes)."""
     # The welcome wizard of the first login is on top and takes the keys: Esc skips it
     qmp.keys("esc")
     sleep(3)
@@ -555,6 +556,29 @@ def drive_installer(con, qmp):
     if not state["canNext"] or state["partition"] != "/dev/vda4" or state["mode"] != "partition":
         raise RuntimeError(f"the confirmed installer is not ready for the Data partition: {state}")
     shot(qmp, "installer-confirmed")
+    if not install:
+        qmp.keys("alt", "f4")
+        sleep(2)
+        return
+
+    # "설치 시작" (the focus is on the check box, where Enter would tick it off again)
+    con.run(INSTALLER_IPC + "installerNext", check=False)
+    wait_installer(con, "installing", lambda st: st["step"] == 4, timeout=60)
+    shot(qmp, "installer-installing")
+    percents = set()
+
+    def over(st):
+        percents.add(st["percent"])
+        return st["step"] == 5
+
+    state = wait_installer(con, "the install is over", over, timeout=5400)
+    shot(qmp, "installer-finished")
+    if not state["succeeded"]:
+        raise RuntimeError(f"the installer says it failed: {state}")
+    # The bar moves while the packages install (it stood at 12% before 2026-10-13)
+    log(f"installer: progress seen: {sorted(percents)}")
+    if len(percents) < 4 or not any(43 <= p <= 69 for p in percents):
+        raise RuntimeError(f"the progress bar didn't move through the package install: {sorted(percents)}")
     qmp.keys("alt", "f4")
     sleep(2)
 
@@ -663,8 +687,10 @@ def phase_live(con, qmp):
         make_data_partition(con)
         con.put_file("/root/disks-check.py", DISKS_CHECK)
         con.run("PYTHONIOENCODING=utf-8 python3 /root/disks-check.py")
-        drive_installer(con, qmp)
-        install_with_robin_install(con, mode="partition", partition="/dev/vda4")
+        # The partition install goes through the wizard itself (the whole-disk one, the
+        # other test run, still calls robin-install directly)
+        drive_installer(con, qmp, install=True)
+        mount_installed(con)
         check_windows_kept(con, before)
         # The partition got RobinOS's name and the Linux type, so a next install knows it
         con.run("sgdisk -i 4 /dev/vda | grep -q \"Partition name: 'RobinOS'\""
@@ -722,6 +748,11 @@ def install_with_robin_install(con, mode="whole", partition=None):
     con.run("grep -Eq '^@@ (4[3-9]|5[0-9]|6[0-9]) ' /root/robin-install.out")
     con.run("grep -Ec '^@@ (1[3-9]|2[0-9]|3[0-9]|4[01]) ' /root/robin-install.out", check=False)
 
+    mount_installed(con)
+
+
+def mount_installed(con):
+    """The installed system on /mnt again (robin-install unmounts it when it is done)."""
     con.run(f"mount -o subvol=@ {ROOT_PART} /mnt && mount /dev/vda1 /mnt/efi")
     # robin-install locks root; the test logs in on the serial console as root
     con.run("arch-chroot /mnt sh -c 'echo root:robin | chpasswd'")

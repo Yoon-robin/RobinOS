@@ -231,6 +231,11 @@ ShellRoot {
             return installerWindow.testState();
         }
 
+        // The installer's "다음" or "설치 시작" button (VM test: the last step really installs)
+        function installerNext(): void {
+            installerWindow.next();
+        }
+
         function learnCenter(): void {
             ShellState.openLearnCenter();
         }
