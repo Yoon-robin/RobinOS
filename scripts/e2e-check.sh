@@ -181,10 +181,22 @@ print(len(kinds), b["current"], b["currentName"], len(b["apps"]))')"
     # Settings' 마우스와 터치패드 and 키보드 (ShellState.setInput): Hyprland runs with the
     # new values, and the file robinos.lua reads at the next login has them too.
     # The boot test sets tap off, natural scroll off, speed 0.4, key repeat 40 first
+    # The value of a Hyprland option, whatever its type (int, float or bool); 1 and 0 for
+    # a bool. When there is no value it prints the answer itself, to see what it was
     opt() {
-      hyprctl getoption "$1" -j 2>/dev/null | python3 -c 'import json, sys
-d = json.load(sys.stdin)
-print(d.get("int", d.get("float", "none")))'
+      local name raw
+      for name in "$1" "${1//_/-}"; do
+        raw="$(hyprctl getoption "${name}" -j 2>&1)"
+        python3 -c 'import json, sys
+try:
+    d = json.loads(sys.argv[1])
+    values = [v for k, v in d.items() if k not in ("option", "set")]
+    v = values[0]
+    print(int(v) if isinstance(v, bool) else v)
+except Exception:
+    sys.exit(1)' "${raw}" 2>/dev/null && return 0
+      done
+      printf 'none(%s)' "$(printf '%s' "${raw}" | tr -d '\n ' | cut -c1-80)"
     }
     tap="$(opt input:touchpad:tap_to_click)"
     natural="$(opt input:touchpad:natural_scroll)"
