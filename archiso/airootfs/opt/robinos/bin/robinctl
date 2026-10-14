@@ -39,7 +39,7 @@ robinctl - RobinOS 관리 도구
   robinctl doctor                       시스템 점검
   robinctl audit                        보안 점검 (윈도우 보안처럼: 열린 포트, 원격 접속, 권한, 암호화)
   robinctl app remove <앱 ID> [--dry-run]  앱 제거 (런처에서 Shift+Delete, RobinOS 기본 앱은 막아요)
-  robinctl update [--dry-run|--preview] 스냅샷을 만든 뒤 시스템 업데이트 (앱 스토어 앱도). --preview는 받을 개수·크기만
+  robinctl update [--dry-run|--preview|--status|--yes] 스냅샷을 만든 뒤 시스템 업데이트 (앱 스토어 앱도). --preview는 받을 개수·크기만, --status는 같은 내용을 JSON 한 줄로, --yes는 묻지 않고
   robinctl snapshot create [이름]       스냅샷 만들기
   robinctl snapshot list                스냅샷 목록
   robinctl snapshot setup [--dry-run]   스냅샷 설정 (Btrfs 루트, 처음 한 번)
@@ -404,51 +404,112 @@ doctor() {
   fi
 }
 
-# What the update is about to do, before pacman asks (T-162): how many packages
-# and how much to download, whether the kernel changes (restart afterwards), the
-# snapshot number taken first, and a question on a metered connection. Reads a
-# throwaway copy of the package databases (checkupdates), so stopping here leaves
-# the system's own databases as they were. Returns 1 when the person stops.
-update_preview() {
-  local mode="$1" db list count bytes metered next rc
+# What an update would bring, looked up in a throwaway copy of the package
+# databases (checkupdates), so stopping here leaves the system's own databases as
+# they were. Sets UPD_RC (0 updates, 2 none, 1 it could not look: no network, a
+# mirror down), UPD_LIST, UPD_COUNT and UPD_BYTES (what would be downloaded).
+update_facts() {
+  local db rc=0
+  UPD_RC=2
+  UPD_LIST=""
+  UPD_COUNT=0
+  UPD_BYTES=0
   have_cmd checkupdates || return 0
   db="$(mktemp -d)"
-  # checkupdates: 0 = updates, 2 = none, 1 = it could not look (no network, a
-  # mirror down). Only 2 means "up to date"; 1 must not look like it
-  rc=0
-  list="$(CHECKUPDATES_DB="${db}" checkupdates 2>/dev/null)" || rc=$?
-  if [[ "${rc}" -eq 1 ]]; then
-    printf '업데이트가 있는지 확인하지 못했어요. 인터넷 연결을 확인해 주세요. 계속하면 pacman이 다시 시도해요.\n'
-    rm -rf "${db}"
-    return 0
+  UPD_LIST="$(CHECKUPDATES_DB="${db}" checkupdates 2>/dev/null)" || rc=$?
+  UPD_RC="${rc}"
+  if [[ "${rc}" -eq 0 && -z "${UPD_LIST}" ]]; then
+    UPD_RC=2
+  elif [[ "${rc}" -eq 0 ]]; then
+    UPD_COUNT="$(printf '%s\n' "${UPD_LIST}" | wc -l)"
+    UPD_BYTES="$(pacman -Sup --dbpath "${db}" --logfile /dev/null --print-format '%s' 2>/dev/null \
+      | awk '/^[0-9]+$/ { sum += $1 } END { print sum + 0 }')"
   fi
-  if [[ -z "${list}" ]]; then
-    printf '시스템 패키지는 모두 최신이에요.\n'
-    rm -rf "${db}"
-    return 0
-  fi
-  count="$(printf '%s\n' "${list}" | wc -l)"
-  bytes="$(pacman -Sup --dbpath "${db}" --logfile /dev/null --print-format '%s' 2>/dev/null \
-    | awk '/^[0-9]+$/ { sum += $1 } END { print sum + 0 }')"
   rm -rf "${db}"
+}
 
-  printf '%s업데이트 %s개%s' "${C_BOLD}" "${count}" "${C_RESET}"
-  if ((bytes > 0)); then
-    printf ', 받을 크기 %s' "$(awk -v b="${bytes}" 'BEGIN { if (b >= 1073741824) printf "%.1fGB", b / 1073741824; else printf "%dMB", int((b + 1048575) / 1048576) }')"
+update_has_kernel() {
+  printf '%s\n' "${UPD_LIST}" | grep -qE '^linux(-lts|-zen|-hardened)? '
+}
+
+# NetworkManager's Metered: 1 yes, 3 guessed yes (a phone hotspot)
+update_metered() {
+  local metered
+  metered="$(busctl get-property org.freedesktop.NetworkManager /org/freedesktop/NetworkManager \
+    org.freedesktop.NetworkManager Metered 2>/dev/null | awk '{ print $2 }')"
+  [[ "${metered}" == 1 || "${metered}" == 3 ]]
+}
+
+# The number of the snapshot the update takes first
+update_next_snapshot() {
+  # Only root can read the list; for anyone else this says nothing rather than "1"
+  snapper --no-dbus -c root list --columns number 2>/dev/null | awk 'BEGIN { n = -1 } $1 ~ /^[0-9]+$/ { n = $1 } END { if (n >= 0) print n + 1 }'
+}
+
+# Apps from the app store (Flathub) that have a newer version; 0 without any
+update_flatpak_count() {
+  have_cmd flatpak || { printf '0\n'; return 0; }
+  [[ -n "$(flatpak list --system --app --columns=application 2>/dev/null)" ]] || { printf '0\n'; return 0; }
+  timeout 30 flatpak remote-ls --system --updates --columns=application 2>/dev/null | wc -l
+}
+
+# The version of the robinos package (RobinOS's own files), or nothing
+robinos_version() {
+  have_cmd pacman || return 0
+  pacman -Q robinos 2>/dev/null | awk 'NR == 1 { print $2 }' | tr -cd 'A-Za-z0-9._:+-'
+}
+
+# robinctl update --status: one line of JSON for the settings app, no root needed
+#   {"state":"updates|current|unknown","count":N,"bytes":N,"kernel":bool,"metered":bool,
+#    "next_snapshot":N,"flatpak":N,"robinos":"0.3.0.r481-1"}
+update_status() {
+  local mode="$1" state="current" kernel=false metered=false next=0
+  update_facts
+  [[ "${UPD_RC}" -eq 1 ]] && state="unknown"
+  [[ "${UPD_COUNT}" -gt 0 ]] && state="updates"
+  update_has_kernel && kernel=true
+  update_metered && metered=true
+  [[ "${mode}" != none ]] && next="$(update_next_snapshot)"
+  printf '{"state":"%s","count":%s,"bytes":%s,"kernel":%s,"metered":%s,"next_snapshot":%s,"flatpak":%s,"robinos":"%s"}\n' \
+    "${state}" "${UPD_COUNT}" "${UPD_BYTES}" "${kernel}" "${metered}" "${next:-0}" "$(update_flatpak_count)" "$(robinos_version)"
+}
+
+# What the update is about to do, before pacman asks (T-162): how many packages
+# and how much to download, whether the kernel changes (restart afterwards), the
+# snapshot number taken first, and a question on a metered connection.
+# Returns 1 when the person stops.
+update_preview() {
+  local mode="$1"
+  have_cmd checkupdates || return 0
+  update_facts
+  if [[ "${UPD_RC}" -eq 1 ]]; then
+    printf '업데이트가 있는지 확인하지 못했어요. 인터넷 연결을 확인해 주세요. 계속하면 pacman이 다시 시도해요.\n'
+    return 0
+  fi
+  if [[ "${UPD_COUNT}" -eq 0 ]]; then
+    printf '시스템 패키지는 모두 최신이에요.\n'
+    return 0
+  fi
+
+  printf '%s업데이트 %s개%s' "${C_BOLD}" "${UPD_COUNT}" "${C_RESET}"
+  if ((UPD_BYTES > 0)); then
+    printf ', 받을 크기 %s' "$(awk -v b="${UPD_BYTES}" 'BEGIN { if (b >= 1073741824) printf "%.1fGB", b / 1073741824; else printf "%dMB", int((b + 1048575) / 1048576) }')"
   fi
   printf '\n'
-  if printf '%s\n' "${list}" | grep -qE '^linux(-lts|-zen|-hardened)? '; then
+  if update_has_kernel; then
     printf '  커널이 바뀌어요. 업데이트가 끝나면 컴퓨터를 다시 시작해요.\n'
   fi
   if [[ "${mode}" != none ]]; then
-    next="$(snapper --no-dbus -c root list --columns number 2>/dev/null | awk '$1 ~ /^[0-9]+$/ { n = $1 } END { print n + 1 }')"
-    printf '  업데이트 직전에 스냅샷 %s번을 찍어요. 문제가 생기면: sudo robinctl snapshot rollback %s\n' "${next}" "${next}"
+    local next
+    next="$(update_next_snapshot)"
+    if [[ -n "${next}" ]]; then
+      printf '  업데이트 직전에 스냅샷 %s번을 찍어요. 문제가 생기면: sudo robinctl snapshot rollback %s\n' "${next}" "${next}"
+    else
+      printf '  업데이트 직전에 스냅샷을 찍어요. 문제가 생기면: sudo robinctl snapshot list\n'
+    fi
   fi
 
-  # NetworkManager's Metered: 1 yes, 3 guessed yes (a phone hotspot)
-  metered="$(busctl get-property org.freedesktop.NetworkManager /org/freedesktop/NetworkManager \
-    org.freedesktop.NetworkManager Metered 2>/dev/null | awk '{ print $2 }')"
-  if [[ "${metered}" == 1 || "${metered}" == 3 ]]; then
+  if update_metered; then
     printf '%s알림:%s 데이터 요금이 드는 연결(휴대폰 핫스팟 등)이에요.\n' "${C_YELLOW}" "${C_RESET}"
     if [[ -t 0 ]] && [[ "${ASSUME_YES}" != true ]]; then
       local answer
@@ -459,9 +520,34 @@ update_preview() {
   printf '\n'
 }
 
+# The desktop shell keeps running the files it started with. When this update
+# brought a new robinos package, the person's shell is ended; robinos-shell starts
+# it again at once, from the new files (desktop/bin/robinos-shell)
+restart_shell_after() {
+  local before="$1" after user="${SUDO_USER:-}"
+  after="$(robinos_version)"
+  [[ -n "${before}" && "${before}" != "${after}" ]] || return 0
+  printf '\nRobinOS 파일이 %s에서 %s로 올라갔어요.\n' "${before}" "${after}"
+  if [[ -n "${user}" && "${user}" != root ]] && pgrep -u "${user}" -x qs >/dev/null 2>&1; then
+    printf '화면(셸)을 새 버전으로 다시 띄워요.\n'
+    pkill -u "${user}" -x qs >/dev/null 2>&1 || true
+  else
+    printf '화면에는 로그아웃했다가 다시 로그인하면 새 버전이 적용돼요.\n'
+  fi
+}
+
 update_system() {
-  local dry_run="false"
-  [[ "${1:-}" == "--dry-run" ]] && dry_run="true"
+  local dry_run="false" preview="false" status="false" arg
+  for arg in "$@"; do
+    case "${arg}" in
+      --dry-run) dry_run="true" ;;
+      --preview) preview="true" ;;
+      --status) status="true" ;;
+      --yes | -y) ASSUME_YES="true" ;;
+      "") ;;
+      *) die "알 수 없는 옵션이에요: ${arg} (쓸 수 있는 것: --dry-run, --preview, --status, --yes)" ;;
+    esac
+  done
 
   have_cmd pacman || die "pacman이 필요해요"
 
@@ -475,8 +561,12 @@ update_system() {
   fi
 
   # robinctl update --preview: only what an update would bring, without root
-  if [[ "${1:-}" == "--preview" ]]; then
+  if [[ "${preview}" == "true" ]]; then
     update_preview "${mode}"
+    return
+  fi
+  if [[ "${status}" == "true" ]]; then
+    update_status "${mode}"
     return
   fi
 
@@ -504,12 +594,19 @@ update_system() {
         "${C_YELLOW}" "${C_RESET}" >&2
       ;;
   esac
-  pacman -Syu
+  local pacman_args=() flatpak_args=() before
+  if [[ "${ASSUME_YES}" == "true" ]]; then
+    pacman_args+=(--noconfirm)
+    flatpak_args+=(-y)
+  fi
+  before="$(robinos_version)"
+  pacman -Syu "${pacman_args[@]}"
+  restart_shell_after "${before}"
 
   # Apps from the app store (Flathub) live outside pacman and its snapshots
   if have_cmd flatpak && [[ -n "$(flatpak list --system --app --columns=application 2>/dev/null)" ]]; then
     printf '\n앱 스토어(Flatpak) 앱을 업데이트해요.\n'
-    flatpak update --system
+    flatpak update --system "${flatpak_args[@]}"
   fi
 }
 
@@ -3827,7 +3924,7 @@ main() {
       ;;
     update)
       shift
-      update_system "${1:-}"
+      update_system "$@"
       ;;
     snapshot)
       shift

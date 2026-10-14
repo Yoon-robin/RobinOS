@@ -761,6 +761,10 @@ def main():
     keys(qmp, "meta_l", "i")
     wait(3)
     shot(qmp, "light-settings")
+    # Down: the update page (the live session doesn't update, and says so), then 정보
+    keys(qmp, "down")
+    wait(3)
+    shot(qmp, "light-settings-update")
     keys(qmp, "down")
     wait(2)
     shot(qmp, "light-settings-about")

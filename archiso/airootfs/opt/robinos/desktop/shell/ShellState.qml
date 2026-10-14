@@ -1158,7 +1158,11 @@ Singleton {
     Process {
         id: updateProc
 
-        command: ["sh", "-c", "checkupdates 2>/dev/null | wc -l"]
+        // pacman's updates, and the app store's (Flathub apps are outside pacman)
+        command: ["sh", "-c", "p=$(checkupdates 2>/dev/null | wc -l); f=0; "
+                  + "if command -v flatpak >/dev/null 2>&1 && [ -n \"$(flatpak list --system --app --columns=application 2>/dev/null)\" ]; then "
+                  + "f=$(timeout 30 flatpak remote-ls --system --updates --columns=application 2>/dev/null | wc -l); fi; "
+                  + "echo $((p + f))"]
         stdout: StdioCollector {
             id: updateOut
 

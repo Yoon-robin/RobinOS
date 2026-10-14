@@ -14,9 +14,37 @@ FloatingWindow {
     property string section: "appearance"
     // [label, value] rows for the about section, read by infoProc
     property var info: []
+    // What `robinctl update --status` said (state, count, bytes, kernel, metered,
+    // next_snapshot, flatpak, robinos); null before the first answer
+    property var updateInfo: null
+    property bool updateChecking: false
+    readonly property var upd: updateInfo ?? ({})
+    readonly property int updateAll: (upd.count ?? 0) + (upd.flatpak ?? 0)
+    readonly property string updateTitle: ShellState.isLive ? "라이브에서는 업데이트하지 않아요"
+                                         : updateChecking ? "확인하는 중이에요…"
+                                         : upd.state === "unknown" ? "업데이트를 확인하지 못했어요"
+                                         : updateAll > 0 ? "업데이트 " + updateAll + "개가 있어요"
+                                         : upd.state ? "모두 최신이에요" : ""
+    readonly property string updateDetail: {
+        if (ShellState.isLive)
+            return "RobinOS를 컴퓨터에 설치한 뒤에 업데이트해요.";
+        if (updateChecking)
+            return "";
+        if (upd.state === "unknown")
+            return "인터넷에 연결돼 있는지 확인해 주세요. 그래도 안 되면 잠시 뒤에 다시 확인해요.";
+        const parts = [];
+        if ((upd.count ?? 0) > 0)
+            parts.push("시스템 패키지 " + upd.count + "개" + (upd.bytes > 0 ? ", 받을 크기 " + sizeText(upd.bytes) : ""));
+        if ((upd.flatpak ?? 0) > 0)
+            parts.push("앱 스토어 앱 " + upd.flatpak + "개");
+        if (upd.kernel)
+            parts.push("커널이 바뀌어요. 끝나면 컴퓨터를 다시 시작해요");
+        return parts.join(" · ");
+    }
 
     readonly property var sections: [
         { key: "appearance", icon: "sun-moon", title: "개인 설정" },
+        { key: "update", icon: "download", title: "업데이트" },
         { key: "sound", icon: "volume", title: "소리", panel: true },
         { key: "wifi", icon: "wifi", title: "Wi-Fi", panel: true },
         { key: "bluetooth", icon: "bluetooth", title: "블루투스", panel: true },
@@ -39,6 +67,8 @@ FloatingWindow {
         if (ShellState.settingsSection !== "")
             pick(ShellState.settingsSection);
         infoProc.running = true;
+        if (section === "update")
+            checkUpdates();
     }
 
     function pick(key) {
@@ -53,10 +83,47 @@ FloatingWindow {
         section = key;
     }
 
+    function sizeText(bytes) {
+        return bytes >= 1073741824 ? (bytes / 1073741824).toFixed(1) + "GB" : Math.max(1, Math.round(bytes / 1048576)) + "MB";
+    }
+
+    function checkUpdates() {
+        if (ShellState.isLive || updateProc.running)
+            return;
+        updateInfo = null;
+        updateChecking = true;
+        updateProc.running = true;
+    }
+
+    onSectionChanged: {
+        if (section === "update" && visible && updateInfo === null)
+            checkUpdates();
+    }
+
     function move(delta) {
         const pages = sections.filter(s => !s.panel);
         const i = pages.findIndex(s => s.key === section);
         section = pages[(i + delta + pages.length) % pages.length].key;
+    }
+
+    // What an update would bring; robinctl looks in its own copy of the package databases
+    Process {
+        id: updateProc
+
+        command: ["robinctl", "update", "--status"]
+        stdout: StdioCollector {
+            id: updateOut
+
+            onStreamFinished: {
+                root.updateChecking = false;
+                try {
+                    const lines = updateOut.text.trim().split("\n");
+                    root.updateInfo = JSON.parse(lines[lines.length - 1]);
+                } catch (error) {
+                    root.updateInfo = { state: "unknown" };
+                }
+            }
+        }
     }
 
     // One "label<TAB>value" line per fact; a missing tool leaves its line out
@@ -243,7 +310,7 @@ FloatingWindow {
                     Loader {
                         Layout.fillWidth: true
                         Layout.topMargin: 18
-                        sourceComponent: root.section === "about" ? aboutPage : appearancePage
+                        sourceComponent: root.section === "about" ? aboutPage : root.section === "update" ? updatePage : appearancePage
                     }
                 }
             }
@@ -603,6 +670,108 @@ FloatingWindow {
                         variant: "ghost"
                         onClicked: ShellState.resetWallpaper()
                     }
+                }
+            }
+        }
+    }
+
+    Component {
+        id: updatePage
+
+        ColumnLayout {
+            spacing: 0
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.bottomMargin: 26
+                implicitHeight: statusColumn.implicitHeight + 44
+                radius: Theme.radius
+                color: "transparent"
+                border.width: 1
+                border.color: Theme.border
+
+                ColumnLayout {
+                    id: statusColumn
+
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: 22
+                    spacing: 6
+
+                    Text {
+                        text: root.updateTitle
+                        color: Theme.fg
+                        font.family: Theme.font
+                        font.pixelSize: 18
+                        font.weight: Font.DemiBold
+                    }
+
+                    Text {
+                        visible: text !== ""
+                        Layout.fillWidth: true
+                        text: root.updateDetail
+                        color: Theme.muted
+                        font.family: Theme.font
+                        font.pixelSize: 13
+                        wrapMode: Text.WordWrap
+                    }
+
+                    Text {
+                        visible: root.upd.metered === true && root.updateAll > 0
+                        Layout.fillWidth: true
+                        text: "데이터 요금이 드는 연결(휴대폰 핫스팟 등)이에요. Wi-Fi에 연결한 뒤에 받는 걸 권해요."
+                        color: Theme.destructive
+                        font.family: Theme.font
+                        font.pixelSize: 12
+                        wrapMode: Text.WordWrap
+                    }
+
+                    RowLayout {
+                        Layout.topMargin: 10
+                        spacing: 8
+
+                        ActionButton {
+                            visible: !ShellState.isLive && !root.updateChecking && root.updateAll > 0
+                            text: "지금 업데이트"
+                            onClicked: ShellState.runInTerminal("sudo robinctl update")
+                        }
+
+                        ActionButton {
+                            visible: !ShellState.isLive
+                            variant: "outline"
+                            text: root.updateChecking ? "확인하는 중…" : "다시 확인"
+                            onClicked: root.checkUpdates()
+                        }
+                    }
+                }
+            }
+
+            Group {
+                title: "업데이트 전에 스냅샷을 찍어요"
+                hint: (root.upd.next_snapshot ?? 0) > 0 ? "이번에는 스냅샷 " + root.upd.next_snapshot + "번이에요. 문제가 생기면 컴퓨터를 켤 때 부팅 메뉴의 \"RobinOS snapshots\"에서 그 상태로 켜고 되돌려요."
+                                                         : "문제가 생기면 컴퓨터를 켤 때 부팅 메뉴의 \"RobinOS snapshots\"에서 업데이트 직전 상태로 켜고 되돌려요."
+
+                Text {
+                    Layout.fillWidth: true
+                    text: "스냅샷에는 시스템만 들어가요. 사진과 문서 같은 개인 파일은 백업 앱으로 따로 남겨요."
+                    color: Theme.muted
+                    font.family: Theme.font
+                    font.pixelSize: 12
+                    wrapMode: Text.WordWrap
+                }
+            }
+
+            Group {
+                title: "RobinOS 파일"
+                hint: "화면, robinctl, 학습 미션은 RobinOS 패키지로 올라가요. 올라가면 화면이 새 버전으로 다시 떠요."
+                visible: (root.upd.robinos ?? "") !== ""
+
+                Text {
+                    text: "버전 " + (root.upd.robinos ?? "")
+                    color: Theme.fg
+                    font.family: Theme.mono
+                    font.pixelSize: 13
                 }
             }
         }

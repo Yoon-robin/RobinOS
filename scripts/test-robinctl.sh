@@ -680,6 +680,69 @@ check "update preview when checkupdates fails" 0 env PATH="${PREVIEW_BIN}:/usr/b
 said "a failed look is not called up to date" "확인하지 못했어요"
 if grep -q "모두 최신이에요" "${WORK}/out"; then bad "a failed look says everything is current"; else ok "a failed look doesn't say everything is current"; fi
 
+printf '%s\n' "Update status for the settings app (robinctl update --status)"
+# One JSON line; json_is <description> <key> <value> reads the last check's output
+json_is() {
+  local got
+  got="$(python3 -c 'import json,sys; v = json.loads(open(sys.argv[1]).read().strip().splitlines()[-1])[sys.argv[2]]; print(str(v).lower() if isinstance(v, bool) else v)' "${WORK}/out" "$2" 2>&1)"
+  if [[ "${got}" == "$3" ]]; then ok "$1"; else bad "$1: ${2} is \"${got}\", not \"$3\""; fi
+}
+printf '#!/bin/sh\nprintf "linux 7.2.9-1 -> 7.3.0-1\\nfirefox 157.0.1-1 -> 158.0-1\\n"\n' >"${PREVIEW_BIN}/checkupdates"
+printf '#!/bin/sh\necho "u 4"\n' >"${PREVIEW_BIN}/busctl"
+check "update status with updates" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --status
+json_is "status: there are updates" state updates
+json_is "status: two of them" count 2
+json_is "status: 150 MB to download" bytes 157286400
+json_is "status: the kernel changes" kernel true
+json_is "status: not metered" metered false
+printf '#!/bin/sh\necho "u 1"\n' >"${PREVIEW_BIN}/busctl"
+check "update status on a metered connection" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --status
+json_is "status: metered" metered true
+printf '#!/bin/sh\nexit 2\n' >"${PREVIEW_BIN}/checkupdates"
+check "update status with nothing new" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --status
+json_is "status: up to date" state current
+json_is "status: no updates" count 0
+json_is "status: no kernel change" kernel false
+printf '#!/bin/sh\nexit 1\n' >"${PREVIEW_BIN}/checkupdates"
+check "update status when checkupdates fails" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --status
+json_is "status: it could not look, which isn't up to date" state unknown
+check "update refuses an option it doesn't know" fail env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --frobnicate
+
+printf '%s\n' "The shell starts again after an update brought new RobinOS files"
+# A pacman that keeps its own version of robinos in a file and "installs" a new one on -Syu
+RESTART_BIN="${WORK}/restart-bin"
+mkdir -p "${RESTART_BIN}"
+printf '0.3.0.r1-1\n' >"${WORK}/robinos-version"
+cat >"${RESTART_BIN}/pacman" <<EOF
+#!/bin/sh
+case "\$*" in
+  "-Q robinos") echo "robinos \$(cat '${WORK}/robinos-version')" ;;
+  *-Syu*) echo "pacman \$*" >>'${WORK}/pacman-calls'; [ -f '${WORK}/new-version' ] && cp '${WORK}/new-version' '${WORK}/robinos-version'; exit 0 ;;
+  *) exit 1 ;;
+esac
+EOF
+printf '#!/bin/sh\nexit 2\n' >"${RESTART_BIN}/checkupdates"
+printf '#!/bin/sh\necho 4242\n' >"${RESTART_BIN}/pgrep"
+printf '#!/bin/sh\necho "pkill $*" >>"%s/pkill-calls"\n' "${WORK}" >"${RESTART_BIN}/pkill"
+chmod 755 "${RESTART_BIN}"/*
+if [[ "${EUID}" -eq 0 ]]; then
+  : >"${WORK}/pkill-calls"
+  rm -f "${WORK}/new-version"
+  check "an update with no new RobinOS files" 0 env SUDO_USER=learner PATH="${RESTART_BIN}:/usr/bin" bash "${ROBINCTL}" update --yes
+  if [[ -s "${WORK}/pkill-calls" ]]; then bad "the shell was ended without new RobinOS files"; else ok "the shell stays when nothing changed"; fi
+  if grep -qx 'pacman -Syu --noconfirm' "${WORK}/pacman-calls"; then ok "update passes --yes on to pacman"; else bad "pacman didn't get --noconfirm: $(cat "${WORK}/pacman-calls")"; fi
+  printf '0.3.0.r2-1\n' >"${WORK}/new-version"
+  check "an update that brings new RobinOS files" 0 env SUDO_USER=learner PATH="${RESTART_BIN}:/usr/bin" bash "${ROBINCTL}" update --yes
+  said "it tells which versions" "0.3.0.r1-1에서 0.3.0.r2-1로"
+  if grep -qx 'pkill -u learner -x qs' "${WORK}/pkill-calls"; then ok "the person's shell is ended so it comes back new"; else bad "pkill wasn't called for the person's shell: $(cat "${WORK}/pkill-calls")"; fi
+  : >"${WORK}/pkill-calls"
+  printf '0.3.0.r2-1\n' >"${WORK}/robinos-version"
+  printf '0.3.0.r3-1\n' >"${WORK}/new-version"
+  check "the same as plain root, without sudo" 0 env -u SUDO_USER PATH="${RESTART_BIN}:/usr/bin" bash "${ROBINCTL}" update --yes
+  said "without a user it says to log in again" "다시 로그인"
+  if [[ -s "${WORK}/pkill-calls" ]]; then bad "the shell was ended without a known user"; else ok "no shell is ended without a user"; fi
+fi
+
 printf '%s\n' "Web lab (robinctl lab) with stand-in docker, sudo and systemctl"
 FAKE="${WORK}/fake"
 mkdir -p "${FAKE}"

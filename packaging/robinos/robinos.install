@@ -11,4 +11,7 @@ post_install() {
 
 post_upgrade() {
   post_install
+  # A running desktop keeps the files it started with. `robinctl update` starts the
+  # shell again by itself; with plain pacman the person logs out and in
+  printf 'RobinOS 화면은 로그아웃했다가 다시 로그인하면 새 버전이 돼요(robinctl update는 알아서 다시 띄워요).\n'
 }

@@ -146,7 +146,7 @@ FloatingWindow {
     visible: ShellState.installerOpen
     title: "RobinOS 설치"
     implicitWidth: 800
-    implicitHeight: 680
+    implicitHeight: 740
     minimumSize: Qt.size(680, 600)
     color: Theme.bg
 

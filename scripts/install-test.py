@@ -559,6 +559,62 @@ def drive_installer(con, qmp):
     sleep(2)
 
 
+# The real `robinctl update` on the installed system. A local repository (file://, no
+# signatures) takes the place of [robinos] and holds a robinos package that is the
+# installed one with a higher version and one more file: an update that brings new
+# RobinOS files. pacman -Syu runs for real, so Arch's packages come along if they
+# moved since the ISO was built.
+LOCAL_REPO = "/srv/robinos-test-repo"  # not under /root: pacman downloads as the alpm user
+
+POINT_AT_LOCAL_REPO = """
+import re
+path = "/etc/pacman.conf"
+conf = open(path).read()
+open(path + ".before-update-test", "w").write(conf)
+new = re.sub(r"(?ms)^\\[robinos\\]\\n.*?(?=^\\[|\\Z)",
+             "[robinos]\\nSigLevel = Never\\nServer = file://%s\\n\\n", conf)
+assert new != conf, "no [robinos] section in pacman.conf"
+open(path, "w").write(new)
+""" % LOCAL_REPO
+
+
+def check_update(con):
+    """robinctl update, from the status the settings app reads to the snapshots around it."""
+    con.run("ls /opt/robinos/pkg/robinos-*.pkg.tar.zst")
+    con.run(f"rm -rf /root/newpkg {LOCAL_REPO} && mkdir -p /root/newpkg {LOCAL_REPO} && chmod 755 {LOCAL_REPO}"
+            " && cd /root/newpkg && bsdtar -xf /opt/robinos/pkg/robinos-*.pkg.tar.zst"
+            " && sed -i 's/^pkgver = .*/pkgver = 0.3.0.r99999-1/' .PKGINFO"
+            " && echo update-test > usr/share/robinos/update-test-marker"
+            f" && ls -A | bsdtar --zstd -cf {LOCAL_REPO}/robinos-0.3.0.r99999-1-any.pkg.tar.zst -T -"
+            f" && repo-add -q {LOCAL_REPO}/robinos.db.tar.gz {LOCAL_REPO}/robinos-0.3.0.r99999-1-any.pkg.tar.zst")
+    con.put_file("/root/local-repo.py", POINT_AT_LOCAL_REPO)
+    con.run("python3 /root/local-repo.py && grep -A3 '^\\[robinos\\]' /etc/pacman.conf")
+    try:
+        _, before = con.capture("pacman -Q robinos; snapper --no-dbus -c root list --columns number"
+                                " | awk '$1 ~ /^[0-9]+$/ { n = $1 } END { print \"last snapshot\", n + 0 }'")
+        print(before, flush=True)
+        # What the settings app reads: one JSON line, an update waiting, root's snapshot number
+        con.run("pacman -Sy > /dev/null && robinctl update --status | tee /root/update-status.json"
+                " && python3 -c 'import json; d = json.load(open(\"/root/update-status.json\"));"
+                " assert d[\"state\"] == \"updates\" and d[\"count\"] >= 1 and d[\"next_snapshot\"] > 0"
+                " and d[\"robinos\"].startswith(\"0.3.0.r\"), d'", timeout=300)
+        # The update itself, without asking
+        # (a subshell: a bare exit would end the test's login shell)
+        con.run("(robinctl update --yes > /root/update.out 2>&1; rc=$?; tail -n 25 /root/update.out; exit $rc)", timeout=1800)
+        con.run("grep -q '0.3.0.r99999-1' /root/update.out && test -f /usr/share/robinos/update-test-marker"
+                " && [ \"$(pacman -Q robinos | cut -d' ' -f2)\" = 0.3.0.r99999-1 ]")
+        # snap-pac took a pair around it, and the version name shows in /etc/os-release
+        _, listing = con.capture("snapper --no-dbus --csvout -c root list --columns number,type,description")
+        print(listing, flush=True)
+        if not any(f.split(",")[1:2] == ["pre"] and "Syu" in f for f in listing.splitlines()):
+            raise RuntimeError("snap-pac took no snapshot before pacman -Syu")
+        con.run("(. /etc/os-release && [ \"$ID\" = robinos ])")
+        # The shell would be started again here, with nobody logged in to a desktop to ask
+        con.run("grep -q '다시 로그인' /root/update.out")
+    finally:
+        con.run("mv /etc/pacman.conf.before-update-test /etc/pacman.conf", check=False)
+
+
 # ---- Phases ----
 
 def phase_live(con, qmp):
@@ -644,8 +700,8 @@ def install_with_robin_install(con, mode="whole", partition=None):
     con.run("grep '^@@' /root/robin-install.out", check=False)
     if status != 0:
         raise RuntimeError(f"robin-install failed with {status}")
-    # The bar moves while packages install (42-70%): pacman spoke Korean in the
-    # live session and the progress stood at 12% until 72% (2026-10-13)
+    # The bar moves while packages install (42-70%); it stood at 12% until 72% when the
+    # installer waited for "(3/987) installing", which pacman only prints on a terminal
     con.run("grep -Eq '^@@ (4[3-9]|5[0-9]|6[0-9]) ' /root/robin-install.out")
     con.run("grep -Ec '^@@ (1[3-9]|2[0-9]|3[0-9]|4[01]) ' /root/robin-install.out", check=False)
 
@@ -806,6 +862,10 @@ def phase_installed(con, qmp):
     con.run(r"pacman -Sy >/dev/null && pacman -Si robinos | head -n 3")
     con.run(r'[ "$(sha256sum < /etc/skel/.bashrc)" = "$(sha256sum < /opt/robinos/desktop/bash/bashrc)" ]'
             r' && [ "$(sha256sum < /etc/xdg/foot/foot.ini)" = "$(sha256sum < /opt/robinos/desktop/foot/foot.ini)" ]')
+
+    # A real update, last: it changes the system the next phases boot (docs/testing.md)
+    if INSTALLER != "archinstall":
+        check_update(con)
 
     # QEMU's WHPX can't reset a VM that reboots itself ("Unexpected VP exit code 4"),
     # so every boot is its own QEMU run: power off here, the next phase boots again.
