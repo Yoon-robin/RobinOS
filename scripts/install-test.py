@@ -614,7 +614,10 @@ def check_update(con):
         # The shell would be started again here, with nobody logged in to a desktop to ask
         con.run("grep -q '다시 로그인' /root/update.out")
     finally:
+        # The real [robinos] again, and its database: the one from the local
+        # repository has no signature, which `pacman -S` rejects afterwards
         con.run("mv /etc/pacman.conf.before-update-test /etc/pacman.conf", check=False)
+        con.run("pacman -Sy > /dev/null", check=False, timeout=300)
 
 
 # ---- Phases ----
