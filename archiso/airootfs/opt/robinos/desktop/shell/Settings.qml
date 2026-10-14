@@ -55,6 +55,7 @@ FloatingWindow {
         { key: "pointer", icon: "mouse-pointer", title: "마우스와 터치패드" },
         { key: "keyboard", icon: "keyboard", title: "키보드" },
         { key: "apps", icon: "app", title: "기본 앱" },
+        { key: "power", icon: "battery", title: "전원" },
         { key: "sound", icon: "volume", title: "소리", panel: true },
         { key: "wifi", icon: "wifi", title: "Wi-Fi", panel: true },
         { key: "bluetooth", icon: "bluetooth", title: "블루투스", panel: true },
@@ -402,7 +403,8 @@ FloatingWindow {
                                          : root.section === "datetime" ? dateTimePage
                                          : root.section === "pointer" ? pointerPage
                                          : root.section === "keyboard" ? keyboardPage
-                                         : root.section === "apps" ? appsPage : appearancePage
+                                         : root.section === "apps" ? appsPage
+                                         : root.section === "power" ? powerPage : appearancePage
                     }
                 }
             }
@@ -603,6 +605,114 @@ FloatingWindow {
                     color: Theme.subtle
                     font.family: Theme.font
                     font.pixelSize: 11
+                }
+            }
+        }
+    }
+
+    // One setting with a few values to pick from, as buttons in a row: a title, a line
+    // under it and the options ([{ value, label }]); the one equal to current is on
+    component ChoiceRow: Rectangle {
+        id: choiceRow
+
+        property string title
+        property string desc
+        property var options: []
+        property var current
+        signal picked(var value)
+
+        Layout.fillWidth: true
+        implicitHeight: choiceColumn.implicitHeight + 28
+        radius: Theme.radius
+        color: "transparent"
+        border.width: 1
+        border.color: Theme.border
+
+        ColumnLayout {
+            id: choiceColumn
+
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            spacing: 6
+
+            Text {
+                text: choiceRow.title
+                color: Theme.fg
+                font.family: Theme.font
+                font.pixelSize: 13
+                font.weight: Font.Medium
+            }
+
+            Text {
+                visible: text !== ""
+                Layout.fillWidth: true
+                text: choiceRow.desc
+                color: Theme.muted
+                font.family: Theme.font
+                font.pixelSize: 12
+                wrapMode: Text.WordWrap
+            }
+
+            Flow {
+                Layout.fillWidth: true
+                Layout.topMargin: 4
+                spacing: 8
+
+                Repeater {
+                    model: choiceRow.options
+
+                    Rectangle {
+                        id: choice
+
+                        required property var modelData
+                        readonly property bool selected: choiceRow.current === modelData.value
+
+                        width: choiceLabel.implicitWidth + 24
+                        height: 32
+                        radius: Theme.radiusMd
+                        color: selected ? Theme.primary : choiceMouse.containsMouse ? Theme.hover : "transparent"
+                        border.width: selected ? 0 : 1
+                        border.color: Theme.border
+
+                        Accessible.role: Accessible.RadioButton
+                        Accessible.name: choiceRow.title + ": " + modelData.label
+                        Accessible.checked: selected
+
+                        activeFocusOnTab: true
+                        Keys.onPressed: event => {
+                            if (Keyboard.activates(event)) {
+                                choiceRow.picked(choice.modelData.value);
+                                event.accepted = true;
+                            }
+                        }
+
+                        FocusRing {
+                            baseRadius: choice.radius
+                        }
+
+                        Text {
+                            id: choiceLabel
+
+                            anchors.centerIn: parent
+                            text: choice.modelData.label
+                            color: choice.selected ? Theme.primaryFg : Theme.fg
+                            font.family: Theme.font
+                            font.pixelSize: 13
+                            font.weight: choice.selected ? Font.DemiBold : Font.Normal
+                        }
+
+                        MouseArea {
+                            id: choiceMouse
+
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: choiceRow.picked(choice.modelData.value)
+                        }
+                    }
                 }
             }
         }
@@ -835,6 +945,67 @@ FloatingWindow {
                     ShellState.resetInput(["repeat_rate", "repeat_delay"]);
                     ShellState.setImeShortcut("ctrl");
                 }
+            }
+        }
+    }
+
+    // 전원: how long of doing nothing locks the screen, turns it off and puts a laptop to
+    // sleep (ShellState.setPower; robinos-idle-config turns them into hypridle's policy)
+    Component {
+        id: powerPage
+
+        ColumnLayout {
+            id: powerBody
+
+            readonly property var prefs: ShellState.powerPrefs
+            readonly property var never: ({ value: 0, label: "안 함" })
+
+            spacing: 0
+
+            Group {
+                title: "화면"
+                hint: "마우스와 키보드를 쓰지 않을 때예요. 잠그기 1분 전에 화면이 어두워져요."
+
+                ChoiceRow {
+                    title: "화면 잠그기"
+                    desc: "다시 쓰려면 비밀번호를 입력해요."
+                    options: [{ value: 1, label: "1분" }, { value: 3, label: "3분" }, { value: 5, label: "5분" },
+                              { value: 10, label: "10분" }, { value: 15, label: "15분" }, { value: 30, label: "30분" }, powerBody.never]
+                    current: powerBody.prefs.lock
+                    onPicked: value => ShellState.setPower("lock", value)
+                }
+
+                ChoiceRow {
+                    title: "화면 끄기"
+                    desc: "화면이 꺼져도 컴퓨터는 켜져 있어요. 아무 키나 누르면 돌아와요."
+                    options: [{ value: 2, label: "2분" }, { value: 5, label: "5분" }, { value: 10, label: "10분" },
+                              { value: 15, label: "15분" }, { value: 30, label: "30분" }, powerBody.never]
+                    current: powerBody.prefs.screen_off
+                    onPicked: value => ShellState.setPower("screen_off", value)
+                }
+            }
+
+            Group {
+                title: "잠자기"
+                hint: ShellState.hasBattery ? "충전기를 꽂아 두면 잠들지 않아요(윈도우처럼). 덮개를 닫으면 언제나 잠들어요."
+                                            : "배터리가 없는 컴퓨터는 저절로 잠들지 않아요. 빠른 설정(Win+S)의 전원 메뉴에서 \"잠자기\"로 직접 재워요."
+
+                ChoiceRow {
+                    visible: ShellState.hasBattery
+                    title: "배터리로 쓸 때 잠자기"
+                    desc: ""
+                    options: [{ value: 5, label: "5분" }, { value: 10, label: "10분" }, { value: 15, label: "15분" },
+                              { value: 30, label: "30분" }, { value: 60, label: "1시간" }, powerBody.never]
+                    current: powerBody.prefs.suspend
+                    onPicked: value => ShellState.setPower("suspend", value)
+                }
+            }
+
+            ActionButton {
+                Layout.alignment: Qt.AlignLeft
+                variant: "outline"
+                text: "기본값으로 되돌리기"
+                onClicked: ShellState.resetPower()
             }
         }
     }

@@ -23,6 +23,8 @@
 #   shell-restarted a new shell (qs) runs and answers over IPC
 #   input-changed   pointer and keyboard settings changed from the shell reached Hyprland and the saved file
 #   input-default   the same after setting them back
+#   power-changed   idle times set from the shell reached hypridle and the saved file
+#   power-default   the same after setting the defaults
 #   default-apps    settings' 기본 앱: Firefox is the default browser, a choice is saved, a wrong one refused
 
 set -uo pipefail
@@ -147,6 +149,23 @@ print(len(kinds), b["current"], b["currentName"], len(b["apps"]))')"
     check "kinds/browser/name/apps=${summary:-none} set=${set_status} refused=${refused} file=$(grep -c '^text/plain=org.gnome.TextEditor.desktop' "${XDG_CONFIG_HOME:-${HOME}/.config}/mimeapps.list" 2>/dev/null)" \
       bash -c "[[ '${summary}' == '7 firefox.desktop Firefox '* ]] && [ ${set_status} = 0 ] && [ ${refused} = 1 ] \
         && grep -q '^text/plain=org.gnome.TextEditor.desktop' '${XDG_CONFIG_HOME:-${HOME}/.config}/mimeapps.list'"
+    ;;
+  power-changed | power-default)
+    # Settings' 전원 (ShellState.setPower): robinos-idle-config wrote hypridle's policy from
+    # the minutes, hypridle runs with that file, and the choices are saved for the next
+    # login. The boot test sets lock 1, screen off 2 and sleep 5 first (no dimming for a
+    # one minute lock), then the defaults
+    state="${XDG_STATE_HOME:-${HOME}/.local/state}/robinos"
+    timeouts="$(sed -n 's/^ *timeout = //p' "${state}/hypridle.conf" 2>/dev/null | tr '\n' ' ' | sed 's/ $//')"
+    running="$(pgrep -a -x hypridle | grep -c 'robinos/hypridle.conf')"
+    saved="$(tr '\n' ',' <"${state}/power" 2>/dev/null)"
+    if [[ "${name}" == power-changed ]]; then
+      want_timeouts="60 120 300" want_saved="lock 1,screen_off 2,suspend 5,"
+    else
+      want_timeouts="240 300 600 900" want_saved="lock 5,screen_off 10,suspend 15,"
+    fi
+    check "timeouts=${timeouts:-none} hypridle=${running} saved=${saved:-none}" \
+      bash -c "[ '${timeouts}' = '${want_timeouts}' ] && [ '${running}' = 1 ] && [ '${saved}' = '${want_saved}' ]"
     ;;
   input-changed | input-default)
     # Settings' 마우스와 터치패드 and 키보드 (ShellState.setInput): Hyprland runs with the

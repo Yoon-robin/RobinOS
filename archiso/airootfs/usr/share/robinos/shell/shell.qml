@@ -299,6 +299,11 @@ ShellRoot {
             ShellState.setInput(name, value === "true" ? true : value === "false" ? false : Number(value));
         }
 
+        // An idle time from 전원 (VM test): setPower lock 1 (minutes; 0 is never)
+        function setPower(name: string, minutes: int): void {
+            ShellState.setPower(name, minutes);
+        }
+
         // The dock's click on an app: open, bring to front, minimize or restore
         function toggleApp(appId: string): void {
             ShellState.toggleApp([appId], null);

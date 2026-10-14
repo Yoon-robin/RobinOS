@@ -790,6 +790,9 @@ def main():
     wait(3)
     shot(qmp, "light-settings-apps")
     keys(qmp, "down")
+    wait(3)
+    shot(qmp, "light-settings-power")
+    keys(qmp, "down")
     wait(2)
     shot(qmp, "light-settings-about")
     keys(qmp, "esc")
@@ -823,6 +826,14 @@ def main():
     type_text(qmp, "clear; for a in 'tap true' 'natural true' 'speed 0' 'repeat_rate 25'; do " + ipc + "setInput $a; done; sleep 2\n")
     wait(4)
     check_scene(qmp, "input-default")
+    # 전원's idle times: the shell function behind the buttons writes hypridle's policy
+    # and restarts hypridle with it; a one minute lock has no dimming before it
+    type_text(qmp, "clear; for a in 'lock 1' 'screen_off 2' 'suspend 5'; do " + ipc + "setPower $a; sleep 1; done; sleep 2\n")
+    wait(8)
+    check_scene(qmp, "power-changed")
+    type_text(qmp, "clear; for a in 'lock 5' 'screen_off 10' 'suspend 15'; do " + ipc + "setPower $a; sleep 1; done; sleep 2\n")
+    wait(8)
+    check_scene(qmp, "power-default")
     # 야간 모드 starts hyprsunset (4500 K) and the second call stops it. The colors
     # need the driver's KMS CTM, which the test VM's bochs-drm lacks, so the shot
     # shows the running process (and the tile's VM note) instead of a warm screen

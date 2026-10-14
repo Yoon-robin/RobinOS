@@ -784,6 +784,37 @@ supply "${WORK}/p7" ACAD Mains 0
 supply "${WORK}/p7" hidpp_battery_0 Battery "" Device
 idle_case "a laptop on battery with a mouse around sleeps" yes "${WORK}/p7"
 
+printf '%s\n' "Idle policy (robinos-idle-config): the 전원 page's minutes become hypridle's listeners"
+IDLE_STATE="${WORK}/idle-state"
+# idle_policy <prefs text or "-" for no file>: renders and prints the policy
+idle_policy() {
+  rm -rf "${IDLE_STATE}"
+  mkdir -p "${IDLE_STATE}/robinos"
+  [[ "$1" == "-" ]] || printf '%s' "$1" >"${IDLE_STATE}/robinos/power"
+  XDG_STATE_HOME="${IDLE_STATE}" bash "${ROOT_DIR}/desktop/bin/robinos-idle-config" render >"${WORK}/idle-path" && cat "${IDLE_STATE}/robinos/hypridle.conf"
+}
+# idle_timeouts: the listeners' timeouts in order, e.g. "240 300 600 900"
+idle_timeouts() { sed -n 's/^ *timeout = //p' | tr '\n' ' ' | sed 's/ $//'; }
+# idle_case_policy <description> <expected timeouts> <prefs text>
+idle_case_policy() {
+  local got
+  got="$(idle_policy "$3" | idle_timeouts)"
+  if [[ "${got}" == "$2" ]]; then ok "$1"; else bad "$1: timeouts '${got}', wanted '$2'"; fi
+}
+idle_case_policy "no file: dim at 4 minutes, lock at 5, screen off at 10, sleep at 15" "240 300 600 900" "-"
+idle_case_policy "the saved minutes are used" "120 180 300 1800" $'lock 3\nscreen_off 5\nsuspend 30\n'
+idle_case_policy "never means no listener (lock 0 also takes the dimming)" "600 900" $'lock 0\n'
+idle_case_policy "a lock after one minute has no dimming before it" "60 600 900" $'lock 1\n'
+idle_case_policy "everything never leaves nothing to wait for" "" $'lock 0\nscreen_off 0\nsuspend 0\n'
+idle_case_policy "odd values keep the defaults" "240 300 600 900" $'lock abc\nscreen_off -5\nsuspend 99999\nbogus 3\n'
+idle_case_policy "a leading zero isn't octal" "240 300 480 900" $'screen_off 08\n'
+if [[ "$(cat "${WORK}/idle-path")" == "${IDLE_STATE}/robinos/hypridle.conf" ]]; then ok "render says where the policy is"; else bad "render printed $(cat "${WORK}/idle-path")"; fi
+default_policy="$(idle_policy "-")"
+if grep -q 'lock_cmd = pidof hyprlock || hyprlock -c /usr/share/robinos/hypr/hyprlock.conf' <<<"${default_policy}" \
+  && grep -q "robinos-idle-suspend" <<<"${default_policy}"; then ok "the lock command and the sleep script are in it"; else bad "the policy lacks the lock command or the sleep script"; fi
+# The shipped hypridle.conf is the same policy as the defaults
+if [[ "$(idle_timeouts <<<"${default_policy}")" == "$(idle_timeouts <"${ROOT_DIR}/desktop/hypr/hypridle.conf")" ]]; then ok "the defaults match desktop/hypr/hypridle.conf"; else bad "the defaults differ from desktop/hypr/hypridle.conf"; fi
+
 printf '%s\n' "Web lab (robinctl lab) with stand-in docker, sudo and systemctl"
 FAKE="${WORK}/fake"
 mkdir -p "${FAKE}"

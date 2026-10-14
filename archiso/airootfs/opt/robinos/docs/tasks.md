@@ -93,7 +93,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ### T-172 노트북 전원: 잠자기, 자동 절전, 덮개, 배터리가 거의 다 됐을 때
 - 상태: 진행 중 (2026-10-14 푸시 `fa08156`, 부팅 테스트 91장면·설치 테스트 5단계 통과)
 - 한 것(2026-10-14): ① 빠른 설정 전원 메뉴와 런처에 "잠자기"(`systemctl suspend`, 잠그는 건 hypridle `before_sleep_cmd`) ② 노트북이 배터리로 돌 때 15분 쉬면 `robinos-idle-suspend`가 잠재움(충전기·USB-C 충전, 배터리 없는 PC, 마우스 배터리는 안 잠들어요; 단위 테스트 7경우) ③ 배터리가 거의 다 됐을 때 `CriticalPowerAction=PowerOff`(`robinos.install`이 설치·업데이트 때 UPower 설정을 바꿔요; UPower 기본값 HybridSleep은 디스크 스왑이 필요한데 RobinOS는 zram뿐) ④ 덮개는 logind 기본값(잠들고, 독에서는 그대로). 설치 테스트가 UPower 설정과 idle 스크립트를 확인
-- 남은 것: 설정 앱의 "전원"(화면 꺼짐·잠자기 시간, 덮개), 최대 절전(디스크 스왑이 필요해 설치기와 같이 결정), 실제 노트북에서 덮개 닫았다 열기(T-167)
+- 설정 앱 "전원"(2026-10-14, `work/batch77`, VM 검증 전): 화면 잠그기·화면 끄기·배터리로 쓸 때 잠자기 시간을 고르는 선택 단추 줄. `ShellState.setPower`가 `~/.local/state/robinos/power`에 저장하고 `desktop/bin/robinos-idle-config apply`가 hypridle 설정을 다시 써서 hypridle을 새로 띄워요(로그인 때는 `robinos-idle-config start`). 시험: `test-robinctl.sh`의 정책 10개(기본값이 `desktop/hypr/hypridle.conf`와 같은지, "안 함"은 듣는 곳이 없는지, 이상한 값·앞자리 0), 부팅 테스트 `power-changed`·`power-default` 판정(정책 파일의 시간, hypridle이 그 파일로 도는지, 저장 파일)과 `light-settings-power` 장면
+- 남은 것: 덮개 닫기 동작(관리자 권한이 필요한 logind 설정이라 화면에서 바꾸지 않고 안내만), 최대 절전(디스크 스왑이 필요해 설치기와 같이 결정), 실제 노트북에서 덮개 닫았다 열기(T-167)
 - 이전 상태: 할 일
 - 출처: 미완성 기능 점검(2026-10-13, [unfinished.md](unfinished.md) 1·4번 표). 전원 메뉴는 로그아웃·재시작·끄기뿐이고, `hypridle.conf`는 5분에 잠그고 10분에 화면만 꺼요(시스템은 안 잠들어요). 덮개 닫기 동작과 최대 절전도 정한 게 없어요
 - 할 것: 전원 메뉴에 "잠자기", `hypridle`에 자동 잠자기(전원 연결 여부로 시간을 다르게), 덮개 닫기(`logind`: 전원 연결·배터리 따로, 외부 모니터가 있으면 그대로 켜 두기), 배터리가 거의 다 됐을 때 UPower가 무엇을 하는지 정하고 설정(`CriticalPowerAction`; 스왑이 zram뿐이라 최대 절전은 안 돼요. 최대 절전은 디스크 스왑이 필요해 설치기와 같이 결정), 설정 앱에 "전원" 쪽(화면 꺼짐·절전 시간, 덮개)

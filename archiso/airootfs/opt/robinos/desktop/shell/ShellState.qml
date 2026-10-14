@@ -1151,6 +1151,50 @@ Singleton {
         inputApply.restart();
     }
 
+    // ---- Idle times (Settings.qml: 전원) ----
+    // Minutes of doing nothing before the screen locks, the screen turns off and a
+    // laptop on battery sleeps; 0 is never. Saved as "name minutes" lines in
+    // ~/.local/state/robinos/power, which robinos-idle-config turns into hypridle's
+    // policy (at login, and at once when one changes).
+
+    readonly property var powerDefaults: ({ lock: 5, screen_off: 10, suspend: 15 })
+    property var powerPrefs: powerDefaults
+
+    FileView {
+        id: powerFile
+
+        path: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state") + "/robinos/power"
+        printErrors: false
+        onLoaded: {
+            const prefs = Object.assign({}, root.powerDefaults);
+            for (const line of powerFile.text().split("\n")) {
+                const m = line.match(/^(\w+)\s+(\d{1,4})$/);
+                if (m && m[1] in prefs && Number(m[2]) <= 1440)
+                    prefs[m[1]] = Number(m[2]);
+            }
+            root.powerPrefs = prefs;
+        }
+    }
+
+    function applyPower(prefs) {
+        powerPrefs = prefs;
+        Quickshell.execDetached(["sh", "-c",
+            "d=\"${XDG_STATE_HOME:-$HOME/.local/state}/robinos\"; mkdir -p \"$d\" && printf 'lock %s\\nscreen_off %s\\nsuspend %s\\n' \"$1\" \"$2\" \"$3\" > \"$d/power\" && exec /usr/share/robinos/bin/robinos-idle-config apply",
+            "sh", String(prefs.lock), String(prefs.screen_off), String(prefs.suspend)]);
+    }
+
+    function setPower(name, minutes) {
+        if (!(name in powerDefaults) || typeof minutes !== "number" || !Number.isInteger(minutes) || minutes < 0 || minutes > 1440 || powerPrefs[name] === minutes)
+            return;
+        const prefs = Object.assign({}, powerPrefs);
+        prefs[name] = minutes;
+        applyPower(prefs);
+    }
+
+    function resetPower() {
+        applyPower(Object.assign({}, powerDefaults));
+    }
+
     // ---- Low battery warning, like Windows at 10% and 5% ----
     // A critical notification stays until dismissed. Near empty, UPower's own
     // CriticalPowerAction puts the laptop to sleep or turns it off.
