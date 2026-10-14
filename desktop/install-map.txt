@@ -11,6 +11,7 @@ desktop/bin/robinos-shell                 /usr/share/robinos/bin/robinos-shell  
 desktop/bin/robinos-vm-display            /usr/share/robinos/bin/robinos-vm-display        755
 desktop/bin/robinos-screenshot            /usr/share/robinos/bin/robinos-screenshot        755
 desktop/bin/robinos-os-release            /usr/share/robinos/bin/robinos-os-release        755
+desktop/bin/robinos-idle-suspend          /usr/share/robinos/bin/robinos-idle-suspend      755
 desktop/bin/robinos-terminal              /usr/share/robinos/bin/robinos-terminal          755
 desktop/bin/robinos-snapshot-notice       /usr/share/robinos/bin/robinos-snapshot-notice   755
 desktop/bin/robinos-wallpaper-portal      /usr/share/robinos/bin/robinos-wallpaper-portal  755

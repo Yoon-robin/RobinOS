@@ -307,6 +307,7 @@ PanelWindow {
         { key: "shortcuts", group: "system", icon: "keyboard", title: "단축키 보기", subtitle: "Win + F1", words: "shortcut shortcuts keyboard hotkey 단축키 키보드 단축 도움말 help 복사 붙여넣기" },
         { key: "welcome", group: "system", icon: "sparkles", title: "환영 마법사", subtitle: "테마, 한/영 키, 단축키 안내", words: "welcome tour setup 환영 마법사 처음 시작 안내 투어 한영" },
         { key: "lock", group: "power", icon: "lock", title: "화면 잠금", subtitle: "Win + L", words: "lock 잠금" },
+        { key: "suspend", group: "power", icon: "moon", title: "잠자기", subtitle: "화면을 잠그고 대기해요", words: "sleep suspend standby 잠자기 절전 대기 절전 모드" },
         { key: "logout", group: "power", icon: "log-out", title: "로그아웃", subtitle: "", words: "logout exit 로그아웃" },
         { key: "reboot", group: "power", icon: "rotate-ccw", title: "다시 시작", subtitle: "", words: "reboot restart 재부팅 재시작" },
         { key: "poweroff", group: "power", icon: "power", title: "전원 끄기", subtitle: "", words: "poweroff shutdown 종료 전원" }
@@ -754,6 +755,9 @@ PanelWindow {
             break;
         case "logout":
             ShellState.logout();
+            break;
+        case "suspend":
+            ShellState.suspend();
             break;
         case "reboot":
             ShellState.reboot();

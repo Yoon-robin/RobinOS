@@ -202,6 +202,7 @@ PanelWindow {
 
                 Repeater {
                     model: [
+                        { key: "suspend", icon: "moon", title: "잠자기" },
                         { key: "logout", icon: "log-out", title: "로그아웃" },
                         { key: "reboot", icon: "rotate-ccw", title: "다시 시작" },
                         { key: "poweroff", icon: "power", title: "전원 끄기" }
@@ -224,7 +225,9 @@ PanelWindow {
 
                         function press() {
                             root.close();
-                            if (modelData.key === "logout")
+                            if (modelData.key === "suspend")
+                                ShellState.suspend();
+                            else if (modelData.key === "logout")
                                 ShellState.logout();
                             else if (modelData.key === "reboot")
                                 ShellState.reboot();

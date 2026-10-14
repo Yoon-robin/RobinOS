@@ -743,6 +743,47 @@ if [[ "${EUID}" -eq 0 ]]; then
   if [[ -s "${WORK}/pkill-calls" ]]; then bad "the shell was ended without a known user"; else ok "no shell is ended without a user"; fi
 fi
 
+printf '%s\n' "Idle suspend (robinos-idle-suspend): a laptop on battery sleeps, nothing else does"
+IDLE_BIN="${WORK}/idle-bin"
+mkdir -p "${IDLE_BIN}"
+printf '#!/bin/sh\necho "systemctl $*" >>"%s/idle-calls"\n' "${WORK}" >"${IDLE_BIN}/systemctl"
+chmod 755 "${IDLE_BIN}/systemctl"
+# supply <dir> <name> <type> [online] [scope]
+supply() {
+  mkdir -p "$1/$2"
+  printf '%s\n' "$3" >"$1/$2/type"
+  [[ -n "${4:-}" ]] && printf '%s\n' "$4" >"$1/$2/online"
+  [[ -n "${5:-}" ]] && printf '%s\n' "$5" >"$1/$2/scope"
+  return 0
+}
+# idle_case <description> <sleeps: yes|no> <dir>
+idle_case() {
+  : >"${WORK}/idle-calls"
+  PATH="${IDLE_BIN}:${PATH}" ROBINOS_POWER_SUPPLY="$3" bash "${ROOT_DIR}/desktop/bin/robinos-idle-suspend"
+  if grep -qx 'systemctl suspend' "${WORK}/idle-calls"; then got=yes; else got=no; fi
+  if [[ "${got}" == "$2" ]]; then ok "$1"; else bad "$1: sleeps=${got}"; fi
+}
+supply "${WORK}/p1" BAT0 Battery
+supply "${WORK}/p1" AC Mains 0
+idle_case "a laptop on battery sleeps" yes "${WORK}/p1"
+supply "${WORK}/p2" BAT0 Battery
+supply "${WORK}/p2" AC Mains 1
+idle_case "a laptop on the charger stays awake" no "${WORK}/p2"
+supply "${WORK}/p3" AC Mains 1
+idle_case "a PC without a battery stays awake" no "${WORK}/p3"
+mkdir -p "${WORK}/p4"
+idle_case "no power supplies at all (a VM) stays awake" no "${WORK}/p4"
+supply "${WORK}/p5" hidpp_battery_0 Battery "" Device
+idle_case "a wireless mouse's battery is no laptop" no "${WORK}/p5"
+supply "${WORK}/p6" BAT1 Battery
+supply "${WORK}/p6" ucsi-source-psy USB_PD 1
+idle_case "a laptop charged over USB-C stays awake" no "${WORK}/p6"
+supply "${WORK}/p7" BAT0 Battery
+supply "${WORK}/p7" ucsi-source-psy USB_PD 0
+supply "${WORK}/p7" ACAD Mains 0
+supply "${WORK}/p7" hidpp_battery_0 Battery "" Device
+idle_case "a laptop on battery with a mouse around sleeps" yes "${WORK}/p7"
+
 printf '%s\n' "Web lab (robinctl lab) with stand-in docker, sudo and systemctl"
 FAKE="${WORK}/fake"
 mkdir -p "${FAKE}"

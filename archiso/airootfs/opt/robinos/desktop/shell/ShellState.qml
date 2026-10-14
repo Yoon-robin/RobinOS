@@ -1280,4 +1280,9 @@ Singleton {
     function powerOff() {
         Quickshell.execDetached(["systemctl", "poweroff"]);
     }
+
+    // hypridle locks the screen before the machine sleeps (before_sleep_cmd)
+    function suspend() {
+        Quickshell.execDetached(["systemctl", "suspend"]);
+    }
 }

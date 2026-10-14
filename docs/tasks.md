@@ -91,7 +91,10 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 2026-10-12 목적 결정("처음 쓰는 리눅스", [design.md](design.md))으로 순서를 다시 봤어요. 화면이 그 목적을 말하게 하는 일(T-151)과 실제 PC에서 켜지는 것이 먼저예요. 학습 기능(터미널 힌트, 미션)은 이제 목적의 중심이라, 윈도우 기능 따라 하기보다 앞에 둬요.
 
 ### T-172 노트북 전원: 잠자기, 자동 절전, 덮개, 배터리가 거의 다 됐을 때
-- 상태: 할 일
+- 상태: 진행 중 (2026-10-14, `work/batch76`, VM 검증 전)
+- 한 것(2026-10-14): ① 빠른 설정 전원 메뉴와 런처에 "잠자기"(`systemctl suspend`, 잠그는 건 hypridle `before_sleep_cmd`) ② 노트북이 배터리로 돌 때 15분 쉬면 `robinos-idle-suspend`가 잠재움(충전기·USB-C 충전, 배터리 없는 PC, 마우스 배터리는 안 잠들어요; 단위 테스트 7경우) ③ 배터리가 거의 다 됐을 때 `CriticalPowerAction=PowerOff`(`robinos.install`이 설치·업데이트 때 UPower 설정을 바꿔요; UPower 기본값 HybridSleep은 디스크 스왑이 필요한데 RobinOS는 zram뿐) ④ 덮개는 logind 기본값(잠들고, 독에서는 그대로). 설치 테스트가 UPower 설정과 idle 스크립트를 확인
+- 남은 것: 설정 앱의 "전원"(화면 꺼짐·잠자기 시간, 덮개), 최대 절전(디스크 스왑이 필요해 설치기와 같이 결정), 실제 노트북에서 덮개 닫았다 열기(T-167)
+- 이전 상태: 할 일
 - 출처: 미완성 기능 점검(2026-10-13, [unfinished.md](unfinished.md) 1·4번 표). 전원 메뉴는 로그아웃·재시작·끄기뿐이고, `hypridle.conf`는 5분에 잠그고 10분에 화면만 꺼요(시스템은 안 잠들어요). 덮개 닫기 동작과 최대 절전도 정한 게 없어요
 - 할 것: 전원 메뉴에 "잠자기", `hypridle`에 자동 잠자기(전원 연결 여부로 시간을 다르게), 덮개 닫기(`logind`: 전원 연결·배터리 따로, 외부 모니터가 있으면 그대로 켜 두기), 배터리가 거의 다 됐을 때 UPower가 무엇을 하는지 정하고 설정(`CriticalPowerAction`; 스왑이 zram뿐이라 최대 절전은 안 돼요. 최대 절전은 디스크 스왑이 필요해 설치기와 같이 결정), 설정 앱에 "전원" 쪽(화면 꺼짐·절전 시간, 덮개)
 - 완료 기준: 부팅 테스트에서 전원 메뉴의 잠자기 단추와 `hypridle` 설정이 맞고(VM은 잠자기를 못 깨울 수 있어 설정 검사로), 실제 노트북에서 덮개를 닫았다 열면 돌아와요(사용자 실기기)
@@ -103,12 +106,13 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: 세 쪽이 키보드만으로도 동작하고, 바꾼 값이 다시 로그인해도 유지돼요
 
 ### T-174 업데이트 이어 붙이기 (화면, 새 파일 적용, 진짜 업데이트 시험)
-- 상태: 진행 중 (`work/batch76`, VM 검증 전)
+- 상태: 진행 중 (2026-10-14 푸시, `a84fcf6`. 부팅 테스트 89장면과 설치 테스트 5단계(진짜 `robinctl update --yes` 포함) 통과. 남은 것 아래)
 - 출처: 사용자(2026-10-14) "알아서 해줘". 미완성 점검(2026-10-13)에서 업데이트가 터미널 명령까지만 되고 화면이 얇다고 나왔어요
 - 한 것(2026-10-14): ① `robinctl update --status`(JSON 한 줄: 상태, 개수, 받을 크기, 커널, 데이터 요금, 다음 스냅샷 번호, 앱 스토어 업데이트 수, robinos 버전). 미리보기와 같은 계산을 `update_facts`로 모았어요 ② 설정 앱의 "업데이트" 쪽(개수·크기·커널·요금 안내, 지금 업데이트, 다시 확인, 스냅샷 안내, RobinOS 파일 버전) ③ `robinctl update`가 robinos 패키지가 새 버전이 되면 사용자의 셸을 끝내서 `robinos-shell`이 새 파일로 다시 띄우게 해요(sudo 없이 root로 돌면 다시 로그인하라고 안내, 패키지 스크립트도 같은 말) ④ 바의 업데이트 점이 앱 스토어(Flathub) 앱도 세요 ⑤ `--yes`(pacman --noconfirm, flatpak -y), 모르는 옵션은 오류 ⑥ 스냅샷 번호는 root만 알아서, 아니면 번호 없이 말해요(전에는 "1번"이라고 잘못 말했어요) ⑦ 설치 창 높이를 740으로(파티션 목록이 길어도 "설치하면" 막대가 보이게)
 - 테스트: `test-robinctl.sh`(상태 JSON 네 경우, 셸 다시 띄우기 세 경우, --yes), 부팅 테스트 `light-settings-update`(라이브는 업데이트하지 않는다고 말해요), 설치 테스트가 설치된 시스템에서 진짜 `robinctl update --yes`를 돌려요: 로컬 저장소(`/srv/robinos-test-repo`)에 설치된 패키지를 높은 버전으로 다시 묶어 올려 놓고, `--status`가 "updates"인지, 업데이트 뒤 버전과 새 파일, `pacman -Syu` 앞의 스냅샷, os-release를 확인하고 pacman.conf를 되돌려요
 - 남은 것: 업데이트하는 동안의 진행을 화면에서(지금은 터미널), 펌웨어(fwupd) 업데이트 점, 실패·디스크 부족 안내, 커널이 바뀌는 업데이트 시험, 업데이트 저장소(`repo` 릴리스)를 새 버전으로 올리는 일(사용자 확인 필요에 적어 둬요)
-- 완료 기준: `verify`와 `install-test`의 업데이트 확인 통과
+- 검증에서 잡은 것: pacman이 패키지의 파일 목록을 `.MTREE`에서 만들어서 시험이 끼워 넣은 새 파일이 설치 때 건너뛰어졌어요(시험을 기존 파일 수정으로 바꿈), 시험이 저장소를 바꿨다 되돌린 뒤 서명 없는 데이터베이스가 남아 다음 `pacman -S`가 막혔어요(되돌린 뒤 `pacman -Sy`)
+- 완료 기준: `verify`와 `install-test`의 업데이트 확인 통과(됨), 실기기에서 한 번 해 보기
 
 ### T-171 설치기 다듬기 (빠진 것과 버그)
 - 상태: 진행 중 (`work/batch76`, VM 검증 전)
@@ -182,6 +186,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 ### T-159 윈도우 프로그램(.exe)을 열면 안내
 - 상태: 진행 중
+- 확장(2026-10-14, 사용자 "알아서 해줘"; 참고: Zorin이 240개 넘게 알아봐요, [references.md](references.md)): 알아보는 프로그램을 17개에서 55개로. 브라우저(Firefox·Edge·Brave·Opera), 메일(Thunderbird), 채팅과 협업(Slack·Signal·WhatsApp·Teams·Notion·Obsidian), 클라우드(Dropbox·OneDrive·Google Drive), Adobe 계열(GIMP·Krita·Inkscape·Kdenlive로), PDF, 사진 보기(알씨), 화면 녹화(반디캠 등 → RobinOS의 Win+Alt+R와 OBS), 토렌트, 게임 런처(Epic·GOG → Heroic, Battle.net → Lutris, Minecraft → Prism), 개발·원격 도구, Rufus(→ 디스크 앱), 백신(알약·V3 → 방화벽은 기본으로 켜져 있다고), 은행·공공기관 보안 프로그램(nProtect·TouchEn·Veraport 등 → 윈도우 전용이라 안 된다고 솔직히). Flathub ID는 모두 Flathub API로 있는지 확인했어요(TeamViewer만 ID가 달라 홈페이지 링크로). `check-desktop.sh`가 파일 이름 맞추기를 시험해요(Steam이 Teams로 잘못 잡히지 않는지, `cooperate_setup.exe`가 Opera로 잡히지 않는지 같은 경우 포함)
 - 한 것(2026-10-13 집 PC): `.exe`·`.msi`·`.lnk`의 기본 앱을 `robinos-windows-app`(숨은 데스크톱 파일)으로, 이게 셸의 "윈도우 프로그램" 창(`WindowsApp.qml`)을 열어요. 파일 이름으로 알려진 프로그램 열일곱 가지(카카오톡, Chrome, 웨일, 한글, Office, 반디집·7-Zip, 곰플레이어·팟플레이어, Discord, Steam, VS Code, Zoom, Spotify, Telegram, OBS, Notepad++, Python, Git)를 알아보고 대신 쓸 것(RobinOS에 있는 앱, 앱 스토어의 Flathub 앱, 웹 버전)을 단추로. 모르는 파일은 "리눅스에서는 그대로 열리지 않아요"와 Bottles 설치 단추. 이름 표는 `windowsapps.js`, `check-desktop.sh`가 파일 이름 열여섯 개로 확인("DigitalClock.exe"가 Git으로 잡히지 않게 짧은 이름은 그대로만). 부팅 테스트 `windows-app` 장면과 상태 확인
 - 2026-10-13 묶음 검증 통과(`windows-app` 장면). 제목의 조사("카카오톡는")를 "카카오톡 윈도우용 설치 파일이에요"로
 - 남은 것: 학습 미션 쪽 설명(실행 파일 형식이 다른 이유), 설치본에서 Flathub 단추가 앱 스토어의 그 앱을 여는지

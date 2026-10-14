@@ -7,6 +7,11 @@ post_install() {
   done </opt/robinos/desktop/package-shared.txt
   dconf update 2>/dev/null || true
   /usr/share/robinos/bin/robinos-os-release 2>/dev/null || true
+  # Nearly empty battery: power off. UPower's default, HybridSleep, needs disk swap to
+  # wake from, and RobinOS only has compressed swap in RAM
+  if [ -f /etc/UPower/UPower.conf ]; then
+    sed -i 's/^CriticalPowerAction=.*/CriticalPowerAction=PowerOff/' /etc/UPower/UPower.conf || true
+  fi
 }
 
 post_upgrade() {

@@ -840,6 +840,11 @@ def phase_installed(con, qmp):
             # and the text console's login prompt too (it said "Arch Linux")
             " && head -n 1 /etc/issue && grep -q '^RobinOS ' /etc/issue && ! grep -q Arch /etc/issue",
             timeout=600)
+    # A nearly empty battery powers off (UPower's HybridSleep needs disk swap), and a
+    # laptop on battery sleeps after 15 minutes idle
+    con.run("grep -qx 'CriticalPowerAction=PowerOff' /etc/UPower/UPower.conf"
+            " && grep -q 'robinos-idle-suspend' /usr/share/robinos/hypr/hypridle.conf"
+            " && test -x /usr/share/robinos/bin/robinos-idle-suspend && /usr/share/robinos/bin/robinos-idle-suspend")
     # Compressed swap in RAM (zram-generator), so a full memory slows down
     # instead of apps getting killed
     con.run("swapon --show && swapon --show=NAME --noheadings | grep -qx /dev/zram0")
