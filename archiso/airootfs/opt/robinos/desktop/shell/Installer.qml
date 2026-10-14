@@ -955,13 +955,20 @@ FloatingWindow {
                         onAccepted: root.next()
                     }
 
+                    // The two passwords differ (red), or the password is easy to guess (a
+                    // tip: it still works, like on other installers)
                     Text {
+                        readonly property bool mismatch: password2Field.text !== "" && password2Field.text !== passwordField.text
+
                         Layout.columnSpan: 2
                         Layout.fillWidth: true
-                        text: password2Field.text !== "" && password2Field.text !== passwordField.text ? "두 비밀번호가 달라요" : ""
-                        color: Theme.destructive
+                        text: mismatch ? "두 비밀번호가 달라요"
+                              : passwordField.text !== "" && passwordField.text === userField.text ? "사용자 이름과 같은 비밀번호는 쉽게 알아맞혀요. 그래도 쓸 수는 있어요."
+                              : passwordField.text !== "" && passwordField.text.length < 8 ? "짧은 비밀번호예요. 8글자 이상을 권해요. 그래도 쓸 수는 있어요." : ""
+                        color: mismatch ? Theme.destructive : Theme.muted
                         font.family: Theme.font
                         font.pixelSize: 12
+                        wrapMode: Text.WordWrap
                     }
 
                     Text {
