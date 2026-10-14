@@ -70,7 +70,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 
 ## 자동 부팅 테스트
 
-`scripts/boot-test.sh`가 QEMU에서 ISO를 부팅하고, `scripts/boot-test-qmp.py`가 화면을 조작하면서 스크린샷을 찍어요(2026-10-14 기준 91장). 키는 QMP `send-key`로, 마우스는 VM에 붙인 `usb-tablet`에 QMP `input-send-event`로 화면 좌표(1600×900)를 찍어 눌러요(`click()`). 소리 창을 보려고 소리를 버리는 사운드 카드(`-audiodev none`, `hda-duplex`)도 붙여요.
+`scripts/boot-test.sh`가 QEMU에서 ISO를 부팅하고, `scripts/boot-test-qmp.py`가 화면을 조작하면서 스크린샷을 찍어요(2026-10-14 기준 96장, 상태로 판정하는 장면 21개). 키는 QMP `send-key`로, 마우스는 VM에 붙인 `usb-tablet`에 QMP `input-send-event`로 화면 좌표(1600×900)를 찍어 눌러요(`click()`). 소리 창을 보려고 소리를 버리는 사운드 카드(`-audiodev none`, `hda-duplex`)도 붙여요.
 
 1. 부팅과 첫 로그인
 2. 환영 마법사의 모든 단계, 마지막에 열리는 학습 센터(0/45)
@@ -103,6 +103,10 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 boot-test
 | `windows-app` | 가짜 `KakaoTalk_Setup.exe`를 `gio open`으로 열면 "윈도우 프로그램" 창이 떠요(기본 앱 연결과 셸 IPC) |
 | `shell-restarted` | 셸을 끈 뒤 새 `qs`가 돌고 IPC에 답해요 |
 | `light`, `dark` | 셸이 저장한 값(`appearance.json`)과 GTK 설정(`color-scheme`)이 둘 다 바뀌어요 |
+| `input-changed`, `input-default` | 설정 앱의 마우스와 터치패드·키보드가 부르는 `setInput`으로 탭 클릭·스크롤 방향·포인터 속도·키 반복을 바꾸면 `hyprctl getoption`이 그 값을 주고(불리언 옵션의 JSON에는 `int`가 아닌 키가 와서 첫 값을 읽어요), `~/.local/state/robinos/input`에 저장돼요. 기본값으로 되돌려도 같아요 |
+| `power-changed`, `power-default` | 전원의 `setPower`로 시간을 바꾸면 `robinos-idle-config`가 hypridle 설정을 다시 쓰고(잠그기 1분이면 어두워지기 없이 `60 120 300`) hypridle이 그 파일로 돌아요. 기본값은 `240 300 600 900` |
+| `default-apps` | 기본 앱의 도구가 7종류를 주고 Firefox가 기본 브라우저이며, 고른 값이 `~/.config/mimeapps.list`에 들어가고 열 수 없는 앱은 거절돼요 |
+| `report` | `robinctl report`가 여덟 구역을 모두 쓰고 그래픽·네트워크 드라이버 줄이 있어요 |
 
 스크린샷과 `serial.log`는 `build\boot-test`에 생겨요. 테스트는 `robinos.debug`를 붙여 부팅해서 `robinos-session`이 Hyprland와 셸 출력을 저널로 보내고, 그 내용이 `serial.log`에 남아요. 셸이 안 뜨면 여기서 QML 오류를 찾으세요.
 
