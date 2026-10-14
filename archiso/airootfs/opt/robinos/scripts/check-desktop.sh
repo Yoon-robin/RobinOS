@@ -5,6 +5,7 @@ set -euo pipefail
 #
 #   - Lua syntax of the Hyprland config      (luac -p)
 #   - Hyprland config validation             (Hyprland --verify-config)
+#   - Pointer and keyboard settings          (lua scripts/test-hypr-input.lua)
 #   - QML syntax of the shell and SDDM theme (qmlformat)
 #   - Syntax of desktop scripts              (bash -n, Python ast)
 #   - JSON syntax of the Firefox policies    (python3 -m json.tool)
@@ -61,6 +62,19 @@ if command -v Hyprland >/dev/null 2>&1; then
   fi
 else
   skip "Hyprland not found (pacman -S hyprland)"
+fi
+
+printf 'Pointer and keyboard settings (Lua)\n'
+if command -v lua >/dev/null 2>&1; then
+  input_state="$(mktemp -d)"
+  if XDG_STATE_HOME="${input_state}" lua "${ROOT_DIR}/scripts/test-hypr-input.lua" "${ROOT_DIR}/desktop/hypr/robinos.lua"; then
+    ok "scripts/test-hypr-input.lua"
+  else
+    fail "scripts/test-hypr-input.lua"
+  fi
+  rm -rf "${input_state}"
+else
+  skip "lua not found (pacman -S lua)"
 fi
 
 printf 'QML syntax\n'

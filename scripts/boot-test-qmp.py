@@ -778,6 +778,14 @@ def main():
     keys(qmp, "down")
     wait(3)
     shot(qmp, "light-settings-datetime")
+    # 마우스와 터치패드, 키보드: a touchpad can't be tried in the VM, so Hyprland's own
+    # option values and the saved file are judged (below) instead of a feel
+    keys(qmp, "down")
+    wait(3)
+    shot(qmp, "light-settings-pointer")
+    keys(qmp, "down")
+    wait(3)
+    shot(qmp, "light-settings-keyboard")
     keys(qmp, "down")
     wait(2)
     shot(qmp, "light-settings-about")
@@ -795,6 +803,15 @@ def main():
     shot(qmp, "scale-125")
     type_text(qmp, "clear; " + ipc + "setScale 1\n")
     wait(3)
+    # 마우스와 터치패드 and 키보드 settings through the shell function the switches and
+    # sliders call: Hyprland takes the values at once and the file that robinos.lua reads
+    # at the next login is written (the Lua side is checked by scripts/test-hypr-input.lua)
+    type_text(qmp, "clear; for a in 'tap false' 'natural false' 'speed 0.4' 'repeat_rate 40'; do " + ipc + "setInput $a; done; sleep 2\n")
+    wait(4)
+    check_scene(qmp, "input-changed")
+    type_text(qmp, "clear; for a in 'tap true' 'natural true' 'speed 0' 'repeat_rate 25'; do " + ipc + "setInput $a; done; sleep 2\n")
+    wait(4)
+    check_scene(qmp, "input-default")
     # 야간 모드 starts hyprsunset (4500 K) and the second call stops it. The colors
     # need the driver's KMS CTM, which the test VM's bochs-drm lacks, so the shot
     # shows the running process (and the tile's VM note) instead of a warm screen

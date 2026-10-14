@@ -284,6 +284,12 @@ ShellRoot {
             ShellState.setScale(scale);
         }
 
+        // A setting from 마우스와 터치패드 or 키보드 (VM test): setInput tap false,
+        // setInput speed 0.4, setInput repeat_rate 40. Anything odd is ignored.
+        function setInput(name: string, value: string): void {
+            ShellState.setInput(name, value === "true" ? true : value === "false" ? false : Number(value));
+        }
+
         // The dock's click on an app: open, bring to front, minimize or restore
         function toggleApp(appId: string): void {
             ShellState.toggleApp([appId], null);

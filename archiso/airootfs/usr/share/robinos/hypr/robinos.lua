@@ -234,13 +234,76 @@ hl.config({
         kb_options = "korean:ralt_hangul,korean:rctrl_hanja",
 
         follow_mouse = 1,
-        sensitivity  = 0,
-
-        touchpad = {
-            natural_scroll = true,
-        },
     },
 })
+
+-- Pointer and keyboard settings from the settings app ("마우스와 터치패드", "키보드"):
+-- "name value" lines in ~/.local/state/robinos/input. They are applied here at login
+-- and by ShellState.setInput through robinos.applyInput the moment one changes, so
+-- both paths take the same values. A missing or odd line keeps the default.
+local input_defaults = {
+    tap          = true,   -- tap the touchpad to click
+    natural      = true,   -- touchpad: content follows the fingers
+    typing_off   = true,   -- touchpad stays quiet while typing
+    wheel_flip   = false,  -- mouse wheel: content follows the wheel, like the touchpad
+    speed        = 0,      -- pointer speed, -1 (slow) to 1 (fast)
+    repeat_rate  = 25,     -- keys per second while a key is held
+    repeat_delay = 600,    -- milliseconds before a held key repeats
+}
+local input_ranges = {
+    speed        = { -1, 1 },
+    repeat_rate  = { 10, 60 },
+    repeat_delay = { 200, 1000 },
+}
+
+function robinos.applyInput(values)
+    local v = {}
+    for name, default in pairs(input_defaults) do
+        local given = values[name]
+        v[name] = default
+        if type(default) == "boolean" then
+            -- not `given and ... or default`: that would turn a saved false back into the default
+            if type(given) == "boolean" then
+                v[name] = given
+            end
+        elseif type(given) == "number" then
+            local range = input_ranges[name]
+            if given >= range[1] and given <= range[2] then
+                v[name] = given
+            end
+        end
+    end
+    hl.config({
+        input = {
+            sensitivity    = v.speed,
+            natural_scroll = v.wheel_flip,
+            repeat_rate    = v.repeat_rate,
+            repeat_delay   = v.repeat_delay,
+            touchpad = {
+                natural_scroll       = v.natural,
+                tap_to_click         = v.tap,
+                disable_while_typing = v.typing_off,
+            },
+        },
+    })
+end
+
+local saved_input = {}
+local input_file = io.open(state_dir .. "/robinos/input")
+if input_file then
+    for line in input_file:lines() do
+        local name, value = line:match("^(%w[%w_]*)%s+(%S+)$")
+        if name then
+            if value == "true" or value == "false" then
+                saved_input[name] = value == "true"
+            else
+                saved_input[name] = tonumber(value)
+            end
+        end
+    end
+    input_file:close()
+end
+robinos.applyInput(saved_input)
 
 hl.gesture({
     fingers   = 3,

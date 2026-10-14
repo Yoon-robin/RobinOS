@@ -21,6 +21,8 @@
 #   zoomed          Win+Plus twice: the screen is zoomed to 2x around the pointer
 #   unzoomed        Win+Esc: back to 1x
 #   shell-restarted a new shell (qs) runs and answers over IPC
+#   input-changed   pointer and keyboard settings changed from the shell reached Hyprland and the saved file
+#   input-default   the same after setting them back
 
 set -uo pipefail
 
@@ -127,6 +129,30 @@ case "${name}" in
   shell-restarted)
     pids="$(pgrep -x qs | tr '\n' ' ')"
     check "qs=${pids:-none}" bash -c "[ -n '${pids}' ] && timeout 10 ${SHELL_IPC[*]} show >/dev/null"
+    ;;
+  input-changed | input-default)
+    # Settings' 마우스와 터치패드 and 키보드 (ShellState.setInput): Hyprland runs with the
+    # new values, and the file robinos.lua reads at the next login has them too.
+    # The boot test sets tap off, natural scroll off, speed 0.4, key repeat 40 first
+    opt() {
+      hyprctl getoption "$1" -j 2>/dev/null | python3 -c 'import json, sys
+d = json.load(sys.stdin)
+print(d.get("int", d.get("float", "none")))'
+    }
+    tap="$(opt input:touchpad:tap_to_click)"
+    natural="$(opt input:touchpad:natural_scroll)"
+    speed="$(opt input:sensitivity)"
+    rate="$(opt input:repeat_rate)"
+    saved="$(tr '\n' ',' <"${XDG_STATE_HOME:-${HOME}/.local/state}/robinos/input" 2>/dev/null)"
+    if [[ "${name}" == input-changed ]]; then
+      want_tap=0 want_natural=0 want_speed=0.4 want_rate=40
+    else
+      want_tap=1 want_natural=1 want_speed=0 want_rate=25
+    fi
+    check "tap=${tap} natural=${natural} speed=${speed} rate=${rate} file=${saved:-none}" \
+      bash -c "[ '${tap}' = ${want_tap} ] && [ '${natural}' = ${want_natural} ] && [ '${rate}' = ${want_rate} ] \
+        && awk -v s='${speed}' 'BEGIN { exit !(s - ${want_speed} < 0.001 && ${want_speed} - s < 0.001) }' \
+        && [[ '${saved}' == *'speed ${want_speed},'* && '${saved}' == *'repeat_rate ${want_rate},'* ]]"
     ;;
   *)
     printf 'usage: %s <scene>  (see the top of this file)\n' "$0" >&2

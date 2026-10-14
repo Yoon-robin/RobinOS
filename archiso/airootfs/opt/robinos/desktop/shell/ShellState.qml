@@ -1069,6 +1069,88 @@ Singleton {
         monitorRefresh.restart();
     }
 
+    // ---- Pointer and keyboard settings (Settings.qml: 마우스와 터치패드, 키보드) ----
+    // Saved as "name value" lines in ~/.local/state/robinos/input. robinos.lua reads
+    // them at login, and robinos.applyInput (the same function) applies a change at once.
+
+    readonly property var inputDefaults: ({
+            tap: true,
+            natural: true,
+            typing_off: true,
+            wheel_flip: false,
+            speed: 0,
+            repeat_rate: 25,
+            repeat_delay: 600
+        })
+    // Same limits as input_ranges in robinos.lua
+    readonly property var inputRanges: ({
+            speed: [-1, 1],
+            repeat_rate: [10, 60],
+            repeat_delay: [200, 1000]
+        })
+    property var inputPrefs: inputDefaults
+
+    FileView {
+        id: inputFile
+
+        path: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state") + "/robinos/input"
+        printErrors: false
+        onLoaded: {
+            const prefs = Object.assign({}, root.inputDefaults);
+            for (const line of inputFile.text().split("\n")) {
+                const m = line.match(/^(\w+)\s+(\S+)$/);
+                if (!m || !(m[1] in prefs))
+                    continue;
+                const value = m[2] === "true" ? true : m[2] === "false" ? false : Number(m[2]);
+                if (root.inputValid(m[1], value))
+                    prefs[m[1]] = value;
+            }
+            root.inputPrefs = prefs;
+        }
+    }
+
+    function inputValid(name, value) {
+        const kind = typeof inputDefaults[name];
+        if (kind === "boolean")
+            return typeof value === "boolean";
+        const range = inputRanges[name];
+        return kind === "number" && range !== undefined && typeof value === "number" && isFinite(value) && value >= range[0] && value <= range[1];
+    }
+
+    // The screen follows the slider at once; the file and Hyprland get the last value
+    // a moment after it stops moving
+    Timer {
+        id: inputApply
+
+        interval: 150
+        onTriggered: {
+            const names = Object.keys(root.inputDefaults);
+            inputFile.setText(names.map(name => name + " " + root.inputPrefs[name]).join("\n") + "\n");
+            Quickshell.execDetached(["hyprctl", "eval", "robinos.applyInput({ " + names.map(name => name + " = " + root.inputPrefs[name]).join(", ") + " })"]);
+        }
+    }
+
+    function setInput(name, value) {
+        if (typeof value === "number")
+            value = Number(value.toFixed(2));
+        if (!inputValid(name, value) || inputPrefs[name] === value)
+            return;
+        const prefs = Object.assign({}, inputPrefs);
+        prefs[name] = value;
+        inputPrefs = prefs;
+        inputApply.restart();
+    }
+
+    function resetInput(names) {
+        const prefs = Object.assign({}, inputPrefs);
+        for (const name of names) {
+            if (name in inputDefaults)
+                prefs[name] = inputDefaults[name];
+        }
+        inputPrefs = prefs;
+        inputApply.restart();
+    }
+
     // ---- Low battery warning, like Windows at 10% and 5% ----
     // A critical notification stays until dismissed. Near empty, UPower's own
     // CriticalPowerAction puts the laptop to sleep or turns it off.

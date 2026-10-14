@@ -48,6 +48,8 @@ FloatingWindow {
         { key: "appearance", icon: "sun-moon", title: "개인 설정" },
         { key: "update", icon: "download", title: "업데이트" },
         { key: "datetime", icon: "globe", title: "날짜와 시간" },
+        { key: "pointer", icon: "mouse-pointer", title: "마우스와 터치패드" },
+        { key: "keyboard", icon: "keyboard", title: "키보드" },
         { key: "sound", icon: "volume", title: "소리", panel: true },
         { key: "wifi", icon: "wifi", title: "Wi-Fi", panel: true },
         { key: "bluetooth", icon: "bluetooth", title: "블루투스", panel: true },
@@ -352,7 +354,9 @@ FloatingWindow {
                         Layout.topMargin: 18
                         sourceComponent: root.section === "about" ? aboutPage
                                          : root.section === "update" ? updatePage
-                                         : root.section === "datetime" ? dateTimePage : appearancePage
+                                         : root.section === "datetime" ? dateTimePage
+                                         : root.section === "pointer" ? pointerPage
+                                         : root.section === "keyboard" ? keyboardPage : appearancePage
                     }
                 }
             }
@@ -462,6 +466,329 @@ FloatingWindow {
                 checked: switchRow.checked
                 label: switchRow.title
                 onToggled: switchRow.toggled()
+            }
+        }
+    }
+
+    // A setting on a scale: a title, the value in words, a line under it and a slider
+    component SliderRow: Rectangle {
+        id: sliderRow
+
+        property string title
+        property string desc
+        property string valueText
+        property string lowLabel
+        property string highLabel
+        // 0..1
+        property real value
+        signal moved(real value)
+
+        Layout.fillWidth: true
+        implicitHeight: sliderColumn.implicitHeight + 28
+        radius: Theme.radius
+        color: "transparent"
+        border.width: 1
+        border.color: Theme.border
+
+        ColumnLayout {
+            id: sliderColumn
+
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            spacing: 6
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Text {
+                    Layout.fillWidth: true
+                    text: sliderRow.title
+                    color: Theme.fg
+                    font.family: Theme.font
+                    font.pixelSize: 13
+                    font.weight: Font.Medium
+                }
+
+                Text {
+                    text: sliderRow.valueText
+                    color: Theme.muted
+                    font.family: Theme.font
+                    font.pixelSize: 12
+                }
+            }
+
+            Text {
+                visible: text !== ""
+                Layout.fillWidth: true
+                text: sliderRow.desc
+                color: Theme.muted
+                font.family: Theme.font
+                font.pixelSize: 12
+                wrapMode: Text.WordWrap
+            }
+
+            QsSlider {
+                Layout.fillWidth: true
+                Layout.topMargin: 4
+                label: sliderRow.title
+                value: sliderRow.value
+                onMoved: v => sliderRow.moved(v)
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Text {
+                    text: sliderRow.lowLabel
+                    color: Theme.subtle
+                    font.family: Theme.font
+                    font.pixelSize: 11
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                Text {
+                    text: sliderRow.highLabel
+                    color: Theme.subtle
+                    font.family: Theme.font
+                    font.pixelSize: 11
+                }
+            }
+        }
+    }
+
+    // One choice of several, like a radio button: Enter or Space picks it
+    component RadioRow: Rectangle {
+        id: radioRow
+
+        property string title
+        property string desc
+        property bool selected
+        signal picked
+
+        Layout.fillWidth: true
+        implicitHeight: 52
+        radius: Theme.radius
+        color: radioMouse.containsMouse ? Theme.hover : "transparent"
+        border.width: 1
+        border.color: selected ? Theme.fg : Theme.border
+
+        Accessible.role: Accessible.RadioButton
+        Accessible.name: title
+        Accessible.checked: selected
+
+        activeFocusOnTab: true
+        Keys.onPressed: event => {
+            if (Keyboard.activates(event)) {
+                radioRow.picked();
+                event.accepted = true;
+            }
+        }
+
+        FocusRing {
+            baseRadius: radioRow.radius
+        }
+
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: 14
+            anchors.rightMargin: 14
+            spacing: 12
+
+            Rectangle {
+                implicitWidth: 16
+                implicitHeight: 16
+                radius: 8
+                color: "transparent"
+                border.width: 1
+                border.color: radioRow.selected ? Theme.fg : Theme.borderStrong
+
+                Rectangle {
+                    anchors.centerIn: parent
+                    visible: radioRow.selected
+                    width: 8
+                    height: 8
+                    radius: 4
+                    color: Theme.fg
+                }
+            }
+
+            Text {
+                text: radioRow.title
+                color: Theme.fg
+                font.family: Theme.font
+                font.pixelSize: 14
+                font.weight: Font.Medium
+            }
+
+            Text {
+                Layout.fillWidth: true
+                text: radioRow.desc
+                color: Theme.muted
+                font.family: Theme.font
+                font.pixelSize: 13
+                elide: Text.ElideRight
+            }
+        }
+
+        MouseArea {
+            id: radioMouse
+
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: radioRow.picked()
+        }
+    }
+
+    // 마우스와 터치패드: Hyprland's input options through ShellState.setInput
+    Component {
+        id: pointerPage
+
+        ColumnLayout {
+            readonly property var prefs: ShellState.inputPrefs
+
+            spacing: 0
+
+            Group {
+                title: "터치패드"
+                hint: "노트북의 터치패드에만 적용돼요."
+
+                SwitchRow {
+                    title: "탭해서 클릭"
+                    desc: "터치패드를 톡 치면 클릭이에요. 꺼도 터치패드를 눌러서 클릭할 수 있어요."
+                    checked: prefs.tap
+                    onToggled: ShellState.setInput("tap", !prefs.tap)
+                }
+
+                SwitchRow {
+                    title: "스크롤 방향: 손가락을 따라가기"
+                    desc: prefs.natural ? "손가락을 위로 밀면 화면이 위로 올라가요(휴대폰과 맥처럼). 끄면 윈도우처럼 손가락을 위로 밀 때 화면이 아래로 내려가요."
+                                        : "손가락을 위로 밀면 화면이 아래로 내려가요(윈도우처럼). 켜면 휴대폰처럼 손가락을 따라 올라가요."
+                    checked: prefs.natural
+                    onToggled: ShellState.setInput("natural", !prefs.natural)
+                }
+
+                SwitchRow {
+                    title: "글을 쓰는 동안 터치패드 끄기"
+                    desc: "타자를 치다 손바닥이 닿아서 커서가 튀는 일을 막아요."
+                    checked: prefs.typing_off
+                    onToggled: ShellState.setInput("typing_off", !prefs.typing_off)
+                }
+            }
+
+            Group {
+                title: "마우스"
+                hint: "바퀴가 달린 마우스에 적용돼요."
+
+                SwitchRow {
+                    title: "휠 방향 뒤집기"
+                    desc: prefs.wheel_flip ? "휠을 위로 굴리면 화면이 아래로 내려가요(맥처럼)."
+                                           : "휠을 위로 굴리면 화면이 위로 올라가요(윈도우처럼)."
+                    checked: prefs.wheel_flip
+                    onToggled: ShellState.setInput("wheel_flip", !prefs.wheel_flip)
+                }
+            }
+
+            Group {
+                title: "포인터 속도"
+                hint: "마우스와 터치패드 모두 같아요."
+
+                SliderRow {
+                    title: "커서가 움직이는 빠르기"
+                    valueText: prefs.speed === 0 ? "기본" : (prefs.speed < 0 ? "느리게 " : "빠르게 ") + Math.round(Math.abs(prefs.speed) * 100) + "%"
+                    lowLabel: "느리게"
+                    highLabel: "빠르게"
+                    value: (prefs.speed + 1) / 2
+                    onMoved: v => ShellState.setInput("speed", Math.round((v * 2 - 1) * 20) / 20)
+                }
+            }
+
+            ActionButton {
+                Layout.alignment: Qt.AlignLeft
+                variant: "outline"
+                text: "기본값으로 되돌리기"
+                onClicked: ShellState.resetInput(["tap", "natural", "typing_off", "wheel_flip", "speed"])
+            }
+        }
+    }
+
+    // 키보드: the key repeat rate, and the 한/영 shortcut (the same choice as the welcome wizard)
+    Component {
+        id: keyboardPage
+
+        ColumnLayout {
+            readonly property var prefs: ShellState.inputPrefs
+
+            spacing: 0
+
+            Group {
+                title: "한/영 전환"
+                hint: "한/영 키와 오른쪽 Alt는 언제나 돼요. 하나 더 고를 수 있어요."
+
+                RadioRow {
+                    title: "Ctrl + Space"
+                    desc: "기본값이에요"
+                    selected: ShellState.imeShortcut === "ctrl"
+                    onPicked: ShellState.setImeShortcut("ctrl")
+                }
+
+                RadioRow {
+                    title: "Shift + Space"
+                    desc: "윈도우 한국어 입력기에서 쓰던 방식이에요"
+                    selected: ShellState.imeShortcut === "shift"
+                    onPicked: ShellState.setImeShortcut("shift")
+                }
+
+                RadioRow {
+                    title: "추가 단축키 없음"
+                    desc: "한/영 키와 오른쪽 Alt만 써요"
+                    selected: ShellState.imeShortcut === "none"
+                    onPicked: ShellState.setImeShortcut("none")
+                }
+            }
+
+            Group {
+                title: "키를 꾹 누르면"
+                hint: "아래 칸에서 키를 꾹 눌러 보면서 맞춰 보세요."
+
+                InputField {
+                    Layout.fillWidth: true
+                    placeholder: "여기에 눌러 보세요"
+                }
+
+                SliderRow {
+                    title: "글자가 반복되는 빠르기"
+                    valueText: "1초에 " + prefs.repeat_rate + "번"
+                    lowLabel: "느리게"
+                    highLabel: "빠르게"
+                    value: (prefs.repeat_rate - 10) / 50
+                    onMoved: v => ShellState.setInput("repeat_rate", Math.round(10 + v * 50))
+                }
+
+                SliderRow {
+                    title: "반복이 시작되기까지"
+                    valueText: (prefs.repeat_delay / 1000).toFixed(2).replace(/0$/, "") + "초"
+                    lowLabel: "짧게"
+                    highLabel: "길게"
+                    value: (prefs.repeat_delay - 200) / 800
+                    onMoved: v => ShellState.setInput("repeat_delay", Math.round((200 + v * 800) / 50) * 50)
+                }
+            }
+
+            ActionButton {
+                Layout.alignment: Qt.AlignLeft
+                variant: "outline"
+                text: "기본값으로 되돌리기"
+                onClicked: {
+                    ShellState.resetInput(["repeat_rate", "repeat_delay"]);
+                    ShellState.setImeShortcut("ctrl");
+                }
             }
         }
     }
