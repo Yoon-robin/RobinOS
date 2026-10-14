@@ -620,6 +620,18 @@ def check_update(con):
         con.run("pacman -Sy > /dev/null", check=False, timeout=300)
 
 
+def check_exit_path(con):
+    """The way out (docs/exit.md): without the [robinos] repository, pacman still brings
+    Arch's updates, robinos stays as a package no repository has, and nothing depends on it."""
+    con.run("sed '/^\\[robinos\\]/,/^$/d' /etc/pacman.conf > /tmp/pacman-arch.conf"
+            " && ! grep -q '^\\[robinos\\]' /tmp/pacman-arch.conf && grep -q '^\\[core\\]' /tmp/pacman-arch.conf")
+    con.run("pacman --config /tmp/pacman-arch.conf -Sy > /dev/null"
+            " && pacman --config /tmp/pacman-arch.conf -Su --print > /dev/null"
+            " && pacman --config /tmp/pacman-arch.conf -Qm | grep -q '^robinos '"
+            " && pacman -R --print robinos > /dev/null", timeout=300)
+    con.run("rm -f /tmp/pacman-arch.conf")
+
+
 # ---- Phases ----
 
 def phase_live(con, qmp):
@@ -875,6 +887,7 @@ def phase_installed(con, qmp):
 
     # A real update, last: it changes the system the next phases boot (docs/testing.md)
     if INSTALLER != "archinstall":
+        check_exit_path(con)
         check_update(con)
 
     # QEMU's WHPX can't reset a VM that reboots itself ("Unexpected VP exit code 4"),

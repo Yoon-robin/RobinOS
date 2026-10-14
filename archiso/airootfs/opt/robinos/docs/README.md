@@ -55,6 +55,7 @@
 작업 관리
 - [tasks.md](tasks.md): 작업 목록
 - [unfinished.md](unfinished.md): 미완성 기능 전체 목록
+- [exit.md](exit.md): RobinOS가 멈추거나 그만 쓰고 싶을 때
 - [references.md](references.md): 비슷한 OS 사례와 가져올 것
 - [done.md](done.md): 오래된 완료 기록
 - [roadmap.md](roadmap.md): 장기 로드맵

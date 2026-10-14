@@ -376,6 +376,15 @@ def main():
     type_text(qmp, "clear; ipconfig\n")
     wait(2)
     shot(qmp, "terminal-windows-hint")
+    # The landing page's picture: a Windows command answered in the terminal, and a
+    # Windows name (the task manager) found in the launcher on top of it
+    keys(qmp, "meta_l", "spc")
+    wait(3)
+    type_text(qmp, "taskmgr")
+    wait(3)
+    shot(qmp, "showcase")
+    keys(qmp, "esc")
+    wait(2)
     type_text(qmp, "clear\n")
     type_text(qmp, "robinctl learn show 1\n")
     wait(2)
@@ -765,6 +774,10 @@ def main():
     keys(qmp, "down")
     wait(3)
     shot(qmp, "light-settings-update")
+    # 날짜와 시간: the time zone and whether the clock follows the internet
+    keys(qmp, "down")
+    wait(3)
+    shot(qmp, "light-settings-datetime")
     keys(qmp, "down")
     wait(2)
     shot(qmp, "light-settings-about")

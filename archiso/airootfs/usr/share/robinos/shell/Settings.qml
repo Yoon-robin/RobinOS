@@ -17,6 +17,8 @@ FloatingWindow {
     // What `robinctl update --status` said (state, count, bytes, kernel, metered,
     // next_snapshot, flatpak, robinos); null before the first answer
     property var updateInfo: null
+    // `timedatectl show`: Timezone, NTP (yes/no), NTPSynchronized, LocalRTC, plus Now
+    property var time: ({})
     property bool updateChecking: false
     readonly property var upd: updateInfo ?? ({})
     readonly property int updateAll: (upd.count ?? 0) + (upd.flatpak ?? 0)
@@ -45,6 +47,7 @@ FloatingWindow {
     readonly property var sections: [
         { key: "appearance", icon: "sun-moon", title: "개인 설정" },
         { key: "update", icon: "download", title: "업데이트" },
+        { key: "datetime", icon: "globe", title: "날짜와 시간" },
         { key: "sound", icon: "volume", title: "소리", panel: true },
         { key: "wifi", icon: "wifi", title: "Wi-Fi", panel: true },
         { key: "bluetooth", icon: "bluetooth", title: "블루투스", panel: true },
@@ -69,6 +72,8 @@ FloatingWindow {
         infoProc.running = true;
         if (section === "update")
             checkUpdates();
+        if (section === "datetime")
+            readTime();
     }
 
     function pick(key) {
@@ -95,15 +100,50 @@ FloatingWindow {
         updateProc.running = true;
     }
 
+    function readTime() {
+        if (!timeProc.running)
+            timeProc.running = true;
+    }
+
     onSectionChanged: {
         if (section === "update" && visible && updateInfo === null)
             checkUpdates();
+        if (section === "datetime" && visible)
+            readTime();
+    }
+
+    // The terminal that changes a setting is a window of its own: look again now and then
+    Timer {
+        interval: 4000
+        repeat: true
+        running: root.visible && root.section === "datetime"
+        onTriggered: root.readTime()
     }
 
     function move(delta) {
         const pages = sections.filter(s => !s.panel);
         const i = pages.findIndex(s => s.key === section);
         section = pages[(i + delta + pages.length) % pages.length].key;
+    }
+
+    // The time zone, whether the clock follows the internet, and the clock itself
+    Process {
+        id: timeProc
+
+        command: ["sh", "-c", "timedatectl show -p Timezone -p NTP -p NTPSynchronized -p LocalRTC 2>/dev/null; date '+Now=%Y-%m-%d %H:%M'"]
+        stdout: StdioCollector {
+            id: timeOut
+
+            onStreamFinished: {
+                const found = {};
+                for (const line of timeOut.text.split("\n")) {
+                    const eq = line.indexOf("=");
+                    if (eq > 0)
+                        found[line.slice(0, eq)] = line.slice(eq + 1).trim();
+                }
+                root.time = found;
+            }
+        }
     }
 
     // What an update would bring; robinctl looks in its own copy of the package databases
@@ -310,11 +350,24 @@ FloatingWindow {
                     Loader {
                         Layout.fillWidth: true
                         Layout.topMargin: 18
-                        sourceComponent: root.section === "about" ? aboutPage : root.section === "update" ? updatePage : appearancePage
+                        sourceComponent: root.section === "about" ? aboutPage
+                                         : root.section === "update" ? updatePage
+                                         : root.section === "datetime" ? dateTimePage : appearancePage
                     }
                 }
             }
         }
+    }
+
+    // Over the whole window; choosing a zone runs the command in a terminal, so the
+    // person sees (and can learn) what changes the time zone
+    ZonePicker {
+        id: zonePicker
+
+        anchors.fill: parent
+        current: root.time.Timezone ?? ""
+        onPicked: zone => ShellState.runInTerminal("sudo timedatectl set-timezone '" + zone + "' && timedatectl | head -n 6")
+        onClosed: root.readTime()
     }
 
     // A labelled group of settings
@@ -773,6 +826,82 @@ FloatingWindow {
                     font.family: Theme.mono
                     font.pixelSize: 13
                 }
+            }
+        }
+    }
+
+    Component {
+        id: dateTimePage
+
+        ColumnLayout {
+            spacing: 0
+
+            Group {
+                title: "시간대"
+                hint: "시계가 맞춰지는 지역이에요. 바꾸면 터미널에서 sudo timedatectl set-timezone이 실행되고 관리자 비밀번호를 물어요."
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: 76
+                    radius: Theme.radius
+                    color: "transparent"
+                    border.width: 1
+                    border.color: Theme.border
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 16
+                        anchors.rightMargin: 16
+                        spacing: 16
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+
+                            Text {
+                                text: root.time.Timezone ? zonePicker.nameOf(root.time.Timezone) : "읽는 중이에요…"
+                                color: Theme.fg
+                                font.family: Theme.font
+                                font.pixelSize: 15
+                                font.weight: Font.DemiBold
+                            }
+
+                            Text {
+                                visible: text !== ""
+                                text: root.time.Now ?? ""
+                                color: Theme.muted
+                                font.family: Theme.mono
+                                font.pixelSize: 12
+                            }
+                        }
+
+                        ActionButton {
+                            variant: "outline"
+                            text: "시간대 바꾸기"
+                            onClicked: zonePicker.show()
+                        }
+                    }
+                }
+            }
+
+            Group {
+                title: "시간 맞추기"
+                hint: "인터넷에서 시계를 맞춰요(systemd-timesyncd). 바꾸면 터미널에서 sudo timedatectl set-ntp가 실행돼요."
+
+                SwitchRow {
+                    title: "시간 자동 맞추기"
+                    desc: root.time.NTP !== "yes" ? "꺼져 있어요. 시계가 조금씩 틀어질 수 있어요."
+                          : root.time.NTPSynchronized === "yes" ? "인터넷의 시계와 맞춰져 있어요."
+                                                                : "맞추는 중이에요. 인터넷에 연결돼 있어야 해요."
+                    checked: root.time.NTP === "yes"
+                    onToggled: ShellState.runInTerminal("sudo timedatectl set-ntp " + (root.time.NTP === "yes" ? "false" : "true") + " && timedatectl | head -n 6")
+                }
+            }
+
+            Group {
+                title: "하드웨어 시계"
+                hint: "윈도우와 같이 쓰는 컴퓨터는 하드웨어 시계를 지역 시간으로 읽어서, 윈도우와 시간이 어긋나지 않아요."
+                visible: root.time.LocalRTC === "yes"
             }
         }
     }

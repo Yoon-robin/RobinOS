@@ -26,8 +26,6 @@ FloatingWindow {
     property bool eraseConfirmed: false
     property bool recoveryConfirmed: false
     property string timezone: "Asia/Seoul"
-    property var allZones: []
-    property bool zonePickerOpen: false
     property real percent: 0
     property string stage: ""
     property string errorText: ""
@@ -93,46 +91,6 @@ FloatingWindow {
         ""
     ]
 
-    // Shown first in the time zone list, by the names people search for
-    readonly property var commonZones: [
-        { tz: "Asia/Seoul", name: "서울" },
-        { tz: "Asia/Tokyo", name: "도쿄" },
-        { tz: "Asia/Shanghai", name: "베이징, 상하이" },
-        { tz: "Asia/Taipei", name: "타이베이" },
-        { tz: "Asia/Singapore", name: "싱가포르" },
-        { tz: "Asia/Ho_Chi_Minh", name: "호찌민" },
-        { tz: "Australia/Sydney", name: "시드니" },
-        { tz: "Pacific/Auckland", name: "오클랜드" },
-        { tz: "Europe/London", name: "런던" },
-        { tz: "Europe/Paris", name: "파리" },
-        { tz: "Europe/Berlin", name: "베를린" },
-        { tz: "America/New_York", name: "뉴욕 (미국 동부)" },
-        { tz: "America/Chicago", name: "시카고 (미국 중부)" },
-        { tz: "America/Denver", name: "덴버 (미국 산악)" },
-        { tz: "America/Los_Angeles", name: "로스앤젤레스 (미국 서부)" },
-        { tz: "America/Toronto", name: "토론토" },
-        { tz: "America/Vancouver", name: "밴쿠버" },
-        { tz: "Pacific/Honolulu", name: "호놀룰루" }
-    ]
-
-    readonly property var zoneMatches: {
-        const query = zoneSearch.text.trim().toLowerCase();
-        if (query === "")
-            return commonZones;
-        const seen = {};
-        const found = [];
-        const candidates = commonZones.concat(allZones.map(id => ({ tz: id, name: "" })));
-        for (const zone of candidates) {
-            if (seen[zone.tz] || !(zone.tz.toLowerCase().includes(query) || zone.name.includes(query)))
-                continue;
-            seen[zone.tz] = true;
-            found.push(zone);
-            if (found.length >= 100)
-                break;
-        }
-        return found;
-    }
-
     // What to know about RobinOS while the packages install
     readonly property var tips: [
         { title: "앱은 Win+Space로 찾아요", body: "메모장, 제어판처럼 윈도우에서 쓰던 이름으로 찾아도 나와요." },
@@ -177,8 +135,7 @@ FloatingWindow {
     }
 
     function zoneName(id) {
-        const zone = commonZones.find(z => z.tz === id);
-        return zone ? zone.name + " (" + id + ")" : id;
+        return zonePicker.nameOf(id);
     }
 
     // The disk after the install, for the second bar
@@ -249,23 +206,11 @@ FloatingWindow {
     }
 
     function openZonePicker() {
-        zoneSearch.text = "";
-        zoneList.currentIndex = 0;
-        zonePickerOpen = true;
-        zoneSearch.input.forceActiveFocus();
-        if (allZones.length === 0 && !zonesProc.running)
-            zonesProc.running = true;
-    }
-
-    function pickZone(id) {
-        if (id)
-            timezone = id;
-        zonePickerOpen = false;
-        zoneButton.forceActiveFocus();
+        zonePicker.show();
     }
 
     function next() {
-        if (zonePickerOpen || !canNext)
+        if (zonePicker.open || !canNext)
             return;
         if (step === 3)
             startInstall();
@@ -326,16 +271,6 @@ FloatingWindow {
         onExited: (exitCode, exitStatus) => {
             if (exitCode !== 0)
                 root.disksLoading = false;
-        }
-    }
-
-    Process {
-        id: zonesProc
-
-        command: ["timedatectl", "list-timezones", "--no-pager"]
-        stdout: StdioCollector {
-            id: zonesOut
-            onStreamFinished: root.allZones = zonesOut.text.split("\n").filter(line => line !== "")
         }
     }
 
@@ -1462,149 +1397,16 @@ FloatingWindow {
         }
 
         // ---- Time zone list, over the window ----
-        Item {
+        ZonePicker {
             id: zonePicker
 
             anchors.fill: parent
-            visible: root.zonePickerOpen
-
-            Keys.onEscapePressed: root.pickZone("")
-            Keys.onUpPressed: zoneList.decrementCurrentIndex()
-            Keys.onDownPressed: zoneList.incrementCurrentIndex()
-
-            Rectangle {
-                anchors.fill: parent
-                color: Theme.scrim
-
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: root.pickZone("")
-                }
+            current: root.timezone
+            onPicked: zone => {
+                root.timezone = zone;
+                zoneButton.forceActiveFocus();
             }
-
-            Rectangle {
-                anchors.centerIn: parent
-                width: Math.min(440, parent.width - 64)
-                height: Math.min(460, parent.height - 64)
-                radius: Theme.radiusPanel
-                color: Theme.surface
-                border.width: 1
-                border.color: Theme.border
-
-                // Clicks on the card stay on the card
-                MouseArea {
-                    anchors.fill: parent
-                }
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 16
-                    spacing: 10
-
-                    RowLayout {
-                        Layout.fillWidth: true
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: "시간대 고르기"
-                            color: Theme.fg
-                            font.family: Theme.font
-                            font.pixelSize: 16
-                            font.weight: Font.DemiBold
-                        }
-
-                        ActionButton {
-                            variant: "ghost"
-                            text: "닫기"
-                            onClicked: root.pickZone("")
-                        }
-                    }
-
-                    InputField {
-                        id: zoneSearch
-                        Layout.fillWidth: true
-                        placeholder: "도시나 지역 (예: 도쿄, New_York)"
-                        onAccepted: {
-                            const zone = root.zoneMatches[zoneList.currentIndex] ?? root.zoneMatches[0];
-                            if (zone)
-                                root.pickZone(zone.tz);
-                        }
-                        onTextChanged: zoneList.currentIndex = 0
-                    }
-
-                    ListView {
-                        id: zoneList
-
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        clip: true
-                        model: root.zoneMatches
-                        boundsBehavior: Flickable.StopAtBounds
-                        highlightMoveDuration: 0
-
-                        delegate: Rectangle {
-                            id: zoneRow
-
-                            required property var modelData
-                            required property int index
-
-                            width: zoneList.width
-                            height: 40
-                            radius: Theme.radiusMd
-                            color: index === zoneList.currentIndex || zoneRowMouse.containsMouse ? Theme.hover : "transparent"
-
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 10
-                                anchors.rightMargin: 10
-                                spacing: 10
-
-                                Text {
-                                    visible: zoneRow.modelData.name !== ""
-                                    text: zoneRow.modelData.name
-                                    color: Theme.fg
-                                    font.family: Theme.font
-                                    font.pixelSize: 14
-                                }
-
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: zoneRow.modelData.tz
-                                    color: zoneRow.modelData.name !== "" ? Theme.muted : Theme.fg
-                                    font.family: Theme.mono
-                                    font.pixelSize: 12
-                                    elide: Text.ElideRight
-                                }
-
-                                Icon {
-                                    visible: zoneRow.modelData.tz === root.timezone
-                                    name: "check"
-                                    size: 14
-                                    color: Theme.fg
-                                }
-                            }
-
-                            MouseArea {
-                                id: zoneRowMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: root.pickZone(zoneRow.modelData.tz)
-                            }
-                        }
-                    }
-
-                    Text {
-                        Layout.fillWidth: true
-                        visible: root.zoneMatches.length === 0
-                        text: "찾는 시간대가 없어요. 영어 도시 이름으로도 찾아봐요."
-                        color: Theme.muted
-                        font.family: Theme.font
-                        font.pixelSize: 13
-                        wrapMode: Text.WordWrap
-                    }
-                }
-            }
+            onClosed: zoneButton.forceActiveFocus()
         }
     }
 

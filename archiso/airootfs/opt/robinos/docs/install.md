@@ -175,6 +175,10 @@ sudo robinctl profile network
 
 프로필은 `network`(네트워크 분석), `web`(웹 보안과 로컬 웹 랩), `forensics`, `reversing`, `passwords`, `wireless`, `vm`이고, `security`는 전부예요.
 
+## RobinOS가 멈추면
+
+내 컴퓨터는 계속 돌아가고 파일은 그대로예요. [exit.md](exit.md)에 업데이트를 계속 받는 법과 일반 Arch로 돌아가는 법을 적어 뒀어요.
+
 ## 아직 없는 것
 
 - 설치기에서 언어 고르기(지금은 한국어로 정해져 있어요. 시간대는 고를 수 있어요)
