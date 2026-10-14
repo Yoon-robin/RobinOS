@@ -568,6 +568,8 @@ def drive_installer(con, qmp, install=False):
     percents = set()
 
     def over(st):
+        if st["percent"] not in percents:
+            log(f"installer: {st['percent']}% {st['stage']}")
         percents.add(st["percent"])
         return st["step"] == 5
 
