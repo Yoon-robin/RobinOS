@@ -561,7 +561,7 @@ def drive_installer(con, qmp):
 
 # The real `robinctl update` on the installed system. A local repository (file://, no
 # signatures) takes the place of [robinos] and holds a robinos package that is the
-# installed one with a higher version and one more file: an update that brings new
+# installed one with a higher version and one changed file: an update that brings new
 # RobinOS files. pacman -Syu runs for real, so Arch's packages come along if they
 # moved since the ISO was built.
 LOCAL_REPO = "/srv/robinos-test-repo"  # not under /root: pacman downloads as the alpm user
@@ -584,7 +584,9 @@ def check_update(con):
     con.run(f"rm -rf /root/newpkg {LOCAL_REPO} && mkdir -p /root/newpkg {LOCAL_REPO} && chmod 755 {LOCAL_REPO}"
             " && cd /root/newpkg && bsdtar -xf /opt/robinos/pkg/robinos-*.pkg.tar.zst"
             " && sed -i 's/^pkgver = .*/pkgver = 0.3.0.r99999-1/' .PKGINFO"
-            " && echo update-test > usr/share/robinos/update-test-marker"
+            # pacman builds the file list from the package's .MTREE, so a file that is not in it
+            # is skipped ("could not find file in the file list"): change one that is
+            " && echo '# update-test' >> usr/share/robinos/bin/robinos-session"
             f" && ls -A | bsdtar --zstd -cf {LOCAL_REPO}/robinos-0.3.0.r99999-1-any.pkg.tar.zst -T -"
             f" && repo-add -q {LOCAL_REPO}/robinos.db.tar.gz {LOCAL_REPO}/robinos-0.3.0.r99999-1-any.pkg.tar.zst")
     con.put_file("/root/local-repo.py", POINT_AT_LOCAL_REPO)
@@ -601,7 +603,7 @@ def check_update(con):
         # The update itself, without asking
         # (a subshell: a bare exit would end the test's login shell)
         con.run("(robinctl update --yes > /root/update.out 2>&1; rc=$?; tail -n 25 /root/update.out; exit $rc)", timeout=1800)
-        con.run("grep -q '0.3.0.r99999-1' /root/update.out && test -f /usr/share/robinos/update-test-marker"
+        con.run("grep -q '0.3.0.r99999-1' /root/update.out && grep -q '^# update-test$' /usr/share/robinos/bin/robinos-session"
                 " && [ \"$(pacman -Q robinos | cut -d' ' -f2)\" = 0.3.0.r99999-1 ]")
         # snap-pac took a pair around it, and the version name shows in /etc/os-release
         _, listing = con.capture("snapper --no-dbus --csvout -c root list --columns number,type,description")
