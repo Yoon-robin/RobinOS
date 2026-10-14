@@ -37,6 +37,7 @@ robinctl - RobinOS 관리 도구
 사용법:
   robinctl version                      버전 보기
   robinctl doctor                       시스템 점검
+  robinctl report [파일]                문제 보고서 만들기 (컴퓨터, 드라이버, 이번 부팅의 오류. 이름과 주소는 가려요, 어디로도 안 보내요)
   robinctl audit                        보안 점검 (윈도우 보안처럼: 열린 포트, 원격 접속, 권한, 암호화)
   robinctl app remove <앱 ID> [--dry-run]  앱 제거 (런처에서 Shift+Delete, RobinOS 기본 앱은 막아요)
   robinctl update [--dry-run|--preview|--status|--yes] 스냅샷을 만든 뒤 시스템 업데이트 (앱 스토어 앱도). --preview는 받을 개수·크기만, --status는 같은 내용을 JSON 한 줄로, --yes는 묻지 않고
@@ -402,6 +403,142 @@ doctor() {
   else
     printf '  루트 파일 시스템: %s (스냅샷은 Btrfs 설치에서만 써요)\n' "${fstype}"
   fi
+}
+
+# ---- Problem report (robinctl report): what to send along with "it doesn't work" ----
+#
+# Facts about the computer, the drivers in use and what went wrong in this boot, in one
+# text file the person reads before sharing it. Nothing is sent anywhere. The user's
+# and the computer's name, MAC and IP addresses, UUIDs and serial numbers are masked.
+
+report_mask() {
+  local user host
+  local -a expr=(
+    -e 's/([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}/xx:xx:xx:xx:xx:xx/g'
+    -e 's/\b[0-9]{1,3}(\.[0-9]{1,3}){3}\b/<ip>/g'
+    -e 's/\b([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}\b/<ipv6>/g'
+    -e 's/[0-9A-Fa-f:]*[0-9A-Fa-f]::[0-9A-Fa-f:]*/<ipv6>/g'
+    -e 's/\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b/<uuid>/g'
+    -e 's/([Ss]erial( [Nn]umber)?|SerialNumber)[:=] *[^ ,;]+/\1: <hidden>/g'
+  )
+  user="$(id -un 2>/dev/null)"
+  host="$(uname -n 2>/dev/null)"
+  # Only names that are safe inside a pattern; the default computer name isn't private
+  if [[ "${user}" =~ ^[a-z_][a-z0-9_-]*$ && "${user}" != root ]]; then
+    expr+=(-e "s/\\b${user}\\b/<user>/g")
+  fi
+  if [[ "${host}" =~ ^[A-Za-z0-9.-]+$ && "${host}" != robinos && "${host}" != localhost ]]; then
+    expr+=(-e "s/\\b${host//./\\.}\\b/<host>/g")
+  fi
+  sed -E "${expr[@]}"
+}
+
+# report_section <title> <function> [raw]: the function's output under a heading,
+# masked (the version numbers of the first two sections would be taken for addresses)
+report_section() {
+  local out
+  printf '\n## %s\n' "$1"
+  if [[ "${3:-}" == raw ]]; then
+    out="$("$2" 2>&1)" || true
+  else
+    out="$("$2" 2>&1 | report_mask)" || true
+  fi
+  if [[ -n "${out}" ]]; then printf '%s\n' "${out}"; else printf '(알아낸 게 없어요)\n'; fi
+}
+
+report_robinos() {
+  local secure
+  print_version
+  pacman -Q robinos linux hyprland quickshell mesa 2>/dev/null
+  if [[ -r /etc/os-release ]]; then
+    # shellcheck disable=SC1091
+    (. /etc/os-release && printf 'OS: %s\n' "${PRETTY_NAME:-${NAME:-알 수 없음}}")
+  fi
+  printf '커널: %s\n' "$(uname -r)"
+  if [[ -d /run/archiso ]]; then printf '실행 방식: 라이브 USB\n'; else printf '실행 방식: 설치본\n'; fi
+  if [[ -d /sys/firmware/efi ]]; then
+    secure="$(od -An -t u1 -j4 -N1 /sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c 2>/dev/null | tr -d ' ')"
+    printf '부팅 방식: UEFI (보안 부팅 %s)\n' "$([[ "${secure}" == 1 ]] && printf '켜짐' || { [[ "${secure}" == 0 ]] && printf '꺼짐' || printf '알 수 없음'; })"
+  else
+    printf '부팅 방식: BIOS(레거시)\n'
+  fi
+  printf '렌더링: %s\n' "${ROBINOS_RENDER:-GPU}"
+  printf '루트 파일 시스템: %s\n' "$(root_fstype)"
+  snapshot_booted 2>/dev/null | sed 's/^/스냅샷으로 부팅: /'
+}
+
+report_computer() {
+  local field
+  for field in sys_vendor product_name product_version bios_vendor bios_version bios_date; do
+    [[ -r "/sys/class/dmi/id/${field}" ]] && printf '%s: %s\n' "${field}" "$(<"/sys/class/dmi/id/${field}")"
+  done
+  printf 'CPU: %s (%s개)\n' "$(sed -n 's/^model name[[:space:]]*: //p' /proc/cpuinfo | head -n 1)" "$(nproc 2>/dev/null)"
+  awk '/^MemTotal/ { printf "메모리: %.1f GB\n", $2 / 1048576 }' /proc/meminfo
+  lsblk -d -o NAME,SIZE,TYPE,ROTA,TRAN,MODEL 2>/dev/null
+  df -h / 2>/dev/null
+}
+
+report_devices() {
+  # The display, network, audio, storage and Bluetooth parts, with the driver in use
+  lspci -nnk 2>/dev/null | awk '/^[0-9a-f]/ { show = ($0 ~ /VGA|3D controller|Display controller|Network controller|Ethernet controller|Audio device|Multimedia audio|Non-Volatile|SATA|RAID/) } show'
+  printf '\nUSB:\n'
+  lsusb 2>/dev/null | head -n 30
+}
+
+report_display() {
+  timeout 10 hyprctl monitors 2>/dev/null | grep -E '^Monitor|@|scale:'
+}
+
+report_network() {
+  timeout 10 nmcli -t -f DEVICE,TYPE,STATE device status 2>/dev/null
+  rfkill list 2>/dev/null
+  # What the kernel said about network and Bluetooth firmware this boot
+  timeout 10 journalctl -k -b --no-pager -q 2>/dev/null | grep -iE 'firmware|iwlwifi|brcmfmac|rtw8|mt79|ath1|bluetooth: hci' | tail -n 15
+}
+
+report_sound() {
+  timeout 10 wpctl status 2>/dev/null | sed -n '/^Audio/,/^Video/p' | head -n 30
+}
+
+report_battery() {
+  local supply
+  for supply in /sys/class/power_supply/*; do
+    [[ -r "${supply}/type" ]] || continue
+    printf '%s: %s' "${supply##*/}" "$(<"${supply}/type")"
+    [[ -r "${supply}/status" ]] && printf ', %s' "$(<"${supply}/status")"
+    [[ -r "${supply}/capacity" ]] && printf ', %s%%' "$(<"${supply}/capacity")"
+    printf '\n'
+  done
+}
+
+report_problems() {
+  printf '실패한 서비스:\n'
+  systemctl --failed --no-legend --plain 2>/dev/null
+  printf '\n이번 부팅의 오류 (마지막 40줄):\n'
+  timeout 10 journalctl -b -p err --no-pager -q 2>/dev/null | tail -n 40
+  printf '\n이번 부팅의 커널 경고 (마지막 30줄):\n'
+  timeout 10 journalctl -k -b -p warning --no-pager -q 2>/dev/null | tail -n 30
+  printf '\nRobinOS 셸 기록 (마지막 20줄):\n'
+  tail -n 20 "${XDG_STATE_HOME:-${HOME}/.local/state}/robinos/shell.log" 2>/dev/null
+}
+
+report() {
+  local file="${1:-${HOME}/robinos-report.txt}"
+  {
+    printf 'RobinOS 문제 보고서 (%s)\n' "$(date '+%Y-%m-%d %H:%M')"
+    printf '어디로도 보내지 않은 파일이에요. 사용자 이름, 컴퓨터 이름, 주소(IP·MAC), 일련번호는 가렸어요.\n'
+    printf '관리자 권한 없이 만들어서 시스템 기록은 일부만 들어갈 수 있어요.\n'
+    report_section "RobinOS" report_robinos raw
+    report_section "컴퓨터" report_computer raw
+    report_section "장치와 드라이버" report_devices
+    report_section "화면" report_display
+    report_section "네트워크" report_network
+    report_section "소리" report_sound
+    report_section "배터리와 전원" report_battery
+    report_section "문제 신호" report_problems
+  } >"${file}" || die "보고서를 쓰지 못했어요: ${file}"
+  printf '보고서를 만들었어요: %s\n' "${file}"
+  printf '열어서 개인 정보가 없는지 읽어 본 뒤, 문제를 알릴 때 붙여 넣어요.\n'
 }
 
 # What an update would bring, looked up in a throwaway copy of the package
@@ -3917,6 +4054,9 @@ main() {
       ;;
     audit)
       audit
+      ;;
+    report)
+      report "${2:-}"
       ;;
     app)
       shift

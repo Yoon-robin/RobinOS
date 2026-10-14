@@ -834,6 +834,8 @@ def main():
     type_text(qmp, "clear; for a in 'lock 5' 'screen_off 10' 'suspend 15'; do " + ipc + "setPower $a; sleep 1; done; sleep 2\n")
     wait(8)
     check_scene(qmp, "power-default")
+    # The problem report (settings' 정보 has a button for it)
+    check_scene(qmp, "report", timeout=60)
     # 야간 모드 starts hyprsunset (4500 K) and the second call stops it. The colors
     # need the driver's KMS CTM, which the test VM's bochs-drm lacks, so the shot
     # shows the running process (and the tile's VM note) instead of a warm screen

@@ -1643,11 +1643,31 @@ FloatingWindow {
                 }
             }
 
-            ActionButton {
+            RowLayout {
                 Layout.topMargin: 16
-                text: "자세히 진단하기 (robinctl doctor)"
-                variant: "outline"
-                onClicked: ShellState.runInTerminal("robinctl doctor")
+                spacing: 8
+
+                ActionButton {
+                    text: "자세히 진단하기 (robinctl doctor)"
+                    variant: "outline"
+                    onClicked: ShellState.runInTerminal("robinctl doctor")
+                }
+
+                ActionButton {
+                    text: "문제 보고서 만들기 (robinctl report)"
+                    variant: "outline"
+                    onClicked: ShellState.runInTerminal("robinctl report")
+                }
+            }
+
+            Text {
+                Layout.fillWidth: true
+                Layout.topMargin: 10
+                text: "보고서는 이 컴퓨터의 장치, 드라이버, 이번 부팅의 오류를 한 파일로 모아요. 이름과 주소는 가리고, 어디로도 보내지 않아요."
+                color: Theme.muted
+                font.family: Theme.font
+                font.pixelSize: 12
+                wrapMode: Text.WordWrap
             }
         }
     }

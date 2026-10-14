@@ -815,6 +815,33 @@ if grep -q 'lock_cmd = pidof hyprlock || hyprlock -c /usr/share/robinos/hypr/hyp
 # The shipped hypridle.conf is the same policy as the defaults
 if [[ "$(idle_timeouts <<<"${default_policy}")" == "$(idle_timeouts <"${ROOT_DIR}/desktop/hypr/hypridle.conf")" ]]; then ok "the defaults match desktop/hypr/hypridle.conf"; else bad "the defaults differ from desktop/hypr/hypridle.conf"; fi
 
+printf '%s\n' "Problem report (robinctl report): facts in one file, names and addresses masked"
+REPORT_BIN="${WORK}/report-bin"
+mkdir -p "${REPORT_BIN}"
+printf '#!/bin/sh\necho robin\n' >"${REPORT_BIN}/id"
+printf '#!/bin/sh\n[ "$1" = "-n" ] && echo sandras-laptop || exec /usr/bin/uname "$@"\n' >"${REPORT_BIN}/uname"
+printf '#!/bin/sh\nprintf "00:02.0 VGA compatible controller [0300]: Intel Corporation Iris Xe [8086:46a6]\\n\\tKernel driver in use: i915\\n00:14.3 Network controller [0280]: Intel Wi-Fi 6 AX201 [8086:a0f0]\\n\\tKernel driver in use: iwlwifi\\n00:1f.3 ISA bridge [0601]: Intel LPC [8086:a082]\\n\\tKernel driver in use: lpc_ich\\n"\n' >"${REPORT_BIN}/lspci"
+printf '#!/bin/sh\ncase "$*" in\n  *"-p err"*) echo "Oct 14 robin@sandras-laptop kernel: eth0 aa:bb:cc:dd:ee:ff 192.168.0.12 fe80::1c2d:3e4f:5a6b:7c8d Serial Number: ABC123XYZ disk 0a1b2c3d-1111-2222-3333-444455556666 robinos robin" ;;\n  *) echo "iwlwifi 0000:00:14.3: loaded firmware version 77.0" ;;\nesac\n' >"${REPORT_BIN}/journalctl"
+chmod 755 "${REPORT_BIN}"/*
+REPORT_FILE="${WORK}/report.txt"
+check "robinctl report writes a file" 0 env PATH="${REPORT_BIN}:${PATH}" HOME="${WORK}" bash "${ROBINCTL}" report "${REPORT_FILE}"
+said "it says where the report is" "${REPORT_FILE}"
+for heading in "## RobinOS" "## 컴퓨터" "## 장치와 드라이버" "## 화면" "## 네트워크" "## 소리" "## 배터리와 전원" "## 문제 신호"; do
+  if grep -qF -- "${heading}" "${REPORT_FILE}"; then ok "the report has ${heading}"; else bad "the report lacks ${heading}"; fi
+done
+if grep -q 'Kernel driver in use: i915' "${REPORT_FILE}" && grep -q 'Kernel driver in use: iwlwifi' "${REPORT_FILE}"; then ok "the graphics and Wi-Fi drivers are in it"; else bad "the drivers of the graphics card and Wi-Fi are missing"; fi
+if grep -q 'ISA bridge' "${REPORT_FILE}"; then bad "parts that don't matter (the ISA bridge) are in it"; else ok "parts that don't matter are left out"; fi
+if grep -qE 'aa:bb:cc:dd:ee:ff|192\.168\.0\.12|fe80::|ABC123XYZ|0a1b2c3d-1111|sandra|\brobin\b' "${REPORT_FILE}"; then
+  bad "something private is still in the report: $(grep -E 'aa:bb:cc|192\.168|fe80|ABC123|0a1b2c3d|sandra|\brobin\b' "${REPORT_FILE}" | head -n 3)"
+else
+  ok "the MAC address, IPs, serial number, UUID and the names are masked"
+fi
+if grep -q 'xx:xx:xx:xx:xx:xx' "${REPORT_FILE}" && grep -q '<ip>' "${REPORT_FILE}" && grep -q '<user>@<host>' "${REPORT_FILE}"; then ok "the masks say what was there"; else bad "the masks are not where they should be: $(grep 'kernel: eth0' "${REPORT_FILE}")"; fi
+if grep -q '8086:46a6' "${REPORT_FILE}"; then ok "PCI ids (vendor:device) are not taken for addresses"; else bad "a PCI id was masked"; fi
+if grep -qF "커널: $(uname -r)" "${REPORT_FILE}"; then ok "the kernel version is not taken for an address"; else bad "the kernel version was changed: $(grep '커널:' "${REPORT_FILE}")"; fi
+if grep -q ' robinos ' "${REPORT_FILE}" && ! grep -q '<user>os' "${REPORT_FILE}"; then ok "a user name inside a word (robinos) is left alone"; else bad "robinos was cut by the user mask"; fi
+check "a report that can't be written says so" fail env PATH="${REPORT_BIN}:${PATH}" HOME="${WORK}" bash "${ROBINCTL}" report "${WORK}/no-such-folder/report.txt"
+
 printf '%s\n' "Web lab (robinctl lab) with stand-in docker, sudo and systemctl"
 FAKE="${WORK}/fake"
 mkdir -p "${FAKE}"

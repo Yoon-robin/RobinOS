@@ -23,6 +23,7 @@
 #   shell-restarted a new shell (qs) runs and answers over IPC
 #   input-changed   pointer and keyboard settings changed from the shell reached Hyprland and the saved file
 #   input-default   the same after setting them back
+#   report          robinctl report makes a file with all its sections and the drivers
 #   power-changed   idle times set from the shell reached hypridle and the saved file
 #   power-default   the same after setting the defaults
 #   default-apps    settings' 기본 앱: Firefox is the default browser, a choice is saved, a wrong one refused
@@ -149,6 +150,15 @@ print(len(kinds), b["current"], b["currentName"], len(b["apps"]))')"
     check "kinds/browser/name/apps=${summary:-none} set=${set_status} refused=${refused} file=$(grep -c '^text/plain=org.gnome.TextEditor.desktop' "${XDG_CONFIG_HOME:-${HOME}/.config}/mimeapps.list" 2>/dev/null)" \
       bash -c "[[ '${summary}' == '7 firefox.desktop Firefox '* ]] && [ ${set_status} = 0 ] && [ ${refused} = 1 ] \
         && grep -q '^text/plain=org.gnome.TextEditor.desktop' '${XDG_CONFIG_HOME:-${HOME}/.config}/mimeapps.list'"
+    ;;
+  report)
+    # robinctl report (settings' 정보): all the sections, the graphics driver, and the
+    # name of the computer is masked when it isn't the default one
+    file="${XDG_RUNTIME_DIR:-/tmp}/robinos-report-test.txt"
+    robinctl report "${file}" >/dev/null 2>&1
+    sections="$(grep -c '^## ' "${file}" 2>/dev/null)"
+    check "sections=${sections} drivers=$(grep -c 'Kernel driver in use' "${file}" 2>/dev/null) lines=$(wc -l <"${file}")" \
+      bash -c "[ '${sections}' = 8 ] && grep -q 'Kernel driver in use' '${file}' && grep -q '^커널: ' '${file}'"
     ;;
   power-changed | power-default)
     # Settings' 전원 (ShellState.setPower): robinos-idle-config wrote hypridle's policy from
