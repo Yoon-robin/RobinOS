@@ -6,6 +6,7 @@ set -euo pipefail
 #   - Lua syntax of the Hyprland config      (luac -p)
 #   - Hyprland config validation             (Hyprland --verify-config)
 #   - Pointer and keyboard settings          (lua scripts/test-hypr-input.lua)
+#   - Default apps tool of the settings      (python3 scripts/test-default-apps.py)
 #   - QML syntax of the shell and SDDM theme (qmlformat)
 #   - Syntax of desktop scripts              (bash -n, Python ast)
 #   - JSON syntax of the Firefox policies    (python3 -m json.tool)
@@ -75,6 +76,17 @@ if command -v lua >/dev/null 2>&1; then
   rm -rf "${input_state}"
 else
   skip "lua not found (pacman -S lua)"
+fi
+
+printf 'Default apps (robinos-default-apps)\n'
+if command -v python3 >/dev/null 2>&1; then
+  if python3 "${ROOT_DIR}/scripts/test-default-apps.py"; then
+    ok "scripts/test-default-apps.py"
+  else
+    fail "scripts/test-default-apps.py"
+  fi
+else
+  skip "python3 not found"
 fi
 
 printf 'QML syntax\n'

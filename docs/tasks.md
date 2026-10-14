@@ -100,9 +100,10 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: 부팅 테스트에서 전원 메뉴의 잠자기 단추와 `hypridle` 설정이 맞고(VM은 잠자기를 못 깨울 수 있어 설정 검사로), 실제 노트북에서 덮개를 닫았다 열면 돌아와요(사용자 실기기)
 
 ### T-173 설정 앱 나머지: 터치패드, 사용자 계정, 기본 앱
-- 상태: 진행 중 (2026-10-14, `work/batch77`: 터치패드와 키보드는 했고 VM 검증 전. 사용자 계정·기본 앱·디스플레이는 남았어요)
+- 상태: 진행 중 (2026-10-14, `work/batch77`: 터치패드·키보드는 검증 중, 기본 앱은 VM 검증 전. 사용자 계정·디스플레이는 남았어요)
 - 한 것(2026-10-14): 설정 앱에 "마우스와 터치패드"(탭해서 클릭, 스크롤 방향, 글 쓰는 동안 끄기, 휠 방향, 포인터 속도)와 "키보드"(한/영 단축키, 키 반복 빠르기·시작 시간, 눌러 보는 칸). `ShellState.setInput`이 `~/.local/state/robinos/input`에 저장하고 `hyprctl eval robinos.applyInput`으로 바로 적용해요. `robinos.lua`가 로그인 때 같은 함수로 읽어요. 시험: `scripts/test-hypr-input.lua`(Hyprland 대역으로 파일 읽기·범위·false 유지 6개, `check-desktop.sh`가 돌려요), 부팅 테스트 `input-changed`·`input-default` 판정(`hyprctl getoption`과 저장 파일), `light-settings-pointer`·`light-settings-keyboard` 장면. 알게 된 것: Lua 설정의 터치패드 옵션 이름은 `tap_to_click`(밑줄)이고 `tap-to-click`은 구문 오류예요(`--verify-config`가 잡았어요)
-- 남은 것: 실제 노트북 터치패드에서 값이 장치에 닿는지(`hl.config`로 바꾼 값이 이미 연결된 장치에 바로 적용되는지는 VM에서 못 봐요), 사용자 계정, 기본 앱, 디스플레이
+- 기본 앱(2026-10-14): 설정 앱 "기본 앱" 쪽. `desktop/bin/robinos-default-apps`(파이썬)가 설치된 앱의 `.desktop`(Flatpak 포함)에서 종류별로 열 수 있는 앱을 모아 `list`로 JSON을 주고, `set 종류 앱`이 그 종류의 모든 형식에 `xdg-mime default`를 해요. 종류: 웹 브라우저, 이메일, 사진, 동영상, 음악, PDF, 글 파일. 시험: `scripts/test-default-apps.py`(가짜 앱 폴더와 가짜 `xdg-mime`으로 18개, `check-desktop.sh`가 돌려요), 부팅 테스트 `default-apps` 판정(Firefox가 기본 브라우저, 고른 값이 `~/.config/mimeapps.list`에, 열 수 없는 앱은 거절)과 `light-settings-apps`·`light-settings-apps-open` 장면
+- 남은 것: 실제 노트북 터치패드에서 값이 장치에 닿는지(`hl.config`로 바꾼 값이 이미 연결된 장치에 바로 적용되는지는 VM에서 못 봐요), 사용자 계정, 디스플레이(해상도·여러 모니터)
 - 출처: 미완성 기능 점검(2026-10-13). 설정 앱은 개인 설정·소리·와이파이·블루투스·정보뿐이에요
 - 할 것: "터치패드"(탭 클릭, 스크롤 방향, 속도; `input.touchpad`를 사용자 설정 파일에 저장), "사용자"(비밀번호 바꾸기는 터미널 `passwd`로 안내, 계정 추가는 관리자 확인 뒤), "기본 앱"(브라우저·메일·사진·동영상·PDF를 `xdg-mime`으로). T-149의 디스플레이·날짜와 시간·키보드와 같은 틀을 써요
 - 완료 기준: 세 쪽이 키보드만으로도 동작하고, 바꾼 값이 다시 로그인해도 유지돼요

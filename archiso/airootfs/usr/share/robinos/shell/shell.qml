@@ -65,7 +65,9 @@ ShellRoot {
 
     LearnCenter {}
 
-    Settings {}
+    Settings {
+        id: settingsWindow
+    }
 
     WindowsApp {}
 
@@ -235,6 +237,13 @@ ShellRoot {
 
         function settings(): void {
             ShellState.openSettings("");
+        }
+
+        // The settings' 기본 앱 page with one kind's list of apps open, as the 바꾸기
+        // button shows it (VM test screenshot)
+        function settingsAppsOpen(kind: string): void {
+            ShellState.openSettings("apps");
+            settingsWindow.openKind = kind;
         }
 
         function shortcuts(): void {

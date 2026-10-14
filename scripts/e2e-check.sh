@@ -23,6 +23,7 @@
 #   shell-restarted a new shell (qs) runs and answers over IPC
 #   input-changed   pointer and keyboard settings changed from the shell reached Hyprland and the saved file
 #   input-default   the same after setting them back
+#   default-apps    settings' 기본 앱: Firefox is the default browser, a choice is saved, a wrong one refused
 
 set -uo pipefail
 
@@ -129,6 +130,23 @@ case "${name}" in
   shell-restarted)
     pids="$(pgrep -x qs | tr '\n' ' ')"
     check "qs=${pids:-none}" bash -c "[ -n '${pids}' ] && timeout 10 ${SHELL_IPC[*]} show >/dev/null"
+    ;;
+  default-apps)
+    # Settings' 기본 앱 (robinos-default-apps): the list names the installed browser as the
+    # default one, a choice lands in ~/.config/mimeapps.list, and an app that can't open
+    # the kind is refused
+    tool=/usr/share/robinos/bin/robinos-default-apps
+    summary="$("${tool}" list | python3 -c 'import json, sys
+kinds = {k["key"]: k for k in json.load(sys.stdin)}
+b = kinds["browser"]
+print(len(kinds), b["current"], b["currentName"], len(b["apps"]))')"
+    "${tool}" set text org.gnome.TextEditor.desktop
+    set_status=$?
+    "${tool}" set text firefox.desktop 2>/dev/null
+    refused=$?
+    check "kinds/browser/name/apps=${summary:-none} set=${set_status} refused=${refused} file=$(grep -c '^text/plain=org.gnome.TextEditor.desktop' "${XDG_CONFIG_HOME:-${HOME}/.config}/mimeapps.list" 2>/dev/null)" \
+      bash -c "[[ '${summary}' == '7 firefox.desktop Firefox '* ]] && [ ${set_status} = 0 ] && [ ${refused} = 1 ] \
+        && grep -q '^text/plain=org.gnome.TextEditor.desktop' '${XDG_CONFIG_HOME:-${HOME}/.config}/mimeapps.list'"
     ;;
   input-changed | input-default)
     # Settings' 마우스와 터치패드 and 키보드 (ShellState.setInput): Hyprland runs with the

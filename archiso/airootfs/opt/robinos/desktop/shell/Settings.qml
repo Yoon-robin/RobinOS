@@ -19,6 +19,10 @@ FloatingWindow {
     property var updateInfo: null
     // `timedatectl show`: Timezone, NTP (yes/no), NTPSynchronized, LocalRTC, plus Now
     property var time: ({})
+    // `robinos-default-apps list`: one entry per kind (key, label, current, currentName, apps)
+    property var defaultApps: []
+    // The kind whose list of apps is open
+    property string openKind: ""
     property bool updateChecking: false
     readonly property var upd: updateInfo ?? ({})
     readonly property int updateAll: (upd.count ?? 0) + (upd.flatpak ?? 0)
@@ -50,6 +54,7 @@ FloatingWindow {
         { key: "datetime", icon: "globe", title: "날짜와 시간" },
         { key: "pointer", icon: "mouse-pointer", title: "마우스와 터치패드" },
         { key: "keyboard", icon: "keyboard", title: "키보드" },
+        { key: "apps", icon: "app", title: "기본 앱" },
         { key: "sound", icon: "volume", title: "소리", panel: true },
         { key: "wifi", icon: "wifi", title: "Wi-Fi", panel: true },
         { key: "bluetooth", icon: "bluetooth", title: "블루투스", panel: true },
@@ -76,6 +81,8 @@ FloatingWindow {
             checkUpdates();
         if (section === "datetime")
             readTime();
+        if (section === "apps")
+            readApps();
     }
 
     function pick(key) {
@@ -107,11 +114,25 @@ FloatingWindow {
             timeProc.running = true;
     }
 
+    function readApps() {
+        if (!appsProc.running)
+            appsProc.running = true;
+    }
+
+    function setDefaultApp(kind, id) {
+        setAppProc.command = ["/usr/share/robinos/bin/robinos-default-apps", "set", kind, id];
+        setAppProc.running = true;
+        openKind = "";
+    }
+
     onSectionChanged: {
         if (section === "update" && visible && updateInfo === null)
             checkUpdates();
         if (section === "datetime" && visible)
             readTime();
+        if (section === "apps" && visible)
+            readApps();
+        openKind = "";
     }
 
     // The terminal that changes a setting is a window of its own: look again now and then
@@ -146,6 +167,30 @@ FloatingWindow {
                 root.time = found;
             }
         }
+    }
+
+    // Which app opens what, and which installed apps could
+    Process {
+        id: appsProc
+
+        command: ["/usr/share/robinos/bin/robinos-default-apps", "list"]
+        stdout: StdioCollector {
+            id: appsOut
+
+            onStreamFinished: {
+                try {
+                    root.defaultApps = JSON.parse(appsOut.text.trim());
+                } catch (error) {
+                    root.defaultApps = [];
+                }
+            }
+        }
+    }
+
+    Process {
+        id: setAppProc
+
+        onExited: (exitCode, exitStatus) => root.readApps()
     }
 
     // What an update would bring; robinctl looks in its own copy of the package databases
@@ -356,7 +401,8 @@ FloatingWindow {
                                          : root.section === "update" ? updatePage
                                          : root.section === "datetime" ? dateTimePage
                                          : root.section === "pointer" ? pointerPage
-                                         : root.section === "keyboard" ? keyboardPage : appearancePage
+                                         : root.section === "keyboard" ? keyboardPage
+                                         : root.section === "apps" ? appsPage : appearancePage
                     }
                 }
             }
@@ -788,6 +834,103 @@ FloatingWindow {
                 onClicked: {
                     ShellState.resetInput(["repeat_rate", "repeat_delay"]);
                     ShellState.setImeShortcut("ctrl");
+                }
+            }
+        }
+    }
+
+    // 기본 앱: robinos-default-apps lists the apps that can open each kind and sets the choice
+    Component {
+        id: appsPage
+
+        ColumnLayout {
+            spacing: 0
+
+            Group {
+                title: "파일을 열 때 쓰는 앱"
+                hint: "고른 앱은 ~/.config/mimeapps.list에 저장돼요. 터미널에서는 xdg-mime default 앱.desktop 형식으로 같은 일을 해요."
+
+                Text {
+                    visible: root.defaultApps.length === 0
+                    text: "읽는 중이에요…"
+                    color: Theme.muted
+                    font.family: Theme.font
+                    font.pixelSize: 13
+                }
+
+                Repeater {
+                    model: root.defaultApps
+
+                    ColumnLayout {
+                        id: kindRow
+
+                        required property var modelData
+                        readonly property bool open: root.openKind === modelData.key
+
+                        Layout.fillWidth: true
+                        spacing: 6
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            implicitHeight: 60
+                            radius: Theme.radius
+                            color: "transparent"
+                            border.width: 1
+                            border.color: Theme.border
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 16
+                                anchors.rightMargin: 16
+                                spacing: 16
+
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 2
+
+                                    Text {
+                                        text: kindRow.modelData.label
+                                        color: Theme.fg
+                                        font.family: Theme.font
+                                        font.pixelSize: 13
+                                        font.weight: Font.Medium
+                                    }
+
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: kindRow.modelData.apps.length === 0 ? "설치된 앱이 없어요"
+                                              : kindRow.modelData.currentName !== "" ? kindRow.modelData.currentName
+                                              : kindRow.modelData.current !== "" ? kindRow.modelData.current : "정해지지 않았어요"
+                                        color: Theme.muted
+                                        font.family: Theme.font
+                                        font.pixelSize: 12
+                                        elide: Text.ElideRight
+                                    }
+                                }
+
+                                ActionButton {
+                                    visible: kindRow.modelData.apps.length > 0
+                                    variant: "outline"
+                                    text: kindRow.open ? "닫기" : "바꾸기"
+                                    onClicked: root.openKind = kindRow.open ? "" : kindRow.modelData.key
+                                }
+                            }
+                        }
+
+                        Repeater {
+                            model: kindRow.open ? kindRow.modelData.apps : []
+
+                            RadioRow {
+                                required property var modelData
+
+                                Layout.leftMargin: 20
+                                title: modelData.name
+                                desc: modelData.id
+                                selected: kindRow.modelData.current === modelData.id
+                                onPicked: root.setDefaultApp(kindRow.modelData.key, modelData.id)
+                            }
+                        }
+                    }
                 }
             }
         }

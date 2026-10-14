@@ -16,6 +16,7 @@ desktop/bin/robinos-terminal              /usr/share/robinos/bin/robinos-termina
 desktop/bin/robinos-snapshot-notice       /usr/share/robinos/bin/robinos-snapshot-notice   755
 desktop/bin/robinos-wallpaper-portal      /usr/share/robinos/bin/robinos-wallpaper-portal  755
 desktop/bin/robinos-windows-app           /usr/share/robinos/bin/robinos-windows-app       755
+desktop/bin/robinos-default-apps          /usr/share/robinos/bin/robinos-default-apps      755
 desktop/portal/robinos.portal             /usr/share/xdg-desktop-portal/portals/robinos.portal 644
 desktop/portal/org.freedesktop.impl.portal.desktop.robinos.service /usr/share/dbus-1/services/org.freedesktop.impl.portal.desktop.robinos.service 644
 desktop/portal/hyprland-portals.conf      /etc/xdg/xdg-desktop-portal/hyprland-portals.conf 644

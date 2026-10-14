@@ -1,0 +1,153 @@
+#!/usr/bin/env python3
+"""Default apps for the settings app ("기본 앱", T-173): which app opens web links, mail,
+photos, videos, music, PDFs and text files, and a way to change it.
+
+  robinos-default-apps list              JSON: one entry per kind with the current app
+                                          and the installed apps that can open it
+  robinos-default-apps set <kind> <id>   make <id> (e.g. firefox.desktop) the default
+
+It reads the .desktop files of the installed apps (including Flatpak) and uses
+xdg-mime for the actual default, so the choice lands in ~/.config/mimeapps.list like
+the "다른 앱으로 열기" choice of Files does. The first MIME type of a kind decides which
+apps are offered; setting a kind sets all of its types.
+"""
+
+import json
+import os
+import subprocess
+import sys
+
+KINDS = [
+    ("browser", "웹 브라우저", ["x-scheme-handler/https", "x-scheme-handler/http", "text/html"]),
+    ("mail", "이메일", ["x-scheme-handler/mailto"]),
+    ("photos", "사진", ["image/png", "image/jpeg", "image/gif", "image/webp", "image/bmp",
+                        "image/tiff", "image/heif", "image/avif"]),
+    ("video", "동영상", ["video/mp4", "video/x-matroska", "video/webm", "video/quicktime",
+                         "video/x-msvideo", "video/mpeg", "video/ogg"]),
+    ("music", "음악", ["audio/mpeg", "audio/flac", "audio/x-flac", "audio/ogg", "audio/x-vorbis+ogg",
+                       "audio/x-opus+ogg", "audio/wav", "audio/x-wav", "audio/mp4", "audio/x-m4a",
+                       "audio/aac"]),
+    ("pdf", "PDF 문서", ["application/pdf"]),
+    ("text", "글 파일", ["text/plain"]),
+]
+
+
+def data_dirs():
+    home = os.path.expanduser("~")
+    dirs = [os.environ.get("XDG_DATA_HOME") or os.path.join(home, ".local/share")]
+    dirs += (os.environ.get("XDG_DATA_DIRS") or "/usr/local/share:/usr/share").split(":")
+    # The shell may not have the profile that adds Flatpak's exports
+    dirs += ["/var/lib/flatpak/exports/share", os.path.join(home, ".local/share/flatpak/exports/share")]
+    seen = []
+    for d in dirs:
+        if d and d not in seen:
+            seen.append(d)
+    return seen
+
+
+def parse_desktop(path):
+    """Name, MimeType list and whether the app may be offered, or None."""
+    entry = {}
+    inside = False
+    try:
+        with open(path, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("["):
+                    inside = line == "[Desktop Entry]"
+                    continue
+                if inside and "=" in line and not line.startswith("#"):
+                    key, value = line.split("=", 1)
+                    entry.setdefault(key.strip(), value.strip())
+    except OSError:
+        return None
+    if entry.get("Type") != "Application":
+        return None
+    if entry.get("NoDisplay", "").lower() == "true" or entry.get("Hidden", "").lower() == "true":
+        return None
+    # Apps that only run inside a terminal (an editor like nvim) aren't for a first choice
+    if entry.get("Terminal", "").lower() == "true":
+        return None
+    name = entry.get("Name[ko]") or entry.get("Name")
+    if not name:
+        return None
+    mimes = [m for m in entry.get("MimeType", "").split(";") if m]
+    return {"name": name, "mimes": mimes}
+
+
+def installed_apps():
+    """{desktop id: {"name", "mimes"}} from every data directory; the first one wins."""
+    apps = {}
+    for base in data_dirs():
+        root = os.path.join(base, "applications")
+        for folder, _, files in os.walk(root):
+            for name in files:
+                if not name.endswith(".desktop"):
+                    continue
+                path = os.path.join(folder, name)
+                app_id = os.path.relpath(path, root).replace(os.sep, "-")
+                if app_id in apps:
+                    continue
+                parsed = parse_desktop(path)
+                if parsed:
+                    apps[app_id] = parsed
+    return apps
+
+
+def query_default(mime):
+    try:
+        out = subprocess.run(["xdg-mime", "query", "default", mime], capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    return out.stdout.strip()
+
+
+def candidates(apps, mime):
+    found = [{"id": app_id, "name": app["name"]} for app_id, app in apps.items() if mime in app["mimes"]]
+    return sorted(found, key=lambda a: (a["name"].lower(), a["id"]))
+
+
+def list_kinds():
+    apps = installed_apps()
+    result = []
+    for key, label, mimes in KINDS:
+        current = query_default(mimes[0])
+        result.append({
+            "key": key,
+            "label": label,
+            "mime": mimes[0],
+            "current": current,
+            "currentName": apps[current]["name"] if current in apps else "",
+            "apps": candidates(apps, mimes[0]),
+        })
+    return result
+
+
+def set_default(key, app_id):
+    kind = next((k for k in KINDS if k[0] == key), None)
+    if kind is None:
+        print("모르는 종류예요: " + key, file=sys.stderr)
+        return 2
+    if app_id not in [a["id"] for a in candidates(installed_apps(), kind[2][0])]:
+        print(app_id + "은(는) 이 종류를 열 수 있는 앱이 아니에요", file=sys.stderr)
+        return 1
+    for mime in kind[2]:
+        subprocess.run(["xdg-mime", "default", app_id, mime], check=True, timeout=10)
+    return 0
+
+
+def main(argv):
+    # A session without a locale (the shell's environment) would print Korean as "?"
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+    if argv[1:2] == ["list"] and len(argv) == 2:
+        print(json.dumps(list_kinds(), ensure_ascii=False))
+        return 0
+    if argv[1:2] == ["set"] and len(argv) == 4:
+        return set_default(argv[2], argv[3])
+    print(__doc__.strip().split("\n\n")[1], file=sys.stderr)
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
