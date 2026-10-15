@@ -717,7 +717,13 @@ cat >"${RESTART_BIN}/pacman" <<EOF
 #!/bin/sh
 case "\$*" in
   "-Q robinos") [ -f '${WORK}/robinos-version' ] || exit 1; echo "robinos \$(cat '${WORK}/robinos-version')" ;;
-  *-Syu*) echo "pacman \$*" >>'${WORK}/pacman-calls'; [ -f '${WORK}/new-version' ] && cp '${WORK}/new-version' '${WORK}/robinos-version'; exit 0 ;;
+  *-Sy) echo "pacman \$*" >>'${WORK}/pacman-calls'
+    # A list that can't be reached: the [robinos] one (GitHub), or every one
+    [ -f '${WORK}/all-down' ] && exit 1
+    [ -f '${WORK}/github-down' ] && grep -q '^\[robinos\]' "\$2" && exit 1
+    exit 0 ;;
+  *-Su*) echo "pacman \$*" >>'${WORK}/pacman-calls'; cp "\$2" '${WORK}/su-conf'
+    [ -f '${WORK}/new-version' ] && cp '${WORK}/new-version' '${WORK}/robinos-version'; exit 0 ;;
   *) exit 1 ;;
 esac
 EOF
@@ -730,7 +736,7 @@ if [[ "${EUID}" -eq 0 ]]; then
   rm -f "${WORK}/new-version"
   check "an update with no new RobinOS files" 0 env SUDO_USER=learner PATH="${RESTART_BIN}:/usr/bin" bash "${ROBINCTL}" update --yes
   if [[ -s "${WORK}/pkill-calls" ]]; then bad "the shell was ended without new RobinOS files"; else ok "the shell stays when nothing changed"; fi
-  if grep -qx 'pacman -Syu --noconfirm' "${WORK}/pacman-calls"; then ok "update passes --yes on to pacman"; else bad "pacman didn't get --noconfirm: $(cat "${WORK}/pacman-calls")"; fi
+  if grep -q -- '-Su --noconfirm$' "${WORK}/pacman-calls"; then ok "update passes --yes on to pacman"; else bad "pacman didn't get --noconfirm: $(cat "${WORK}/pacman-calls")"; fi
   printf '0.3.0.r2-1\n' >"${WORK}/new-version"
   check "an update that brings new RobinOS files" 0 env SUDO_USER=learner PATH="${RESTART_BIN}:/usr/bin" bash "${ROBINCTL}" update --yes
   said "it tells which versions" "0.3.0.r1-1에서 0.3.0.r2-1로"
@@ -746,7 +752,26 @@ if [[ "${EUID}" -eq 0 ]]; then
   rm -f "${WORK}/robinos-version" "${WORK}/new-version"
   : >"${WORK}/pacman-calls"
   check "an update without the robinos package" 0 env SUDO_USER=learner PATH="${RESTART_BIN}:/usr/bin" bash "${ROBINCTL}" update --yes
-  if grep -q -- '-Syu' "${WORK}/pacman-calls"; then ok "pacman -Syu runs without the robinos package"; else bad "pacman -Syu didn't run without the robinos package"; fi
+  if grep -q -- '-Su' "${WORK}/pacman-calls"; then ok "pacman -Syu runs without the robinos package"; else bad "pacman -Syu didn't run without the robinos package"; fi
+  # GitHub (the RobinOS repository) can't be reached: Arch's updates still come
+  printf '[options]\nHoldPkg = pacman\n\n[core]\nInclude = /etc/pacman.d/mirrorlist\n\n# RobinOS\n[robinos]\nSigLevel = Required DatabaseRequired\nServer = https://github.com/Yoon-robin/RobinOS/releases/download/repo\n\n[extra]\nInclude = /etc/pacman.d/mirrorlist\n' >"${WORK}/pacman.conf"
+  touch "${WORK}/github-down"
+  : >"${WORK}/pacman-calls"
+  rm -f "${WORK}/su-conf"
+  check "an update while GitHub can't be reached" 0 env SUDO_USER=learner ROBINOS_PACMAN_CONF="${WORK}/pacman.conf" PATH="${RESTART_BIN}:/usr/bin" bash "${ROBINCTL}" update --yes
+  said "it says RobinOS files come next time" "RobinOS 파일은 다음 업데이트 때 받아요"
+  if [[ -f "${WORK}/su-conf" ]] && ! grep -q '^\[robinos\]' "${WORK}/su-conf" && grep -q '^\[core\]' "${WORK}/su-conf" && grep -q '^\[extra\]' "${WORK}/su-conf"; then
+    ok "Arch's packages update without the RobinOS repository"
+  else
+    bad "the update without GitHub used: $(cat "${WORK}/su-conf" 2>/dev/null || echo nothing)"
+  fi
+  if grep -q "${WORK}/pacman.conf -Su" "${WORK}/pacman-calls"; then bad "-Su ran with the full pacman.conf"; else ok "pacman.conf itself is left alone"; fi
+  touch "${WORK}/all-down"
+  : >"${WORK}/pacman-calls"
+  check "an update with no internet at all fails" fail env SUDO_USER=learner ROBINOS_PACMAN_CONF="${WORK}/pacman.conf" PATH="${RESTART_BIN}:/usr/bin" bash "${ROBINCTL}" update --yes
+  said "it says to check the connection" "인터넷 연결을 확인해 주세요"
+  if grep -q -- '-Su' "${WORK}/pacman-calls"; then bad "-Su ran without any package lists"; else ok "nothing is installed without the lists"; fi
+  rm -f "${WORK}/github-down" "${WORK}/all-down"
 fi
 
 printf '%s\n' "Idle suspend (robinos-idle-suspend): a laptop on battery sleeps, nothing else does"

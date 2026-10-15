@@ -690,6 +690,12 @@ restart_shell_after() {
   fi
 }
 
+# pacman.conf without the [robinos] section: what's left when only the RobinOS
+# repository (a GitHub release) can't be reached
+pacman_conf_without_robinos() {
+  awk '/^\[robinos\]/ { skip = 1; next } /^\[/ { skip = 0 } !skip' "$1"
+}
+
 update_system() {
   local dry_run="false" preview="false" status="false" arg
   for arg in "$@"; do
@@ -754,7 +760,26 @@ update_system() {
     flatpak_args+=(-y)
   fi
   before="$(robinos_version)"
-  pacman -Syu "${pacman_args[@]}"
+  # pacman -Syu stops as a whole when one repository can't be reached. The RobinOS
+  # repository is a GitHub release: when GitHub is down or blocked, Arch's updates
+  # (security fixes among them) still come, and RobinOS's files the next time.
+  # -Sy then -Su is -Syu in two steps; snap-pac only acts on the second.
+  local conf="${ROBINOS_PACMAN_CONF:-/etc/pacman.conf}" fallback="" rc=0
+  if ! pacman --config "${conf}" -Sy; then
+    grep -q '^\[robinos\]' "${conf}" || die "패키지 목록을 받지 못했어요. 인터넷 연결을 확인해 주세요"
+    fallback="$(mktemp)"
+    pacman_conf_without_robinos "${conf}" >"${fallback}"
+    printf '%s알림:%s RobinOS 저장소(깃허브)에 닿지 못했어요. 이번에는 Arch 패키지만 업데이트하고, RobinOS 파일은 다음 업데이트 때 받아요.\n' \
+      "${C_YELLOW}" "${C_RESET}" >&2
+    if ! pacman --config "${fallback}" -Sy; then
+      rm -f "${fallback}"
+      die "패키지 목록을 받지 못했어요. 인터넷 연결을 확인해 주세요"
+    fi
+    conf="${fallback}"
+  fi
+  pacman --config "${conf}" -Su "${pacman_args[@]}" || rc=$?
+  [[ -z "${fallback}" ]] || rm -f "${fallback}"
+  ((rc == 0)) || return "${rc}"
   restart_shell_after "${before}"
 
   # Apps from the app store (Flathub) live outside pacman and its snapshots

@@ -8,9 +8,13 @@
 |---|---|
 | 제품 방향, 설계 결정, v0.1 범위와 항목별 상태 | [design.md](design.md) |
 | 지금 할 일, 진행 중인 작업, 푸시 대기 커밋, 사용자 확인이 필요한 것 | [tasks.md](tasks.md) (오래된 완료 기록은 [done.md](done.md)) |
-| 빠져 있거나 반쯤인 기능 전체(영역별 표, 우선순위) | [unfinished.md](unfinished.md) |
+| **부족한 점 전체**: 빠져 있거나 반쯤인 기능, 확인 안 된 것, 찾은 버그, 일하는 방식의 빈 곳(영역별 표, 우선순위) | [unfinished.md](unfinished.md). 다른 문서는 링크만 걸어요 |
 | 비슷한 OS 사례(Omarchy, Zorin, 하모니카 등)와 RobinOS가 가져올 것 | [references.md](references.md) |
-| 장기 단계 (0~6단계) | [roadmap.md](roadmap.md) |
+| 장기 단계 (0~7단계) | [roadmap.md](roadmap.md) |
+| 왜 만드나요, 윤리 기준 | [vision.md](vision.md), [ethics.md](ethics.md) |
+| RobinOS가 멈추거나 그만 쓰고 싶을 때 | [exit.md](exit.md) |
+| 실기기 대신 VMware로 확인할 것, 결과 | [testing.md](testing.md) "VMware로 실기기 대신 확인하기", 결과는 [tasks.md](tasks.md) T-167 |
+| 릴리스마다 바뀐 것과 알려진 한계 | `release-notes-v*.md` (공개한 그때의 기록이라 나중에 고치지 않아요) |
 | 루프 작업 절차 (Claude가 회차마다 따르는 순서) | [loop.md](loop.md) |
 | 검사 방법, 바꾼 것에 따라 돌릴 검사 | [testing.md](testing.md) |
 | 빌드 환경 (WSL 2, Hyper-V, Docker) | [build-environment.md](build-environment.md) |
@@ -36,6 +40,7 @@
 - [recovery.md](recovery.md): 스냅샷으로 되돌리기
 - [desktop.md](desktop.md): 데스크톱 쓰기와 바꾸기
 - [ctf.md](ctf.md): CTF 시작하기
+- [exit.md](exit.md): RobinOS가 멈추거나 그만 쓰고 싶을 때
 - [../labs/web/README.md](../labs/web/README.md): 웹 보안 랩
 - [../labs/net/README.md](../labs/net/README.md): 네트워크 스캔 랩
 
@@ -51,11 +56,11 @@
 - [release-notes-v0.2.md](release-notes-v0.2.md): v0.2 프리뷰 릴리스 노트
 - [release-notes-v0.3.md](release-notes-v0.3.md): v0.3 프리뷰 릴리스 노트
 - [../themes/README.md](../themes/README.md): 테마 파일
+- [../promo/intro/README.md](../promo/intro/README.md): 소개 영상 만들기
 
 작업 관리
 - [tasks.md](tasks.md): 작업 목록
-- [unfinished.md](unfinished.md): 미완성 기능 전체 목록
-- [exit.md](exit.md): RobinOS가 멈추거나 그만 쓰고 싶을 때
+- [unfinished.md](unfinished.md): 부족한 점 전체 목록(기능, 버그, 일하는 방식)
 - [references.md](references.md): 비슷한 OS 사례와 가져올 것
 - [done.md](done.md): 오래된 완료 기록
 - [roadmap.md](roadmap.md): 장기 로드맵
@@ -66,6 +71,8 @@
 
 - 한국어로 써요. 말투는 [design.md](design.md)의 "말투"를 따라요(해요체, 짧고 쉬운 문장, 번역투 없이). 코드, 명령, 경로, 워크플로 이름은 그대로 둬요.
 - 코드를 바꾸면 같은 커밋에서 관련 문서도 고쳐요.
+- **부족한 점은 [unfinished.md](unfinished.md) 한 곳에만** 적어요. 점검(설계, 코드 검토, 실기기·VMware 확인)에서 찾은 빈 곳과 버그는 거기에 줄로 넣고, 작업이 생기면 작업 번호를 붙여요. design.md, roadmap.md, README는 링크만 걸어요. 같은 목록을 여러 곳에 두면 한쪽만 고쳐져서 서로 달라져요(2026-10-15 문서 체계 점검에서 design.md의 낡은 "설계 점검" 표를 찾았어요).
+- tasks.md는 루프가 회차마다 읽어요. 작업마다 지금 상태와 남은 것만 두고, 끝난 단계의 긴 기록은 [done.md](done.md)로 옮겨요.
 
 | 바꾼 것 | 같이 고칠 문서 |
 |---|---|
@@ -80,5 +87,8 @@
 | RobinOS 패키지와 저장소 (`packaging/robinos`, `stage-robinos.sh`, `build-package.sh`, `build-repo.sh`, `keys/`) | `release.md` "RobinOS 패키지 저장소", `design.md` "RobinOS 파일 업데이트", `install.md`, `testing.md`, `build-iso.md` |
 | v0.1 항목의 상태 | `design.md`의 v0.1 표, `tasks.md` |
 | 새 설계 결정 | `design.md` (결정과 이유, 날짜) |
+| 기능을 더하거나 버그를 고쳐 빈 곳이 줄었을 때 | `unfinished.md`의 그 줄(상태를 바꾸거나, 다 됐으면 줄을 지우고 "이번에 고친 것"에 한 줄) |
+| 업데이트 동작 (`robinctl update`, `[robinos]` 저장소, 설정 앱 "업데이트") | `design.md` "RobinOS 파일 업데이트", `install.md` "설치한 다음", `desktop.md` "업데이트 알림", `recovery.md` |
+| 실기기·VMware 확인 결과 | `tasks.md` T-167, `unfinished.md` 4번 표, `install.md`의 확인한 PC 표(T-167에서 만들어요) |
 
 - `archiso/airootfs/opt/robinos/docs/`는 라이브 ISO에 들어가는 사본이에요. 직접 고치지 말고 `scripts/sync-archiso-files.ps1`로 맞춰요.
