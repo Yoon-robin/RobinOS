@@ -41,7 +41,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| (없음) | | |
+| 설치기 코드 검토 고침 (브랜치 `claude/eoseohae-7nleia`, 2026-10-15 클라우드 세션) | 윈도우 옆 설치가 GRUB 뒤에서 멈춰도 부팅 메뉴에 윈도우, 시스템 계정 이름·비밀번호 제어 문자 거절, 쓰는 중인 디스크는 지우지 않기 | `test-robin-install.py`(Arch 컨테이너에서 통과), 이 PC에서 `verify -Installer robinos`와 `install-test -Installer windows`. 통과하면 main에 합쳐요 |
 
 `b2a3624`까지 2026-10-13 묶음 검증(`verify -Installer robinos`, 집 PC)을 마치고 푸시했어요.
 
@@ -141,6 +141,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 검증(2026-10-13): `verify -Installer windows` 통과(부팅 88장면·판정 15개 PASS, 설치 5단계 통과, 화면 스크린샷 확인), 디스크 전체 설치(`-Installer robinos`)도 같은 백엔드로 5단계 통과. VM 테스트가 잡은 버그 둘: 설치 진행률이 12%에 머물던 것(pacman이 파이프에서는 `installing 이름...`만 말해요), 윈도우 디스크 관리가 만든 NTFS 파티션에 설치하면 `btrfs subvolume create`가 실패하던 것(예전 NTFS 흔적을 `wipefs`로 지우고 `mount -t btrfs`로 지정). 남은 것: 파티션 목록이 길면 "설치하면" 막대가 아래로 밀려 스크롤해야 해요(설치 창 높이를 키우기), 실제 윈도우 PC에서는 아직 해 보지 않았어요
 - 테스트: `test-robin-install.py`(진행률, 디스크 그림, 이전 파티션 다시 쓰기와 거절, 다른 디스크의 윈도우, 시간대 경로), 설치 테스트(진행률 43~69% 줄, `/etc/issue`, zram, windows 모드는 멈춘 설치의 파티션을 만든 뒤 `replace`로 설치), 부팅 테스트 `installer-user`, `installer-timezone` 장면
 - 남은 것: 별도 `/home`·수동 파티션 전체, 설치기 안에서 윈도우 C: 줄이기(ntfsresize, BitLocker·빠른 시작이면 막기), 디스크 암호화(T-163), 언어 고르기, (설치 화면이 끝까지 설치하는 것은 2026-10-14에 윈도우 설치 테스트에 넣어 통과했어요: 진행 막대 2%에서 100%), 비밀번호 강도(2026-10-14: 짧거나 사용자 이름과 같으면 안내만 보여 줘요. 막지는 않아요), 재설치할 때 `/home` 지키기, 설치 중 전원이 꺼졌을 때 시험. 전체 목록은 [unfinished.md](unfinished.md)
+- 코드 검토(2026-10-15 클라우드 세션)에서 고친 것: ① 윈도우 옆 설치가 `grub-install` 뒤(설치 후 설정 중 인터넷이 끊기는 등)에서 멈추면 펌웨어가 GRUB를 먼저 켜는데 메뉴에 윈도우가 없었어요 → 멈출 때도 `grub_mkconfig_with_udev`로 윈도우를 넣어요 ② `games`, `video`, `http`, `nobody` 같은 시스템 이름은 패키지를 다 받은 72%에서야 `useradd`가 실패했어요 → 시작할 때 거절(라이브의 id 1000 미만 계정·그룹) ③ 비밀번호의 줄바꿈이 `chpasswd`에 다른 계정 줄로 들어갔어요 → 제어 문자 거절 ④ 디스크 전체 설치가 쓰는 중인 디스크(마운트, 스왑, 열린 암호화)를 지우다 `partprobe`에서 멈췄어요 → 지우기 전에 거절. 실패 메시지가 `arch-chroot` 대신 안의 명령 이름을 말해요. 시험 20개
+- 코드 검토에서 남긴 것: 파티션 표가 없는 디스크(디스크 전체가 NTFS·ext4·LVM·LUKS)가 그림에 빈 공간으로 보여요, 같은 디스크의 exFAT·FAT 데이터 파티션만으로도 `dual_boot`가 켜져요(시계가 지역 시간, os-prober), 내 파일이 든 NTFS 데이터 파티션도 "만들어 둔 파티션"으로 고를 수 있어요(지우기 확인은 받아요), `RobinOS` 이름의 파티션은 형식 검사를 건너뛰어요(LUKS·LVM), `copytoram`이나 파일로 부팅하면 라이브 USB 디스크를 목록에서 못 빼요, 화면(`Installer.qml`)의 사용자 이름 검사는 시스템 이름을 몰라요(백엔드가 시작할 때 거절해요)
 - 완료 기준: `verify`와 `install-test -Installer windows` 통과, 설치 화면 스크린샷 확인
 
 ### T-170 랜딩 페이지와 GitHub Pages

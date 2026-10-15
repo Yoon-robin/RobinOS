@@ -128,6 +128,27 @@ except robin.InstallError:
 check("BitLocker without the recovery key confirmed: refused", refused, True)
 check("refused before touching the disk", ran, [])
 
+# Erasing a disk that is in use: the table is wiped, then partprobe fails
+robin.holders = lambda path: []
+for what, mountpoints, children, want in (
+        ("a partition opened in the file manager", ["/run/media/robin/Data"], None, "/dev/nvme0n1p2"),
+        ("swap on a partition", ["[SWAP]"], None, "/dev/nvme0n1p2"),
+        ("an encrypted partition that is open", [None], [{"path": "/dev/mapper/data"}], "/dev/nvme0n1p2"),
+        ("nothing in use", [None], None, None)):
+    listing = lsblk_disk("ntfs")
+    listing["blockdevices"][0]["children"][1].update(mountpoints=mountpoints, children=children)
+    robin.output = fake_output(listing)
+    disk = robin.list_disks()[0]
+    check(f"whole disk, {what}: busy", disk["busy"], want)
+    if want:
+        ran.clear()
+        try:
+            robin.prepare_disk({"mode": "whole"}, disk)
+            refused = False
+        except robin.InstallError:
+            refused = True
+        check(f"whole disk, {what}: refused before touching the disk", (refused, ran), (True, []))
+
 print("pacman progress (piped, pacman prints \"installing name...\" without counters)")
 pacman = robin.PacmanProgress()
 check("database downloads before the package list don't count", pacman.feed(" core downloading..."), None)
@@ -449,6 +470,56 @@ check("a host name that isn't a string is refused", plan_refused(hostname={"a": 
 check("a disk id that isn't a string is refused", plan_refused(disk_id=5), True)
 check("a partition that isn't a device path is refused", plan_refused(mode="partition", partition="vda4; rm -rf /"), True)
 check("a partition with the free-space mode is refused", plan_refused(mode="alongside", partition="/dev/vda4"), True)
+
+print("System account names and the password")
+with tempfile.TemporaryDirectory() as root:
+    passwd, group = os.path.join(root, "passwd"), os.path.join(root, "group")
+    with open(passwd, "w") as f:
+        f.write("root:x:0:0::/root:/bin/bash\nhttp:x:33:33::/srv/http:/usr/bin/nologin\n"
+                "nobody:x:65534:65534::/:/usr/bin/nologin\nrobin:x:1000:1000::/home/robin:/bin/bash\n")
+    with open(group, "w") as f:
+        f.write("wheel:x:998:robin\ngames:x:50:\nrobin:x:1000:\nbroken line\n")
+    names = robin.system_names((passwd, group, os.path.join(root, "missing")))
+    check("system accounts and groups are taken, people's aren't", sorted(names),
+          ["games", "http", "nobody", "root", "wheel"])
+# Every Linux has nobody (65534); the live system's own user (1000) stays free
+check("a system account's name is refused before the download", plan_refused(user="nobody"), True)
+check("a line break in the password is refused", plan_refused(password="pw\nroot:x"), True)
+check("a tab in the password is refused", plan_refused(password="pw\tpw"), True)
+if os.path.isfile("/usr/share/zoneinfo/Asia/Seoul"):
+    check("a password with spaces, colons and Korean is fine", plan_refused(password="내 비밀: 번호 1"), False)
+
+print("A dual-boot install that stops after grub-install keeps Windows in the menu")
+calls = []
+saved = (robin.run, robin.chroot, robin.write, robin.progress, robin.grub_mkconfig_with_udev)
+robin.run = lambda *args, **kwargs: None
+robin.write = lambda *args, **kwargs: None
+robin.progress = lambda *args: None
+robin.grub_mkconfig_with_udev = lambda: calls.append("windows in the menu")
+
+
+def stopping_chroot(*cmd, **kwargs):
+    calls.append(next(part for part in cmd if part != "env" and "=" not in part).rsplit("/", 1)[-1])
+    if any(str(part).endswith("post-install.sh") for part in cmd):
+        raise robin.InstallError("명령이 실패했어요 (1): env")
+
+
+robin.chroot = stopping_chroot
+for dual_boot, want in ((True, ["grub-install", "grub-mkconfig", "post-install.sh", "windows in the menu"]),
+                        (False, ["grub-install", "grub-mkconfig", "post-install.sh"])):
+    calls.clear()
+    try:
+        robin.install_robinos({"mode": "alongside", "dual_boot": dual_boot, "user": "robin"})
+        stopped = False
+    except robin.InstallError:
+        stopped = True
+    check(f"dual boot {dual_boot}: the error still stops the install", stopped, True)
+    check(f"dual boot {dual_boot}: what ran", calls, want)
+robin.chroot = lambda *cmd, **kwargs: calls.append(cmd[0])
+calls.clear()
+robin.install_robinos({"mode": "alongside", "dual_boot": True, "user": "robin"})
+check("a dual-boot install that goes through adds Windows once", calls.count("windows in the menu"), 1)
+robin.run, robin.chroot, robin.write, robin.progress, robin.grub_mkconfig_with_udev = saved
 
 if failures:
     print(f"{failures} robin-install check(s) failed.")
