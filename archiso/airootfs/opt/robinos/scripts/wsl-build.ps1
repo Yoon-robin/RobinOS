@@ -37,6 +37,9 @@ param(
     # install-test: also start the web lab on the installed system (downloads its images)
     [switch]$Lab,
     [string]$Distro = "archlinux",
+    # Memory of each WHPX test VM; verify runs two at once (scripts/verify-all-in-one.ps1
+    # gives 4096 on a PC with less than 12 GB)
+    [int]$MemoryMB = 6144,
     # Internal: the boot test that verify starts next to its install test (no busy
     # check, no reset of the WSL clone, the VM files verify already prepared)
     [switch]$Inner
@@ -90,7 +93,7 @@ function Invoke-WhpxBootTest {
         $kernelArgs = "archisobasedir=$base archisolabel=$label console=tty0 console=ttyS0,115200 systemd.journald.forward_to_console=1 robinos.debug"
         # Start-Process joins the arguments with spaces, so quote the ones that have them
         $qemuArgs = @(
-            "-machine", "q35", "-accel", "whpx", "-m", "6144", "-smp", "4",
+            "-machine", "q35", "-accel", "whpx", "-m", "$MemoryMB", "-smp", "4",
             # The hardware clock in local time, as on a PC that runs Windows (the live
             # ISO reads it that way, archiso/airootfs/etc/adjtime)
             "-rtc", "base=localtime",
@@ -174,7 +177,7 @@ function Invoke-WhpxInstallTest {
     $env:ROBINOS_SERIAL = "tcp:127.0.0.1:47021"
     $env:ROBINOS_QMP = "tcp:127.0.0.1:47022"
     $common = @(
-        "-machine", "q35", "-accel", "whpx", "-m", "6144", "-smp", "4",
+        "-machine", "q35", "-accel", "whpx", "-m", "$MemoryMB", "-smp", "4",
         "-drive", "`"if=pflash,format=raw,readonly=on,file=install-test\OVMF_CODE.fd`"",
         "-drive", "`"if=pflash,format=raw,file=install-test\OVMF_VARS.fd`"",
         "-drive", "`"file=install-test\disk.qcow2,format=qcow2,if=virtio`"",
@@ -346,7 +349,7 @@ switch ($Task) {
         $env:ROBINOS_VM_PREPARED = Get-VmFiles
 
         $bootLog = Join-Path $root "build\verify-boot.log"
-        $bootArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`" boot-test -Inner -Accel whpx -Qemu `"$Qemu`" -Distro $Distro"
+        $bootArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`" boot-test -Inner -Accel whpx -Qemu `"$Qemu`" -Distro $Distro -MemoryMB $MemoryMB"
         $boot = Start-Process powershell.exe -ArgumentList $bootArgs -PassThru -WindowStyle Hidden `
             -RedirectStandardOutput $bootLog -RedirectStandardError "$bootLog.err"
         # Without holding the handle now, ExitCode comes back empty once the process is gone

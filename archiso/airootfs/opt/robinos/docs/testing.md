@@ -114,7 +114,7 @@ Windows용 QEMU가 준비돼 있으면 WHPX 가속으로 돌아요([build-enviro
 
 ## 묶음 검증 (verify)
 
-여러 커밋을 한 번에 검증할 때는 빌드와 두 테스트를 따로 돌리지 않고 이렇게 해요.
+여러 커밋을 한 번에 검증할 때는 빌드와 두 테스트를 따로 돌리지 않고 이렇게 해요. 빌드 환경이 없는 PC(학교 PC 등)에서는 [build-environment.md](build-environment.md) "처음 쓰는 PC에서 한 번에 검증하기"의 `scripts/verify-all-in-one.ps1`이 준비까지 하고 이걸 돌려요.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 verify -Installer robinos

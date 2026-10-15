@@ -61,6 +61,23 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test
 
 이렇게 준비하면 `scripts/wsl-build.ps1 boot-test`가 알아서 WHPX를 써요. WSL이 ISO를 `build\vm`으로 복사하고 커널을 꺼내면(`scripts/vm-prepare.sh`), Windows에서 QEMU를 띄우고 `scripts/boot-test-qmp.py`가 TCP로 조작해요. `-Accel tcg`를 붙이면 예전처럼 WSL 안에서 돌고, QEMU 위치가 다르면 `-Qemu <경로>`로 알려 줘요.
 
+## 처음 쓰는 PC에서 한 번에 검증하기
+
+RobinOS를 빌드해 본 적 없는 윈도우 PC(학교 PC 등)에서는 `scripts/verify-all-in-one.ps1` 하나로 준비부터 검증까지 해요. 저장소를 미리 받지 않아도 돼요. PowerShell에서 이 한 줄을 실행해요(관리자가 아니어도 돼요).
+
+```powershell
+[Net.ServicePointManager]::SecurityProtocol = 'Tls12'; iwr -UseBasicParsing https://raw.githubusercontent.com/Yoon-robin/RobinOS/claude/eoseohae-7nleia/scripts/verify-all-in-one.ps1 -OutFile $env:TEMP\rv.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File $env:TEMP\rv.ps1
+```
+
+1. 이 PC를 확인해요: 윈도우 빌드, 메모리, 남은 공간(40GB 이상), 관리자 권한, 가상화
+2. WSL 2와 Arch Linux: 없으면 관리자일 때만 켜고 "다시 켠 뒤 다시 실행"하라고 해요. 관리자 권한이 없으면 무엇이 막혔는지 적고 멈춰요
+3. 도구: 없는 것만 `%USERPROFILE%\RobinOS-tools`에 받아요. QEMU(qemu.weilnetz.de, SHA-512), 7-Zip(깃허브 릴리스 digest), Python(python.org API의 SHA-256), Git(MinGit, 깃허브 릴리스 digest). 체크섬이 맞지 않으면 지우고 멈춰요
+4. 하이퍼바이저 플랫폼(WHPX)이 되는지 QEMU로 바로 시험해요
+5. 브랜치를 `C:\RobinOS-verify\RobinOS`에 받고 `wsl-build.ps1`의 `setup`, `check`, `verify`를 차례로 돌려요. 메모리가 16GB보다 적으면 빌드·부팅 테스트·설치 테스트를 차례로(12GB보다 적으면 테스트 VM 4GB), WHPX가 안 되면 ISO 빌드와 느린 부팅 테스트만 해요
+6. 결과를 `C:\RobinOS-verify\results-<시각>.zip`(요약 `summary.txt`, 단계별 기록, 스크린샷, 시리얼 로그)으로 모아요. 이 zip을 Claude 대화창에 올리면 돼요
+
+다시 실행해도 돼요. 받아 둔 도구와 저장소를 다시 쓰고, 끊긴 곳부터 이어서 해요. 브랜치는 `-Branch`, 설치 방식은 `-Installer`, 설치 테스트를 빼려면 `-SkipInstallTest`예요.
+
 ## 다른 PC에서 이어서 하기
 
 작업 기록은 모두 깃허브에 있어요. 지금 할 일과 진행 상황은 [tasks.md](tasks.md), 작업 순서는 [loop.md](loop.md), Claude가 지킬 규칙은 저장소의 `CLAUDE.md`예요. 새 PC에서는 이렇게 해요.
