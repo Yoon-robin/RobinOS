@@ -28,7 +28,7 @@ build/logs/mkarchiso-*.log
 - `robinctl` 테스트(`scripts/test-robinctl.sh`)와 설치기 테스트(`scripts/test-robin-install.py`), 둘 다 `check`에 들어 있어요
 - 설치 테스트: `archinstall`, `robinos`, `windows` 세 방식 모두, 한 번은 `-Lab`을 붙여 웹 랩까지
 - VM에서 직접 써 보기의 "눈으로 확인할 것" 목록
-- 실기기 한 대 이상에서 라이브 부팅
+- 실기기 한 대 이상, 또는 VMware에서 [testing.md](testing.md) "VMware로 실기기 대신 확인하기"의 라이브·설치 항목(2026-10-15 사용자 결정). 릴리스 노트에는 VMware로 확인했다고 적고, "VMware로는 못 보는 것"은 확인 안 됨으로 둬요
 - 문서와 `/etc/motd`에 윤리 안내가 보임
 
 ## 서명
