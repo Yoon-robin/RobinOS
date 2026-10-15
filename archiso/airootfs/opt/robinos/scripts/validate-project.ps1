@@ -280,6 +280,19 @@ foreach ($line in Get-Content (Join-Path $root "desktop/install-map.txt")) {
     }
 }
 
+# PowerShell reads Korean letters as part of a variable name: $limit followed directly
+# by 분 is the (empty) variable "limit분". Write "${limit}분" (2026-10-15).
+foreach ($script in Get-ChildItem (Join-Path $root "scripts") -Filter *.ps1) {
+    $lineNumber = 0
+    foreach ($line in Get-Content $script.FullName -Encoding UTF8) {
+        $lineNumber++
+        $match = [regex]::Match($line, '\$[A-Za-z_][A-Za-z0-9_]*[가-힣]')
+        if ($match.Success) {
+            Add-Error "scripts/$($script.Name):${lineNumber}: $($match.Value) is one variable name to PowerShell; write `${...} around the name"
+        }
+    }
+}
+
 if ($errors.Count -gt 0) {
     Write-Host ""
     Write-Host "Validation failed:" -ForegroundColor Red

@@ -156,6 +156,20 @@ if ($distros -notcontains "archlinux") {
 }
 Note "WSL 2와 Arch Linux: 준비됨"
 
+# An earlier run still going (a window left open, or one stuck on a step) would share
+# the checkout and the WSL clone with this one: end it, and what it started in WSL
+$leftover = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
+    $_.ProcessId -ne $PID -and $_.CommandLine -and
+    ($_.CommandLine -match 'verify-all-in-one\.ps1|\\rv\.ps1|wsl-build\.ps1' -or
+     ($_.Name -eq "qemu-system-x86_64.exe" -and $_.CommandLine -match 'robinos'))
+})
+if ($leftover.Count -gt 0) {
+    Note "이전 실행에서 남은 것을 끝냈어요 (프로세스 $($leftover.Count)개)"
+    foreach ($p in $leftover) { taskkill.exe /T /F /PID $p.ProcessId 2>&1 | Out-Null }
+    $term = Start-Process wsl.exe -ArgumentList "--terminate archlinux" -WindowStyle Hidden -PassThru
+    $null = $term.WaitForExit(60000)
+}
+
 # ---- 3. Tools on the Windows side ----
 Step "3. 도구 (Git, Python, QEMU)"
 $downloads = Join-Path $tools "downloads"
@@ -255,23 +269,55 @@ try {
 }
 $wslBuild = Join-Path $repoDir "scripts\wsl-build.ps1"
 
-function Invoke-Task([string]$title, [string[]]$taskArgs) {
+# Ends a task that runs far past its usual time, so a run never sits on one step for
+# hours (2026-10-15: a test waited for a key nobody saw). Runs as a background job: it
+# notes what was running in <task>-stuck.txt, then ends the task's PowerShell with
+# everything it started (wsl.exe, Python, QEMU) and what is left in WSL.
+$watchdog = {
+    param([int]$parentId, [int]$minutes, [string]$stuck)
+    Start-Sleep -Seconds ($minutes * 60)
+    $tasks = @(Get-CimInstance Win32_Process -Filter "ParentProcessId=$parentId" | Where-Object { $_.CommandLine -match 'wsl-build\.ps1' })
+    if ($tasks.Count -eq 0) { return }
+    $windows = Get-CimInstance Win32_Process | Where-Object { $_.Name -match '^(powershell|wsl|python|qemu)' } |
+        Select-Object ProcessId, ParentProcessId, CommandLine | Format-Table -AutoSize -Wrap | Out-String -Width 300
+    $wslList = "$stuck.wsl"
+    $ps = Start-Process wsl.exe -ArgumentList "-d archlinux -u root -e ps -eo pid,etime,args --forest" `
+        -WindowStyle Hidden -PassThru -RedirectStandardOutput $wslList
+    $null = $ps.WaitForExit(30000)
+    $text = @("제한 시간 ${minutes}분을 넘겨서 멈췄어요. 그때 돌던 프로세스:", "", "== 윈도우", $windows, "== WSL")
+    if (Test-Path $wslList) { $text += Get-Content $wslList }
+    $text | Set-Content -Encoding UTF8 $stuck
+    foreach ($t in $tasks) { taskkill.exe /T /F /PID $t.ProcessId 2>&1 | Out-Null }
+    $term = Start-Process wsl.exe -ArgumentList "--terminate archlinux" -WindowStyle Hidden -PassThru
+    $null = $term.WaitForExit(60000)
+}
+
+function Invoke-Task([string]$title, [string[]]$taskArgs, [int]$limit, [string]$usual) {
     $ErrorActionPreference = "Continue"
     Step $title
+    Say "  보통 $usual 걸려요. ${limit}분이 넘으면 멈추고 다음으로 넘어가요." "DarkGray"
     $t0 = Get-Date
     $log = Join-Path $results (($taskArgs[0]) + ".txt")
+    $stuck = Join-Path $results (($taskArgs[0]) + "-stuck.txt")
+    $job = Start-Job -ScriptBlock $watchdog -ArgumentList $PID, $limit, $stuck
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $wslBuild @taskArgs 2>&1 | Tee-Object -FilePath $log -Append
     $code = $LASTEXITCODE
     $minutes = ((Get-Date) - $t0).TotalMinutes
+    # The job may still be ending what the task left in WSL
+    if (Test-Path $stuck) { $null = Wait-Job $job -Timeout 120 }
+    Stop-Job $job -ErrorAction SilentlyContinue
+    Remove-Job $job -Force -ErrorAction SilentlyContinue
     if ($code -eq 0) {
         Note ("{0}: 통과 ({1:N1}분)" -f $title, $minutes)
     } else {
-        Note ("{0}: 실패 (종료 코드 {1}, {2:N1}분, 기록 {3})" -f $title, $code, $minutes, (Split-Path -Leaf $log))
+        $why = "종료 코드 $code"
+        if (Test-Path $stuck) { $why = "제한 시간 ${limit}분을 넘겨서 멈췄어요, 그때 돌던 것은 $(Split-Path -Leaf $stuck)" }
+        Note ("{0}: 실패 ({1}, {2:N1}분, 기록 {3})" -f $title, $why, $minutes, (Split-Path -Leaf $log))
         # Why, in the summary itself: the lines the tests mark as failed
         # (the boot test inside verify writes to build\verify-boot.log)
         $logs = @($log, (Join-Path $repoDir "build\verify-boot.log")) | Where-Object { Test-Path $_ }
         Get-Content $logs -ErrorAction SilentlyContinue |
-            Where-Object { $_ -match '^\s*FAILED |\[install-test\] FAILED|: missing \(|: FAIL |scenario stopped|Desktop check failed' -and $_ -notmatch '^\s*\+' } |
+            Where-Object { $_ -match '^\s*FAILED |\[install-test\] FAILED|: missing \(|: FAIL |scenario stopped|Desktop check failed|Quick checks FAILED' -and $_ -notmatch '^\s*\+' } |
             Select-Object -First 12 | ForEach-Object {
                 $line = ($_ -replace "\x1b\[[0-9;]*m", "").Trim()
                 if ($line.Length -gt 220) { $line = $line.Substring(0, 220) + "..." }
@@ -285,20 +331,21 @@ function Invoke-Task([string]$title, [string[]]$taskArgs) {
 # Each test VM takes 6 GB; on a PC with less than 12 GB they get 4 GB
 $vmArgs = @("-Qemu", $qemu)
 if ($ramGb -lt 12) { $vmArgs += @("-MemoryMB", "4096"); Note "메모리가 적어서 테스트 VM을 4GB로 띄워요" }
-$ok = Invoke-Task "5. WSL 빌드 도구 준비" @("setup")
+# Time limits (minutes) well past the usual times
+$ok = Invoke-Task "5. WSL 빌드 도구 준비" @("setup") 60 "처음에는 10~20분, 그다음부터는 1분"
 if ($ok) {
-    $null = Invoke-Task "6. 빠른 검사 (설정 검사, qmllint, robinctl·설치기 시험)" @("check")
+    $null = Invoke-Task "6. 빠른 검사 (설정 검사, qmllint, robinctl·설치기 시험)" @("check") 60 "5분 안쪽"
     if ($whpx -and $ramGb -ge 16 -and -not $SkipInstallTest) {
-        $null = Invoke-Task "7. 묶음 검증 (ISO + 부팅·설치 테스트 동시)" (@("verify", "-Installer", $Installer) + $vmArgs)
+        $null = Invoke-Task "7. 묶음 검증 (ISO + 부팅·설치 테스트 동시)" (@("verify", "-Installer", $Installer) + $vmArgs) 180 "30~40분"
     } elseif ($whpx) {
         # Two VMs of 6 GB at once need 16 GB; one after the other is fine with less
-        if (Invoke-Task "7. ISO 빌드" @("build")) {
-            $null = Invoke-Task "8. 부팅 테스트" (@("boot-test", "-Accel", "whpx") + $vmArgs)
-            if (-not $SkipInstallTest) { $null = Invoke-Task "9. 설치 테스트 ($Installer)" (@("install-test", "-Installer", $Installer, "-Accel", "whpx") + $vmArgs) }
+        if (Invoke-Task "7. ISO 빌드" @("build") 120 "15~25분") {
+            $null = Invoke-Task "8. 부팅 테스트" (@("boot-test", "-Accel", "whpx") + $vmArgs) 90 "10~15분"
+            if (-not $SkipInstallTest) { $null = Invoke-Task "9. 설치 테스트 ($Installer)" (@("install-test", "-Installer", $Installer, "-Accel", "whpx") + $vmArgs) 180 "20~40분" }
         }
     } else {
-        if (Invoke-Task "7. ISO 빌드" @("build")) {
-            $null = Invoke-Task "8. 부팅 테스트 (TCG, 오래 걸려요)" @("boot-test", "-Accel", "tcg")
+        if (Invoke-Task "7. ISO 빌드" @("build") 120 "15~25분") {
+            $null = Invoke-Task "8. 부팅 테스트 (TCG, 오래 걸려요)" @("boot-test", "-Accel", "tcg") 480 "1~3시간"
             Note "설치 테스트: 건너뜀 (가속 없이는 몇 시간 걸려요)"
         }
     }

@@ -671,6 +671,13 @@ if grep -q "데이터 요금" "${WORK}/out"; then bad "preview warns on an unmet
 printf '#!/bin/sh\necho "u 1"\n' >"${PREVIEW_BIN}/busctl"
 check "update preview on a metered connection" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --preview
 said "preview warns about a metered connection" "데이터 요금이 드는 연결"
+# At a terminal too (a person, or wsl.exe started from a PowerShell window) the preview
+# only warns: it used to ask and wait for an answer, which kept the all-in-one check on
+# a school PC waiting for hours behind a question it never showed (2026-10-15)
+if command -v script >/dev/null 2>&1; then
+  timeout 20 script -qec "env PATH='${PREVIEW_BIN}:/usr/bin' bash '${ROBINCTL}' update --preview" /dev/null < <(sleep 5) >"${WORK}/out" 2>&1
+  if grep -q "받을까요" "${WORK}/out"; then bad "preview at a terminal asks on a metered connection"; else ok "preview at a terminal only warns"; fi
+fi
 printf '#!/bin/sh\nexit 2\n' >"${PREVIEW_BIN}/checkupdates"
 check "update preview with nothing new" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --preview
 said "preview says everything is current" "모두 최신이에요"

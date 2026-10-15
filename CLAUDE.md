@@ -52,5 +52,7 @@ powershell -ExecutionPolicy Bypass -File scripts/sync-archiso-files.ps1         
 - **검사 결과를 파이프로 가리지 않아요**: `validate ... | tail -1 && git commit`은 검증이 실패해도 커밋해요(2026-10-08). `scripts/ready.ps1`의 종료 코드로 판단해요. 오버레이 동기화와 sddm 설정 줄 끝 되돌리기도 `ready.ps1`이 해요.
 - **실행 권한**: 윈도우는 실행 비트를 기록하지 않아요. 새 스크립트는 `git update-index --chmod=+x <파일>`로 남기고, 동기화가 만든 ISO 오버레이 사본(`archiso/airootfs/usr/share/robinos/bin/`, `opt/robinos/...`)에도 해요. **라이브 ISO 안의 권한은 git이 아니라 `archiso/profiledef.sh`의 `file_permissions`가 정해요**(mkarchiso가 권한 없이 복사해요). 새 실행 파일은 거기에도 넣어요. 빠지면 라이브에서 644가 돼서 실행이 안 돼요(2026-10-12: 터미널이 하나도 안 열림). `validate-project.ps1`이 셋 다 확인해요.
 - **부팅 테스트 "통과"는 화면을 찍었다는 뜻이에요**: 스크린샷을 직접 보고, 꼭 동작해야 하는 것은 `expect_serial`처럼 확인하는 줄을 넣어요.
+- **PowerShell 창에서 부른 WSL의 표준 입력은 터미널이에요**: `[[ -t 0 ]]`로 묻는 코드가 시험 안에서 키를 기다리고, 줄바꿈 없는 질문은 창에 보이지도 않아요(2026-10-15, 올인원이 몇 시간 멈춤). 시험은 `scripts/check.sh`처럼 `</dev/null`로 돌리고, 묻는 코드는 실제로 할 때만 물어요.
+- **PowerShell 문자열에서 변수 바로 뒤에 한글을 붙이지 않아요**: 한글까지 변수 이름이 돼요. `${limit}분`처럼 써요. `validate-project.ps1`이 `scripts/*.ps1`에서 잡아요.
 - **QML 한 줄 실수로 셸 전체가 안 떠요**: QML을 고치면 `wsl-build.ps1 check`(qmllint)를 꼭 돌려요. 셸이 안 뜨면 부팅 테스트의 `serial.log`에서 오류를 찾아요.
 - **느린 VM(TCG)의 키 반복**: 부팅 테스트에서 키가 반복 입력될 수 있어요. 테스트 결과가 이상하면 제품 문제인지 먼저 가려요.

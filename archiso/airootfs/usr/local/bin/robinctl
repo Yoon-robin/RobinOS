@@ -631,9 +631,11 @@ update_status() {
 # What the update is about to do, before pacman asks (T-162): how many packages
 # and how much to download, whether the kernel changes (restart afterwards), the
 # snapshot number taken first, and a question on a metered connection.
-# Returns 1 when the person stops.
+# Returns 1 when the person stops. With "ask" as the second argument (the update
+# itself) a metered connection is a question; robinctl update --preview only says so,
+# since it downloads nothing and nobody may be at the keyboard to answer.
 update_preview() {
-  local mode="$1"
+  local mode="$1" ask="${2:-}"
   have_cmd checkupdates || return 0
   update_facts
   if [[ "${UPD_RC}" -eq 1 ]]; then
@@ -665,7 +667,7 @@ update_preview() {
 
   if update_metered; then
     printf '%s알림:%s 데이터 요금이 드는 연결(휴대폰 핫스팟 등)이에요.\n' "${C_YELLOW}" "${C_RESET}"
-    if [[ -t 0 ]] && [[ "${ASSUME_YES}" != true ]]; then
+    if [[ "${ask}" == ask ]] && [[ -t 0 ]] && [[ "${ASSUME_YES}" != true ]]; then
       local answer
       read -r -p '그래도 지금 받을까요? [y/N] ' answer
       [[ "${answer}" =~ ^[yY]$ ]] || { printf 'Wi-Fi에 연결한 뒤 다시 업데이트해요.\n'; return 1; }
@@ -744,7 +746,7 @@ update_system() {
   fi
 
   need_root
-  update_preview "${mode}" || return 0
+  update_preview "${mode}" ask || return 0
   case "${mode}" in
     manual)
       snapper --no-dbus -c root create --description "RobinOS before update" --cleanup-algorithm number

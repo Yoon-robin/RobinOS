@@ -76,7 +76,9 @@ RobinOS를 빌드해 본 적 없는 윈도우 PC(학교 PC 등)에서는 `script
 5. 브랜치를 `C:\RobinOS-verify\RobinOS`에 받고 `wsl-build.ps1`의 `setup`, `check`, `verify`를 차례로 돌려요. 메모리가 16GB보다 적으면 빌드·부팅 테스트·설치 테스트를 차례로(12GB보다 적으면 테스트 VM 4GB), WHPX가 안 되면 ISO 빌드와 느린 부팅 테스트만 해요
 6. 결과를 `C:\RobinOS-verify\results-<시각>.zip`(요약 `summary.txt`, 단계별 기록, 스크린샷, 시리얼 로그)으로 모아요. 이 zip을 Claude 대화창에 올리면 돼요
 
-다시 실행해도 돼요. 받아 둔 도구와 저장소를 다시 쓰고, 끊긴 곳부터 이어서 해요. 브랜치는 `-Branch`, 설치 방식은 `-Installer`, 설치 테스트를 빼려면 `-SkipInstallTest`예요.
+단계마다 보통 걸리는 시간과 제한 시간을 보여 줘요. 제한 시간을 넘긴 단계는 그때 돌던 프로세스를 결과 폴더의 `<단계>-stuck.txt`에 남기고 멈춘 뒤 다음 단계로 넘어가요.
+
+다시 실행해도 돼요. 앞서 실행한 것이 아직 돌고 있으면(창을 닫지 않았거나 멈췄으면) 먼저 끝내요. 받아 둔 도구와 저장소를 다시 쓰고, 끊긴 곳부터 이어서 해요. 브랜치는 `-Branch`, 설치 방식은 `-Installer`, 설치 테스트를 빼려면 `-SkipInstallTest`예요.
 
 ## 다른 PC에서 이어서 하기
 

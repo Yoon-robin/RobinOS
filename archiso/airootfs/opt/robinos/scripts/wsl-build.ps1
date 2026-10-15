@@ -12,8 +12,8 @@
 # and loses file modes). build, boot-test and install-test first reset that
 # clone to this checkout's HEAD, so commit before running; uncommitted changes
 # don't reach WSL. They refuse to start while another build or VM is running,
-# because the reset would pull files out from under it. check (desktop config
-# and qmllint) and status read this checkout directly and are always safe.
+# because the reset would pull files out from under it. check (the quick checks,
+# scripts/check.sh) and status read this checkout directly and are always safe.
 # Test results (screenshots, serial logs) are copied back to build\ here.
 # Needs WSL 2 and the archlinux distro: wsl --install archlinux
 
@@ -248,7 +248,8 @@ echo 'WSL 빌드 환경이 준비됐어요.'
 }
 
 if ($Task -eq "check") {
-    Invoke-Wsl "cd '$wslRoot' && bash scripts/check-desktop.sh && bash scripts/qmllint.sh && bash scripts/check-sync.sh && bash scripts/test-robinctl.sh && python3 scripts/test-robin-install.py"
+    # Every quick check, each with a time limit and no input (scripts/check.sh)
+    Invoke-Wsl "cd '$wslRoot' && bash scripts/check.sh"
     exit 0
 }
 
