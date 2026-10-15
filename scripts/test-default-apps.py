@@ -54,7 +54,7 @@ with tempfile.TemporaryDirectory() as tmp:
     write(bin_dir + "/xdg-mime", f"""#!/bin/sh
 case "$1" in
   query) grep "^$3=" '{state}' 2>/dev/null | tail -n 1 | cut -d= -f2- ;;
-  default) printf '%s=%s\\n' "$3" "$2" >> '{state}' ;;
+  default) app="$2"; shift 2; for m in "$@"; do printf '%s=%s\\n' "$m" "$app" >> '{state}'; done ;;
 esac
 """, 0o755)
     write(state, "x-scheme-handler/https=firefox.desktop\nimage/png=org.gnome.Loupe.desktop\n")
@@ -98,5 +98,23 @@ esac
     check("an unknown kind is refused", run("set", "games", "firefox.desktop").returncode == 2)
     check("a missing argument prints the usage", run("set", "browser").returncode == 2)
     check("a bad id with a path isn't accepted", run("set", "browser", "../../x.desktop").returncode == 1)
+
+    # An image viewer that says it opens PNG and JPEG doesn't get GIF, WebP or HEIF
+    done = run("set", "photos", "org.gnome.Loupe.desktop")
+    check("setting a photo app works", done.returncode == 0, done.stderr)
+    lines = open(state, encoding="utf-8").read().splitlines()
+    loupe = sorted(line.split("=")[0] for line in lines if line.endswith("=org.gnome.Loupe.desktop"))
+    check("only the formats the app opens are set", "image/gif" not in loupe and "image/jpeg" in loupe, str(loupe))
+
+    # Hidden=true in the user's folder hides the system's copy of the same app
+    write(home_share + "/applications/chromium.desktop", desktop("Chromium", web, "Hidden=true\n"))
+    ids = [a["id"] for a in {k["key"]: k for k in json.loads(run("list").stdout)}["browser"]["apps"]]
+    check("a Hidden=true copy in the user's folder hides the app", "chromium.desktop" not in ids, str(ids))
+
+    # Without xdg-mime: a message, not a Python traceback
+    no_tool = dict(env, PATH=os.path.dirname(sys.executable))
+    gone = subprocess.run([sys.executable, TOOL, "set", "browser", "firefox.desktop"], capture_output=True, text=True,
+                          env=no_tool, encoding="utf-8")
+    check("without xdg-mime it says so", gone.returncode == 1 and "Traceback" not in gone.stderr, gone.stderr)
 
 sys.exit(1 if failed else 0)

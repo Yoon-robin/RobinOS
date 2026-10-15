@@ -789,6 +789,53 @@ supply "${WORK}/p7" ucsi-source-psy USB_PD 0
 supply "${WORK}/p7" ACAD Mains 0
 supply "${WORK}/p7" hidpp_battery_0 Battery "" Device
 idle_case "a laptop on battery with a mouse around sleeps" yes "${WORK}/p7"
+supply "${WORK}/p8" BAT0 Battery
+printf '0\n' >"${WORK}/p8/BAT0/present"
+idle_case "a desktop whose firmware reports an empty battery slot stays awake" no "${WORK}/p8"
+supply "${WORK}/p9" BAT0 Battery
+printf 'Charging\n' >"${WORK}/p9/BAT0/status"
+idle_case "a laptop that shows the charger only on the battery stays awake" no "${WORK}/p9"
+supply "${WORK}/p10" BAT0 Battery
+supply "${WORK}/p10" AC Mains 0
+printf '1\n' >"${WORK}/p10/BAT0/present"
+printf 'Discharging\n' >"${WORK}/p10/BAT0/status"
+idle_case "a laptop that says it is discharging sleeps" yes "${WORK}/p10"
+
+printf '%s\n' "Screen recording (robinos-screenshot record): the bar's red dot follows the recorder"
+REC_BIN="${WORK}/rec-bin"
+REC_RUN="${WORK}/rec-run"
+mkdir -p "${REC_BIN}" "${REC_RUN}"
+printf '#!/bin/sh\necho "qs $*" >>"%s/rec-calls"\n' "${WORK}" >"${REC_BIN}/qs"
+printf '#!/bin/sh\necho "notify $*" >>"%s/rec-calls"\n' "${WORK}" >"${REC_BIN}/notify-send"
+printf '#!/bin/sh\necho "[]"\n' >"${REC_BIN}/hyprctl"
+printf '#!/bin/sh\necho "%s"\n' "${WORK}" >"${REC_BIN}/xdg-user-dir"
+chmod 755 "${REC_BIN}"/*
+record() { env PATH="${REC_BIN}:/usr/bin" XDG_RUNTIME_DIR="${REC_RUN}" HOME="${WORK}" bash "${ROOT_DIR}/desktop/bin/robinos-screenshot" record >/dev/null 2>&1; }
+# A wf-recorder that can't capture the screen and gives up at once
+printf '#!/bin/sh\necho "failed to capture" >&2\nexit 1\n' >"${REC_BIN}/wf-recorder"
+chmod 755 "${REC_BIN}/wf-recorder"
+: >"${WORK}/rec-calls"
+record
+if grep -q 'setRecording true' "${WORK}/rec-calls"; then bad "the red dot shows for a recorder that gave up"; else ok "no red dot when the recorder gives up"; fi
+if grep -q '녹화하지 못했어요' "${WORK}/rec-calls" && [[ ! -e "${REC_RUN}/robinos-record.pid" ]]; then ok "it says the recording failed, nothing is left behind"; else bad "no failure notice, or a pid file was left: $(cat "${WORK}/rec-calls")"; fi
+# A recording that died on its own: the next press clears the dot instead of starting again
+printf '999999\n%s/x.mp4\n' "${WORK}" >"${REC_RUN}/robinos-record.pid"
+: >"${WORK}/rec-calls"
+record
+if grep -q 'setRecording false' "${WORK}/rec-calls" && grep -q '중간에 멈췄어요' "${WORK}/rec-calls" && [[ ! -e "${REC_RUN}/robinos-record.pid" ]]; then
+  ok "a recording that died: the press clears the dot and says so"
+else
+  bad "a recording that died: $(cat "${WORK}/rec-calls")"
+fi
+# A recorder that keeps going: the dot shows, the next press stops it. Like the real
+# one it sets its own SIGINT handler (a background job starts with SIGINT ignored)
+printf '#!/usr/bin/env python3\nimport signal, sys, time\nsignal.signal(signal.SIGINT, lambda *a: sys.exit(0))\ntime.sleep(30)\n' >"${REC_BIN}/wf-recorder"
+: >"${WORK}/rec-calls"
+record
+if grep -q 'setRecording true' "${WORK}/rec-calls" && [[ -s "${REC_RUN}/robinos-record.pid" ]]; then ok "a recording that runs shows the dot"; else bad "a running recording: $(cat "${WORK}/rec-calls")"; fi
+rec_pid="$(head -n 1 "${REC_RUN}/robinos-record.pid" 2>/dev/null)"
+record
+if [[ ! -e "${REC_RUN}/robinos-record.pid" ]] && ! kill -0 "${rec_pid:-999999}" 2>/dev/null; then ok "the next press stops it"; else bad "the recording didn't stop"; kill "${rec_pid}" 2>/dev/null; fi
 
 printf '%s\n' "Idle policy (robinos-idle-config): the 전원 page's minutes become hypridle's listeners"
 IDLE_STATE="${WORK}/idle-state"

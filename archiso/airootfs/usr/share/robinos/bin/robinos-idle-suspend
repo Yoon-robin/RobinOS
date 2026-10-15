@@ -18,7 +18,15 @@ for supply in "${supplies}"/*; do
   # A wireless mouse or a headset has a battery too, with scope "Device"
   [[ "$(cat "${supply}/scope" 2>/dev/null)" == "Device" ]] && continue
   case "$(cat "${supply}/type")" in
-    Battery) has_battery="true" ;;
+    Battery)
+      # An empty battery slot (some desktops report one) is no battery
+      [[ "$(cat "${supply}/present" 2>/dev/null)" == "0" ]] && continue
+      has_battery="true"
+      # Some laptops show the charger only here, without a Mains supply
+      case "$(cat "${supply}/status" 2>/dev/null)" in
+        Charging | Full | "Not charging") plugged="true" ;;
+      esac
+      ;;
     Mains | USB | USB_C | USB_PD | USB_DCP | USB_CDP | USB_ACA | Wireless)
       [[ "$(cat "${supply}/online" 2>/dev/null)" == "1" ]] && plugged="true"
       ;;

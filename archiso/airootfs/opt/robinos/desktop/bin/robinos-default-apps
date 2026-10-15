@@ -88,10 +88,10 @@ def installed_apps():
                 app_id = os.path.relpath(path, root).replace(os.sep, "-")
                 if app_id in apps:
                     continue
-                parsed = parse_desktop(path)
-                if parsed:
-                    apps[app_id] = parsed
-    return apps
+                # Kept even when hidden: a Hidden=true copy in ~/.local/share hides
+                # the system's copy of the same app
+                apps[app_id] = parse_desktop(path)
+    return {app_id: app for app_id, app in apps.items() if app}
 
 
 def query_default(mime):
@@ -128,11 +128,18 @@ def set_default(key, app_id):
     if kind is None:
         print("모르는 종류예요: " + key, file=sys.stderr)
         return 2
-    if app_id not in [a["id"] for a in candidates(installed_apps(), kind[2][0])]:
+    apps = installed_apps()
+    if app_id not in [a["id"] for a in candidates(apps, kind[2][0])]:
         print(app_id + "은(는) 이 종류를 열 수 있는 앱이 아니에요", file=sys.stderr)
         return 1
-    for mime in kind[2]:
-        subprocess.run(["xdg-mime", "default", app_id, mime], check=True, timeout=10)
+    # Only the formats the app says it opens: an editor for PNG and JPEG shouldn't
+    # take over GIF, WebP and HEIF it can't open
+    mimes = [mime for mime in kind[2] if mime in apps[app_id]["mimes"]]
+    try:
+        subprocess.run(["xdg-mime", "default", app_id, *mimes], check=True, timeout=10)
+    except (OSError, subprocess.SubprocessError) as error:
+        print("기본 앱을 바꾸지 못했어요: " + str(error), file=sys.stderr)
+        return 1
     return 0
 
 

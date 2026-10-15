@@ -30,9 +30,14 @@ action="$(notify-send --app-name=RobinOS --urgency=critical \
 log="${XDG_RUNTIME_DIR:-/tmp}/robinos-rollback.log"
 pkexec "${robinctl}" snapshot rollback "${number}" --yes >"${log}" 2>&1
 status=$?
-# 126: the password window was closed or the password refused; nothing changed,
-# and the bar's button can start it again
+# pkexec(1): 126 when the password window was closed, 127 when the password was
+# refused (or pkexec itself failed). Either way nothing changed, and the bar's
+# button can start it again
 if ((status == 126)); then
+  exit 0
+elif ((status == 127)); then
+  notify-send --app-name=RobinOS "되돌리지 않았어요" \
+    "비밀번호를 확인하지 못했어요. 바의 단추로 다시 할 수 있어요." || true
   exit 0
 elif ((status == 0)); then
   done_body="다시 시작하면 그 상태로 켜져요. 지금 시스템은 @.broken-<시각>으로 남겨 뒀어요."
