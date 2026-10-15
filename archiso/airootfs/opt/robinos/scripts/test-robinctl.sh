@@ -826,6 +826,18 @@ printf '1\n' >"${WORK}/p10/BAT0/present"
 printf 'Discharging\n' >"${WORK}/p10/BAT0/status"
 idle_case "a laptop that says it is discharging sleeps" yes "${WORK}/p10"
 
+printf '%s\n' "UPower's battery action (packaging/robinos/robinos.install)"
+upower_case() {
+  printf '# comment\nCriticalPowerAction=%s\n' "$2" >"${WORK}/UPower.conf"
+  (. "${ROOT_DIR}/packaging/robinos/robinos.install" && robinos_upower_conf "${WORK}/UPower.conf")
+  if grep -qx "CriticalPowerAction=$3" "${WORK}/UPower.conf"; then ok "$1"; else bad "$1: $(grep CriticalPowerAction "${WORK}/UPower.conf")"; fi
+}
+upower_case "UPower 1.91's default (Auto) becomes PowerOff" Auto PowerOff
+upower_case "the older default (HybridSleep) becomes PowerOff" HybridSleep PowerOff
+upower_case "a person's Hibernate stays" Hibernate Hibernate
+upower_case "PowerOff stays PowerOff" PowerOff PowerOff
+(. "${ROOT_DIR}/packaging/robinos/robinos.install" && robinos_upower_conf "${WORK}/no-such-UPower.conf") && ok "no UPower.conf: nothing to do" || bad "a missing UPower.conf is an error"
+
 printf '%s\n' "Screen recording (robinos-screenshot record): the bar's red dot follows the recorder"
 REC_BIN="${WORK}/rec-bin"
 REC_RUN="${WORK}/rec-run"

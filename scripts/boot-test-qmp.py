@@ -745,7 +745,9 @@ def main():
     # Clicking a mission opens it in a terminal (mission 2's row): one new Ptyxis
     # window, which has the focus and takes commands after the mission text
     click(qmp, 800, 437)
-    wait(4)
+    # Ptyxis can take more than 4 s to show up while the install test VM runs next to
+    # this one (seen 2026-10-13 and 2026-10-15); the check types into the focused window
+    wait(10)
     shot(qmp, "learn-center-mission")
     check_scene(qmp, "one-more", "mission-terminal")
     keys(qmp, "alt", "f4")  # the new terminal has the focus

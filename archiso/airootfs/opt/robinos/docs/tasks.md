@@ -41,6 +41,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
+| 올인원 검증 1차 결과 고침 (같은 브랜치, 2026-10-15) | 학교 PC에서 `verify-all-in-one.ps1`(빌드 2.7분, 테스트 26.3분)이 찾은 것: 기본 앱 시험이 xdg-mime이 있는 PC에서 실패, UPower 1.91의 기본값이 `Auto`라 제 고침이 PowerOff로 안 바꿈(설치 테스트 실패), 학습 센터 미션 터미널이 4초 안에 안 떠서 그 뒤 판정 8개 누락(10월 13일과 같은 흔들림) | 같은 한 줄로 올인원을 다시 돌려 통과하면 아래 줄들과 함께 main에 합쳐요 |
 | 깃허브가 안 될 때 Arch 업데이트(T-177 ①)와 문서 체계 점검 (같은 브랜치, 2026-10-15) | `robinctl update`가 `[robinos]`만 빼고 업데이트, 부족한 점을 unfinished.md 한 곳으로, 문서 지도 | `test-robinctl.sh`·실제 pacman(Arch 컨테이너에서 통과), 정적 검증. 이 PC에서 `verify -Installer robinos`(설치본의 진짜 `robinctl update --yes`가 `-Sy`·`-Su` 두 단계로 바뀌어요) |
 | robinctl·데스크톱 스크립트 코드 검토 고침 (같은 브랜치, 2026-10-15) | 업데이트·업데이트 상태의 pipefail 함정, 보고서 가리기, UPower 설정, 자동 잠자기의 배터리 판단, 기본 앱 형식, 녹화 빨간 점, pkexec 127 | `test-robinctl.sh`, `test-default-apps.py`(Arch 컨테이너에서 통과), 이 PC에서 `ready.ps1 -Check`와 `verify -Installer robinos`(설치본의 `update --status`, 설정 앱의 업데이트 쪽) |
 | 설치기 코드 검토 고침 (브랜치 `claude/eoseohae-7nleia`, 2026-10-15 클라우드 세션) | 윈도우 옆 설치가 GRUB 뒤에서 멈춰도 부팅 메뉴에 윈도우, 시스템 계정 이름·비밀번호 제어 문자 거절, 쓰는 중인 디스크는 지우지 않기 | `test-robin-install.py`(Arch 컨테이너에서 통과), 이 PC에서 `verify -Installer robinos`와 `install-test -Installer windows`. 통과하면 main에 합쳐요 |
@@ -197,6 +198,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 남은 것: 일부러 망가뜨린 ISO로 실패하는 것 확인
 - 처음 할 것(기록): 장면마다 게스트 안에서 확인하고 통과했을 때만 `logger -t robinos-e2e "scenario=<이름> status=PASS"`를 남기기. 후보: 최대화(`hyprctl clients -j`의 fullscreen, at, size가 바·독 사이), 학습 미션 터미널의 출력, 테마 바꾸기(저장된 값과 GTK 설정), 셸 재시작(새 Quickshell과 IPC 응답), 새 터미널을 열 때 창이 하나만 늘어나는지. 결과를 장면별로 모아 하나라도 실패면 전체 실패
 - 흔들림(2026-10-13): 셸을 다시 시작한 뒤 IPC `learnCenter`로 학습 센터를 열었는데 창이 안 떠서 `mission-terminal`, `dark`가 실패했어요(설치 테스트는 통과). 같은 HEAD로 부팅 테스트만 다시 돌리니 14장면 모두 통과했어요. 다시 나오면 열리기를 기다렸다가 다시 부르는 확인을 넣어요
+- 다시 나옴(2026-10-15, 학교 PC의 올인원 검증): 이번엔 학습 센터는 떴는데 미션 줄을 누르고 4초 안에 Ptyxis가 안 떠서, 판정 명령이 학습 센터에 들어가고 그 뒤 판정 8개가 모두 `missing`이었어요(`80-learn-center-mission`에 터미널 없음). 설치 테스트 VM이 옆에서 도는 동안이라 느렸어요. 기다림을 10초로 늘렸어요(작업 브랜치). 그래도 나오면 판정 전에 Ptyxis 창이 늘었는지 QMP 쪽에서 기다리는 방법을 넣어요
 - 완료 기준: 위 장면이 화면이 아니라 상태로 판정되고, 일부러 망가뜨린 ISO(실행 권한 빼기 등)에서 테스트가 실패하는 것을 한 번 확인
 
 ### T-156 설치본 펌웨어와 펌웨어 업데이트

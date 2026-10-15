@@ -243,7 +243,11 @@ try {
         git clone -q --branch $Branch --single-branch $Repo $repoDir
     }
     if ($LASTEXITCODE -ne 0) { throw "git이 실패했어요" }
+    # git writes UTF-8; Windows PowerShell would read it in the console's code page
+    $consoleEncoding = [Console]::OutputEncoding
+    [Console]::OutputEncoding = [Text.Encoding]::UTF8
     $commit = (git -C $repoDir log -1 --format="%h %s")
+    [Console]::OutputEncoding = $consoleEncoding
     Note "커밋: $commit"
 } catch {
     Note "막힘: 저장소를 받지 못했어요: $($_.Exception.Message)"
@@ -259,7 +263,21 @@ function Invoke-Task([string]$title, [string[]]$taskArgs) {
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $wslBuild @taskArgs 2>&1 | Tee-Object -FilePath $log -Append
     $code = $LASTEXITCODE
     $minutes = ((Get-Date) - $t0).TotalMinutes
-    if ($code -eq 0) { Note ("{0}: 통과 ({1:N1}분)" -f $title, $minutes) } else { Note ("{0}: 실패 (종료 코드 {1}, {2:N1}분, 기록 {3})" -f $title, $code, $minutes, (Split-Path -Leaf $log)) }
+    if ($code -eq 0) {
+        Note ("{0}: 통과 ({1:N1}분)" -f $title, $minutes)
+    } else {
+        Note ("{0}: 실패 (종료 코드 {1}, {2:N1}분, 기록 {3})" -f $title, $code, $minutes, (Split-Path -Leaf $log))
+        # Why, in the summary itself: the lines the tests mark as failed
+        # (the boot test inside verify writes to build\verify-boot.log)
+        $logs = @($log, (Join-Path $repoDir "build\verify-boot.log")) | Where-Object { Test-Path $_ }
+        Get-Content $logs -ErrorAction SilentlyContinue |
+            Where-Object { $_ -match '^\s*FAILED |\[install-test\] FAILED|: missing \(|: FAIL |scenario stopped|Desktop check failed' -and $_ -notmatch '^\s*\+' } |
+            Select-Object -First 12 | ForEach-Object {
+                $line = ($_ -replace "\x1b\[[0-9;]*m", "").Trim()
+                if ($line.Length -gt 220) { $line = $line.Substring(0, 220) + "..." }
+                Note "    - $line"
+            }
+    }
     return ($code -eq 0)
 }
 

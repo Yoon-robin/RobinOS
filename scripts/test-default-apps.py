@@ -112,7 +112,10 @@ esac
     check("a Hidden=true copy in the user's folder hides the app", "chromium.desktop" not in ids, str(ids))
 
     # Without xdg-mime: a message, not a Python traceback
-    no_tool = dict(env, PATH=os.path.dirname(sys.executable))
+    # (not the Python folder: on Arch that is /usr/bin, where the real xdg-mime lives)
+    empty = os.path.join(tmp, "empty-bin")
+    os.makedirs(empty)
+    no_tool = dict(env, PATH=empty)
     gone = subprocess.run([sys.executable, TOOL, "set", "browser", "firefox.desktop"], capture_output=True, text=True,
                           env=no_tool, encoding="utf-8")
     check("without xdg-mime it says so", gone.returncode == 1 and "Traceback" not in gone.stderr, gone.stderr)
