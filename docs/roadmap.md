@@ -22,7 +22,6 @@ v0.1 범위와 진행 상황은 `docs/design.md`에서 관리해요.
 - `robinctl doctor` 구현 - 첫 프로토타입 완료
 - `robinctl profile` 구현 - 학습 단계별 프로필 7개(network, web, forensics, reversing, passwords, wireless, vm)와 전부(security)
 - `robinctl update` 구현 - 완료 (업데이트 전후 스냅샷, 앱 스토어 앱, RobinOS 파일)
-- `robinctl repo` 구현 - RobinOS 파일 업데이트 저장소를 켜고 파일을 `robinos` 패키지로 옮겨요 (2026-10-10, VM 검증 전)
 - `robinctl snapshot create` 구현 - 첫 프로토타입 완료
 - `robinctl learn` 구현 - 리눅스·네트워크·포렌식·리버싱·웹·셸·시스템·보안 기초·텍스트 다루기 미션 5개씩, 모두 45개 완료
 - `/etc/robinos/config.toml`에 간단한 설정 파일 추가 - 완료 (버전, 데스크톱, 프로필 목록. `robinctl doctor`가 있는지 확인)
@@ -63,7 +62,7 @@ v0.1 범위와 진행 상황은 `docs/design.md`에서 관리해요.
 - 첫 CTF 랩 가이드 작성 - [ctf.md](ctf.md), 입문 CTF 10문제 `robinctl ctf` (2026-10-09, 6~10번은 2026-10-10)
 - GitHub 릴리스 만들기 - v0.1 프리뷰 공개(2026-10-08), v0.2 프리뷰 공개(2026-10-10, `v0.2.0`, 서명한 `SHA256SUMS`와 함께)
 
-## 7단계: 매일 쓰는 나만의 OS
+## 7단계: 실제 PC에서 매일 쓰기
 
 2026-10-10 방향 결정과 설계 점검([design.md](design.md) "설계 점검")에서 나온 단계예요. 작업은 [tasks.md](tasks.md)에 있어요.
 

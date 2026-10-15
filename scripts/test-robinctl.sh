@@ -592,6 +592,17 @@ said "audit ends with a count or an all-clear" "살펴볼"
 # The test's home is chmod 777 (root owns it, so the learner can't tighten it)
 said "audit says the home folder is open to others" "홈 폴더 권한이 777"
 
+printf '%s\n' "snapshot booted: the snapshot the boot menu started, from the kernel line"
+SNAPS="${WORK}/snaps"
+mkdir -p "${SNAPS}/7"
+printf '<snapshot><description>pacman -S cowsay</description></snapshot>\n' >"${SNAPS}/7/info.xml"
+printf 'BOOT_IMAGE=/@/boot/vmlinuz-linux root=UUID=x rw rootflags=subvol=@\n' >"${WORK}/cmdline-normal"
+printf 'BOOT_IMAGE=/@snapshots/7/snapshot/boot/vmlinuz-linux root=UUID=x rw rootflags=subvol=@snapshots/7/snapshot\n' >"${WORK}/cmdline-snap"
+booted() { ROBINOS_CMDLINE="${WORK}/cmdline-$1" ROBINOS_SNAPSHOT_DIR="${SNAPS}" bash "${ROBINCTL}" snapshot booted; }
+check "a normal start is no snapshot" fail booted normal
+check "a snapshot start gives its number" 0 booted snap
+said "with its description" "pacman -S cowsay"
+
 printf '%s\n' "app remove: RobinOS's own apps stay, others go through pacman"
 APPS="${WORK}/apps"
 mkdir -p "${APPS}"
@@ -644,17 +655,192 @@ chmod 755 "${UPDATE_BIN}/flatpak"
 check "update dry run with flatpak" 0 env PATH="${UPDATE_BIN}:/usr/bin" bash "${ROBINCTL}" update --dry-run
 said "update also updates app store apps" "flatpak update --system"
 
-printf '%s\n' "RobinOS repository (robinctl repo) with the stand-in pacman"
-check "repo status" 0 env PATH="${UPDATE_BIN}:/usr/bin" bash "${ROBINCTL}" repo
-said "status says the files aren't a package yet" "아직 패키지가 아니에요"
-check "repo setup dry run" 0 env PATH="${UPDATE_BIN}:/usr/bin" bash "${ROBINCTL}" repo setup --dry-run
-said "setup adds the release key" "keys/robinos-release.asc"
-key_fpr="$(gpg --batch --show-keys --with-colons "${ROOT_DIR}/keys/robinos-release.asc" 2>/dev/null | awk -F: '/^fpr:/ {print $10; exit}')"
-said "setup trusts the release key's fingerprint (${key_fpr:-no gpg})" "pacman-key --lsign-key ${key_fpr:-?}"
-touch "${WORK}/robinos-0.3.0.r1-1-any.pkg.tar.zst"
-check "repo adopt dry run with a package file" 0 env PATH="${UPDATE_BIN}:/usr/bin" bash "${ROBINCTL}" repo adopt --dry-run "${WORK}/robinos-0.3.0.r1-1-any.pkg.tar.zst"
-said "adopt overwrites only the existing RobinOS files" "--overwrite <이미 있는 RobinOS 파일>"
-check "repo adopt with a missing file" fail env PATH="${UPDATE_BIN}:/usr/bin" bash "${ROBINCTL}" repo adopt --dry-run "${WORK}/nothing.pkg.tar.zst"
+printf '%s\n' "Update preview (T-162) with stand-in checkupdates, pacman and busctl"
+PREVIEW_BIN="${WORK}/preview-bin"
+mkdir -p "${PREVIEW_BIN}"
+printf '#!/bin/sh\nprintf "linux 7.2.9-1 -> 7.3.0-1\\nfirefox 157.0.1-1 -> 158.0-1\\n"\n' >"${PREVIEW_BIN}/checkupdates"
+# pacman -Sup --print-format %%s: download sizes in bytes (150 MiB together)
+printf '#!/bin/sh\nprintf "104857600\\n52428800\\n"\n' >"${PREVIEW_BIN}/pacman"
+printf '#!/bin/sh\necho "u 4"\n' >"${PREVIEW_BIN}/busctl"
+chmod 755 "${PREVIEW_BIN}"/*
+check "update preview" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --preview
+said "preview counts the updates" "업데이트 2개"
+said "preview gives the download size" "받을 크기 150MB"
+said "preview says the kernel changes" "커널이 바뀌어요"
+if grep -q "데이터 요금" "${WORK}/out"; then bad "preview warns on an unmetered connection"; else ok "no metered warning on Wi-Fi"; fi
+printf '#!/bin/sh\necho "u 1"\n' >"${PREVIEW_BIN}/busctl"
+check "update preview on a metered connection" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --preview
+said "preview warns about a metered connection" "데이터 요금이 드는 연결"
+printf '#!/bin/sh\nexit 2\n' >"${PREVIEW_BIN}/checkupdates"
+check "update preview with nothing new" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --preview
+said "preview says everything is current" "모두 최신이에요"
+# checkupdates exits 1 when it cannot look: that is not "up to date"
+printf '#!/bin/sh\nexit 1\n' >"${PREVIEW_BIN}/checkupdates"
+check "update preview when checkupdates fails" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --preview
+said "a failed look is not called up to date" "확인하지 못했어요"
+if grep -q "모두 최신이에요" "${WORK}/out"; then bad "a failed look says everything is current"; else ok "a failed look doesn't say everything is current"; fi
+
+printf '%s\n' "Update status for the settings app (robinctl update --status)"
+# One JSON line; json_is <description> <key> <value> reads the last check's output
+json_is() {
+  local got
+  got="$(python3 -c 'import json,sys; v = json.loads(open(sys.argv[1]).read().strip().splitlines()[-1])[sys.argv[2]]; print(str(v).lower() if isinstance(v, bool) else v)' "${WORK}/out" "$2" 2>&1)"
+  if [[ "${got}" == "$3" ]]; then ok "$1"; else bad "$1: ${2} is \"${got}\", not \"$3\""; fi
+}
+printf '#!/bin/sh\nprintf "linux 7.2.9-1 -> 7.3.0-1\\nfirefox 157.0.1-1 -> 158.0-1\\n"\n' >"${PREVIEW_BIN}/checkupdates"
+printf '#!/bin/sh\necho "u 4"\n' >"${PREVIEW_BIN}/busctl"
+check "update status with updates" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --status
+json_is "status: there are updates" state updates
+json_is "status: two of them" count 2
+json_is "status: 150 MB to download" bytes 157286400
+json_is "status: the kernel changes" kernel true
+json_is "status: not metered" metered false
+printf '#!/bin/sh\necho "u 1"\n' >"${PREVIEW_BIN}/busctl"
+check "update status on a metered connection" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --status
+json_is "status: metered" metered true
+printf '#!/bin/sh\nexit 2\n' >"${PREVIEW_BIN}/checkupdates"
+check "update status with nothing new" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --status
+json_is "status: up to date" state current
+json_is "status: no updates" count 0
+json_is "status: no kernel change" kernel false
+printf '#!/bin/sh\nexit 1\n' >"${PREVIEW_BIN}/checkupdates"
+check "update status when checkupdates fails" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --status
+json_is "status: it could not look, which isn't up to date" state unknown
+check "update refuses an option it doesn't know" fail env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --frobnicate
+
+printf '%s\n' "The shell starts again after an update brought new RobinOS files"
+# A pacman that keeps its own version of robinos in a file and "installs" a new one on -Syu
+RESTART_BIN="${WORK}/restart-bin"
+mkdir -p "${RESTART_BIN}"
+printf '0.3.0.r1-1\n' >"${WORK}/robinos-version"
+cat >"${RESTART_BIN}/pacman" <<EOF
+#!/bin/sh
+case "\$*" in
+  "-Q robinos") echo "robinos \$(cat '${WORK}/robinos-version')" ;;
+  *-Syu*) echo "pacman \$*" >>'${WORK}/pacman-calls'; [ -f '${WORK}/new-version' ] && cp '${WORK}/new-version' '${WORK}/robinos-version'; exit 0 ;;
+  *) exit 1 ;;
+esac
+EOF
+printf '#!/bin/sh\nexit 2\n' >"${RESTART_BIN}/checkupdates"
+printf '#!/bin/sh\necho 4242\n' >"${RESTART_BIN}/pgrep"
+printf '#!/bin/sh\necho "pkill $*" >>"%s/pkill-calls"\n' "${WORK}" >"${RESTART_BIN}/pkill"
+chmod 755 "${RESTART_BIN}"/*
+if [[ "${EUID}" -eq 0 ]]; then
+  : >"${WORK}/pkill-calls"
+  rm -f "${WORK}/new-version"
+  check "an update with no new RobinOS files" 0 env SUDO_USER=learner PATH="${RESTART_BIN}:/usr/bin" bash "${ROBINCTL}" update --yes
+  if [[ -s "${WORK}/pkill-calls" ]]; then bad "the shell was ended without new RobinOS files"; else ok "the shell stays when nothing changed"; fi
+  if grep -qx 'pacman -Syu --noconfirm' "${WORK}/pacman-calls"; then ok "update passes --yes on to pacman"; else bad "pacman didn't get --noconfirm: $(cat "${WORK}/pacman-calls")"; fi
+  printf '0.3.0.r2-1\n' >"${WORK}/new-version"
+  check "an update that brings new RobinOS files" 0 env SUDO_USER=learner PATH="${RESTART_BIN}:/usr/bin" bash "${ROBINCTL}" update --yes
+  said "it tells which versions" "0.3.0.r1-1에서 0.3.0.r2-1로"
+  if grep -qx 'pkill -u learner -x qs' "${WORK}/pkill-calls"; then ok "the person's shell is ended so it comes back new"; else bad "pkill wasn't called for the person's shell: $(cat "${WORK}/pkill-calls")"; fi
+  : >"${WORK}/pkill-calls"
+  printf '0.3.0.r2-1\n' >"${WORK}/robinos-version"
+  printf '0.3.0.r3-1\n' >"${WORK}/new-version"
+  check "the same as plain root, without sudo" 0 env -u SUDO_USER PATH="${RESTART_BIN}:/usr/bin" bash "${ROBINCTL}" update --yes
+  said "without a user it says to log in again" "다시 로그인"
+  if [[ -s "${WORK}/pkill-calls" ]]; then bad "the shell was ended without a known user"; else ok "no shell is ended without a user"; fi
+fi
+
+printf '%s\n' "Idle suspend (robinos-idle-suspend): a laptop on battery sleeps, nothing else does"
+IDLE_BIN="${WORK}/idle-bin"
+mkdir -p "${IDLE_BIN}"
+printf '#!/bin/sh\necho "systemctl $*" >>"%s/idle-calls"\n' "${WORK}" >"${IDLE_BIN}/systemctl"
+chmod 755 "${IDLE_BIN}/systemctl"
+# supply <dir> <name> <type> [online] [scope]
+supply() {
+  mkdir -p "$1/$2"
+  printf '%s\n' "$3" >"$1/$2/type"
+  [[ -n "${4:-}" ]] && printf '%s\n' "$4" >"$1/$2/online"
+  [[ -n "${5:-}" ]] && printf '%s\n' "$5" >"$1/$2/scope"
+  return 0
+}
+# idle_case <description> <sleeps: yes|no> <dir>
+idle_case() {
+  : >"${WORK}/idle-calls"
+  PATH="${IDLE_BIN}:${PATH}" ROBINOS_POWER_SUPPLY="$3" bash "${ROOT_DIR}/desktop/bin/robinos-idle-suspend"
+  if grep -qx 'systemctl suspend' "${WORK}/idle-calls"; then got=yes; else got=no; fi
+  if [[ "${got}" == "$2" ]]; then ok "$1"; else bad "$1: sleeps=${got}"; fi
+}
+supply "${WORK}/p1" BAT0 Battery
+supply "${WORK}/p1" AC Mains 0
+idle_case "a laptop on battery sleeps" yes "${WORK}/p1"
+supply "${WORK}/p2" BAT0 Battery
+supply "${WORK}/p2" AC Mains 1
+idle_case "a laptop on the charger stays awake" no "${WORK}/p2"
+supply "${WORK}/p3" AC Mains 1
+idle_case "a PC without a battery stays awake" no "${WORK}/p3"
+mkdir -p "${WORK}/p4"
+idle_case "no power supplies at all (a VM) stays awake" no "${WORK}/p4"
+supply "${WORK}/p5" hidpp_battery_0 Battery "" Device
+idle_case "a wireless mouse's battery is no laptop" no "${WORK}/p5"
+supply "${WORK}/p6" BAT1 Battery
+supply "${WORK}/p6" ucsi-source-psy USB_PD 1
+idle_case "a laptop charged over USB-C stays awake" no "${WORK}/p6"
+supply "${WORK}/p7" BAT0 Battery
+supply "${WORK}/p7" ucsi-source-psy USB_PD 0
+supply "${WORK}/p7" ACAD Mains 0
+supply "${WORK}/p7" hidpp_battery_0 Battery "" Device
+idle_case "a laptop on battery with a mouse around sleeps" yes "${WORK}/p7"
+
+printf '%s\n' "Idle policy (robinos-idle-config): the 전원 page's minutes become hypridle's listeners"
+IDLE_STATE="${WORK}/idle-state"
+# idle_policy <prefs text or "-" for no file>: renders and prints the policy
+idle_policy() {
+  rm -rf "${IDLE_STATE}"
+  mkdir -p "${IDLE_STATE}/robinos"
+  [[ "$1" == "-" ]] || printf '%s' "$1" >"${IDLE_STATE}/robinos/power"
+  XDG_STATE_HOME="${IDLE_STATE}" bash "${ROOT_DIR}/desktop/bin/robinos-idle-config" render >"${WORK}/idle-path" && cat "${IDLE_STATE}/robinos/hypridle.conf"
+}
+# idle_timeouts: the listeners' timeouts in order, e.g. "240 300 600 900"
+idle_timeouts() { sed -n 's/^ *timeout = //p' | tr '\n' ' ' | sed 's/ $//'; }
+# idle_case_policy <description> <expected timeouts> <prefs text>
+idle_case_policy() {
+  local got
+  got="$(idle_policy "$3" | idle_timeouts)"
+  if [[ "${got}" == "$2" ]]; then ok "$1"; else bad "$1: timeouts '${got}', wanted '$2'"; fi
+}
+idle_case_policy "no file: dim at 4 minutes, lock at 5, screen off at 10, sleep at 15" "240 300 600 900" "-"
+idle_case_policy "the saved minutes are used" "120 180 300 1800" $'lock 3\nscreen_off 5\nsuspend 30\n'
+idle_case_policy "never means no listener (lock 0 also takes the dimming)" "600 900" $'lock 0\n'
+idle_case_policy "a lock after one minute has no dimming before it" "60 600 900" $'lock 1\n'
+idle_case_policy "everything never leaves nothing to wait for" "" $'lock 0\nscreen_off 0\nsuspend 0\n'
+idle_case_policy "odd values keep the defaults" "240 300 600 900" $'lock abc\nscreen_off -5\nsuspend 99999\nbogus 3\n'
+idle_case_policy "a leading zero isn't octal" "240 300 480 900" $'screen_off 08\n'
+if [[ "$(cat "${WORK}/idle-path")" == "${IDLE_STATE}/robinos/hypridle.conf" ]]; then ok "render says where the policy is"; else bad "render printed $(cat "${WORK}/idle-path")"; fi
+default_policy="$(idle_policy "-")"
+if grep -q 'lock_cmd = pidof hyprlock || hyprlock -c /usr/share/robinos/hypr/hyprlock.conf' <<<"${default_policy}" \
+  && grep -q "robinos-idle-suspend" <<<"${default_policy}"; then ok "the lock command and the sleep script are in it"; else bad "the policy lacks the lock command or the sleep script"; fi
+# The shipped hypridle.conf is the same policy as the defaults
+if [[ "$(idle_timeouts <<<"${default_policy}")" == "$(idle_timeouts <"${ROOT_DIR}/desktop/hypr/hypridle.conf")" ]]; then ok "the defaults match desktop/hypr/hypridle.conf"; else bad "the defaults differ from desktop/hypr/hypridle.conf"; fi
+
+printf '%s\n' "Problem report (robinctl report): facts in one file, names and addresses masked"
+REPORT_BIN="${WORK}/report-bin"
+mkdir -p "${REPORT_BIN}"
+printf '#!/bin/sh\necho robin\n' >"${REPORT_BIN}/id"
+printf '#!/bin/sh\n[ "$1" = "-n" ] && echo sandras-laptop || exec /usr/bin/uname "$@"\n' >"${REPORT_BIN}/uname"
+printf '#!/bin/sh\nprintf "00:02.0 VGA compatible controller [0300]: Intel Corporation Iris Xe [8086:46a6]\\n\\tKernel driver in use: i915\\n00:14.3 Network controller [0280]: Intel Wi-Fi 6 AX201 [8086:a0f0]\\n\\tKernel driver in use: iwlwifi\\n00:1f.3 ISA bridge [0601]: Intel LPC [8086:a082]\\n\\tKernel driver in use: lpc_ich\\n"\n' >"${REPORT_BIN}/lspci"
+printf '#!/bin/sh\ncase "$*" in\n  *"-p err"*) echo "Oct 14 robin@sandras-laptop kernel: eth0 aa:bb:cc:dd:ee:ff 192.168.0.12 fe80::1c2d:3e4f:5a6b:7c8d Serial Number: ABC123XYZ disk 0a1b2c3d-1111-2222-3333-444455556666 robinos robin" ;;\n  *) echo "iwlwifi 0000:00:14.3: loaded firmware version 77.0" ;;\nesac\n' >"${REPORT_BIN}/journalctl"
+chmod 755 "${REPORT_BIN}"/*
+REPORT_FILE="${WORK}/report.txt"
+check "robinctl report writes a file" 0 env PATH="${REPORT_BIN}:${PATH}" HOME="${WORK}" bash "${ROBINCTL}" report "${REPORT_FILE}"
+said "it says where the report is" "${REPORT_FILE}"
+for heading in "## RobinOS" "## 컴퓨터" "## 장치와 드라이버" "## 화면" "## 네트워크" "## 소리" "## 배터리와 전원" "## 문제 신호"; do
+  if grep -qF -- "${heading}" "${REPORT_FILE}"; then ok "the report has ${heading}"; else bad "the report lacks ${heading}"; fi
+done
+if grep -q 'Kernel driver in use: i915' "${REPORT_FILE}" && grep -q 'Kernel driver in use: iwlwifi' "${REPORT_FILE}"; then ok "the graphics and Wi-Fi drivers are in it"; else bad "the drivers of the graphics card and Wi-Fi are missing"; fi
+if grep -q 'ISA bridge' "${REPORT_FILE}"; then bad "parts that don't matter (the ISA bridge) are in it"; else ok "parts that don't matter are left out"; fi
+if grep -qE 'aa:bb:cc:dd:ee:ff|192\.168\.0\.12|fe80::|ABC123XYZ|0a1b2c3d-1111|sandra|\brobin\b' "${REPORT_FILE}"; then
+  bad "something private is still in the report: $(grep -E 'aa:bb:cc|192\.168|fe80|ABC123|0a1b2c3d|sandra|\brobin\b' "${REPORT_FILE}" | head -n 3)"
+else
+  ok "the MAC address, IPs, serial number, UUID and the names are masked"
+fi
+if grep -q 'xx:xx:xx:xx:xx:xx' "${REPORT_FILE}" && grep -q '<ip>' "${REPORT_FILE}" && grep -q '<user>@<host>' "${REPORT_FILE}"; then ok "the masks say what was there"; else bad "the masks are not where they should be: $(grep 'kernel: eth0' "${REPORT_FILE}")"; fi
+if grep -q '8086:46a6' "${REPORT_FILE}"; then ok "PCI ids (vendor:device) are not taken for addresses"; else bad "a PCI id was masked"; fi
+if grep -qF "커널: $(uname -r)" "${REPORT_FILE}"; then ok "the kernel version is not taken for an address"; else bad "the kernel version was changed: $(grep '커널:' "${REPORT_FILE}")"; fi
+if grep -q ' robinos ' "${REPORT_FILE}" && ! grep -q '<user>os' "${REPORT_FILE}"; then ok "a user name inside a word (robinos) is left alone"; else bad "robinos was cut by the user mask"; fi
+check "a report that can't be written says so" fail env PATH="${REPORT_BIN}:${PATH}" HOME="${WORK}" bash "${ROBINCTL}" report "${WORK}/no-such-folder/report.txt"
 
 printf '%s\n' "Web lab (robinctl lab) with stand-in docker, sudo and systemctl"
 FAKE="${WORK}/fake"
@@ -715,10 +901,24 @@ printf '%s\n' "Windows command hints (robinos-hints.sh)"
 # would start the Windows programs through WSL's interop
 hint() { bash -c ". '${HINTS}'; command_not_found_handle '$1'" 2>&1; }
 for pair in "ipconfig:ip a" "IPCONFIG.EXE:ip a" "dir:ls -l" "tasklist:ps aux" "notepad:gnome-text-editor" \
-    "calc:gnome-calculator" "taskmgr:missioncenter" "start:xdg-open" "clip:wl-copy" "powercfg:powerprofilesctl" "ncpa.cpl:nmtui" "doskey:alias" "eventvwr:journalctl -b" "services.msc:systemctl" "diskmgmt.msc:gnome-disks" "nslookup:getent hosts" \n    "certutil:sha256sum" "cipher:gpg -c" "runas:sudo" "netsh:nmcli" "sc:systemctl status"; do
+    "calc:gnome-calculator" "taskmgr:missioncenter" "start:xdg-open" "clip:wl-copy" "powercfg:powerprofilesctl" "ncpa.cpl:nmtui" "doskey:alias" "eventvwr:journalctl -b" "services.msc:systemctl" "diskmgmt.msc:gnome-disks" "nslookup:getent hosts" \
+    "certutil:sha256sum" "cipher:gpg -c" "runas:sudo" "netsh:nmcli" "sc:systemctl status"; do
   out="$(hint "${pair%%:*}")"
   if [[ "${out}" == *"${pair#*:}"* ]]; then ok "hint for ${pair%%:*}"; else bad "hint for ${pair%%:*}: ${out}"; fi
 done
+# Each Windows command with a mission (T-169) shows its hint and the mission to try,
+# and the mission numbers exist (learn_title in robinctl)
+out="$(hint ipconfig)"
+if [[ "${out}" == *"학습 미션 6"*"robinctl learn show 6"* ]]; then ok "ipconfig points to mission 6"; else bad "ipconfig mission: ${out}"; fi
+missions_total="$(sed -n '/^learn_title()/,/^}/p' "${ROBINCTL}" | grep -cE '^ +[0-9]+\) printf')"
+while read -r cmds number; do
+  for c in ${cmds//|/ }; do
+    out="$(hint "${c}")"
+    [[ "${out}" == *"robinctl learn show ${number}"* ]] || bad "mission link for ${c}: ${out}"
+  done
+  ((number >= 1 && number <= missions_total)) || bad "mission ${number} for ${cmds} is not one of the ${missions_total} missions"
+done < <(sed -n '/^__robinos_hint_mission()/,/^}/p' "${HINTS}" | sed -nE "s/^ +([a-z.|]+)\) +printf '([0-9]+)'.*/\1 \2/p")
+ok "every mission link has a hint and a real mission (${missions_total} missions)"
 out="$(hint "surely-not-a-command-xyz")"
 if [[ "${out}" == *"명령을 찾을 수 없어요"* ]]; then ok "unknown commands say so"; else bad "unknown command: ${out}"; fi
 # Apps the hints send people to must be installed by RobinOS

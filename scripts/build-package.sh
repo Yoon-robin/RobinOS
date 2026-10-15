@@ -33,12 +33,30 @@ pkg="$(find "${work}/src/packaging/robinos" -maxdepth 1 -name 'robinos-*.pkg.tar
 expected="${work}/expected"
 "${ROOT_DIR}/scripts/stage-robinos.sh" --root "${expected}"
 install -Dm644 "${ROOT_DIR}/config/robinos.toml" "${expected}/etc/robinos/config.toml"
+# Paths other packages own stay out (desktop/package-shared.txt)
+while read -r src dest; do
+  case "${src}" in "" | \#*) continue ;; esac
+  rm -f "${expected}${dest}"
+done <"${ROOT_DIR}/desktop/package-shared.txt"
 (cd "${expected}" && find . ! -type d -printf '%P\n' | LC_ALL=C sort) >"${work}/want"
 bsdtar -tf "${pkg}" | grep -Ev '^\.(PKGINFO|BUILDINFO|MTREE|INSTALL)$' | grep -v '/$' | LC_ALL=C sort >"${work}/got"
 if [[ "$(sha256sum <"${work}/want")" != "$(sha256sum <"${work}/got")" ]]; then
   printf 'error: the package files differ from scripts/stage-robinos.sh\n' >&2
   python3 -c 'import sys; a=set(open(sys.argv[1])); b=set(open(sys.argv[2])); [print("  missing", l.strip()) for l in sorted(a-b)][:20]; [print("  extra  ", l.strip()) for l in sorted(b-a)][:20]' "${work}/want" "${work}/got" >&2
   exit 1
+fi
+
+# No path another Arch package owns, or pacman would refuse robinos on a real system
+# (desktop/package-shared.txt is the way around). Needs the files database.
+if pacman -Fy >/dev/null 2>&1; then
+  owned="$(sed 's|^|/|' "${work}/got" | xargs -r pacman -F --machinereadable 2>/dev/null \
+    | tr '\0' ' ' | awk '{print $4 " <- " $2}' | sort -u || true)"
+  if [[ -n "${owned}" ]]; then
+    printf 'error: other packages own these (add them to desktop/package-shared.txt):\n%s\n' "${owned}" >&2
+    exit 1
+  fi
+else
+  printf 'note: no pacman files database, skipped the ownership check\n'
 fi
 
 # robinctl from the package runs

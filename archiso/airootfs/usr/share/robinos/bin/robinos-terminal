@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# RobinOS's terminal (docs/tasks.md T-154): Ptyxis, which draws its own title bar so
+# the window can be dragged with the mouse, or foot where Ptyxis isn't installed
+# (systems installed before 2026-10-12 that only updated the robinos files).
+#
+#   robinos-terminal [-T TITLE] [-- COMMAND ARGS...]
+set -euo pipefail
+
+title=""
+if [[ "${1:-}" == "-T" ]]; then
+  title="${2:-}"
+  shift 2
+fi
+[[ "${1:-}" == "--" ]] && shift
+
+foot_args=(foot)
+[[ -n "${title}" ]] && foot_args+=("--title=${title}")
+foot_args+=("$@")
+
+if command -v ptyxis >/dev/null 2>&1; then
+  # A command opens its own new window; --new-window with it would open a second,
+  # empty one (the boot test's mission terminal, 2026-10-12)
+  if (($#)); then
+    args=(ptyxis)
+    [[ -n "${title}" ]] && args+=(-T "${title}")
+    args+=(-- "$@")
+  else
+    args=(ptyxis --new-window)
+  fi
+  # Ptyxis is installed but doesn't start (a broken GTK, no GPU driver): foot
+  # still gives a terminal. Only a failure right away counts; the first Ptyxis
+  # runs until its last window closes, and ending it later (a logout) is no
+  # reason to open foot.
+  started=${SECONDS}
+  status=0
+  "${args[@]}" || status=$?
+  if ((status == 0 || SECONDS - started > 5)) || ! command -v foot >/dev/null 2>&1; then
+    exit "${status}"
+  fi
+fi
+exec "${foot_args[@]}"

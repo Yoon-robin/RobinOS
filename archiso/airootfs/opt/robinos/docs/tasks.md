@@ -18,8 +18,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
-| 2026-10-10 (아침) | `030455d` 테스트 ISO | 설치 테스트 windows(9.1분) | 다섯 단계 통과. 윈도우 파티션, EFI 파일, C: 그대로, GRUB 메뉴에 Windows Boot Manager. 새벽 뒤로 바뀐 것(LLMNR 끄기, 앱 제거, 설치 테스트의 UDP 확인)이 윈도우 옆 설치 경로에서도 문제없음 |
-| 2026-10-10 (새벽) | `857383b` 테스트 ISO | 설치 테스트 archinstall(11.4분) | 다섯 단계 통과. 어제 저녁 뒤로 바뀐 설치 코드(openssh, baobab, wtype, 힌트)가 archinstall+post-install 경로에서도 문제없음(`ssh-keygen`, `baobab` 확인) |
+| 2026-10-13 (새벽 3시) | `b2a3624` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 3.4분, 테스트 17.7분) | 통과. 장면 판정 열다섯 개 모두 PASS, 새 `zoomed`(zoom_factor 2)·`unzoomed`(1), 확대 스크린샷 확인. 설치 테스트 다섯 단계 |
+| 2026-10-13 (새벽 2시 반) | `0292d22` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 3.3분, 테스트 17.3분) | 통과. 장면 판정 열세 개 모두 PASS, 새 `windows-app`: 가짜 `KakaoTalk_Setup.exe`를 열면 "윈도우 프로그램" 창(기본 앱 `robinos-windows-app.desktop`), 스크린샷에서 카카오톡 안내와 Bottles 단추 확인. 설치 테스트 다섯 단계 |
 
 ## 품질 점검 기록
 
@@ -41,17 +41,19 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| `9b5d5f3` (브랜치 `claude/eoseohae-7nleia`) | T-145 설치본이 RobinOS 저장소를 쓰게 | `verify -Installer robinos`(ISO 빌드가 패키지를 넣는지, 설치 테스트의 `pacman -Qo`·저장소 확인), 이어서 `install-test`(archinstall 경로) |
-| `1549271`과 그 뒤 문서 커밋 (같은 브랜치) | 방향 고침, 설계 점검, 문서 최종 점검(`install-test.sh`와 `doctor-build.sh` 한 줄씩 포함) | 정적 검증(통과). 앞의 T-145와 함께 기다려요 |
+| (없음) | | |
 
-모두 클라우드 세션에서 만들어 작업 브랜치에만 올렸어요. 이 PC에서 브랜치를 받아 검증하고, 통과하면 main에 합치고 푸시해요. main은 `c910682`까지 푸시했어요(묶음 69는 `f6ceb6d`, T-144는 실제 올리기로 확인).
+`b2a3624`까지 2026-10-13 묶음 검증(`verify -Installer robinos`, 집 PC)을 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
-- **실기기 라이브 부팅 (지금 가장 값진 검증, 2026-10-10 설계 점검)**: 검증 묶음 69번이 모두 VM이었고 실제 PC에서는 한 번도 켜 보지 않았어요. USB로 실제 PC에서 ISO를 부팅해 봐 주세요. 먼저 펌웨어 설정에서 보안 부팅을 꺼야 해요([install.md](install.md) "보안 부팅 끄기", 윈도우를 남길 거면 BitLocker 복구 키부터 확인). 데스크톱이 뜨는지, Wi-Fi·소리·화면 밝기·한글 입력이 되는지가 먼저예요. NVIDIA 카드(GTX 16, RTX 20 이후)가 있는 PC라면 설치한 뒤 데스크톱이 뜨는지, `lsmod | grep nvidia`에 나오는지도 봐 주세요(T-030). 노트북이라면 전원을 뽑고 배터리가 10%가 될 때 "배터리가 10% 남았어요" 알림이 뜨는지(T-070), 런처의 "Steam 설치하기"로 받은 Steam에서 게임이 켜지는지(T-066)도 봐 주세요. 빠른 설정의 "야간 모드"를 켜면 화면이 따뜻한 색이 되는지도 봐 주세요(T-076, VM에서는 안 돼요). (`막힘`)
-- **라이선스**: 저장소에 라이선스 파일이 없어서 RobinOS 패키지에 `license=(unknown)`으로 적었어요. 공개 프로젝트라 정해 두는 게 좋아요(예: MIT, GPL-3.0). 정해 주면 `LICENSE`와 패키지에 넣어요
+- **업데이트 저장소를 새 버전으로 올렸어요 (2026-10-14, 사용자 "올려")**: `37674bc`에서 `publish-repo`로 `[robinos]` 저장소(`repo` 릴리스)를 `r475`에서 `0.3.0.r505-1`로 올렸어요. 서명한 데이터베이스와 패키지(302개 파일)가 올라갔고, 버린 루트에 서명 확인(`SigLevel = Required`)으로 받아 설치하는 시험도 통과했어요(`repo ok`). 이제 v0.3.0을 설치한 시스템이 `robinctl update`로 이 버전을 받아요. 실제 v0.3.0 설치본에서 업데이트가 되는 것은 실기기나 옛 ISO로 한 번 봐야 해요(설치 테스트의 업데이트 시험은 로컬 저장소로 해요).
+- **서명 열쇠 파일 정리 (2026-10-13)**: v0.3에 서명하려고 다운로드 폴더의 `robinos-release-secret.asc`를 이 PC의 WSL(`/root/.robinos-signing`)에 들였어요. [release.md](release.md) "서명"대로 그 파일과 `robinos-release-revoke.rev`는 USB 같은 오프라인 저장소로 옮기고 PC에서는 지워 주세요(지우는 건 직접 해 주세요).
+
+- **T-152 shadcn × macOS 범위 (2026-10-12 제안)**: macOS에서는 반투명 재질, 색이 있는 배경화면, 떠 있는 패널의 깊이, Spotlight 같은 런처, 제어 센터 같은 빠른 설정, 스프링 움직임을 가져오고, 신호등 창 단추·전역 메뉴·Cmd 단축키는 가져오지 않는 안이에요. 윈도우에서 온 사람에게 익숙한 단축키와 닫기 위치는 그대로예요. 다르게 하고 싶으면 알려 주세요. 답이 없으면 이 안으로 ①단계부터 해요
+
+- **실기기 라이브 부팅 (지금 가장 값진 검증, 2026-10-10 설계 점검)**: 검증 묶음 73번(2026-10-12까지)이 모두 VM이었고 실제 PC에서는 한 번도 켜 보지 않았어요. USB로 실제 PC에서 ISO를 부팅해 봐 주세요. 먼저 펌웨어 설정에서 보안 부팅을 꺼야 해요([install.md](install.md) "보안 부팅 끄기", 윈도우를 남길 거면 BitLocker 복구 키부터 확인). 데스크톱이 뜨는지, Wi-Fi·소리·화면 밝기·한글 입력이 되는지가 먼저예요. NVIDIA 카드(GTX 16, RTX 20 이후)가 있는 PC라면 설치한 뒤 데스크톱이 뜨는지, `lsmod | grep nvidia`에 나오는지도 봐 주세요(T-030). 노트북이라면 전원을 뽑고 배터리가 10%가 될 때 "배터리가 10% 남았어요" 알림이 뜨는지(T-070), 런처의 "Steam 설치하기"로 받은 Steam에서 게임이 켜지는지(T-066)도 봐 주세요. 빠른 설정의 "야간 모드"를 켜면 화면이 따뜻한 색이 되는지도 봐 주세요(T-076, VM에서는 안 돼요). (`막힘`)
 - **실제 윈도우 PC에서 "윈도우 옆에 설치"**: VM의 가짜 윈도우 디스크로는 파티션과 부팅 파일이 그대로인 것까지 확인했어요(T-006). 진짜 윈도우가 GRUB 메뉴에 나오는지, BitLocker 복구 키를 묻는지는 실제 PC에서만 볼 수 있어요. 백업해 둔 PC나 남는 디스크로 해 주세요. (`막힘`)
-- **집 PC의 VMware 서비스 켜기(T-025)**: 집 PC(Blitz)에서 VM을 만들어 켜려 했더니 VMware의 윈도우 서비스(Authorization, DHCP, NAT, USB Arbitration)가 모두 "사용 안 함"이라 VM이 켜지지 않아요. 관리자 권한이 필요해서 직접 하지 않아요. 쓰려면 관리자 PowerShell에서 `'VMAuthdService','VMnetDHCP','VMware NAT Service','VMUSBArbService' | ForEach-Object { Set-Service -Name $_ -StartupType Manual }; Start-Service VMAuthdService,VMnetDHCP,'VMware NAT Service'` (2026-10-10 처음 알려 드린 명령은 `Set-Service`에 이름을 한꺼번에 넘겨서 윈도우 PowerShell 5.1에서 실패했어요). VM(`문서\Virtual Machines\RobinOS`)과 스크립트(`build\vmware\vmware-test.py`)는 준비돼 있어요 (`막힘`)
 
 ## 진행 중
 
@@ -59,7 +61,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 상태: 진행 중
 - 출처: 설계 점검(2026-10-10) "보안 부팅". 문서 어디에도 없었어요
 - 한 것: install.md "보안 부팅 끄기"(BitLocker 복구 키 확인, 윈도우의 고급 시작 → UEFI 펌웨어 설정, 설치 뒤에도 꺼 둬야 하는 것), 준비 목록, README 내려받기 안내
-- 남은 것: 설치기가 윈도우 옆에 설치할 때 윈도우 파티션이 BitLocker인지 보고(`lsblk -o FSTYPE`의 `BitLocker`) 확인 단계에서 "복구 키를 확인했나요?"를 묻기. 다음 릴리스 노트에 보안 부팅 안내
+- 한 것(2026-10-12 집 PC): 설치기가 디스크의 `BitLocker` 파티션을 알아보고(`lsblk`의 FSTYPE) 디스크 카드에 "윈도우 있음 (BitLocker)", "윈도우 옆에 설치"의 확인 단계에서 "복구 키를 따로 적어 두었어요"에 체크해야 설치 시작. 백엔드도 계획에 `bitlocker_key_saved`가 없으면 디스크를 건드리기 전에 멈춰요. `test-robin-install.py`에 가짜 BitLocker 디스크 검사 여덟 개. 확인 상자는 `ConfirmBox` 하나로 합쳤어요(지우기 확인과 같이 써요)
+- 남은 것: 설치 테스트 windows의 가짜 디스크에 BitLocker 서명(`-FVE-FS-`)을 넣은 장면. 다음 릴리스 노트에 보안 부팅 안내
 - 완료 기준: 설치기 테스트(`test-robin-install.py`)에 가짜 BitLocker 파티션, 설치 테스트 windows에서 경고 장면
 
 ### T-025 VMware에서 쓰기
@@ -71,25 +74,258 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 같이 한 것: 화면에 보이는 단축키를 `Super` 대신 `Win`으로 적어요(사용자 질문 "Super 키가 뭐야?"). 환영 마법사 마지막 단계에 "Win 키는 리눅스에서 Super 키라고 불러요"를 넣었어요
 - 지금까지(2026-10-08, robin PC): `426e32d` ISO를 VMware VM에 설치함. 설치기가 마지막 `umount`에서 멈췄고(gpg-agent, `933ca31`에서 고침) 손으로 분리한 뒤 고친 `robinos-shell`을 넣어 부팅. 설치본에서 `open-vm-tools` 설치, `vmtoolsd` 켜짐, SDDM 로그인 화면까지 확인. 로그인 뒤 데스크톱은 아직 못 봄(VMware에는 키 입력을 보낼 방법이 없어 사람이 로그인해야 해요)
 - 검증: `933ca31` ISO로 부팅 테스트(29장)와 설치 테스트 robinos(다섯 단계) 통과, `e038f2a`까지 main 푸시(정기 점검 표)
+- 2026-10-11: 사용자가 집 PC(Blitz)의 VMware 서비스(Authorization, DHCP, NAT)를 켜서 `Running` 확인. 이제 이 PC에서 VM을 만들어 최신 ISO로 설치해 볼 수 있어요
+- 2026-10-12 집 PC(Blitz): 묶음 72의 ISO(`bd8c495`, robinos 패키지 포함)를 `build\vmware\vmware-test.py install`로 VM에 설치하는 중. 끝나면 `installed`로 설치본 부팅·해상도·vmtoolsd 확인. 다른 PC로 옮기면 이 VM은 집 PC에만 있어요. `build\`는 git에 안 올라가서 `vmware-test.py`도 집 PC에만 있어요. 집에서 이어 할 때 `scripts/`로 옮겨 커밋하면 robin PC에서도 같은 스크립트를 써요
 - 남은 것 (VMware가 있는 PC: robin PC, 집 PC(Blitz, VMware Workstation 26.0)): 최종 ISO로 VMware VM에 다시 설치(`vmrun` 게스트 명령, 계획은 디스크 `/dev/nvme0n1` 전체), 로그인 뒤 셸·해상도 확인. 집 PC에는 VM이 아직 없어서 새로 만들어요(`build\vmware\guest-*.sh`는 robin PC에만 있어요). VMware가 없는 PC의 루프는 이 작업을 건너뛰어요
+
+### T-151 정체성 문구를 화면에
+- 상태: 진행 중 (화면 문구는 묶음 73에서 검증, 스크린샷 바꾸기 남음)
+- 출처: 설계 점검(2026-10-10) "정체성 문구". 2026-10-12에 목적을 "처음 쓰는 리눅스"로 정해서(design.md "목적 결정") 화면에 넣을 말이 생겼어요
+- 한 것(2026-10-12): 로고 한 줄 소개와 SVG(푸시함), 환영 마법사 첫 화면. 사용자 요청("T-151 남은 화면 문구도 바꿔줘")으로 나머지도 바꿨어요: 로그인 화면(SDDM, 방패 아이콘 → 터미널 아이콘)과 잠금 화면(hyprlock)의 "허가받은 환경에서만 쓰는 보안 학습용 시스템이에요", 설치본 부팅 메뉴의 "Security Learning Workstation" → 한 줄 소개(Unifont라 한글이 나와야 해요)와 윤리 안내 줄 빼기, 라이브 부팅 메뉴·콘솔·ISO 이름 "RobinOS Security Learning Live" → "RobinOS Live"(영어로 둔 건 syslinux와 리눅스 콘솔이 한글을 못 그려서예요), 터미널 인사 "RobinOS 보안 학습 환경" → "RobinOS · 쓰다 보면 리눅스를 알게 되는 OS", `robinctl` 도움말의 "허가받은 환경에서 보안을 배우는 시스템이에요" 줄 빼기(실습 안내 줄은 그대로), 기본 배경화면 그림(`robinos-default.svg`)의 글, `config.toml`의 `purpose`(읽는 코드 없음)를 `learn-linux`로. 윤리 안내는 motd, 학습 센터, 랩, ethics.md에 그대로예요
+- 한 줄 소개 다시(2026-10-12, 사용자: "쓰다 보면 리눅스를 알게 되는 OS 이거 살짝 cringe야" → "화면엔 이름만"): 부팅 메뉴(설치본 GRUB, 라이브 BIOS 스플래시), 로그인·잠금 화면, 기본 배경화면 그림, 터미널 인사에서 소개 줄을 빼고 이름만 뒀어요. 환영 마법사 첫 화면도 소개 문장을 뺐어요. 로고 아래와 README, 소개 영상 끝에만 "처음 쓰는 리눅스"를 써요(`work/batch74`)
+- 남은 것: 묶음 검증(`verify -Installer robinos`)으로 확인하기. 특히 설치 테스트의 부팅 메뉴 스크린샷에서 한글 한 줄 소개가 네모로 깨지지 않는지. 통과하면 README 학습 센터 스크린샷("1 / 40")과 소개 영상의 부팅 메뉴·로그인 화면을 새 스크린샷으로 바꾸고, 영상에서 가린 부분을 없애기
+- 완료 기준: 부팅 테스트의 SDDM·잠금 화면 장면, 설치 테스트의 부팅 메뉴 스크린샷, README 로고
 
 ## 할 일 (위에서부터)
 
-2026-10-10 방향 결정("나만의 새로운 OS", [design.md](design.md))과 설계 점검으로 순서를 다시 잡았어요. RobinOS다운 경험(설정, 부팅 화면, 정체성)과 실제 PC에서 켜지는 것을 먼저 하고, 윈도우 기능 따라 하기와 학습 기능은 그 뒤예요.
+2026-10-12 목적 결정("처음 쓰는 리눅스", [design.md](design.md))으로 순서를 다시 봤어요. 화면이 그 목적을 말하게 하는 일(T-151)과 실제 PC에서 켜지는 것이 먼저예요. 학습 기능(터미널 힌트, 미션)은 이제 목적의 중심이라, 윈도우 기능 따라 하기보다 앞에 둬요.
 
-### T-145 설치본이 RobinOS 저장소를 쓰게 (RobinOS 파일 업데이트 3단계)
-- 상태: 검증 대기 (2026-10-10 클라우드 세션에서 만듦, 이 PC의 VM 검증 전)
-- 할 것: 설치기·post-install이 `[robinos]` 저장소와 열쇠(로컬 서명)를 넣고 RobinOS 파일을 패키지로 설치. 이미 깐 파일에서 옮겨 가는 `robinctl update`(처음 한 번 `--overwrite`)
-- 한 것: `robinctl repo`(상태), `repo setup`(열쇠 지문 고정, `[robinos]` 넣기), `repo adopt`(패키지에 든 경로에만 `--overwrite`). `post-install.sh`가 설치 끝에 둘 다 하고, `robinctl update`는 저장소가 켜졌는데 패키지가 아니면 한 번 옮겨요. `build-iso.sh`가 같은 커밋의 패키지를 라이브 ISO `/opt/robinos/pkg`에 넣어서 설치기는 그걸 써요(개발 ISO에서 저장소의 옛 파일로 돌아가지 않게, design.md). 릴리스 열쇠는 `/opt/robinos/keys`. 설치 테스트에 `pacman -Qo`·`pacman -Qk`·저장소·열쇠·`pacman -Si robinos` 확인, archinstall 경로는 ISO의 `pkg/`도 복사
-- 확인한 것(클라우드 세션, Arch 컨테이너의 실제 pacman): ① 복사한 파일 위에 `repo setup` + `repo adopt <패키지>` → `pacman -Qo`가 `robinos`, `-Qk` 빠진 파일 없음, 다시 setup해도 `[robinos]` 한 번, 깃허브 저장소가 서명된 DB로 답함(`0.3.0.r400-1`) ② 패키지 없이 파일만 있는 시스템에서 `robinctl update`가 깃허브에서 받아 옮기고, 고친 `config.toml`은 남고 `.pacnew` ③ `post-install.sh --dry-run`이 `pkg/`가 있으면 `pacman -U`, 없으면 `pacman -S`(여기서 `pkg/`가 없을 때 `find` 실패로 스크립트가 멈추던 것을 찾아 고침) ④ 정적 검증(pwsh), `check-sync.sh`, `test-robinctl.sh`(새 repo 시험 통과, 컨테이너에 systemd가 없어 미션 34 관련 5개는 전부터 실패), `test-robin-install.py`
-- 남은 것: 이 PC에서 `verify -Installer robinos`. 서명한 로컬 패키지(`.sig`)를 `pacman -U`가 받아들이는지는 VM에서 처음 봐요(컨테이너에는 개인 열쇠가 없어 서명 없이 시험). 스냅샷과 함께 받는 것은 실제 새 버전이 저장소에 올라간 뒤 설치본에서 확인
-- 완료 기준: 설치 테스트에서 `pacman -Qo /usr/share/robinos/shell/shell.qml`이 `robinos`, `robinctl update`가 스냅샷과 함께 새 버전을 받음
+### T-172 노트북 전원: 잠자기, 자동 절전, 덮개, 배터리가 거의 다 됐을 때
+- 상태: 진행 중 (2026-10-14 푸시 `fa08156`, 부팅 테스트 91장면·설치 테스트 5단계 통과)
+- 한 것(2026-10-14): ① 빠른 설정 전원 메뉴와 런처에 "잠자기"(`systemctl suspend`, 잠그는 건 hypridle `before_sleep_cmd`) ② 노트북이 배터리로 돌 때 15분 쉬면 `robinos-idle-suspend`가 잠재움(충전기·USB-C 충전, 배터리 없는 PC, 마우스 배터리는 안 잠들어요; 단위 테스트 7경우) ③ 배터리가 거의 다 됐을 때 `CriticalPowerAction=PowerOff`(`robinos.install`이 설치·업데이트 때 UPower 설정을 바꿔요; UPower 기본값 HybridSleep은 디스크 스왑이 필요한데 RobinOS는 zram뿐) ④ 덮개는 logind 기본값(잠들고, 독에서는 그대로). 설치 테스트가 UPower 설정과 idle 스크립트를 확인
+- 설정 앱 "전원"(2026-10-14, 부팅 테스트 판정 통과): 화면 잠그기·화면 끄기·배터리로 쓸 때 잠자기 시간을 고르는 선택 단추 줄. `ShellState.setPower`가 `~/.local/state/robinos/power`에 저장하고 `desktop/bin/robinos-idle-config apply`가 hypridle 설정을 다시 써서 hypridle을 새로 띄워요(로그인 때는 `robinos-idle-config start`). 시험: `test-robinctl.sh`의 정책 10개(기본값이 `desktop/hypr/hypridle.conf`와 같은지, "안 함"은 듣는 곳이 없는지, 이상한 값·앞자리 0), 부팅 테스트 `power-changed`·`power-default` 판정(정책 파일의 시간, hypridle이 그 파일로 도는지, 저장 파일)과 `light-settings-power` 장면
+- 남은 것: 덮개 닫기 동작(관리자 권한이 필요한 logind 설정이라 화면에서 바꾸지 않고 안내만), 최대 절전(디스크 스왑이 필요해 설치기와 같이 결정), 실제 노트북에서 덮개 닫았다 열기(T-167)
+- 이전 상태: 할 일
+- 출처: 미완성 기능 점검(2026-10-13, [unfinished.md](unfinished.md) 1·4번 표). 전원 메뉴는 로그아웃·재시작·끄기뿐이고, `hypridle.conf`는 5분에 잠그고 10분에 화면만 꺼요(시스템은 안 잠들어요). 덮개 닫기 동작과 최대 절전도 정한 게 없어요
+- 할 것: 전원 메뉴에 "잠자기", `hypridle`에 자동 잠자기(전원 연결 여부로 시간을 다르게), 덮개 닫기(`logind`: 전원 연결·배터리 따로, 외부 모니터가 있으면 그대로 켜 두기), 배터리가 거의 다 됐을 때 UPower가 무엇을 하는지 정하고 설정(`CriticalPowerAction`; 스왑이 zram뿐이라 최대 절전은 안 돼요. 최대 절전은 디스크 스왑이 필요해 설치기와 같이 결정), 설정 앱에 "전원" 쪽(화면 꺼짐·절전 시간, 덮개)
+- 완료 기준: 부팅 테스트에서 전원 메뉴의 잠자기 단추와 `hypridle` 설정이 맞고(VM은 잠자기를 못 깨울 수 있어 설정 검사로), 실제 노트북에서 덮개를 닫았다 열면 돌아와요(사용자 실기기)
+
+### T-173 설정 앱 나머지: 터치패드, 사용자 계정, 기본 앱
+- 상태: 진행 중 (2026-10-14: 터치패드·키보드·기본 앱은 `verify -Installer windows`로 확인했어요. 사용자 계정·디스플레이는 남았어요)
+- 한 것(2026-10-14): 설정 앱에 "마우스와 터치패드"(탭해서 클릭, 스크롤 방향, 글 쓰는 동안 끄기, 휠 방향, 포인터 속도)와 "키보드"(한/영 단축키, 키 반복 빠르기·시작 시간, 눌러 보는 칸). `ShellState.setInput`이 `~/.local/state/robinos/input`에 저장하고 `hyprctl eval robinos.applyInput`으로 바로 적용해요. `robinos.lua`가 로그인 때 같은 함수로 읽어요. 시험: `scripts/test-hypr-input.lua`(Hyprland 대역으로 파일 읽기·범위·false 유지 6개, `check-desktop.sh`가 돌려요), 부팅 테스트 `input-changed`·`input-default` 판정(`hyprctl getoption`과 저장 파일), `light-settings-pointer`·`light-settings-keyboard` 장면. 알게 된 것: Lua 설정의 터치패드 옵션 이름은 `tap_to_click`(밑줄)이고 `tap-to-click`은 구문 오류예요(`--verify-config`가 잡았어요)
+- 기본 앱(2026-10-14): 설정 앱 "기본 앱" 쪽. `desktop/bin/robinos-default-apps`(파이썬)가 설치된 앱의 `.desktop`(Flatpak 포함)에서 종류별로 열 수 있는 앱을 모아 `list`로 JSON을 주고, `set 종류 앱`이 그 종류의 모든 형식에 `xdg-mime default`를 해요. 종류: 웹 브라우저, 이메일, 사진, 동영상, 음악, PDF, 글 파일. 시험: `scripts/test-default-apps.py`(가짜 앱 폴더와 가짜 `xdg-mime`으로 18개, `check-desktop.sh`가 돌려요), 부팅 테스트 `default-apps` 판정(Firefox가 기본 브라우저, 고른 값이 `~/.config/mimeapps.list`에, 열 수 없는 앱은 거절)과 `light-settings-apps`·`light-settings-apps-open` 장면
+- 남은 것: 실제 노트북 터치패드에서 값이 장치에 닿는지(`hl.config`로 바꾼 값이 이미 연결된 장치에 바로 적용되는지는 VM에서 못 봐요), 사용자 계정, 디스플레이(해상도·여러 모니터)
+- 출처: 미완성 기능 점검(2026-10-13). 설정 앱은 개인 설정·소리·와이파이·블루투스·정보뿐이에요
+- 할 것: "터치패드"(탭 클릭, 스크롤 방향, 속도; `input.touchpad`를 사용자 설정 파일에 저장), "사용자"(비밀번호 바꾸기는 터미널 `passwd`로 안내, 계정 추가는 관리자 확인 뒤), "기본 앱"(브라우저·메일·사진·동영상·PDF를 `xdg-mime`으로). T-149의 디스플레이·날짜와 시간·키보드와 같은 틀을 써요
+- 완료 기준: 세 쪽이 키보드만으로도 동작하고, 바꾼 값이 다시 로그인해도 유지돼요
+
+### T-149 보충: 날짜와 시간 (2026-10-14)
+- 설정 앱에 "날짜와 시간"(`Settings.qml`): `timedatectl show`로 시간대·시간 자동 맞추기·하드웨어 시계 방식을 읽고 4초마다 새로 읽어요. 시간대 목록은 설치기에서 떼어 낸 공용 부품 `ZonePicker.qml`(설치기도 이걸 써요). 바꾸는 건 터미널에서 `sudo timedatectl set-timezone/set-ntp`를 실행해 명령을 보여 줘요. 부팅 테스트 `light-settings-datetime`. 남은 것: 날짜·시간 손으로 맞추기, 시간 형식, 디스플레이·키보드·터치패드·사용자·기본 앱(T-173)
+
+### T-175 프로젝트가 멈추면 (탈출 경로)
+- 상태: 진행 중 (2026-10-14 푸시 `fa08156`, 설치 테스트의 `check_exit_path` 통과)
+- 출처: 비슷한 OS 사례 조사(2026-10-13, [references.md](references.md)): Antergos는 2019년에 스스로 끝내면서 사용자가 순수 Arch로 가는 길을 열어 두었고 두 달 뒤 EndeavourOS가 이어받았어요. 작은 배포판이 닫는 흔한 이유는 번아웃과 수익 부족이에요
+- 한 것: [exit.md](exit.md)(RobinOS가 얹은 것, 멈췄을 때, 그만 쓰고 싶을 때, 확인한 것과 못 한 것), 설치 테스트 `check_exit_path`(`[robinos]` 블록을 뺀 설정으로 `pacman -Sy`와 `-Su --print`가 되는지, `robinos`가 저장소에 없는 패키지로 남는지, 다른 패키지가 기대지 않아 지울 수 있는지)
+- 남은 것: 서버가 실제로 사라진 상황과 `robinos`를 지운 뒤 다른 데스크톱으로 가는 전 과정을 VM에서 해 보기. 이어 갈 사람을 위한 서명 열쇠 새로 만들기 안내(release.md)
+
+### T-167 보충: 문제 보고서 (2026-10-14)
+- `robinctl report [파일]`(기본 `~/robinos-report.txt`): RobinOS 버전과 패키지, 커널, 부팅 방식(UEFI·보안 부팅), 컴퓨터(DMI, CPU, 메모리, 디스크), 장치와 드라이버(`lspci -nnk`의 그래픽·네트워크·소리·저장장치, USB), 화면, 네트워크(펌웨어 줄), 소리, 배터리, 문제 신호(실패한 서비스, 이번 부팅의 오류와 커널 경고, 셸 기록)를 한 파일로. 사용자·컴퓨터 이름, MAC·IP, UUID, 일련번호를 가리고 어디로도 보내지 않아요. 설정 앱 "정보"에 단추. 실기기 확인(T-167)에서 "안 돼요"를 받으면 이 파일을 받는 게 목적이에요. 시험: `test-robinctl.sh`의 보고서 18개(가짜 `lspci`·`journalctl`·`id`·`uname`으로 가림, PCI id·커널 버전·robinos를 안 건드리는지), 부팅 테스트 `report` 판정
+- 남은 것: 동의를 받고 `hw-probe`로 올리기([references.md](references.md), 외부 서비스에 올리는 일이라 사용자 확인 필요), 보고서를 USB에 저장하는 단추
+
+### T-174 업데이트 이어 붙이기 (화면, 새 파일 적용, 진짜 업데이트 시험)
+- 상태: 진행 중 (2026-10-14 푸시, `a84fcf6`. 부팅 테스트 89장면과 설치 테스트 5단계(진짜 `robinctl update --yes` 포함) 통과. 남은 것 아래)
+- 출처: 사용자(2026-10-14) "알아서 해줘". 미완성 점검(2026-10-13)에서 업데이트가 터미널 명령까지만 되고 화면이 얇다고 나왔어요
+- 한 것(2026-10-14): ① `robinctl update --status`(JSON 한 줄: 상태, 개수, 받을 크기, 커널, 데이터 요금, 다음 스냅샷 번호, 앱 스토어 업데이트 수, robinos 버전). 미리보기와 같은 계산을 `update_facts`로 모았어요 ② 설정 앱의 "업데이트" 쪽(개수·크기·커널·요금 안내, 지금 업데이트, 다시 확인, 스냅샷 안내, RobinOS 파일 버전) ③ `robinctl update`가 robinos 패키지가 새 버전이 되면 사용자의 셸을 끝내서 `robinos-shell`이 새 파일로 다시 띄우게 해요(sudo 없이 root로 돌면 다시 로그인하라고 안내, 패키지 스크립트도 같은 말) ④ 바의 업데이트 점이 앱 스토어(Flathub) 앱도 세요 ⑤ `--yes`(pacman --noconfirm, flatpak -y), 모르는 옵션은 오류 ⑥ 스냅샷 번호는 root만 알아서, 아니면 번호 없이 말해요(전에는 "1번"이라고 잘못 말했어요) ⑦ 설치 창 높이를 740으로(파티션 목록이 길어도 "설치하면" 막대가 보이게)
+- 테스트: `test-robinctl.sh`(상태 JSON 네 경우, 셸 다시 띄우기 세 경우, --yes), 부팅 테스트 `light-settings-update`(라이브는 업데이트하지 않는다고 말해요), 설치 테스트가 설치된 시스템에서 진짜 `robinctl update --yes`를 돌려요: 로컬 저장소(`/srv/robinos-test-repo`)에 설치된 패키지를 높은 버전으로 다시 묶어 올려 놓고, `--status`가 "updates"인지, 업데이트 뒤 버전과 새 파일, `pacman -Syu` 앞의 스냅샷, os-release를 확인하고 pacman.conf를 되돌려요
+- 남은 것: 업데이트하는 동안의 진행을 화면에서(지금은 터미널), 펌웨어(fwupd) 업데이트 점, 실패·디스크 부족 안내, 커널이 바뀌는 업데이트 시험, 업데이트 저장소(`repo` 릴리스)를 새 버전으로 올리는 일(사용자 확인 필요에 적어 둬요)
+- 검증에서 잡은 것: pacman이 패키지의 파일 목록을 `.MTREE`에서 만들어서 시험이 끼워 넣은 새 파일이 설치 때 건너뛰어졌어요(시험을 기존 파일 수정으로 바꿈), 시험이 저장소를 바꿨다 되돌린 뒤 서명 없는 데이터베이스가 남아 다음 `pacman -S`가 막혔어요(되돌린 뒤 `pacman -Sy`)
+- 완료 기준: `verify`와 `install-test`의 업데이트 확인 통과(됨), 실기기에서 한 번 해 보기
+
+### T-171 설치기 다듬기 (빠진 것과 버그)
+- 상태: 진행 중 (2026-10-14 푸시 `fa08156`: 윈도우·디스크 전체 설치 테스트 5단계 통과)
+- 출처: 사용자(2026-10-13) "부족한 거 많은데 설치기도 제대로 다 안 만들어져 있고", "우리 아직 arch 브랜딩 남은 거 있던데"(실기기에서 USB를 꽂은 뒤 본 폴더 이름)
+- 찾은 버그: ① 진행률이 패키지 설치 내내 12%에 멈췄다가 72%로 뛰었어요(설치 테스트의 `@@` 줄로 확인). 설치기가 `(3/987) installing`을 기다렸는데, pacman은 터미널이 아니면(파이프) 그 숫자 없이 `installing 이름...`이라고만 해요. 내려받기는 ` 이름 downloading...`. 라이브가 한국어라 pacman 글도 한국어가 될 수 있어서 `LC_ALL=C.UTF-8`로 영어로 고정. 처음엔 한국어 탓으로 짐작하고 고쳤다가 설치 테스트(`@@ 43~69` 줄 확인)에서 틀린 걸 알았어요 ② 화면에서 BitLocker 복구 키 확인에 체크해도 계획에 `bitlocker_key_saved`가 빠져서, BitLocker 디스크에 화면으로 윈도우 옆 설치를 하면 늘 오류였어요 ③ 윈도우 옆에 설치하다 멈추면 만든 파티션이 빈 공간을 다 차지해서 다시 할 수 없었어요 ④ ISO의 EFI 파티션 이름이 `ARCHISO_EFI`(mkarchiso가 정해요)라 윈도우 탐색기에 그대로 보였어요 ⑤ 설치본의 텍스트 콘솔 로그인 화면이 "Arch Linux"
+- 한 것(2026-10-13): pacstrap은 `LC_ALL=C.UTF-8`로, 진행률은 내려받기 12~42%·설치 42~70%(`PacmanProgress`가 `Packages (N)`의 N으로 두 줄을 센다). 계획에 `bitlocker_key_saved`. 이전 RobinOS 파티션(GPT 이름 `RobinOS`, 리눅스 파일 시스템 형식)을 `disks`가 `robinos`로 알려 주고, 계획의 `replace`로 그 자리에 다시 설치(재설치도 같아요). 다른 고정 디스크의 윈도우(EFI 파티션 + NTFS)도 부팅 메뉴와 지역 시간 시계에. 시간대 검사에 경로 글자 제한. 설치 화면: 인터넷이 없으면 다음으로 못 넘어가요, 노트북이 배터리로 돌면 경고, 디스크의 지금·설치한 뒤 모습을 파티션 막대로, 시간대 고르기(자주 쓰는 도시 + `timedatectl list-timezones` 검색), 확인 단계에 부팅 메뉴·시간대·언어와 이전 파티션 지움 확인, 설치하는 동안 RobinOS 요령 카드(명령 기록은 "설치 기록 보기"), 실패하면 기록을 바로 보여 줘요. `build-iso.sh`가 mkarchiso 사본으로 EFI 파티션 이름을 `ROBINOS_EFI`로 하고 빌드 끝에 확인. `post-install.sh`가 `/etc/issue`를 RobinOS로. 압축 스왑 zram(`zram-generator`, 메모리 절반 최대 8GB, 라이브와 설치본)
+- 파티션 고르기와 크기 정하기(2026-10-13, 사용자 "1번이랑 2번 같이 해줘"): 설치 방식이 셋이 됐어요. ① 빈 공간에 설치: RobinOS에 줄 크기를 40GB부터 빈 공간 전부까지 슬라이더로(`size_gb`; 1GB 미만이 남으면 끝까지) ② 만들어 둔 파티션에 설치(`mode: "partition"`, `partition`): 윈도우 디스크 관리에서 만든 NTFS 파티션이나 이전 RobinOS 파티션을 골라요. 윈도우가 들어 있는 파티션(읽기 전용으로 마운트해 `Windows\System32` 확인), EFI·복구·예약, BitLocker, 쓰는 중, 40GB 미만, 스왑·LUKS·LVM은 이유와 함께 흐리게 보이고 백엔드도 설치 직전에 다시 막아요. 고른 파티션은 이름 RobinOS, 형식 리눅스 파일 시스템으로 바꿔 다음 설치가 알아봐요. ③ 디스크 전체 사용. 예전 `replace`는 `partition`으로 받아 줘요. 확인 단계에 지워질 파티션을 이름과 크기로 적어서 체크하게 해요. 설치 테스트 windows: 크기(41GB)를 실제 sgdisk로 만들어 보고, NTFS 데이터 파티션을 만들어 목록에 나오는지·C:는 안 나오는지 보고, 화면 스크린샷(`installer-partitions`), 그 파티션에 설치한 뒤 윈도우 파티션이 그대로인지
+- Codex 검토(2026-10-13, 파티션을 지우는 코드라 읽기 전용으로 맡김): 치명 넷과 중요 둘, 사소 하나가 맞아서 고쳤어요. ① 윈도우 판별이 대소문자 철자에 따라 놓칠 수 있었고 알 수 없는 형식(LDM, 손상된 NTFS)은 검사 없이 통과했어요 → 폴더 이름을 대소문자 없이 비교(`windows_in_tree`: Windows/System32, WINNT, bootmgr, Recovery, $WINDOWS.~BT), 형식은 허용 목록(btrfs·ext·xfs·f2fs·exfat·vfat·ntfs)만, 형식이 없는 파티션은 안이 비었을 때만 ② "쓰는 중"이 파티션 자신의 마운트만 봐서 그 위에 올라간 암호화·LVM 장치를 놓쳤어요 → 자식 장치와 sysfs holders도 봐요 ③ 화면에서 확인한 디스크가 설치 직전에 다른 디스크로 바뀌어도 이름만 같으면 지웠어요 → 계획에 디스크 id(크기+시리얼+WWN)와 파티션 PARTUUID를 넣어 설치 직전에 같은지 확인 ④ 라이브 USB를 한 단계만 따라가서 Ventoy(`/dev/mapper/ventoy`)로 켠 USB 자체가 설치 대상에 보였어요(이전부터 있던 문제) → 디스크가 나올 때까지 올라가요 ⑤ OEM 복구 파티션 → GPT 속성(숨김·읽기 전용·필수)이 있으면 막아요 ⑥ 다른 디스크의 BitLocker 윈도우는 복구 키 확인 대상이 아니었어요 → 남는 디스크 어디든 BitLocker면 모든 방식에서 확인 ⑦ VM 테스트가 화면의 안전 흐름을 안 지나갔어요 → `qs ipc call shell installerState`(비밀번호 없는 상태 JSON)로 키보드로 몰아서 확인 단계에서 지울 파티션을 체크하기 전에는 못 가고 체크하면 갈 수 있는지 확인(`drive_installer`) ⑧ 계획의 타입 검사. 이것들은 모두 단위 테스트로 막혀 있어요(87개)
+- 검증(2026-10-13): `verify -Installer windows` 통과(부팅 88장면·판정 15개 PASS, 설치 5단계 통과, 화면 스크린샷 확인), 디스크 전체 설치(`-Installer robinos`)도 같은 백엔드로 5단계 통과. VM 테스트가 잡은 버그 둘: 설치 진행률이 12%에 머물던 것(pacman이 파이프에서는 `installing 이름...`만 말해요), 윈도우 디스크 관리가 만든 NTFS 파티션에 설치하면 `btrfs subvolume create`가 실패하던 것(예전 NTFS 흔적을 `wipefs`로 지우고 `mount -t btrfs`로 지정). 남은 것: 파티션 목록이 길면 "설치하면" 막대가 아래로 밀려 스크롤해야 해요(설치 창 높이를 키우기), 실제 윈도우 PC에서는 아직 해 보지 않았어요
+- 테스트: `test-robin-install.py`(진행률, 디스크 그림, 이전 파티션 다시 쓰기와 거절, 다른 디스크의 윈도우, 시간대 경로), 설치 테스트(진행률 43~69% 줄, `/etc/issue`, zram, windows 모드는 멈춘 설치의 파티션을 만든 뒤 `replace`로 설치), 부팅 테스트 `installer-user`, `installer-timezone` 장면
+- 남은 것: 별도 `/home`·수동 파티션 전체, 설치기 안에서 윈도우 C: 줄이기(ntfsresize, BitLocker·빠른 시작이면 막기), 디스크 암호화(T-163), 언어 고르기, (설치 화면이 끝까지 설치하는 것은 2026-10-14에 윈도우 설치 테스트에 넣어 통과했어요: 진행 막대 2%에서 100%), 비밀번호 강도(2026-10-14: 짧거나 사용자 이름과 같으면 안내만 보여 줘요. 막지는 않아요), 재설치할 때 `/home` 지키기, 설치 중 전원이 꺼졌을 때 시험. 전체 목록은 [unfinished.md](unfinished.md)
+- 완료 기준: `verify`와 `install-test -Installer windows` 통과, 설치 화면 스크린샷 확인
+
+### T-170 랜딩 페이지와 GitHub Pages
+- 상태: 진행 중 (2026-10-13 공개: https://yoon-robin.github.io/RobinOS/)
+- 출처: 사용자(2026-10-13) "우리 OS 랜딩페이지도 만들어줘 그리고 웹사이트도 깃허브 이용해서 무료로 만들 수 있지 않아?"
+- 한 것(2026-10-13): `site/`에 한 장짜리 랜딩 페이지(약속 "RobinOS로 시작하는 첫 리눅스", 윈도우 이름 표, 터미널 힌트가 타이핑되는 데모, 미션, 스냅샷 되돌리기, 매일 쓰는 기능, 써 보는 순서, "지금은 미리 보기" 안내). 글꼴은 Geist·Pretendard, 색은 brand.md. 움직임 줄이기를 켜면 움직이지 않아요. `scripts/publish-site.sh`가 `site/`를 `gh-pages` 브랜치로 올려요(GitHub Actions 없이 Pages의 "브랜치에서 배포")
+- 공개(2026-10-13, 사용자 "웹사이트 공개해 줘"): `gh-pages` 브랜치를 올리자 GitHub가 Pages를 저절로 켰어요(브랜치에서 배포, legacy 빌드). README에 주소
+- 다시 만들기(2026-10-13, 사용자 "taste-skill 이용해서 랜딩페이지 만들어"): taste-skill 기준으로 점검해 고쳤어요. 왼쪽 글·오른쪽 실제 화면의 첫 화면, 크기가 다른 네 칸(실제 스크린샷), div로 그린 가짜 터미널 대신 `hints.json`으로 실제 힌트를 돌려주는 입력 칸, 부팅 메뉴의 실제 스냅샷 목록, 겹친 설정 화면, 라이트·다크, 글꼴 직접 올리기(Pretendard는 쓰인 글자만 남겨 1MB→120KB), 사진은 WebP(합쳐서 170KB), 404 페이지, 본문 건너뛰기
+- 더 화려하게(2026-10-13, 사용자 "더 예쁘고 화려하게"): 다이얼을 변화 8, 움직임 8로. 제목이 줄마다 떠오르고, 실제 데스크톱이 뒤로 기울어져 있다가 스크롤하면 펴지고(CSS 스크롤 타임라인), 마우스를 따라 살짝 기울어요. 뒤에는 빨강·주황 빛이 천천히 움직여요. 윈도우 이름 → RobinOS 이름이 두 줄로 흐르는 띠, 마우스를 따라 테두리가 빛나는 칸, 터미널은 명령을 타이핑하고 답을 한 줄씩, 되돌리기는 화면이 고정된 채 설치 테스트의 실제 부팅 메뉴 세 장이 단계마다 바뀌어요. 겹친 설정 화면은 스크롤에 따라 벌어지고, 마지막에 소개 영상의 빛의 고리와 내려받기. 움직임 줄이기면 모두 멈추고, 스크롤 이벤트는 쓰지 않아요(IntersectionObserver, 포인터 이벤트, CSS 스크롤 타임라인)
+- ChatGPT 여섯 번째 검토(2026-10-13): 페이지가 소개하는 기능이 공개 ISO(v0.2, 10월 10일)에 없다는 지적이 가장 컸어요(v0.2 뒤 커밋 86개). 사용자가 "새 미리 보기 v0.3 공개"를 골랐어요. 페이지에는 첫 화면의 "설치 전에 알아 둘 것", 확인한 것과 아직 못 한 것 표, 자주 묻는 질문(윈도우가 지워지나요, 보안 부팅과 BitLocker, 카카오톡·HWP·은행·게임, 스냅샷과 내 파일, 사양, 다른 리눅스와 차이), 움직임 멈추기 단추(WCAG 2.2.2), 움직임 줄이기를 바로 따라가기, 칸의 빛도 움직임 줄이기를 지키기, 터미널은 다 쓴 답만 화면 읽기 프로그램에, main.js를 못 불러오면 내용을 보이기, 키 낮은 창에서는 되돌리기 장면을 고정하지 않기. 마우스 기울기는 스크롤 펴기와 겹쳐서 뺐고, 과하게 약속하던 문구("윈도우 옆에도 설치돼요", "대부분 드라이버 없이", "winget → pacman -S")를 고쳤어요. USB 없이 파티션으로 켜기는 페이지에서 빼고 install.md에만
+- v0.3 프리뷰 공개(2026-10-13, 사용자 "새 미리 보기 v0.3 공개"): main `8698053`로 xz ISO 2,103,541,760바이트(한도까지 약 42MiB), 서명한 SHA256SUMS, https://github.com/Yoon-robin/RobinOS/releases/tag/v0.3.0 (프리릴리스). 업데이트 저장소 `repo`도 `robinos 0.3.0.r475`로 올리고 받아 설치 확인. 페이지의 내려받기는 이 태그로
+- 설명 줄이기와 모션그래픽(2026-10-13, 사용자 "쓸데없는 설명 줄여주고 좀더 모션그래픽처럼"): 구역마다 제목 한 줄과 화면만 남기고 칸 설명·긴 답을 줄였어요. 제목 낱말이 흐림에서 하나씩 떠오르고, 화면은 위에서부터 열리고, 숫자 띠(학습 미션 45, 명령 힌트 75, 확인하는 화면 86)가 0부터 올라가요. 움직임 줄이기면 모두 그 자리에
+- 애플처럼 단순하게(2026-10-13, 사용자 "너무 cringe인 설명이 너무 많아… 비주얼적으로만 This is RobinOS 이런 식으로, 애플처럼 심플하게"): 페이지를 다시 짰어요. 큰 "RobinOS"와 약속 한 줄, 내려받기, 기울어져 있다가 일어서는 환영 화면 → 옆으로 넘기는 실제 화면 여섯 장(캡션은 기능 이름만) → 터미널 힌트 세 줄(`ipconfig`→`ip a` 등, 윈도우 명령에 줄이 그어지고 리눅스 명령이 들어와요) → 학습 센터 → 다크와 라이트(고정된 빠른 설정이 스크롤에 따라 다크에서 라이트로) → 스냅샷 부팅 메뉴 → 끝의 이름과 내려받기. 흐르는 띠, 숫자 띠, 칸 설명, 자주 묻는 질문, 단계, 빛의 고리, 움직임 멈추기 단추(반복되는 움직임이 없어져서)를 뺐어요. "실제 PC에서는 아직 켜 보지 못했어요"와 릴리스 노트 링크는 끝에 남겼어요. `hints.json` 대신 `build-site.py`가 페이지의 명령 짝을 힌트 스크립트와 맞춰 봐요
+- 개선(2026-10-13, 사용자 "개선점 더 찾아줘"): 게시된 페이지를 재 보니 첫 로드 267KB(글꼴 235KB), 레이아웃 흔들림 0, 링크 모두 열림. 고친 것: 푸터·상단 링크 높이를 24px 이상으로(WCAG 2.2), canonical·robots·sitemap·JSON-LD, 링크 미리 보기 그림에서 상단바 글자 빼기(`scripts/make-og.py`), 첫 화면의 둘째 링크를 "설치 안내"로, 끝에 "약 2GB · 64비트 UEFI PC", 휴대폰에서 줄 끝에 글자 하나 남는 것, 내려받기 릴리스 태그 확인(`publish-site.sh`). 남은 것: 첫 화면 그림이 어두워 눈길이 약함(앱 여러 개가 열린 장면이나 GPU 유리 질감, 짧은 화면 녹화), 영어 페이지, Firefox·Safari에서 스크롤 효과 확인
+- 첫 화면 그림(2026-10-14, 사용자 "알아서 해줘"): 어둡던 환영 화면 대신 부팅 테스트의 `showcase` 장면(터미널에 `ipconfig`를 치면 `ip a` 힌트가 뜨고, 런처에 `taskmgr`를 치면 미션 센터가 나와요)으로 바꿨어요. 글꼴 부분 집합과 링크 미리 보기 그림(`og.jpg`)도 다시 만들어 `45f2f85`로 게시
+- 할 것: 소개 영상 넣기, 스크린샷을 GPU로 켠 화면(유리·블러가 보이는)으로 바꾸기(T-152), 실제 PC 확인 뒤 "미리 보기" 안내 고치기
+- 완료 기준: https://yoon-robin.github.io/RobinOS/ 가 열리고 휴대폰 폭에서도 가로로 넘치지 않아요
+
+### T-169 평소 쓰다가 다음 리눅스 개념으로 (윈도우 습관에서 리눅스로)
+- 상태: 진행 중
+- 출처: 컨셉 결정(2026-10-13, [design.md](design.md) "컨셉 결정"), ChatGPT 다섯 번째 검토: "미션이 45개라는 사실보다 평소 사용 중에 다음 리눅스 개념을 알게 되는지가 차별점. 미션이 별도 메뉴에만 있으면 약해요"
+- 한 것(2026-10-13): 터미널 힌트 아래 "직접 해 보기: 학습 미션 N → robinctl learn show N"(윈도우 명령 30여 개, `__robinos_hint_mission`), 런처의 윈도우 이름(작업 관리자, 파일 탐색기, 명령 프롬프트, 네트워크, 저장소, 디스크 관리, 이벤트 뷰어, 서비스)에 "터미널: 명령"과 학습 미션 항목, 환영 마법사의 마지막 안내와 "리눅스 기초" 설명. 테스트: 미션이 붙은 명령마다 힌트가 있고 번호가 45개 안인지(`test-robinctl.sh`), 부팅 테스트 `launcher-windows-mission` 장면. 남은 것: 연결표를 한 곳으로 모으기(지금은 힌트 스크립트와 런처 두 곳), 미션을 끝냈을 때 다음 일상 동작 알려 주기
+- 할 것: 처음 10~15분 안에 "윈도우 이름으로 찾기 → 리눅스 이름과 명령 → 그 개념의 미션"을 겪게 하기. 런처에서 윈도우 이름(작업 관리자, 서비스, 이벤트 뷰어 등)으로 찾으면 결과에 "터미널로는 `top`" 같은 명령과 해당 미션으로 가는 길, 터미널 힌트(`ipconfig` → `ip a`)가 나오면 관련 미션 번호, 환영 마법사 끝에서 첫 미션 세 개. 연결표는 한 곳(윈도우 이름 ↔ 리눅스 명령 ↔ 미션)에 두고 런처·힌트·학습 센터가 같이 써요
+- 완료 기준: 부팅 테스트에서 "작업 관리자" 검색 결과에 명령과 미션이 보이고, `ipconfig` 힌트가 미션을 알려 줘요
+
+### T-155 부팅 테스트에 성공 조건 넣기
+- 상태: 진행 중
+- 출처: ChatGPT 세 번째 검토(2026-10-12). 묶음 77이 "통과"로 나왔는데 라이브 ISO에서 터미널이 하나도 안 열렸어요. 스크린샷만 찍는 테스트는 화면이 틀려도 통과해요
+- 한 것(2026-10-12): 멈춘 시나리오는 실패(종료 코드 1, WHPX·TCG 실행기 둘 다), 터미널을 연 뒤 "활성 창이 Ptyxis"일 때만 남는 `logger` 표시를 시리얼 로그에서 확인(`expect_serial`), 안 열리면 tty3 진단, 키·포인터 QMP 명령이 오류로 답하면 실패(`Qmp.act`), `build-iso.sh`가 빌드한 airootfs의 `/usr/share/robinos/bin`과 `/usr/local/bin`이 모두 실행 가능한지 확인
+- 한 것(2026-10-13 집 PC): `scripts/e2e-check.sh`(ISO의 `/opt/robinos/scripts`)가 장면마다 VM 안에서 상태를 확인해 `robinos-e2e: scenario=<이름> status=PASS|FAIL <근거>`를 저널에 남기고, `boot-test-qmp.py`의 `check_scene`이 시리얼 로그에서 결과를 모아 하나라도 실패면 끝에 실패. 장면: 터미널(Ptyxis), 미션 1, 최대화(`fullscreen` 1, 바 아래·독 위, 화면 70% 넘게)와 되돌리기, 새 터미널이 창 하나만 늘리기, 셸 다시 띄우기(새 `qs`와 IPC 응답), 라이트·다크(저장된 값과 GTK `color-scheme`). 가짜 hyprctl로 판정 시험. [testing.md](testing.md) "상태로 판정하는 장면"
+- 2026-10-13 묶음 검증(`a2c513a`): 열 장면 모두 PASS(최대화 y=37·높이 792/900, 되돌린 높이 673, Ptyxis 1→2, 녹화 4초, 새 qs, 라이트·다크 저장값과 GTK)
+- 한 것(2026-10-13 두 번째): 같은 장면을 여러 번 확인할 수 있게(`label`, 입력한 뒤의 시리얼 로그만 봐요), 학습 센터에서 연 미션 터미널(`mission-terminal`), 결과 줄의 색 코드 빼기
+- 남은 것: 일부러 망가뜨린 ISO로 실패하는 것 확인
+- 처음 할 것(기록): 장면마다 게스트 안에서 확인하고 통과했을 때만 `logger -t robinos-e2e "scenario=<이름> status=PASS"`를 남기기. 후보: 최대화(`hyprctl clients -j`의 fullscreen, at, size가 바·독 사이), 학습 미션 터미널의 출력, 테마 바꾸기(저장된 값과 GTK 설정), 셸 재시작(새 Quickshell과 IPC 응답), 새 터미널을 열 때 창이 하나만 늘어나는지. 결과를 장면별로 모아 하나라도 실패면 전체 실패
+- 흔들림(2026-10-13): 셸을 다시 시작한 뒤 IPC `learnCenter`로 학습 센터를 열었는데 창이 안 떠서 `mission-terminal`, `dark`가 실패했어요(설치 테스트는 통과). 같은 HEAD로 부팅 테스트만 다시 돌리니 14장면 모두 통과했어요. 다시 나오면 열리기를 기다렸다가 다시 부르는 확인을 넣어요
+- 완료 기준: 위 장면이 화면이 아니라 상태로 판정되고, 일부러 망가뜨린 ISO(실행 권한 빼기 등)에서 테스트가 실패하는 것을 한 번 확인
+
+### T-156 설치본 펌웨어와 펌웨어 업데이트
+- 상태: 완료 (2026-10-13 묶음 검증에서 설치본의 `pacman -Q sof-firmware fwupd` 확인. 실제 PC의 GNOME Software 펌웨어 목록은 실기기 확인 때 같이 봐요)
+- 출처: 다른 OS와 비교(2026-10-12). `sof-firmware`, `linux-firmware-marvell`, `wireless-regdb`가 라이브 ISO(`archiso/packages.x86_64`)에만 있고 설치본 목록에는 없었어요. 라이브에서는 소리가 나던 요즘 인텔·AMD 노트북이 설치하고 나면 소리가 안 날 수 있어요. 펌웨어 업데이트(fwupd)는 Fedora, elementary, Ubuntu에 다 있는데 RobinOS에는 없었어요
+- 한 것: 세 펌웨어를 `packages/core.txt`에, `fwupd`를 `packages/apps.txt`에 넣었어요. GNOME Software는 fwupd가 있으면 업데이트 목록에 펌웨어도 보여 줘요
+- 완료 기준: 설치 테스트에서 설치본에 `pacman -Q sof-firmware fwupd`가 나오고, 실제 PC에서 GNOME Software 업데이트에 펌웨어가 보이는지 확인(실기기 확인은 사용자)
+
+### T-157 방화벽 켜기
+- 상태: 진행 중
+- 한 것(2026-10-13 집 PC): ufw를 골랐어요(`ufw status`, `ufw allow 22`처럼 명령이 말에 가까워서 미션에서 설명하기 쉬워요). `packages/core.txt`에 `ufw`, `post-install.sh`가 `/etc/ufw/ufw.conf`의 `ENABLED=yes`와 `ufw.service`로 켜요(설치기 chroot에서 `ufw enable`을 하면 라이브 커널에 규칙이 들어가서요). 기본값이 들어오는 연결은 막고 나가는 연결은 그대로, ufw의 before.rules가 DHCP·ping·mDNS(프린터 찾기)를 열어 둬요. `robinctl audit`은 설치본에서 방화벽이 꺼져 있으면 경고(라이브는 괜찮다고). 설치 테스트에서 `ufw` 켜짐과 mDNS 규칙 확인
+- 2026-10-13 묶음 검증 통과(설치본에서 ufw 켜짐, mDNS 규칙)
+- 남은 것: 보안 기초 미션에 "방화벽 규칙 보기". 웹 보안 랩(Docker)이 그대로 되는지 실제로 띄워 보기
+- 출처: 다른 OS와 비교(2026-10-12). Fedora는 firewalld가 켜져 있고, Mint는 환영 화면 체크리스트에서 방화벽을 켜게 해요. RobinOS는 방화벽이 꺼져 있는데 `robinctl audit`은 괜찮다고 해요
+- 할 것: 들어오는 연결은 막고 나가는 연결은 그대로 두는 기본값(ufw나 firewalld 중 하나, 학습 미션에서 설명하기 쉬운 쪽). 프린터 찾기(mDNS)는 열어 두기. `robinctl audit`이 방화벽이 꺼져 있으면 알려 주기. 보안 기초 미션에 "방화벽 규칙 보기" 하나
+- ChatGPT 네 번째 검토(2026-10-12): firewalld를 추천했어요(NetworkManager 연결마다 집/공공 구역, 공공 Wi-Fi에서는 mDNS도 막기). 지금은 설명하기 쉽고 이미 검증 중인 ufw로 두고, 연결마다 다른 규칙이 필요해지면 firewalld로 옮겨요. Docker 랩은 포트를 127.0.0.1에만 열어서 밖으로 새지 않아요
+- 완료 기준: 설치 테스트에서 방화벽이 켜져 있고, 네트워크 프린터 찾기와 웹 보안 랩이 그대로 동작
+
+### T-158 개인 파일 백업
+- 상태: 완료 (2026-10-13 묶음 검증. USB 디스크에 백업하고 되살리기는 실기기 확인 때 같이 봐요)
+- 한 것(2026-10-12 집 PC): `deja-dup`을 `packages/apps.txt`에, 런처에서 "백업", "파일 히스토리", "Time Machine"으로 찾으면 Déjà Dup(윈도우의 파일 히스토리에 해당), [recovery.md](recovery.md) "스냅샷과 백업", 설치 테스트에서 `pacman -Q deja-dup`과 데스크톱 파일 확인
+- 출처: 다른 OS와 비교(2026-10-12). 스냅샷은 시스템만 되돌리고 개인 파일은 지켜 주지 않아요. Mint는 백업 도구, GNOME 계열은 Déjà Dup, 윈도우는 "Windows 백업", macOS는 Time Machine이 있어요
+- 할 것: Déjà Dup(`deja-dup`)을 `packages/apps.txt`에 넣고 런처에서 "백업", "파일 히스토리", "Time Machine"으로 찾게 하기. 환영 화면이나 [recovery.md](recovery.md)에 스냅샷과 백업의 차이를 한 줄로
+- ChatGPT 네 번째 검토: 앱을 넣는 것으로 끝내지 말고 외장 디스크에 백업한 뒤 파일 하나를 지우고 되살리기까지 확인. 같은 디스크에만 백업하면 디스크 고장에는 소용없다고 안내
+- 완료 기준: 설치본에서 런처로 백업 앱이 열리고, USB 디스크에 백업하고 파일 하나를 되살리는 것을 확인
+
+### T-159 윈도우 프로그램(.exe)을 열면 안내
+- 상태: 진행 중
+- 확장(2026-10-14, 사용자 "알아서 해줘"; 참고: Zorin이 240개 넘게 알아봐요, [references.md](references.md)): 알아보는 프로그램을 17개에서 55개로. 브라우저(Firefox·Edge·Brave·Opera), 메일(Thunderbird), 채팅과 협업(Slack·Signal·WhatsApp·Teams·Notion·Obsidian), 클라우드(Dropbox·OneDrive·Google Drive), Adobe 계열(GIMP·Krita·Inkscape·Kdenlive로), PDF, 사진 보기(알씨), 화면 녹화(반디캠 등 → RobinOS의 Win+Alt+R와 OBS), 토렌트, 게임 런처(Epic·GOG → Heroic, Battle.net → Lutris, Minecraft → Prism), 개발·원격 도구, Rufus(→ 디스크 앱), 백신(알약·V3 → 방화벽은 기본으로 켜져 있다고), 은행·공공기관 보안 프로그램(nProtect·TouchEn·Veraport 등 → 윈도우 전용이라 안 된다고 솔직히). Flathub ID는 모두 Flathub API로 있는지 확인했어요(TeamViewer만 ID가 달라 홈페이지 링크로). `check-desktop.sh`가 파일 이름 맞추기를 시험해요(Steam이 Teams로 잘못 잡히지 않는지, `cooperate_setup.exe`가 Opera로 잡히지 않는지 같은 경우 포함)
+- 한 것(2026-10-13 집 PC): `.exe`·`.msi`·`.lnk`의 기본 앱을 `robinos-windows-app`(숨은 데스크톱 파일)으로, 이게 셸의 "윈도우 프로그램" 창(`WindowsApp.qml`)을 열어요. 파일 이름으로 알려진 프로그램 열일곱 가지(카카오톡, Chrome, 웨일, 한글, Office, 반디집·7-Zip, 곰플레이어·팟플레이어, Discord, Steam, VS Code, Zoom, Spotify, Telegram, OBS, Notepad++, Python, Git)를 알아보고 대신 쓸 것(RobinOS에 있는 앱, 앱 스토어의 Flathub 앱, 웹 버전)을 단추로. 모르는 파일은 "리눅스에서는 그대로 열리지 않아요"와 Bottles 설치 단추. 이름 표는 `windowsapps.js`, `check-desktop.sh`가 파일 이름 열여섯 개로 확인("DigitalClock.exe"가 Git으로 잡히지 않게 짧은 이름은 그대로만). 부팅 테스트 `windows-app` 장면과 상태 확인
+- 2026-10-13 묶음 검증 통과(`windows-app` 장면). 제목의 조사("카카오톡는")를 "카카오톡 윈도우용 설치 파일이에요"로
+- 남은 것: 학습 미션 쪽 설명(실행 파일 형식이 다른 이유), 설치본에서 Flathub 단추가 앱 스토어의 그 앱을 여는지
+- 출처: 다른 OS와 비교(2026-10-12). Zorin은 `.exe`를 열면 170개 넘는 설치 파일을 알아보고 리눅스판, 웹 앱, Wine 중 무엇을 쓰면 되는지 알려 줘요. 처음 쓰는 사람이 가장 먼저 부딪히는 곳이에요
+- 할 것: `.exe`·`.msi`의 기본 앱을 RobinOS 안내 창으로. 파일 이름으로 잘 알려진 프로그램(카카오톡, 크롬, 한글, 반디집, 곰플레이어 등)을 알아보고 대신 쓸 것(Flathub 앱, 웹 버전, 기본 앱)을 보여 주기. 모르는 파일이면 "리눅스에서는 바로 실행되지 않아요"와 Bottles(Flathub) 설치 단추. 학습 미션 쪽 설명(실행 파일 형식이 다른 이유)으로 이어지게
+- ChatGPT 네 번째 검토의 안전 규칙: 파일을 열자마자 실행하지 않기, Wine·Bottles를 자동으로 설치하거나 관리자 권한으로 돌리지 않기, Bottles를 "안전한 상자"라고 하지 않기(호환 환경이지 격리가 아니에요), 파일 이름이 `KakaoTalk_Setup.exe`여도 진짜라는 보장이 없다고 쓰기, 공식 리눅스판이 있으면 그것부터, 대체 앱 목록에는 확인한 날짜, 모르는 파일은 "모르겠어요"라고. 첫 단계는 추천 목록보다 안내 창과 앱 스토어 연결
+- 완료 기준: 부팅 테스트에서 `.exe`를 열면 안내 창이 뜨고 알려진 이름 하나는 대신 쓸 앱을 보여 줘요
+
+### T-160 화면 녹화
+- 상태: 완료 (2026-10-13 묶음 검증: `recorded` PASS, 4초 mp4, 바의 "녹화 중" 스크린샷)
+- 한 것(2026-10-13 집 PC): `robinos-screenshot record`가 `wf-recorder`로 지금 화면을 `~/비디오/Screencasts/날짜.mp4`에 녹화하고, 한 번 더 부르면 멈추고 "열기·폴더 열기" 알림. `Win+Alt+R`(Hyprland), 런처 "화면 녹화"(윈도우 이름 "Xbox Game Bar"), 녹화 중에는 바에 빨간 점 "녹화 중"(누르면 멈춤, 셸 IPC `setRecording`). `wf-recorder`는 `packages/desktop.txt`와 라이브 목록에. 부팅 테스트 `recording` 장면과 `recorded` 상태 확인(1초 넘는 mp4)
+- 나중에 할 수 있는 것: 소리 함께 녹화, 영역 녹화
+- 출처: 다른 OS와 비교(2026-10-12). 윈도우(Win+Alt+R, 캡처 도구), macOS(Cmd+Shift+5), GNOME 기본 녹화가 있는데 RobinOS는 스크린샷만 있어요
+- 할 것: `robinos-screenshot`에 녹화 추가(`wf-recorder`나 `gpu-screen-recorder`), 녹화 중에는 바에 빨간 점과 멈춤 단추, 파일은 `~/동영상`에. 단축키는 Win+Alt+R
+- 완료 기준: 부팅 테스트에서 몇 초 녹화한 파일이 생기고 재생돼요
+
+### T-161 접근성: 확대, 큰 글씨, 고대비, 움직임 줄이기
+- 상태: 진행 중
+- 한 것(2026-10-13 집 PC): 화면 확대는 윈도우 돋보기와 같은 `Win+=`·`Win+-`·`Win+Esc`(Hyprland `cursor:zoom_factor`, 0.5배씩 1~5배), 설정 창의 "손쉬운 사용"에 "움직임 줄이기"(셸 애니메이션 시간 0, Hyprland 애니메이션 끔, GTK `enable-animations`)와 "앱 글자 크게"(GTK `text-scaling-factor` 1.25). 저장은 `appearance.json`이라 다시 켜도 유지. 부팅 테스트 `zoomed`·`unzoomed`
+- 2026-10-13 묶음 검증 통과(확대 2배와 되돌리기). 움직임 줄이기·앱 글자 크게는 아직 VM에서 켜 보지 않음
+- 남은 것: 고대비 색, 셸 자체의 글자 크기(지금은 화면 배율로), 움직임 줄이기·글자 크게를 부팅 테스트 장면으로
+- 출처: 다른 OS와 비교(2026-10-12). GNOME 계열(Ubuntu, Fedora, Zorin)은 Orca, 화면 확대, 움직임 줄이기가 기본이에요. RobinOS는 투명도 줄이기만 있고 Orca는 막혀 있어요(T-040)
+- 할 것: 설정 앱(T-149)에 "손쉬운 사용" 쪽. 화면 확대는 Hyprland `cursor:zoom_factor`로(단축키 Win+더하기/빼기), 글자 크기(셸과 GTK 배율), 고대비 색, 움직임 줄이기(Theme의 시간 값을 0으로)
+- 완료 기준: 네 가지가 설정에서 켜지고 다시 켜도 유지돼요
+
+### T-162 업데이트 화면
+- 상태: 진행 중
+- 한 것(2026-10-13 집 PC): `robinctl update`가 pacman을 부르기 전에 "업데이트 N개, 받을 크기 X MB", 커널이 바뀌면 "끝나면 다시 시작", "업데이트 직전에 스냅샷 N번을 찍어요(되돌리기 명령)"를 보여 줘요. 데이터 요금 연결(NetworkManager `Metered` 1·3)이면 알리고 받을지 물어요. 목록은 `checkupdates`의 임시 데이터베이스로 봐서, 여기서 멈춰도 시스템의 패키지 데이터베이스는 그대로예요(부분 업데이트 없음). `robinctl update --preview`(root 없이 미리 보기)와 가짜 checkupdates·pacman·busctl 테스트 여덟 개
+- 2026-10-13 묶음 검증 통과(빠른 테스트만, VM에서 실제 업데이트는 아직)
+- 남은 것: 셸의 업데이트 점(바)에도 개수와 크기, 데이터 요금 연결에서는 점만 띄우고 알림 안 하기
+- 출처: 다른 OS와 비교(2026-10-12). Mint는 보안·커널 업데이트를 먼저 보여 주고, elementary는 받을 크기를 보여 주고 데이터 요금 연결에서는 받지 않아요. RobinOS는 업데이트 전에 스냅샷을 자동으로 찍어서(snap-pac) Omarchy와 같은 장점이 있는데 화면에서는 보이지 않아요
+- 할 것: 업데이트 창에 받을 크기, 커널이 바뀌는지(다시 시작 필요), "업데이트 전에 스냅샷 N번을 찍어요". 데이터 요금 연결(NetworkManager metered)에서는 알림만
+- ChatGPT 네 번째 검토: 오래 업데이트하지 않은 시스템, 디스크 공간 부족, 업데이트 실패 때 무엇을 하면 되는지(스냅샷 번호와 되돌리는 법)도 같은 화면에서
+- 완료 기준: 부팅 테스트나 설치 테스트에서 업데이트 창의 세 줄이 맞게 나와요
+
+### T-163 디스크 암호화 (조사)
+- 상태: 할 일
+- 출처: 다른 OS와 비교(2026-10-12). Ubuntu는 TPM 암호화와 복구 키, Pop!_OS는 기본으로 켜져 있고, Omarchy는 필수예요. 노트북을 잃어버리면 지금은 파일을 그대로 읽을 수 있어요
+- 할 것: 설치 프로그램에 "디스크 암호화" 선택을 넣을 수 있는지 조사. GRUB이 LUKS2(argon2)를 못 여는 문제, grub-btrfs 스냅샷 부팅과 함께 쓰는 방법, 비밀번호 입력 화면(T-150 Plymouth), 복구 키를 사람에게 어떻게 보여 줄지
+- ChatGPT 네 번째 검토: 실험 두 개를 별도 브랜치에서. A) GRUB + LUKS2(PBKDF2) + 암호화된 /boot: 지금의 grub-btrfs 스냅샷 부팅이 그대로 되는지. B) GRUB + 암호화하지 않은 /boot + LUKS2(Argon2id): 설치, 부팅, 라이브 USB에서 되돌리기. LUKS1은 새 설치 기본값으로 쓰지 않아요. 복구 키를 암호화 안 된 곳에 평문으로 두지 않기, 부팅 때 비밀번호 입력은 한글이 아니라 영문 배열이라는 것을 설치 때 알려 주기. systemd-boot + UKI는 보안 부팅과 함께 나중에
+- 완료 기준: 방식 하나를 정해 [design.md](design.md)에 쓰고 구현 작업으로 나누기
+
+### T-164 처음 상태로 되돌리기 (조사)
+- 상태: 할 일 (나중)
+- 출처: 다른 OS와 비교(2026-10-12). 윈도우 "이 PC 초기화", ChromeOS Powerwash, Omarchy "Reset Computer", Pop!_OS의 파일을 남기는 다시 설치
+- 할 것: 설치가 끝난 직후의 스냅샷을 "처음 상태"로 남겨 두고, 설정 앱에서 개인 파일은 남긴 채 시스템만 그때로 되돌리는 방법 조사. 다른 사람에게 PC를 넘길 때 쓰는 "새 주인 준비"는 그다음
+- ChatGPT 네 번째 검토: 개인 파일과 다른 하위 볼륨은 남으니 "공장 초기화"가 아니라 "시스템 재설정"이라고 불러요. Pop!_OS의 파일을 남기는 다시 설치와 비교
+- 완료 기준: 방식과 위험(남는 것과 지워지는 것)을 [recovery.md](recovery.md)에 정리
+
+### T-165 휴대폰 연결과 스캐너
+- 상태: 진행 중 (스캐너 먼저)
+- 한 것(2026-10-13 집 PC): 스캐너. `sane`, `sane-airscan`(드라이버 없이 네트워크·요즘 USB 스캐너), `simple-scan`을 `packages/apps.txt`에, 런처에서 "팩스 및 스캔"(윈도우 이름)으로 찾기, 설치 테스트에서 패키지와 데스크톱 파일 확인
+- 2026-10-13 묶음 검증 통과(설치본에 스캔 패키지와 데스크톱 파일)
+- 남은 것: 휴대폰 연결(KDE Connect와 LocalSend 중 고르기)
+- 출처: 다른 OS와 비교(2026-10-12). Zorin Connect(알림, 문자, 파일), Mint Warpinator(아이폰 앱도 있음), 윈도우 "휴대폰과 연결". 스캐너는 대부분 기본으로 돼요
+- 할 것: 휴대폰은 KDE Connect(크기 큼)와 LocalSend(Flathub, 아이폰도 됨) 중 고르기. 스캐너는 `sane`과 `simple-scan`을 `packages/apps.txt`에 넣고 런처에서 "팩스 및 스캔"으로
+- ChatGPT 네 번째 검토: 휴대폰은 LocalSend(Flathub)가 먼저, KDE Connect는 권한과 방화벽 규칙까지 생각해야 해서 나중
+- 완료 기준: 고른 것을 설치본에 넣고 런처에서 열려요
+
+### T-166 라이브 USB로 설치본 고치기
+- 상태: 할 일
+- 출처: ChatGPT 네 번째 검토(2026-10-12). GRUB이 망가지면 부팅 메뉴의 스냅샷에도 갈 수 없어요. Ubuntu·Fedora는 라이브 USB에서 고치는 길이 문서로 있어요
+- 할 것: 라이브 USB에서 설치된 RobinOS를 찾아(Btrfs `@`) 마운트하고 GRUB과 커널을 다시 설치하는 `robinctl rescue`(먼저 명령, 화면은 나중). 스냅샷으로 되돌리기도 라이브에서 되게. [recovery.md](recovery.md)에 순서
+- 완료 기준: 설치 테스트에서 GRUB을 일부러 지운 디스크를 라이브 ISO로 고쳐 다시 부팅돼요
+
+### T-167 실제 PC 확인 목록
+- 상태: 할 일 (사용자 확인 필요와 함께)
+- 출처: 다른 OS와 비교와 ChatGPT 네 번째 검토(2026-10-12). ChromeOS Flex는 확인한 기종과 알려진 문제를 목록으로 보여 줘요. 실제 PC 테스트는 0번이에요
+- 할 것: 실기기에서 볼 것을 한 장으로(Wi-Fi, 소리, 밝기, 한글 입력, 절전 뒤 깨우기, 터치패드, 외부 모니터, 블루투스 오디오, NVIDIA·인텔·AMD 그래픽). `robinctl doctor`가 결과를 붙여 넣기 좋게 요약. 확인한 PC와 알려진 문제를 [install.md](install.md)에 표로
+- 완료 기준: 목록과 doctor 요약이 있고, 사용자가 실기기 결과를 한 번 채워요
+- 사용자 보고(2026-10-13): 실기기에서 해 봤는데 잘 된다, VMware에서 하는 것과 똑같다. 어떤 PC에서 무엇까지(라이브, 설치, 와이파이·소리 등) 했는지는 아직 몰라요. 그때 본 `ARCHISO_EFI` 이름은 T-171에서 고쳤어요
+
+### T-168 USB 없이 실제 PC에서 켜 보기 (파티션 부팅)
+- 상태: 진행 중
+- 출처: 사용자(2026-10-13) "USB필요없이 파티션나눠서 가상 USB만들어서 부팅할수잇지않아?"
+- 한 것(2026-10-13): ISO의 파일을 FAT32 기본 데이터 파티션에 복사해 UEFI로 켜는 방법을 [install.md](install.md) "USB 없이 켜 보기"에 정리(디스크 관리로 4GB 만들기, `bcdedit`로 다음 한 번만 그 파티션으로 켜기, 되돌리기, BitLocker 주의). `scripts/partition-boot-test.sh`가 VM에서 확인: CD 없이 기본 데이터 파티션 하나뿐인 디스크로 켜서 archiso가 `/dev/vda1`을 찾아 52초 만에 로그인 프롬프트(가장 큰 파일 `airootfs.sfs` 1959MiB, FAT32 한도 안)
+- 할 것: 실제 PC에서 `bcdedit /set {fwbootmgr} bootsequence`로 만든 항목을 펌웨어가 받아 주는지 확인(사용자, T-167과 함께). 되면 이 과정을 대신 해 주는 관리자 PowerShell 스크립트(파티션 줄이기는 사용자가 디스크 관리에서 하고, 복사와 부팅 항목만)
+- 완료 기준: 실제 윈도우 PC 한 대에서 USB 없이 라이브가 뜨고, 다시 시작하면 윈도우로 돌아와요
+
+### T-154 터미널 창을 마우스로 옮기기 (제목 표시줄)
+- 상태: 진행 중 (사용자 결정 2026-10-12: "Ptyxis로 바꾸기". foot 대신 Ptyxis를 기본 터미널로)
+- 출처: 사용자 질문(2026-10-12, VMware 라이브에서) "창들은 어떻게 이동시키는데", ChatGPT 검토(2026-10-12) "초보자용 OS라면 Win+드래그를 유일한 이동 방법으로 두어서는 안 됩니다". T-011에 있던 일을 앞으로 당겼어요
+- 지금: 셸 창(학습 센터, 설치기)과 GTK·Qt 앱은 제목 표시줄을 끌면 돼요. foot 터미널은 제목 표시줄이 없어서 `Win`+왼쪽 끌기(이동), `Win`+오른쪽 끌기(크기)만 돼요(`robinos.lua`의 `hl.dsp.window.drag`). `desktop/foot/foot.ini`에 `[csd] preferred=client`가 있는데 Hyprland가 xdg-decoration에 "서버가 그린다"고 답해서 foot이 제목 표시줄을 그리지 않아요(design.md "창 제목 표시줄")
+- 찾은 것(2026-10-12): Hyprland 0.56.2 소스(`src/protocols/XDGDecoration.cpp`)에서 `xdgModeOnRequestCSD()`가 앱이 무엇을 요청하든 `MODE_SERVER_SIDE`를 돌려줘요. 설정으로 바꿀 수 없어서 foot은 언제나 제목 표시줄을 그리지 않아요
+- 할 것: 비교: hyprbars 플러그인(Hyprland 버전마다 다시 빌드해야 해서 롤링 업데이트에 약해요), 제목 표시줄을 스스로 그리는 터미널(GNOME 콘솔·Ptyxis 등, foot의 테마 전환·힌트를 옮겨야 해요), 셸이 그리는 얇은 끌기 막대 ④ 제품 방향이 바뀌는 선택(터미널 교체)이면 사용자 확인 필요로
+- 한 것(2026-10-12, `work/batch74`): 기본 터미널을 Ptyxis로. `ShellState.terminal`(`ptyxis --new-window`) 하나를 독, 런처(터미널 앱 실행 포함), Win+X, 바탕 화면 메뉴, 미션·업데이트 터미널(`openTerminal`, `runInTerminal`)이 같이 써요. Hyprland `Win+Enter`도 Ptyxis. dconf 기본값 `[org/gnome/Ptyxis]`: 다크·라이트를 셸 선택대로(`interface-style='system'`), 지난 창 복원 끄기, 100×28. foot은 대체용으로 남기고 런처에서는 숨겨요. 패키지 목록(설치본, 라이브)에 ptyxis. 부팅 테스트의 최소화 장면은 `org.gnome.Ptyxis`로
+- 남은 것: 묶음 검증. RobinOS zinc 팔레트(Ptyxis 기본은 GNOME 팔레트), 이미 설치한 시스템에 ptyxis 깔기(`robinos` 패키지 의존성 또는 `robinctl update` 안내)
+- ChatGPT 두 번째 검토(2026-10-12) 반영: Ptyxis가 깔려 있는데 바로 실패하면(5초 안) foot으로. 남은 것: 파일 관리자(Nautilus)의 "터미널에서 열기"(지금은 없음. Nautilus 47 이후의 `xdg-terminal-exec` 또는 확장), RobinOS zinc 팔레트(`.palette`의 [Light]/[Dark], 프로필 UUID 처리), 한글 2칸 폭과 상자 그리기 문자(│├└─) 정렬, 닫기 확인 창이 실행 중인 작업에만 뜨는지
+- 한글 폭(2026-10-12): Ptyxis에서 한글 음절 사이가 벌어져요(한글 두 칸 = 1.2em인데 Noto Sans Mono CJK KR의 한글은 1.0em). fontconfig matrix로 가로세로 1.16배는 틈이 없어졌지만 한국어 환경에서 줄 높이가 22→28px로 커져 28줄 창이 900px 화면을 넘었고, 가로로만 1.16배는 VTE에 효과가 없었어요. 규칙은 뺐어요. 남은 후보: 한글과 영문 폭이 맞는 고정폭 글꼴로 터미널 글꼴 자체를 바꾸기, 기본 줄 수를 줄이고 가로세로 확대를 다시 쓰기
+- 완료 기준: 처음 쓰는 사람이 단축키 없이 터미널 창을 마우스로 옮기고 닫을 수 있음. 부팅 테스트에 끌어서 옮기는 장면
+
+### T-153 스냅샷으로 켰을 때 알려 주고 화면에서 되돌리기
+- 상태: 진행 중
+- 출처: ChatGPT 검토(2026-10-12). [recovery.md](recovery.md)대로 부팅 메뉴에서 스냅샷을 골라 켜면 그 상태는 임시예요(grub-btrfs 오버레이). 완전히 되돌리려면 `sudo robinctl snapshot rollback`을 쳐야 하는데, 처음 쓰는 사람은 이미 되돌려졌다고 생각하기 쉬워요
+- 할 것: 셸이 스냅샷으로 켠 것을 알아채면(`/proc/cmdline`의 `rootflags=subvol=@snapshots/...` 또는 `robinctl snapshot status`) 바 아래에 알림: "업데이트 전 상태로 켰어요(임시). 이 상태로 되돌릴까요?" [되돌리기] [그냥 둘게요]. 되돌리기는 관리자 확인 뒤 `robinctl snapshot rollback`을 돌리고 다시 시작을 권해요
+- 한 것(2026-10-12, `work/batch74`): `robinctl snapshot booted`(커널 줄의 `rootflags=subvol=@snapshots/N/snapshot`에서 번호, `/.snapshots/N/info.xml`에서 설명), `desktop/bin/robinos-snapshot-notice`(로그인 때 Hyprland가 실행. 알림 "스냅샷 N번으로 켰어요"와 [이 상태로 되돌리기] [나중에], 되돌리기는 pkexec 비밀번호 창으로 `robinctl snapshot rollback N --yes`, 끝나면 [지금 다시 시작]). doctor도 번호를 말해요. test-robinctl.sh에 가짜 커널 줄 시험, 설치 테스트 snapshot-boot 단계에서 번호 확인. 남은 것: 설치 테스트에서 알림과 단추를 화면으로 확인(그 단계는 콘솔 로그인이라 데스크톱이 없어요)
+- ChatGPT 두 번째 검토(2026-10-12) 반영: "나중에"를 눌러도 바에 "스냅샷 N · 임시" 단추가 남고 누르면 알림이 다시 떠요(`ShellState.bootedSnapshot`). 알림에 "되돌리면 시스템과 설치한 프로그램이 이 상태가 되고, 내 파일(홈 폴더)은 그대로예요". 비밀번호 창을 닫으면(pkexec 126) 아무 일도 없던 것으로. 커널 사본이 없는 스냅샷이면 끝 알림이 그렇게 말해요. robinctl이 root로 번호를 다시 확인해요(스냅샷이 없으면 멈춤). 남은 것: 실패 시나리오(없는 번호, 커널 사본 없음, 취소)를 설치 테스트에 더 넣기, 다시 켠 뒤 이전 시스템(@.broken)을 지우는 일도 화면에서
+- 완료 기준: 터미널 없이 이전 상태로 돌아가고 다시 켜도 유지됨. 설치 테스트 rollback 단계에 알림과 버튼 장면
+
+### T-152 shadcn × macOS: 질감과 움직임
+- 상태: 진행 중 (사용자: "T-152 macOS 디자인 작업도 시작해줘", 2026-10-12. 범위는 사용자 확인 필요의 제안대로)
+- 출처: 사용자 제안(2026-10-12) "우리 디자인도 MAC OS 참고하면 어떨까, SHADCN과 mac os의 콜라보 같은 느낌"
+- 한 것(2026-10-12, `work/batch74`): ① `Theme.qml`에 `glass`(다크 70%, 라이트 72% 불투명), `glassBorder`, `radiusPanel`(16). 바 55%·독 58%(라이트 62%·64%)로 더 비치게. 소프트웨어 모드(`lowPower`)에서는 지금처럼 거의 불투명. 떠 있는 패널 11개(빠른 설정, 달력, 연결, 소리, 알림 센터, 런처, 메뉴, 창 전환, 단축키, 알림, 음량 표시)를 유리 토큰으로. `robinos.lua` 블러 size 6→10, vibrancy 0.17→0.22, 패널 이름공간에 블러 규칙(`ignore_alpha 0.5`로 카드 아래만) ② 기본 배경화면에 RobinOS 빨강·주황·보라의 부드러운 빛(`Wallpaper.qml`) ③ 런처를 Spotlight처럼: 검색 칸 62px·글자 18px, 뒤는 살짝만 어둡게(`scrimSoft`), 블러는 카드 아래만, 열 때 96%에서 스프링처럼 자리 잡기 ④ 빠른 설정을 제어 센터처럼: 꺼진 타일과 버튼을 단색 대신 유리 위 옅은 색조(`glassTile`), 타일 모서리 12, 열 때 오른쪽 위 모서리에서 자라며 자리 잡기
+- 한 것(2026-10-12~13): ⑤ 알림·달력·소리 패널도 ①의 유리 토큰으로 ⑥ [brand.md](brand.md) "재질과 움직임"과 [design.md](design.md) "디자인"에 기준. 설정 앱(T-149)에 투명도 줄이기와 움직임 줄이기
+- 남은 것(2026-10-13): 부팅 테스트 VM은 소프트웨어 렌더링이라 유리·블러가 거의 불투명하게만 찍혀요. 그래서 랜딩 페이지와 소개 영상에도 새 재질이 안 보여요. VMware 3D 가속(이 PC에 있어요)으로 켜서 블러를 확인하고 스크린샷 다시 찍기, 흰 페이지·터미널·영상 위 글자 대비 확인, 소개 영상 다시 렌더링(`out/`은 10월 12일 오전 문구)
+- 지금(시작 전): 배치는 이미 macOS와 같아요(위에 바, 아래 가운데 독). 바·독·런처에 Hyprland 블러가 켜져 있지만 배경이 72~85% 불투명이고(`Theme.qml`의 `barBg`, `dockBg`) 블러가 작아서(`size 6`) 유리처럼 보이지 않아요. 배경화면도 무늬 없는 검정에 점이라 비쳐 보일 색이 없어요
+- 가져올 것(macOS): ① 반투명 재질. 바·독·런처·빠른 설정·알림·달력을 50~65% 불투명 + 큰 블러(size 10~14) + 1px 안쪽 밝은 테두리. 소프트웨어 렌더링(VM)에서는 지금처럼 불투명 ② 색이 있는 기본 배경화면(zinc 위에 RobinOS 빨강·주황의 부드러운 빛, 다크·라이트 두 장). 유리가 비쳐 보일 색 ③ 떠 있는 패널의 깊이: 큰 모서리(16~20), 부드러운 그림자 두 겹 ④ 런처를 Spotlight처럼: 큰 검색 칸이 가운데, 결과는 그 아래로 펼쳐짐 ⑤ 빠른 설정을 제어 센터처럼 묶음 타일로 ⑥ 움직임은 창 스프링("easy")을 패널에도: 열 때 살짝 커지며(96%→100%) 착지
+- 가져오지 않을 것: 창의 신호등 단추(Hyprland에 제목 표시줄이 없고, 윈도우 사용자는 닫기가 오른쪽에 있다고 알아요), 앱 메뉴를 바에 올리는 전역 메뉴(Wayland 앱 대부분이 지원하지 않아요), Cmd 단축키(Win 단축키 그대로)
+- 그대로 둘 것(shadcn): zinc 색, 1px 테두리, Geist·Pretendard, Lucide 아이콘, 절제(큰 그라데이션 없이)
+- 단계: ① `Theme.qml` 재질 토큰(`glass`, `glassBorder`, `radiusPanel`)과 소프트웨어 모드 대체, `robinos.lua` 블러 값과 패널 이름공간 ② 기본 배경화면 두 장(`Wallpaper.qml`, SDDM·hyprlock도 같은 그림) ③ 런처 ④ 빠른 설정 ⑤ 알림·달력·소리 패널 ⑥ brand.md·design.md "디자인" 절에 shadcn × macOS 기준을 적고, 소개 영상 스크린샷을 새로 찍기
+- 더 할 것(ChatGPT 검토 2026-10-12): 흰 웹 페이지, 검은 터미널, 영상 위에서 유리 패널 글자 대비 확인. 설정 앱(T-149)에 "투명도 줄이기"와 "움직임 줄이기"
+- 검증: `wsl-build.ps1 check`(qmllint), 부팅 테스트 스크린샷(GPU 블러는 WHPX VM에서도 소프트웨어 렌더링이라 안 보여요. 블러는 VMware 3D 가속이나 실기기에서 확인)
+- 완료 기준: 부팅 테스트 장면이 모두 새 재질로 바뀌고, 소프트웨어 모드에서 글자 대비가 지금과 같거나 더 좋음
 
 ### T-149 RobinOS 설정 앱
-- 상태: 할 일
+- 상태: 진행 중 (ChatGPT 검토 2026-10-12도 가장 먼저 할 일로 꼽았어요)
+- 한 것(2026-10-12, `work/batch74`): ① `desktop/shell/Settings.qml`. macOS 시스템 설정처럼 왼쪽에 항목, 오른쪽에 내용이에요. "개인 설정"(다크·라이트 미리보기 카드, 강조색, 투명도 줄이기, 배경화면 바꾸기·되돌리기)과 "정보"(버전, `robinos` 패키지, 커널, 컴퓨터, CPU, 메모리, 그래픽, 디스크, 렌더링 방식). 소리·Wi-Fi·블루투스는 이미 있는 패널을 열어요. `Win+I`, 런처의 "설정"(윈도우 이름 "제어판"), `Win+X`의 "설정", `qs ipc ... call shell settings`로 열려요. 투명도 줄이기는 `Theme.solid`(GPU가 없을 때와 같이 유리를 불투명하게). 공용 `Switch.qml`. 부팅 테스트에 `light-settings`, `light-settings-about` 장면
 - 출처: 설계 점검(2026-10-10) "설정". 런처의 "제어판"과 바탕 화면 메뉴의 "디스플레이 설정"이 빠른 설정(배율, 밝기)으로 가요. 해상도, 여러 모니터, 날짜·시간, 사용자, 기본 앱은 화면이 없고 Lua 파일을 고쳐야 해요
 - 방향: 환영 마법사·학습 센터처럼 셸 안의 QML 창(`desktop/shell/Settings.qml`)으로 만들어요. 왼쪽에 항목, 오른쪽에 내용. 빠른 설정은 자주 쓰는 것만 남기고 "모든 설정"으로 이 창을 열어요. 바꾼 값은 사용자 설정 파일에 저장해 RobinOS 기본값을 덮어요(시스템 파일은 건드리지 않아요)
-- 단계(한 단계가 1~3회차): ① 창 틀과 "개인 설정"(테마, 강조색, 배경화면)·"정보"(RobinOS 버전, `robinctl repo` 상태, 하드웨어 요약) ② "디스플레이"(모니터마다 해상도·주사율·배율·위치, `hyprctl monitors`로 읽고 사용자 Hyprland 설정에 저장) ③ "소리"·"네트워크"·"블루투스"는 이미 있는 창으로 연결 ④ "날짜와 시간"(시간대, 자동 동기화)·"키보드"(한/영 키, 반복 속도) ⑤ "기본 앱"·"사용자 계정"(비밀번호 바꾸기는 `passwd`를 터미널에서) ⑥ "업데이트와 복구"(`robinctl update`, 스냅샷 목록)
+- 단계(한 단계가 1~3회차): ① 창 틀과 "개인 설정"(테마, 강조색, 배경화면)·"정보"(RobinOS 버전과 `robinos` 패키지 버전, 하드웨어 요약) ② "디스플레이"(모니터마다 해상도·주사율·배율·위치, `hyprctl monitors`로 읽고 사용자 Hyprland 설정에 저장) ③ "소리"·"네트워크"·"블루투스"는 이미 있는 창으로 연결 ④ "날짜와 시간"(시간대, 자동 동기화)·"키보드"(한/영 키, 반복 속도) ⑤ "기본 앱"·"사용자 계정"(비밀번호 바꾸기는 `passwd`를 터미널에서) ⑥ "업데이트와 복구"(`robinctl update`, 스냅샷 목록)
+- ChatGPT 두 번째 검토(2026-10-12): 다음은 디스플레이 → 날짜와 시간 → 키보드 순서. 디스플레이는 바꾼 뒤 "이 설정을 유지할까요? 15초 뒤 되돌려요"를 두되, 되돌리는 타이머를 셸(QML) 밖의 따로 된 프로세스에 둬요(화면이 사라져 셸이 죽어도 돌아오게). `hyprctl monitors all -j`로 읽고, 확인한 뒤에만 저장. 날짜와 시간은 systemd-timedated(D-Bus, polkit)로, 하드웨어 시계 방식은 고급 설정에. 키보드는 배열·입력기·한/영 단축키를 따로 저장하고 기본 한/영 키는 남겨요
 - 검증: `wsl-build.ps1 check`(qmllint), 부팅 테스트에 설정 창 장면(단계마다 하나), 디스플레이는 두 번째 가상 모니터로
 - 완료 기준: 런처에서 "설정"·"제어판"으로 이 창이 열리고, 위 여섯 항목이 키보드만으로도 동작
 
@@ -99,12 +335,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 할 것: Plymouth와 RobinOS 테마(울새 마크, zinc 배경, 진행 표시). 설치본(`robin-install`·`post-install.sh`의 initramfs 훅, `quiet splash`)과 라이브 ISO 둘 다. 디스크 암호화를 나중에 넣을 때 비밀번호 입력도 이 화면이 맡아요
 - 확인할 것: 패키지 크기(라이브 ISO 한도까지 약 44MiB), 소프트웨어 렌더링 VM에서 SDDM으로 넘어가는 시간, 스냅샷으로 부팅할 때(grub-btrfs-overlayfs 훅과 함께)
 - 완료 기준: 부팅 테스트에 스플래시 장면, 부팅 시간이 전과 비슷함, 설치 테스트의 스냅샷 부팅 통과
-
-### T-151 정체성 문구를 화면에
-- 상태: 할 일
-- 출처: 설계 점검(2026-10-10) "정체성 문구". 문서(design, vision, README, brand)는 고쳤고 화면이 남았어요
-- 할 것: 로고 한 줄 소개("매일 쓰면서 배우는 보안 학습 OS")를 새 방향에 맞게 바꾸고 `assets/brand/build-logo.py`로 SVG 다시 만들기, 로그인·잠금 화면의 "허가받은 환경에서만 쓰는 보안 학습용 시스템이에요"를 RobinOS 인사로 바꾸기(윤리 안내는 학습 센터·랩·motd·ethics.md에 그대로), 라이브 부팅 메뉴 이름 "RobinOS Security Learning Live"(`scripts/customize-iso-boot.sh`, testing.md), 터미널 인사 "RobinOS 보안 학습 환경"(`desktop/bash/robinos-bashrc.sh`, fastfetch가 없을 때), `config/robinos.toml`의 `purpose = "security-learning"`(읽는 코드가 없는지 먼저 확인), 환영 마법사 첫 화면 문구 다시 보기. README의 학습 센터 스크린샷이 "1 / 40"이라 다시 찍기
-- 완료 기준: 부팅 테스트의 SDDM·잠금 화면 장면, README 로고
 
 ### T-148 보안 부팅을 켠 채로 부팅 (조사)
 - 상태: 할 일 (조사 뒤 사용자 확인이 필요할 수 있어요)
@@ -135,12 +365,17 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: 채점 테스트(가짜 API 응답으로), 설치 테스트 -Lab에서 한 문제를 실제로 풀고 채점
 
 ### T-011 다음 버전 후보 (백로그 1~7에서 쓸 만한 일이 없을 때 꺼내요)
-- foot 제목 표시줄(hyprbars). 학습 센터, 네트워크 랩, 입문 CTF는 이미 들어갔어요(최소화와 `Win+D`는 T-024, Qt 앱 제목 표시줄은 T-029)
+- 학습 센터, 네트워크 랩, 입문 CTF는 이미 들어갔어요(최소화와 `Win+D`는 T-024, Qt 앱 제목 표시줄은 T-029, 터미널 제목 표시줄은 T-154)
 
 ## 완료
 
 최근 것이 위에 있어요. 더 오래된 기록은 [done.md](done.md)에 있어요.
 
+- 2026-10-12 목적을 다시 정함(사용자: 소개 영상의 "매일 쓰는, 나만의 OS."를 보고 "뭐 어쩌라는 건지 모르겠어, 목적을 제대로 정해야 할 것 같은데"): 세 안(쓰면서 배우는 리눅스, 윈도우 대신 쓰는 리눅스, 개발자용 작업 OS) 가운데 사용자가 "쓰면서 배우는 리눅스"를 골랐어요. 한 줄 정의는 "쓰다 보면 리눅스를 알게 되는 OS"이고, 10월 10일의 "나만의 새로운 OS"는 만드는 원칙으로 남겼어요. design·vision·brand·README·roadmap·loop·CLAUDE.md, 로고 한 줄 소개(SVG 다시 만듦), 환영 마법사 첫 화면, 소개 영상 문구를 바꿨어요. 함께 humanizer로 AI 같은 말을 덜어 냈어요(사용자: "claude humanizer 스킬 사용해서 AI 같은 말 다 정리해"): 영상의 대구 "밤에는 다크, 낮에는 라이트.", 쉼표로 가른 제목("켜는 순간부터, RobinOS.", "매일 쓰는 화면, 하나하나 직접."), 세 줄 대구 자막, 문서의 "A가 아니라 B" 문장과 의인화
+- 2026-10-12 10월 10일 방향 결정을 main에 합침(Robin: "10월 10일 브랜치 main에 합칠까" → 합치기로): `origin/claude/eoseohae-7nleia`에서 문서 두 커밋(`1549271` 방향 고침과 설계 점검, `57e2410` 문서 최종 점검)만 가져왔어요. 같은 브랜치의 `9b5d5f3`(T-145 코드)은 main이 그 뒤에 T-145를 다른 방식으로 끝내고 검증해서 뺐어요. 그래서 브랜치 문서가 가리키던 `robinctl repo`(main에 없는 명령)를 vision·roadmap·testing·docs/README·T-149에서 지우고, 할 일로 다시 들어온 T-145 절을 뺐어요. 충돌한 곳은 main의 최신 사실(묶음 73까지, T-145 완료, GPL-3.0)을 남기고 새 방향 문장을 얹었어요. 이제 정체성은 "직접 만든 데스크톱과 도구로 이루어진, 매일 쓰는 나만의 OS"이고, 백로그 출처 4번이 "RobinOS다운 경험 넓히기"예요(loop.md). 새 작업: T-147~T-151(보안 부팅 안내, 보안 부팅 조사, 설정 앱, 부팅 화면, 화면의 정체성 문구)
+- 2026-10-12 RobinOS 소개 영상(`promo/intro/`, 사용자 요청 "RobinOS 소개 영상 모션그래픽으로 예쁘고 모던하게"): 41초, 1920×1080, 60fps, 소리 포함. 세 번째 판이에요. 첫 판은 ITCS Connect 광고와 비슷했고, 둘째 판(RobinOS 세션 스타일)은 "PPT 슬라이드 같아"라고 해서 "애플 느낌의 모션그래픽"으로 다시 만들었어요. 검은 바탕에 한 번에 한 문장(단어가 흐림에서 떠올라 박마다 착지, 강조는 빨강→주황 그라데이션), 실제 스크린샷이 원근을 두고 떠서 내려앉고, 뒤의 빛이 떠다니며 킥마다 숨을 쉬어요. 장면: 로고 → "매일 쓰는, 나만의 OS." → 누운 화면이 일어서며 부팅 → 입체 키캡과 패널 덱("윈도우에서 쓰던 그대로") → 터미널 힌트와 학습 미션 45 → 쉬는 마디에 다크에서 라이트로 → 스냅샷 줄과 되돌리기, 실제 부팅 메뉴 → 벤토 격자 → 끝 로고. 곡은 `music.mjs`가 직접 합성한 일렉트로닉 펑크(116BPM, D단조, 사용자 요청 "노래 그냥 너가 만들고")라 저작권 걱정이 없어요. 크롬 5개로 약 70초에 녹화해요. 결과물 mp4는 git에 없어요(`npm run render`로 다시 만들어요)
+- 2026-10-12 묶음 71~73 검증(`e82be3c`, 빌드 4분 + 부팅 테스트 79장 통과, 설치 테스트 다섯 단계 통과)
+  - T-145 설치본이 RobinOS 저장소를 쓰게(`bd8c495`~`e82be3c`): 빌드가 `robinos-0.3.0.r405`를 만들어 ISO에 넣고, 설치본에서 `pacman -Q robinos` = 0.3.0.r405-1, `[robinos]` 저장소와 열쇠, `pacman -Si robinos`가 깃허브의 0.3.0.r400을 서명 확인과 함께 받음, `filesystem` 재설치 통과. 검증 중 찾은 것: ① 설치 테스트 VM의 일시적인 네트워크 끊김 ② 저장소를 켜고 목록을 받지 않아 `pacman -S`가 실패하던 버그(고침) ③ 한국어 설치본에서 `pacman -Qo` 문구를 영어로 찾던 시험(`-Qqo`로 고침). GPL-3.0 `LICENSE`(사용자 결정)
 - 2026-10-10 T-144 깃허브 릴리스를 pacman 저장소로(`e3ace38`, `816c352`): `wsl-build.ps1 publish-repo`가 `robinos-0.3.0.r400-1`과 서명한 데이터베이스를 깃허브 프리릴리스 [repo](https://github.com/Yoon-robin/RobinOS/releases/tag/repo)에 올리고, `scripts/test-repo.sh`가 버린 루트에 `SigLevel = Required DatabaseRequired`로 깃허브에서 받아 설치(`robinos 0.3.0.r400-1`, `repo ok`). 빌드·배포 도구만 바뀌어서 이 실제 올리기와 설치가 검증이에요
 - 2026-10-10 묶음 69 검증(`f6ceb6d`, verify 빌드 3.6분 + 테스트 14.5분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장, 부팅 끝 14.8초)
   - T-143 RobinOS 파일을 pacman 패키지로(`30cfd62`): `wsl-build.ps1 package`가 `robinos-0.2.0.r395-1-any.pkg.tar.zst`(파일 264개)를 만들고 파일 목록·robinctl 실행·서명 확인 통과. `stage-robinos.sh`로 바꾼 ISO 동기화의 오버레이가 옛 것과 파일 하나까지 같고, 그 ISO로 부팅·설치 테스트 통과. 개발 버전 0.3.0-dev(`f6ceb6d`)

@@ -8,6 +8,8 @@
 |---|---|
 | 제품 방향, 설계 결정, v0.1 범위와 항목별 상태 | [design.md](design.md) |
 | 지금 할 일, 진행 중인 작업, 푸시 대기 커밋, 사용자 확인이 필요한 것 | [tasks.md](tasks.md) (오래된 완료 기록은 [done.md](done.md)) |
+| 빠져 있거나 반쯤인 기능 전체(영역별 표, 우선순위) | [unfinished.md](unfinished.md) |
+| 비슷한 OS 사례(Omarchy, Zorin, 하모니카 등)와 RobinOS가 가져올 것 | [references.md](references.md) |
 | 장기 단계 (0~6단계) | [roadmap.md](roadmap.md) |
 | 루프 작업 절차 (Claude가 회차마다 따르는 순서) | [loop.md](loop.md) |
 | 검사 방법, 바꾼 것에 따라 돌릴 검사 | [testing.md](testing.md) |
@@ -18,6 +20,7 @@
 | 데스크톱 구성, 단축키, 셸 기능 | [desktop.md](desktop.md) |
 | 릴리스 절차, 서명, RobinOS 패키지 저장소 | [release.md](release.md) |
 | CTF 시작하기, 입문 CTF, 다음 연습장 | [ctf.md](ctf.md) |
+| 웹사이트(랜딩 페이지)와 올리는 법 | `site/` (올리기: `scripts/publish-site.sh`, [release.md](release.md) "웹사이트") |
 | 디자인 토큰 | `desktop/shell/Theme.qml` (코드가 원본, [brand.md](brand.md)의 표는 사본) |
 
 ## 문서 목록
@@ -46,10 +49,14 @@
 - [release.md](release.md): 릴리스 체크리스트
 - [release-notes-v0.1.md](release-notes-v0.1.md): v0.1 프리뷰 릴리스 노트
 - [release-notes-v0.2.md](release-notes-v0.2.md): v0.2 프리뷰 릴리스 노트
+- [release-notes-v0.3.md](release-notes-v0.3.md): v0.3 프리뷰 릴리스 노트
 - [../themes/README.md](../themes/README.md): 테마 파일
 
 작업 관리
 - [tasks.md](tasks.md): 작업 목록
+- [unfinished.md](unfinished.md): 미완성 기능 전체 목록
+- [exit.md](exit.md): RobinOS가 멈추거나 그만 쓰고 싶을 때
+- [references.md](references.md): 비슷한 OS 사례와 가져올 것
 - [done.md](done.md): 오래된 완료 기록
 - [roadmap.md](roadmap.md): 장기 로드맵
 - [loop.md](loop.md): 루프 작업 절차
@@ -70,7 +77,7 @@
 | 설치 과정 (`post-install.sh`, `robin-install`) | `install.md`, `testing.md` |
 | 테스트 스크립트 | `testing.md` |
 | 빌드 스크립트, 빌드 환경 | `build-iso.md`, `build-environment.md`, `release.md` |
-| RobinOS 패키지와 저장소 (`packaging/robinos`, `stage-robinos.sh`, `build-package.sh`, `build-repo.sh`, `robinctl repo`, `keys/`) | `release.md` "RobinOS 패키지 저장소", `design.md` "RobinOS 파일 업데이트", `install.md`, `testing.md`, `build-iso.md` |
+| RobinOS 패키지와 저장소 (`packaging/robinos`, `stage-robinos.sh`, `build-package.sh`, `build-repo.sh`, `keys/`) | `release.md` "RobinOS 패키지 저장소", `design.md` "RobinOS 파일 업데이트", `install.md`, `testing.md`, `build-iso.md` |
 | v0.1 항목의 상태 | `design.md`의 v0.1 표, `tasks.md` |
 | 새 설계 결정 | `design.md` (결정과 이유, 날짜) |
 

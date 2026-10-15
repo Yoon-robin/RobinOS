@@ -20,3 +20,13 @@ enable-hot-corners=false
 # nothing; the dock minimizes instead (desktop/shell/ShellState.qml).
 [org/gnome/desktop/wm/preferences]
 button-layout='appmenu:maximize,close'
+
+# Ptyxis, the terminal (T-154): follow the shell's light/dark choice, open each
+# window clean instead of restoring the last session, a little larger than 80x24,
+# and the interface's monospace font above (Geist Mono)
+[org/gnome/Ptyxis]
+interface-style='system'
+restore-session=false
+restore-window-size=false
+default-columns=uint32 100
+default-rows=uint32 28

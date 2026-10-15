@@ -1,10 +1,54 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Usage: robinos-screenshot [region|screen]
+# Usage: robinos-screenshot [region|screen|record]
 # Saves to ~/Pictures/Screenshots, copies the image to the clipboard, and notifies.
+# record starts a screen recording (wf-recorder, ~/Videos/Screencasts), or stops the
+# running one: Win+Alt+R like Windows' Game Bar, or the red dot in the bar (T-160).
 
 mode="${1:-region}"
+SHELL_IPC=(qs ipc -p /usr/share/robinos/shell call shell)
+
+if [[ "${mode}" == record ]]; then
+  pidfile="${XDG_RUNTIME_DIR:-/tmp}/robinos-record.pid"
+  if [[ -s "${pidfile}" ]] && kill -0 "$(head -n1 "${pidfile}")" 2>/dev/null; then
+    { read -r pid; read -r file; } <"${pidfile}"
+    # wf-recorder finishes the file on SIGINT, like Ctrl+C
+    kill -INT "${pid}"
+    for _ in $(seq 50); do
+      kill -0 "${pid}" 2>/dev/null || break
+      sleep 0.1
+    done
+    rm -f "${pidfile}"
+    "${SHELL_IPC[@]}" setRecording false >/dev/null 2>&1 || true
+    (
+      action="$(notify-send --app-name=RobinOS --icon=video-x-generic --action=default=열기 --action=folder="폴더 열기" \
+        --hint="string:x-robinos-open:${file}" "화면 녹화를 저장했어요" "${file/#${HOME}/\~}" || true)"
+      case "${action}" in
+        default) xdg-open "${file}" ;;
+        folder) xdg-open "${file%/*}" ;;
+      esac
+    ) >/dev/null 2>&1 &
+    exit 0
+  fi
+  command -v wf-recorder >/dev/null 2>&1 || {
+    notify-send --app-name=RobinOS "화면 녹화 도구가 없어요" "sudo pacman -S wf-recorder로 설치해요" || true
+    exit 1
+  }
+  dir="$(xdg-user-dir VIDEOS 2>/dev/null || printf '%s/Videos' "${HOME}")/Screencasts"
+  file="${dir}/$(date +%Y%m%d-%H%M%S).mp4"
+  mkdir -p "${dir}"
+  # The focused screen, without sound
+  output="$(hyprctl monitors -j | python3 -c 'import json, sys
+print(next((m["name"] for m in json.load(sys.stdin) if m.get("focused")), ""))' 2>/dev/null || true)"
+  args=(-f "${file}")
+  [[ -n "${output}" ]] && args+=(-o "${output}")
+  wf-recorder "${args[@]}" >"${XDG_RUNTIME_DIR:-/tmp}/robinos-record.log" 2>&1 &
+  printf '%s\n%s\n' "$!" "${file}" >"${pidfile}"
+  "${SHELL_IPC[@]}" setRecording true >/dev/null 2>&1 || true
+  notify-send --app-name=RobinOS --icon=media-record "화면을 녹화하고 있어요" "멈추려면 Win+Alt+R이나 바의 빨간 점을 눌러요" || true
+  exit 0
+fi
 dir="$(xdg-user-dir PICTURES 2>/dev/null || printf '%s/Pictures' "${HOME}")/Screenshots"
 file="${dir}/$(date +%Y%m%d-%H%M%S).png"
 
@@ -19,7 +63,7 @@ case "${mode}" in
     grim "${file}"
     ;;
   *)
-    printf 'usage: %s [region|screen]\n' "$0" >&2
+    printf 'usage: %s [region|screen|record]\n' "$0" >&2
     exit 1
     ;;
 esac

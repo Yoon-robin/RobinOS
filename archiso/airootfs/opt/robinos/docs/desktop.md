@@ -20,7 +20,7 @@ RobinOS의 데스크톱은 Hyprland 위에 직접 만든 Quickshell 셸이에요
 | 트레이 아이콘 | StatusNotifierItem (Quickshell `SystemTray`) | `desktop/shell/Bar.qml` |
 | 로그인 화면 | SDDM (Qt 6 테마) | `themes/sddm/robinos/` |
 | 잠금 화면과 대기 | hyprlock, hypridle | `desktop/hypr/hyprlock.conf`, `hypridle.conf` |
-| 터미널 | foot | `desktop/foot/foot.ini` |
+| 터미널 | Ptyxis (foot은 대체용) | `desktop/dconf/00-robinos`의 `[org/gnome/Ptyxis]`, foot은 `desktop/foot/foot.ini` |
 | 파일, 브라우저 | Nautilus, Firefox (원격 측정과 실험 기능은 꺼 둬요: `/etc/firefox/policies/policies.json`) | `desktop/firefox/` |
 | 파일을 여는 기본 앱 | `/etc/xdg/mimeapps.list` | `desktop/mime/` |
 | fastfetch 요약과 울새 그림 | fastfetch | `desktop/fastfetch/` |
@@ -120,6 +120,8 @@ VM 창 크기를 바꾸면 VMware(`vmtoolsd`)나 QEMU(`virtio-gpu`)가 새 크�
 | `Super+drag` | 창 이동(왼쪽 버튼), 크기 조절(오른쪽 버튼) |
 | `Print`, `Shift+Print` 또는 `Super+Print` | `Print`는 영역, 나머지는 전체 화면을 찍어 사진 폴더의 `Screenshots`(`~/사진/Screenshots`, 영어 환경은 `~/Pictures/Screenshots`)와 클립보드에 저장. 알림을 누르면 사진이 열리고, "폴더 열기" 단추로 폴더를 열어요. 알림이 사라진 뒤에는 알림 센터에서 눌러도 열려요 |
 | `Super+Shift+S` | 영역 스크린샷 (윈도우의 캡처 도구 `Win+Shift+S`와 같아요) |
+| `Super+=`, `Super+-`, `Super+Esc` | 화면 확대, 축소, 원래대로 (윈도우의 돋보기 `Win+더하기`). 마우스 포인터 둘레를 0.5배씩 최대 5배까지 |
+| `Super+Alt+R` | 화면 녹화 시작, 한 번 더 누르면 멈춤 (윈도우의 `Win+Alt+R`). 녹화하는 동안 바에 빨간 점이 있고, 누르면 멈춰요. 파일은 `~/비디오/Screencasts` |
 | `Super+.` 또는 `Super+;` | 이모지: 런처에서 이모지를 찾아(하트, 웃음, ok처럼 한국어·영어로) `Enter`를 누르면 원래 창에 들어가고 클립보드에도 복사돼요 (윈도우의 `Win+.`와 같아요) |
 | `Super+V` | 클립보드 기록 (윈도우의 `Win+V`처럼 복사한 것 50개, 로그아웃하면 지워져요) |
 | `Super+Alt+D` 또는 바의 시계 클릭 | 달력 (←, → 로 달 바꾸기, Home은 이번 달). 일요일과 공휴일(설날·추석·대체공휴일·선거일 포함)은 빨간색이고, 그달의 공휴일 이름이 아래에 나와요. 음력 공휴일과 대체공휴일은 `desktop/shell/holidays.js`의 표에 있어서 해마다 다음 해를 넣어요(지금 2026~2028년) |
@@ -133,7 +135,7 @@ VM 창 크기를 바꾸면 VMware(`vmtoolsd`)나 QEMU(`virtio-gpu`)가 새 크�
 
 독의 앱 아이콘은 윈도우 작업 표시줄처럼 동작해요. 앱이 꺼져 있으면 열고, 창이 뒤에 있으면 앞으로 가져오고, 이미 앞에 있으면 최소화하고, 최소화돼 있으면 원래 작업 공간으로 되돌려요. 창이 여러 개면 차례로 앞으로 가져와요. 최소화한 창은 숨은 작업 공간(`special:minimized`)에 있고, 독에는 계속 실행 중(점)으로 보여요. 셸 IPC로도 같은 동작을 할 수 있어요: `qs ipc -p /usr/share/robinos/shell call shell toggleApp foot`. 독에 고정된 앱은 터미널, 파일, 브라우저이고, Wireshark는 network 프로필로 설치한 뒤에 나타나요(`sudo robinctl profile network`). 독의 앱을 오른쪽 버튼으로 누르면 윈도우 작업 표시줄의 점프 목록처럼 메뉴가 떠요. "새 창"으로 그 앱을 하나 더 열고, "독에 고정"·"독에서 고정 풀기"로 실행 중인 다른 앱을 고정하거나 풀고(알림으로 알려 줘요), "창 닫기"(여러 개면 "창 N개 모두 닫기")로 그 앱의 창을 닫아요. 화살표와 `Enter`로도 골라요. 터미널, 파일, 브라우저는 늘 고정돼 있어요. 런처에서 앱을 오른쪽 버튼으로 누르면(키보드로는 메뉴 키나 `Shift+F10`) 시작 메뉴처럼 열기, 독에 고정·고정 풀기, 제거 메뉴가 떠요. 고정해도 런처는 열려 있어요. 고정한 앱은 셸 상태 폴더의 `desktop.json`에 남아서 다음 로그인에도 그대로예요. 켜져 있는 앱 아이콘 위에 마우스를 0.5초 올려 두면 그 앱의 창(4개까지)이 미리보기로 독 위에 떠요. 미리보기를 누르면 그 창으로 가요.
 
-GTK 앱, Firefox, Qt 앱(설치기, Wireshark 등)은 창 위에 제목 표시줄이 있어요. 단추는 최대화와 닫기 두 개예요. Hyprland가 앱의 최소화 요청을 아직 처리하지 않아서 최소화는 독에서 해요. 터미널(foot)에는 제목 표시줄이 없어요. `Alt+F4`나 `Super+Q`로 닫아요.
+터미널(Ptyxis), GTK 앱, Firefox, Qt 앱(설치기, Wireshark 등)은 창 위에 제목 표시줄이 있어서 끌어 옮길 수 있어요. 어느 창이든 `Win`을 누른 채 끌어도 옮겨지고, 오른쪽 버튼으로 끌면 크기가 바뀌어요. 단추는 최대화와 닫기 두 개예요. Hyprland가 앱의 최소화 요청을 아직 처리하지 않아서 최소화는 독에서 해요. 터미널(foot)에는 제목 표시줄이 없어요. `Alt+F4`나 `Super+Q`로 닫아요.
 
 마우스 없이도 쓸 수 있어요. 런처, 빠른 설정, 환영 마법사, 설치기에서 `Tab`으로 버튼과 선택지를 옮겨 다니고(포커스가 테두리로 보여요), `Enter`나 `Space`로 눌러요. 볼륨 같은 슬라이더는 화살표 키로 5%씩, `Home`과 `End`로 끝까지 움직여요.
 
@@ -197,7 +199,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 | 메모장, `notepad` | 텍스트 편집기 |
 | 작업 관리자, `taskmgr` | Mission Center |
 | 파일 탐색기, 내 PC, `explorer` | 파일 (Nautilus) |
-| 명령 프롬프트, `cmd`, `powershell`, Windows 터미널 | 터미널 (foot) |
+| 명령 프롬프트, `cmd`, `powershell`, Windows 터미널 | 터미널 (Ptyxis) |
 | Edge, 크롬, `chrome` | Firefox |
 | 사진 | 이미지 뷰어 (Loupe) |
 | 반디집, 알집, `7-zip` | 압축 관리자 |
@@ -206,12 +208,15 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 | 블루투스 및 장치, 이어폰 | 블루투스 연결 창 |
 | Acrobat, `pdf` | 문서 뷰어 (Evince) |
 | 캡처 도구, `snipping tool` | 영역 스크린샷 명령 (`Super+Shift+S`) |
+| Xbox Game Bar, 화면 녹화, `screen recording` | 화면 녹화 명령 (`Super+Alt+R`) |
 | 계산기, `calc` | 계산기 |
 | 디스크 관리, USB 포맷 | 디스크 (GNOME 디스크, 설치본에만 있어요) |
 | 저장소, 디스크 정리, `cleanmgr` | 디스크 사용량 분석 (baobab, 설치본에만 있어요) |
 | 워드, 엑셀, 파워포인트, 오피스 | LibreOffice Writer, Calc, Impress (설치본에만 있어요) |
 | Microsoft Store, 스토어, 앱 설치 | GNOME 소프트웨어 (설치본에만 있어요) |
 | 장치 및 프린터, 프린터, `printer` | 프린터 설정 (설치본에만 있어요) |
+| 팩스 및 스캔, 스캐너, `scan` | 문서 스캐너 앱 (설치본에만 있어요) |
+| 파일 히스토리, 백업, `Time Machine` | 백업 앱 Déjà Dup (설치본에만 있어요) |
 | 미디어 플레이어, 영화 및 TV, 동영상 | 동영상 재생 앱 (Showtime, 설치본에만 있어요) |
 | 그루브 음악, 음악 | 오디오 재생기 (Decibels, 설치본에만 있어요) |
 | 제어판, `control panel` | 빠른 설정 |
@@ -256,7 +261,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 ## 라이브 세션
 
-라이브 ISO는 `robin` 계정(비밀번호 `robin`)으로 RobinOS 세션에 자동 로그인해요. 비밀번호 없는 sudo는 라이브 ISO에만 설정돼 있어요(`/etc/sudoers.d/10-robinos-live`). 시간대는 한국(`Asia/Seoul`)이고, 인터넷에 연결되면 `systemd-timesyncd`가 시계를 맞춰요. 설치한 시스템도 서울 시간대예요. 명령으로 설치할 때는 계획 파일의 `timezone`으로 바꿀 수 있어요([install.md](install.md)).
+라이브 ISO는 `robin` 계정(비밀번호 `robin`)으로 RobinOS 세션에 자동 로그인해요. 비밀번호 없는 sudo는 라이브 ISO에만 설정돼 있어요(`/etc/sudoers.d/10-robinos-live`). 시간대는 한국(`Asia/Seoul`)이고, 인터넷에 연결되면 `systemd-timesyncd`가 시계를 맞춰요. 설치한 시스템은 설치기의 "사용자" 단계에서 고른 시간대예요(기본은 서울). 명령으로 설치할 때는 계획 파일의 `timezone`으로 바꿀 수 있어요([install.md](install.md)).
 
 라이브 ISO에는 가벼운 보안 도구(nmap, tcpdump, netcat, dig, sqlmap, binwalk 같은 것)만 들어 있어요. Wireshark 화면 앱, john, hashcat, hydra, gdb, Docker(웹 랩), 가상 머신 도구는 크기가 커서 빠져 있고, 설치한 시스템에서 `sudo robinctl profile <이름>`으로 넣어요. 라이브 세션은 메모리 위에서 돌아서 큰 묶음이나 랩 이미지를 받을 자리가 거의 없어요. 프린터(CUPS와 프린터 설정 앱), 오피스(LibreOffice), 앱 스토어(GNOME 소프트웨어), 디스크 관리(GNOME 디스크)도 설치본에만 들어가요(`packages/apps.txt`).
 
@@ -275,6 +280,10 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 설치한 시스템에는 GNOME의 동영상 재생 앱(Showtime)과 오디오 재생기(Decibels)가 있고, MP4(H.264/AAC)도 재생돼요(`gst-libav`). 파일에서 동영상이나 음악을 두 번 누르면 바로 재생돼요.
 
 파일을 어떤 앱으로 여는지는 `desktop/mime/mimeapps.list`(설치 위치 `/etc/xdg/mimeapps.list`)가 정해요. 폴더는 파일, 글 파일은 텍스트 편집기, PDF는 문서 보기, 사진은 이미지 보기, 동영상과 음악은 위 두 앱, 웹 주소는 Firefox예요. 파일 앱에서 "다른 앱으로 열기"로 바꾸면 내 설정(`~/.config/mimeapps.list`)이 먼저예요.
+
+## 윈도우 프로그램(.exe)을 열면
+
+`.exe`, `.msi`, `.lnk`를 열면 셸의 "윈도우 프로그램" 창이 떠요(`desktop/bin/robinos-windows-app`, `WindowsApp.qml`). 윈도우 프로그램은 리눅스에서 그대로 실행되지 않는다고 알려 주고, 파일 이름이 알려진 프로그램(`desktop/shell/windowsapps.js`: 카카오톡, Chrome, 한글, Office, 반디집, 곰플레이어, Discord, Steam 등)이면 대신 쓸 것을 단추로 보여 줘요. RobinOS에 있는 앱은 바로 열고, Flathub 앱은 앱 스토어의 그 앱 쪽을, 웹 버전은 브라우저를 열어요. 모르는 파일이면 Bottles(윈도우 프로그램 실행기) 설치 단추를 보여 줘요.
 
 ## 화면 배율
 
@@ -324,11 +333,21 @@ Steam, Discord처럼 백그라운드에서 도는 앱의 아이콘이 바 오른
 
 빠른 설정의 "전원 모드"에서 절전, 균형, 최고 성능을 골라요(윈도우의 전원 모드와 같아요). `power-profiles-daemon`이 CPU와 화면 설정을 바꿔요. 최고 성능은 지원하는 CPU에서만 보여요(VM에는 보통 없어요).
 
-노트북에서는 바에 배터리 아이콘과 남은 양이 보이고, 20% 아래로 내려가면 빨갛게 바뀌어요. 전원 없이 쓰다가 10%와 5%가 되면 윈도우처럼 "배터리가 10% 남았어요" 알림이 떠요(`ShellState.qml`). 이 알림은 닫을 때까지 남아 있어요. 거의 다 떨어지면 UPower가 컴퓨터를 잠재우거나 꺼서 작업을 지켜요. 전원을 연결하면 다음 방전 때 다시 알려 줘요.
+노트북에서는 바에 배터리 아이콘과 남은 양이 보이고, 20% 아래로 내려가면 빨갛게 바뀌어요. 전원 없이 쓰다가 10%와 5%가 되면 윈도우처럼 "배터리가 10% 남았어요" 알림이 떠요(`ShellState.qml`). 이 알림은 닫을 때까지 남아 있어요. 거의 다 떨어지면 UPower가 컴퓨터를 꺼요(`CriticalPowerAction=PowerOff`. UPower의 기본값 HybridSleep은 깨어날 디스크 스왑이 있어야 하는데 RobinOS의 스왑은 메모리 안의 압축 스왑뿐이라, `robinos` 패키지가 설치와 업데이트 때 이 값을 바꿔 둬요). 전원을 연결하면 다음 방전 때 다시 알려 줘요.
+
+잠자기는 빠른 설정의 전원 단추 메뉴나 런처("잠자기", "절전")에서 해요. 잠자기 전에 화면을 잠그고(hypridle의 `before_sleep_cmd`), 깨어나면 화면을 다시 켜요. 노트북 덮개를 닫으면 logind의 기본값대로 잠들어요(외부 모니터에 꽂은 도킹 상태에서는 그대로 켜 둬요). 노트북이 배터리로 돌 때 15분 동안 아무것도 안 하면 저절로 잠들어요(`robinos-idle-suspend`). 충전기가 꽂혀 있거나 배터리가 없는 PC는 잠들지 않아요. 설정 앱의 "전원"에서 시간을 바꿔요: 화면 잠그기(기본 5분), 화면 끄기(기본 10분), 배터리로 쓸 때 잠자기(기본 15분)를 1분~1시간이나 "안 함"으로 골라요. 잠그기 1분 전에 화면이 어두워져요(잠그기를 1분으로 하면 어두워지지 않아요). 고른 분은 `~/.local/state/robinos/power`에 `이름 분` 줄로 저장되고, `desktop/bin/robinos-idle-config`가 그걸로 hypridle의 설정(`~/.local/state/robinos/hypridle.conf`)을 다시 써서 hypridle을 새로 띄워요. 로그인할 때도 이 도구가 hypridle을 띄워서, 파일이 없으면 `desktop/hypr/hypridle.conf`와 같은 기본값이에요. 덮개를 닫으면 언제나 잠들어요(logind의 `HandleLidSwitch`).
 
 ## 업데이트 알림
 
-설치한 시스템은 로그인하고 3분 뒤, 그다음엔 3시간마다 업데이트가 있는지 봐요(`checkupdates`, 패키지 DB의 사본으로 확인해서 pacman을 막지 않아요). 있으면 바의 빠른 설정 단추에 강조 색 새로 고침 아이콘이 생기고, 빠른 설정 맨 위에 "업데이트 N개가 있어요" 단추가 나와요. 누르면 터미널에서 `sudo robinctl update`가 돌아서 업데이트 전후 스냅샷과 함께 설치해요. RobinOS 파일(`robinos` 패키지, RobinOS 저장소)의 새 버전도 여기에 함께 세어요. 빠른 설정을 열 때도 10분이 지났으면 다시 봐요. 라이브 세션에서는 보지 않아요.
+설치한 시스템은 로그인하고 3분 뒤, 그다음엔 3시간마다 업데이트가 있는지 봐요(`checkupdates`, 패키지 DB의 사본으로 확인해서 pacman을 막지 않아요). 있으면 바의 빠른 설정 단추에 강조 색 새로 고침 아이콘이 생기고, 빠른 설정 맨 위에 "업데이트 N개가 있어요" 단추가 나와요. 개수에는 앱 스토어(Flathub) 앱의 업데이트도 들어가요. 누르면 터미널에서 `sudo robinctl update`가 돌아서 업데이트 전후 스냅샷과 함께 설치해요. 빠른 설정을 열 때도 10분이 지났으면 다시 봐요. 라이브 세션에서는 보지 않아요.
+
+설정 앱(`Win+I`)의 "날짜와 시간"에서는 지금 시간대와 시각, 시간 자동 맞추기(인터넷의 시계, systemd-timesyncd)가 켜져 있는지를 보여 줘요. "시간대 바꾸기"에서 도시를 한국어로 찾아 고르면(설치기와 같은 목록) 터미널이 열려서 `sudo timedatectl set-timezone ...`이 실행되고, 스위치를 누르면 `sudo timedatectl set-ntp ...`이 실행돼요. 바꾸는 명령을 터미널에서 보여 주는 건 일부러예요. 화면에서 누르면서 리눅스 명령도 익히게요. 윈도우와 같이 쓰는 컴퓨터는 하드웨어 시계를 지역 시간으로 읽는다는 안내도 나와요.
+
+설정 앱의 "마우스와 터치패드"에서는 터치패드의 탭해서 클릭, 스크롤 방향(손가락을 따라가기), 글을 쓰는 동안 터치패드 끄기, 마우스 휠 방향 뒤집기, 포인터 속도(느리게~빠르게)를 바꿔요. "키보드"에서는 한/영 전환 단축키(환영 마법사와 같은 선택), 키를 꾹 눌렀을 때 글자가 반복되는 빠르기와 시작되기까지의 시간을 바꾸고, 위의 칸에서 눌러 보면서 맞춰요. 바꾸면 바로 적용되고(`hyprctl eval`로 `robinos.applyInput`을 불러요), `~/.local/state/robinos/input`에 `이름 값` 줄로 저장돼서 다음 로그인 때 `robinos.lua`가 같은 함수로 읽어요. 이름은 `tap`, `natural`, `typing_off`, `wheel_flip`, `speed`(-1~1), `repeat_rate`(10~60), `repeat_delay`(200~1000)이고, 범위를 벗어나거나 이상한 줄은 기본값으로 둬요. 노트북 터치패드에서 손으로 느끼는 것은 실기기에서만 볼 수 있어요.
+
+"기본 앱"에서는 웹 브라우저, 이메일, 사진, 동영상, 음악, PDF 문서, 글 파일을 어떤 앱으로 여는지 보여 주고 "바꾸기"로 고르게 해요. 설치된 앱의 `.desktop` 파일(Flatpak 포함)에서 그 형식을 열 수 있는 앱만 보여 주고, 터미널에서 도는 편집기 같은 건 빼요. `desktop/bin/robinos-default-apps`가 목록을 만들고(`list`) 고른 앱을 `xdg-mime default`로 저장해요(`set`). 파일 앱의 "다른 앱으로 열기"와 같은 `~/.config/mimeapps.list`예요. 사진 같은 종류는 PNG·JPEG처럼 여러 형식을 한꺼번에 바꿔요.
+
+설정 앱의 "업데이트"에서는 개수, 받을 크기, 커널이 바뀌는지, 데이터 요금 연결인지를 미리 보여 주고(`robinctl update --status`), "지금 업데이트"와 "다시 확인" 단추가 있어요. 업데이트로 RobinOS 파일이 새 버전이 되면 `robinctl update`가 화면(셸)을 끝내고 `robinos-shell`이 새 파일로 바로 다시 띄워요. `sudo` 없이 `pacman -Syu`만 했다면 로그아웃했다가 다시 로그인해야 새 화면이 돼요.
 
 ## 프린터
 

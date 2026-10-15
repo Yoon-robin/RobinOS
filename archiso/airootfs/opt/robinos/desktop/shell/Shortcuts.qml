@@ -35,7 +35,8 @@ PanelWindow {
             { keys: ["Win", "Enter"], title: "터미널" },
             { keys: ["Win", "E"], title: "파일" },
             { keys: ["Win", "B"], title: "브라우저" },
-            { keys: ["Win", "S"], title: "빠른 설정 (Win+I도 돼요)" },
+            { keys: ["Win", "S"], title: "빠른 설정" },
+            { keys: ["Win", "I"], title: "설정" },
             { keys: ["Win", "V"], title: "클립보드 기록" },
             { keys: ["Win", "X"], title: "빠른 메뉴: 작업 관리자, 디스크, 종료" },
             { keys: ["Win", "."], title: "이모지 넣기" },
@@ -123,10 +124,10 @@ PanelWindow {
         anchors.centerIn: parent
         width: Math.min(parent.width - 48, 1120)
         height: content.implicitHeight + 56
-        radius: Theme.radiusLg
-        color: Theme.surface
+        radius: Theme.radiusPanel
+        color: Theme.glass
         border.width: 1
-        border.color: Theme.border
+        border.color: Theme.glassBorder
         opacity: root.revealed ? 1 : 0
         scale: root.revealed ? 1 : 0.98
         focus: true

@@ -59,9 +59,17 @@ ShellRoot {
 
     Welcome {}
 
-    Installer {}
+    Installer {
+        id: installerWindow
+    }
 
     LearnCenter {}
+
+    Settings {
+        id: settingsWindow
+    }
+
+    WindowsApp {}
 
     // Bound in robinos.lua with hl.dsp.global("robinos:<name>")
     GlobalShortcut {
@@ -104,6 +112,13 @@ ShellRoot {
         name: "quicksettings"
         description: "빠른 설정 열기/닫기"
         onPressed: ShellState.toggleQuickSettings(null)
+    }
+
+    GlobalShortcut {
+        appid: "robinos"
+        name: "settings"
+        description: "설정 열기"
+        onPressed: ShellState.openSettings("")
     }
 
     GlobalShortcut {
@@ -211,8 +226,29 @@ ShellRoot {
             ShellState.openInstaller();
         }
 
+        // The installer's state as JSON, without the password (VM test)
+        function installerState(): string {
+            return installerWindow.testState();
+        }
+
+        // The installer's "다음" or "설치 시작" button (VM test: the last step really installs)
+        function installerNext(): void {
+            installerWindow.next();
+        }
+
         function learnCenter(): void {
             ShellState.openLearnCenter();
+        }
+
+        function settings(): void {
+            ShellState.openSettings("");
+        }
+
+        // The settings' 기본 앱 page with one kind's list of apps open, as the 바꾸기
+        // button shows it (VM test screenshot)
+        function settingsAppsOpen(kind: string): void {
+            ShellState.openSettings("apps");
+            settingsWindow.openKind = kind;
         }
 
         function shortcuts(): void {
@@ -247,9 +283,30 @@ ShellRoot {
             ShellState.toggleNightLight();
         }
 
+        // robinos-windows-app: an .exe or .msi was opened (T-159)
+        function windowsApp(path: string): void {
+            ShellState.openWindowsApp(path);
+        }
+
+        // robinos-screenshot record: a recording started (true) or stopped (false)
+        function setRecording(on: bool): void {
+            ShellState.recording = on;
+        }
+
         // The quick settings' 화면 배율 for the focused screen: 1, 1.25, 1.5, 1.75 or 2
         function setScale(scale: real): void {
             ShellState.setScale(scale);
+        }
+
+        // A setting from 마우스와 터치패드 or 키보드 (VM test): setInput tap false,
+        // setInput speed 0.4, setInput repeat_rate 40. Anything odd is ignored.
+        function setInput(name: string, value: string): void {
+            ShellState.setInput(name, value === "true" ? true : value === "false" ? false : Number(value));
+        }
+
+        // An idle time from 전원 (VM test): setPower lock 1 (minutes; 0 is never)
+        function setPower(name: string, minutes: int): void {
+            ShellState.setPower(name, minutes);
         }
 
         // The dock's click on an app: open, bring to front, minimize or restore

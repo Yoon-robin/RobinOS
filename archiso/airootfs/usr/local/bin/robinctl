@@ -37,16 +37,15 @@ robinctl - RobinOS 관리 도구
 사용법:
   robinctl version                      버전 보기
   robinctl doctor                       시스템 점검
+  robinctl report [파일]                문제 보고서 만들기 (컴퓨터, 드라이버, 이번 부팅의 오류. 이름과 주소는 가려요, 어디로도 안 보내요)
   robinctl audit                        보안 점검 (윈도우 보안처럼: 열린 포트, 원격 접속, 권한, 암호화)
   robinctl app remove <앱 ID> [--dry-run]  앱 제거 (런처에서 Shift+Delete, RobinOS 기본 앱은 막아요)
-  robinctl update [--dry-run]           스냅샷을 만든 뒤 시스템 업데이트 (RobinOS 파일, 앱 스토어 앱도)
-  robinctl repo                         RobinOS 파일 업데이트 저장소와 패키지 상태
-  robinctl repo setup [--dry-run]       RobinOS 저장소 켜기 (설치기가 해요)
-  robinctl repo adopt [패키지 파일]     복사로 설치한 RobinOS 파일을 패키지로 옮기기 (update가 해요)
+  robinctl update [--dry-run|--preview|--status|--yes] 스냅샷을 만든 뒤 시스템 업데이트 (앱 스토어 앱도). --preview는 받을 개수·크기만, --status는 같은 내용을 JSON 한 줄로, --yes는 묻지 않고
   robinctl snapshot create [이름]       스냅샷 만들기
   robinctl snapshot list                스냅샷 목록
   robinctl snapshot setup [--dry-run]   스냅샷 설정 (Btrfs 루트, 처음 한 번)
   robinctl snapshot rollback <번호>     그 스냅샷으로 시스템 되돌리기
+  robinctl snapshot booted              스냅샷으로 켰으면 그 번호와 설명
   robinctl profile list                 보안 실습 프로필 보기 (network, web, ...)
   robinctl profile <이름> [--dry-run]   그 프로필의 도구 설치 (security는 전부)
   robinctl packages core                기본 패키지 목록
@@ -66,7 +65,6 @@ robinctl - RobinOS 관리 도구
   robinctl lab start <web|net>          랩 시작
   robinctl lab stop <web|net>           랩 중지
 
-RobinOS는 허가받은 환경에서 보안을 배우는 시스템이에요.
 실습은 내 컴퓨터 안의 랩과 허락받은 대상에서만 하세요.
 EOF
 }
@@ -187,9 +185,11 @@ audit() {
     fi
   done
   if [[ -n "${fw}" ]]; then
-    audit_ok "방화벽(${fw})이 켜져 있어요"
+    audit_ok "방화벽(${fw})이 켜져 있어요" "들어오는 연결은 막고 나가는 연결은 그대로예요. 규칙 보기: sudo ufw status verbose"
+  elif [[ -d /run/archiso ]]; then
+    audit_ok "라이브 세션이라 방화벽은 꺼져 있어요" "설치하면 처음부터 켜져 있어요"
   else
-    audit_ok "방화벽은 켜져 있지 않아요" "밖에서 닿는 서비스가 없으면(위) 괜찮아요. 공용 Wi-Fi에서 서비스를 켤 때는 방화벽을 생각해요"
+    audit_warn "방화벽이 꺼져 있어요. 공용 Wi-Fi에서는 같은 네트워크의 누구나 열린 포트에 닿을 수 있어요" "sudo ufw enable"
   fi
   crypt="$(lsblk -nr -o TYPE 2>/dev/null | grep -c '^crypt$' || true)"
   if [[ "${crypt:-0}" -gt 0 ]]; then
@@ -396,16 +396,295 @@ doctor() {
     check_line "업데이트 자동 스냅샷 (snap-pac)" "${snap_pac}" "sudo robinctl snapshot setup"
     check_line "부팅 메뉴 스냅샷 (grub-btrfs)" "${grub_btrfs}" "sudo robinctl snapshot setup"
   elif [[ "${fstype}" == "overlay" ]] && root_on_btrfs; then
-    printf '  루트 파일 시스템: 스냅샷으로 부팅한 상태예요. 바꾼 내용은 재부팅하면 사라져요.\n'
-    printf '    이 상태로 되돌리려면: sudo robinctl snapshot rollback <번호>\n'
+    local booted
+    booted="$(snapshot_booted)" && booted="${booted%%$'\t'*}" || booted="<번호>"
+    printf '  루트 파일 시스템: 스냅샷 %s번으로 부팅한 상태예요. 바꾼 내용은 재부팅하면 사라져요.\n' "${booted}"
+    printf '    이 상태로 되돌리려면: sudo robinctl snapshot rollback %s\n' "${booted}"
   else
     printf '  루트 파일 시스템: %s (스냅샷은 Btrfs 설치에서만 써요)\n' "${fstype}"
   fi
 }
 
+# ---- Problem report (robinctl report): what to send along with "it doesn't work" ----
+#
+# Facts about the computer, the drivers in use and what went wrong in this boot, in one
+# text file the person reads before sharing it. Nothing is sent anywhere. The user's
+# and the computer's name, MAC and IP addresses, UUIDs and serial numbers are masked.
+
+report_mask() {
+  local user host
+  local -a expr=(
+    -e 's/([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}/xx:xx:xx:xx:xx:xx/g'
+    -e 's/\b[0-9]{1,3}(\.[0-9]{1,3}){3}\b/<ip>/g'
+    -e 's/\b([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}\b/<ipv6>/g'
+    -e 's/[0-9A-Fa-f:]*[0-9A-Fa-f]::[0-9A-Fa-f:]*/<ipv6>/g'
+    -e 's/\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b/<uuid>/g'
+    -e 's/([Ss]erial( [Nn]umber)?|SerialNumber)[:=] *[^ ,;]+/\1: <hidden>/g'
+  )
+  user="$(id -un 2>/dev/null)"
+  host="$(uname -n 2>/dev/null)"
+  # Only names that are safe inside a pattern; the default computer name isn't private
+  if [[ "${user}" =~ ^[a-z_][a-z0-9_-]*$ && "${user}" != root ]]; then
+    expr+=(-e "s/\\b${user}\\b/<user>/g")
+  fi
+  if [[ "${host}" =~ ^[A-Za-z0-9.-]+$ && "${host}" != robinos && "${host}" != localhost ]]; then
+    expr+=(-e "s/\\b${host//./\\.}\\b/<host>/g")
+  fi
+  sed -E "${expr[@]}"
+}
+
+# report_section <title> <function> [raw]: the function's output under a heading,
+# masked (the version numbers of the first two sections would be taken for addresses)
+report_section() {
+  local out
+  printf '\n## %s\n' "$1"
+  if [[ "${3:-}" == raw ]]; then
+    out="$("$2" 2>&1)" || true
+  else
+    out="$("$2" 2>&1 | report_mask)" || true
+  fi
+  if [[ -n "${out}" ]]; then printf '%s\n' "${out}"; else printf '(알아낸 게 없어요)\n'; fi
+}
+
+report_robinos() {
+  local secure
+  print_version
+  pacman -Q robinos linux hyprland quickshell mesa 2>/dev/null
+  if [[ -r /etc/os-release ]]; then
+    # shellcheck disable=SC1091
+    (. /etc/os-release && printf 'OS: %s\n' "${PRETTY_NAME:-${NAME:-알 수 없음}}")
+  fi
+  printf '커널: %s\n' "$(uname -r)"
+  if [[ -d /run/archiso ]]; then printf '실행 방식: 라이브 USB\n'; else printf '실행 방식: 설치본\n'; fi
+  if [[ -d /sys/firmware/efi ]]; then
+    secure="$(od -An -t u1 -j4 -N1 /sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c 2>/dev/null | tr -d ' ')"
+    printf '부팅 방식: UEFI (보안 부팅 %s)\n' "$([[ "${secure}" == 1 ]] && printf '켜짐' || { [[ "${secure}" == 0 ]] && printf '꺼짐' || printf '알 수 없음'; })"
+  else
+    printf '부팅 방식: BIOS(레거시)\n'
+  fi
+  printf '렌더링: %s\n' "${ROBINOS_RENDER:-GPU}"
+  printf '루트 파일 시스템: %s\n' "$(root_fstype)"
+  snapshot_booted 2>/dev/null | sed 's/^/스냅샷으로 부팅: /'
+}
+
+report_computer() {
+  local field
+  for field in sys_vendor product_name product_version bios_vendor bios_version bios_date; do
+    [[ -r "/sys/class/dmi/id/${field}" ]] && printf '%s: %s\n' "${field}" "$(<"/sys/class/dmi/id/${field}")"
+  done
+  printf 'CPU: %s (%s개)\n' "$(sed -n 's/^model name[[:space:]]*: //p' /proc/cpuinfo | head -n 1)" "$(nproc 2>/dev/null)"
+  awk '/^MemTotal/ { printf "메모리: %.1f GB\n", $2 / 1048576 }' /proc/meminfo
+  lsblk -d -o NAME,SIZE,TYPE,ROTA,TRAN,MODEL 2>/dev/null
+  df -h / 2>/dev/null
+}
+
+report_devices() {
+  # The display, network, audio, storage and Bluetooth parts, with the driver in use
+  lspci -nnk 2>/dev/null | awk '/^[0-9a-f]/ { show = ($0 ~ /VGA|3D controller|Display controller|Network controller|Ethernet controller|Audio device|Multimedia audio|Non-Volatile|SATA|RAID/) } show'
+  printf '\nUSB:\n'
+  lsusb 2>/dev/null | head -n 30
+}
+
+report_display() {
+  timeout 10 hyprctl monitors 2>/dev/null | grep -E '^Monitor|@|scale:'
+}
+
+report_network() {
+  timeout 10 nmcli -t -f DEVICE,TYPE,STATE device status 2>/dev/null
+  rfkill list 2>/dev/null
+  # What the kernel said about network and Bluetooth firmware this boot
+  timeout 10 journalctl -k -b --no-pager -q 2>/dev/null | grep -iE 'firmware|iwlwifi|brcmfmac|rtw8|mt79|ath1|bluetooth: hci' | tail -n 15
+}
+
+report_sound() {
+  timeout 10 wpctl status 2>/dev/null | sed -n '/^Audio/,/^Video/p' | head -n 30
+}
+
+report_battery() {
+  local supply
+  for supply in /sys/class/power_supply/*; do
+    [[ -r "${supply}/type" ]] || continue
+    printf '%s: %s' "${supply##*/}" "$(<"${supply}/type")"
+    [[ -r "${supply}/status" ]] && printf ', %s' "$(<"${supply}/status")"
+    [[ -r "${supply}/capacity" ]] && printf ', %s%%' "$(<"${supply}/capacity")"
+    printf '\n'
+  done
+}
+
+report_problems() {
+  printf '실패한 서비스:\n'
+  systemctl --failed --no-legend --plain 2>/dev/null
+  printf '\n이번 부팅의 오류 (마지막 40줄):\n'
+  timeout 10 journalctl -b -p err --no-pager -q 2>/dev/null | tail -n 40
+  printf '\n이번 부팅의 커널 경고 (마지막 30줄):\n'
+  timeout 10 journalctl -k -b -p warning --no-pager -q 2>/dev/null | tail -n 30
+  printf '\nRobinOS 셸 기록 (마지막 20줄):\n'
+  tail -n 20 "${XDG_STATE_HOME:-${HOME}/.local/state}/robinos/shell.log" 2>/dev/null
+}
+
+report() {
+  local file="${1:-${HOME}/robinos-report.txt}"
+  {
+    printf 'RobinOS 문제 보고서 (%s)\n' "$(date '+%Y-%m-%d %H:%M')"
+    printf '어디로도 보내지 않은 파일이에요. 사용자 이름, 컴퓨터 이름, 주소(IP·MAC), 일련번호는 가렸어요.\n'
+    printf '관리자 권한 없이 만들어서 시스템 기록은 일부만 들어갈 수 있어요.\n'
+    report_section "RobinOS" report_robinos raw
+    report_section "컴퓨터" report_computer raw
+    report_section "장치와 드라이버" report_devices
+    report_section "화면" report_display
+    report_section "네트워크" report_network
+    report_section "소리" report_sound
+    report_section "배터리와 전원" report_battery
+    report_section "문제 신호" report_problems
+  } >"${file}" || die "보고서를 쓰지 못했어요: ${file}"
+  printf '보고서를 만들었어요: %s\n' "${file}"
+  printf '열어서 개인 정보가 없는지 읽어 본 뒤, 문제를 알릴 때 붙여 넣어요.\n'
+}
+
+# What an update would bring, looked up in a throwaway copy of the package
+# databases (checkupdates), so stopping here leaves the system's own databases as
+# they were. Sets UPD_RC (0 updates, 2 none, 1 it could not look: no network, a
+# mirror down), UPD_LIST, UPD_COUNT and UPD_BYTES (what would be downloaded).
+update_facts() {
+  local db rc=0
+  UPD_RC=2
+  UPD_LIST=""
+  UPD_COUNT=0
+  UPD_BYTES=0
+  have_cmd checkupdates || return 0
+  db="$(mktemp -d)"
+  UPD_LIST="$(CHECKUPDATES_DB="${db}" checkupdates 2>/dev/null)" || rc=$?
+  UPD_RC="${rc}"
+  if [[ "${rc}" -eq 0 && -z "${UPD_LIST}" ]]; then
+    UPD_RC=2
+  elif [[ "${rc}" -eq 0 ]]; then
+    UPD_COUNT="$(printf '%s\n' "${UPD_LIST}" | wc -l)"
+    UPD_BYTES="$(pacman -Sup --dbpath "${db}" --logfile /dev/null --print-format '%s' 2>/dev/null \
+      | awk '/^[0-9]+$/ { sum += $1 } END { print sum + 0 }')"
+  fi
+  rm -rf "${db}"
+}
+
+update_has_kernel() {
+  printf '%s\n' "${UPD_LIST}" | grep -qE '^linux(-lts|-zen|-hardened)? '
+}
+
+# NetworkManager's Metered: 1 yes, 3 guessed yes (a phone hotspot)
+update_metered() {
+  local metered
+  metered="$(busctl get-property org.freedesktop.NetworkManager /org/freedesktop/NetworkManager \
+    org.freedesktop.NetworkManager Metered 2>/dev/null | awk '{ print $2 }')"
+  [[ "${metered}" == 1 || "${metered}" == 3 ]]
+}
+
+# The number of the snapshot the update takes first
+update_next_snapshot() {
+  # Only root can read the list; for anyone else this says nothing rather than "1"
+  snapper --no-dbus -c root list --columns number 2>/dev/null | awk 'BEGIN { n = -1 } $1 ~ /^[0-9]+$/ { n = $1 } END { if (n >= 0) print n + 1 }'
+}
+
+# Apps from the app store (Flathub) that have a newer version; 0 without any
+update_flatpak_count() {
+  have_cmd flatpak || { printf '0\n'; return 0; }
+  [[ -n "$(flatpak list --system --app --columns=application 2>/dev/null)" ]] || { printf '0\n'; return 0; }
+  timeout 30 flatpak remote-ls --system --updates --columns=application 2>/dev/null | wc -l
+}
+
+# The version of the robinos package (RobinOS's own files), or nothing
+robinos_version() {
+  have_cmd pacman || return 0
+  pacman -Q robinos 2>/dev/null | awk 'NR == 1 { print $2 }' | tr -cd 'A-Za-z0-9._:+-'
+}
+
+# robinctl update --status: one line of JSON for the settings app, no root needed
+#   {"state":"updates|current|unknown","count":N,"bytes":N,"kernel":bool,"metered":bool,
+#    "next_snapshot":N,"flatpak":N,"robinos":"0.3.0.r481-1"}
+update_status() {
+  local mode="$1" state="current" kernel=false metered=false next=0
+  update_facts
+  [[ "${UPD_RC}" -eq 1 ]] && state="unknown"
+  [[ "${UPD_COUNT}" -gt 0 ]] && state="updates"
+  update_has_kernel && kernel=true
+  update_metered && metered=true
+  [[ "${mode}" != none ]] && next="$(update_next_snapshot)"
+  printf '{"state":"%s","count":%s,"bytes":%s,"kernel":%s,"metered":%s,"next_snapshot":%s,"flatpak":%s,"robinos":"%s"}\n' \
+    "${state}" "${UPD_COUNT}" "${UPD_BYTES}" "${kernel}" "${metered}" "${next:-0}" "$(update_flatpak_count)" "$(robinos_version)"
+}
+
+# What the update is about to do, before pacman asks (T-162): how many packages
+# and how much to download, whether the kernel changes (restart afterwards), the
+# snapshot number taken first, and a question on a metered connection.
+# Returns 1 when the person stops.
+update_preview() {
+  local mode="$1"
+  have_cmd checkupdates || return 0
+  update_facts
+  if [[ "${UPD_RC}" -eq 1 ]]; then
+    printf '업데이트가 있는지 확인하지 못했어요. 인터넷 연결을 확인해 주세요. 계속하면 pacman이 다시 시도해요.\n'
+    return 0
+  fi
+  if [[ "${UPD_COUNT}" -eq 0 ]]; then
+    printf '시스템 패키지는 모두 최신이에요.\n'
+    return 0
+  fi
+
+  printf '%s업데이트 %s개%s' "${C_BOLD}" "${UPD_COUNT}" "${C_RESET}"
+  if ((UPD_BYTES > 0)); then
+    printf ', 받을 크기 %s' "$(awk -v b="${UPD_BYTES}" 'BEGIN { if (b >= 1073741824) printf "%.1fGB", b / 1073741824; else printf "%dMB", int((b + 1048575) / 1048576) }')"
+  fi
+  printf '\n'
+  if update_has_kernel; then
+    printf '  커널이 바뀌어요. 업데이트가 끝나면 컴퓨터를 다시 시작해요.\n'
+  fi
+  if [[ "${mode}" != none ]]; then
+    local next
+    next="$(update_next_snapshot)"
+    if [[ -n "${next}" ]]; then
+      printf '  업데이트 직전에 스냅샷 %s번을 찍어요. 문제가 생기면: sudo robinctl snapshot rollback %s\n' "${next}" "${next}"
+    else
+      printf '  업데이트 직전에 스냅샷을 찍어요. 문제가 생기면: sudo robinctl snapshot list\n'
+    fi
+  fi
+
+  if update_metered; then
+    printf '%s알림:%s 데이터 요금이 드는 연결(휴대폰 핫스팟 등)이에요.\n' "${C_YELLOW}" "${C_RESET}"
+    if [[ -t 0 ]] && [[ "${ASSUME_YES}" != true ]]; then
+      local answer
+      read -r -p '그래도 지금 받을까요? [y/N] ' answer
+      [[ "${answer}" =~ ^[yY]$ ]] || { printf 'Wi-Fi에 연결한 뒤 다시 업데이트해요.\n'; return 1; }
+    fi
+  fi
+  printf '\n'
+}
+
+# The desktop shell keeps running the files it started with. When this update
+# brought a new robinos package, the person's shell is ended; robinos-shell starts
+# it again at once, from the new files (desktop/bin/robinos-shell)
+restart_shell_after() {
+  local before="$1" after user="${SUDO_USER:-}"
+  after="$(robinos_version)"
+  [[ -n "${before}" && "${before}" != "${after}" ]] || return 0
+  printf '\nRobinOS 파일이 %s에서 %s로 올라갔어요.\n' "${before}" "${after}"
+  if [[ -n "${user}" && "${user}" != root ]] && pgrep -u "${user}" -x qs >/dev/null 2>&1; then
+    printf '화면(셸)을 새 버전으로 다시 띄워요.\n'
+    pkill -u "${user}" -x qs >/dev/null 2>&1 || true
+  else
+    printf '화면에는 로그아웃했다가 다시 로그인하면 새 버전이 적용돼요.\n'
+  fi
+}
+
 update_system() {
-  local dry_run="false"
-  [[ "${1:-}" == "--dry-run" ]] && dry_run="true"
+  local dry_run="false" preview="false" status="false" arg
+  for arg in "$@"; do
+    case "${arg}" in
+      --dry-run) dry_run="true" ;;
+      --preview) preview="true" ;;
+      --status) status="true" ;;
+      --yes | -y) ASSUME_YES="true" ;;
+      "") ;;
+      *) die "알 수 없는 옵션이에요: ${arg} (쓸 수 있는 것: --dry-run, --preview, --status, --yes)" ;;
+    esac
+  done
 
   have_cmd pacman || die "pacman이 필요해요"
 
@@ -418,6 +697,16 @@ update_system() {
     mode="manual"
   fi
 
+  # robinctl update --preview: only what an update would bring, without root
+  if [[ "${preview}" == "true" ]]; then
+    update_preview "${mode}"
+    return
+  fi
+  if [[ "${status}" == "true" ]]; then
+    update_status "${mode}"
+    return
+  fi
+
   if [[ "${dry_run}" == "true" ]]; then
     case "${mode}" in
       snap-pac) printf '업데이트 전후 스냅샷은 snap-pac이 자동으로 만들어요.\n' ;;
@@ -425,9 +714,6 @@ update_system() {
       none) printf '스냅샷이 설정되지 않아서 업데이트 전 스냅샷을 만들지 않아요 (설정: sudo robinctl snapshot setup).\n' ;;
     esac
     printf '실행할 명령: pacman -Syu\n'
-    if repo_configured && ! pkg_installed robinos; then
-      printf 'RobinOS 파일을 robinos 패키지로 옮겨요: pacman -S robinos --overwrite <이미 있는 RobinOS 파일>\n'
-    fi
     if have_cmd flatpak; then
       printf '앱 스토어(Flatpak) 앱이 있으면 이어서: flatpak update --system\n'
     fi
@@ -435,6 +721,7 @@ update_system() {
   fi
 
   need_root
+  update_preview "${mode}" || return 0
   case "${mode}" in
     manual)
       snapper --no-dbus -c root create --description "RobinOS before update" --cleanup-algorithm number
@@ -444,178 +731,20 @@ update_system() {
         "${C_YELLOW}" "${C_RESET}" >&2
       ;;
   esac
-  pacman -Syu
-
-  # Installed before the RobinOS repository's package took over: move the files once
-  if repo_configured && ! pkg_installed robinos; then
-    printf '\nRobinOS 파일(셸, robinctl, 설정)을 robinos 패키지로 옮겨요. 다음부터는 위 업데이트에 함께 들어가요.\n'
-    repo_adopt || printf '%s알림:%s RobinOS 파일을 패키지로 옮기지 못했어요. 다음 업데이트 때 다시 해요.\n' \
-      "${C_YELLOW}" "${C_RESET}" >&2
+  local pacman_args=() flatpak_args=() before
+  if [[ "${ASSUME_YES}" == "true" ]]; then
+    pacman_args+=(--noconfirm)
+    flatpak_args+=(-y)
   fi
+  before="$(robinos_version)"
+  pacman -Syu "${pacman_args[@]}"
+  restart_shell_after "${before}"
 
   # Apps from the app store (Flathub) live outside pacman and its snapshots
   if have_cmd flatpak && [[ -n "$(flatpak list --system --app --columns=application 2>/dev/null)" ]]; then
     printf '\n앱 스토어(Flatpak) 앱을 업데이트해요.\n'
-    flatpak update --system
+    flatpak update --system "${flatpak_args[@]}"
   fi
-}
-
-# ---- RobinOS's own files from the [robinos] pacman repository ----
-#
-# The shell, robinctl and settings are the robinos package in a signed repository on
-# GitHub (docs/design.md "RobinOS 파일 업데이트"), so pacman -Syu updates them with
-# everything else and snap-pac snapshots around it. Only the release key is trusted
-# for it: the fingerprint is fixed here, whatever else the key file holds.
-
-readonly REPO_SERVER="https://github.com/Yoon-robin/RobinOS/releases/download/repo"
-readonly REPO_KEY_FPR="D8EB0C495CBF5B2BBB57EACCFD9B53B8B79E9AAD"
-readonly PACMAN_CONF="/etc/pacman.conf"
-
-repo_key_file() {
-  local key
-  for key in "${PROJECT_ROOT}/keys/robinos-release.asc" "${SCRIPT_DIR}/../keys/robinos-release.asc"; do
-    if [[ -f "${key}" ]]; then
-      printf '%s\n' "${key}"
-      return 0
-    fi
-  done
-  return 1
-}
-
-repo_configured() {
-  grep -qx '\[robinos\]' "${PACMAN_CONF}" 2>/dev/null
-}
-
-repo_status() {
-  printf 'RobinOS 파일 업데이트:\n'
-  if repo_configured; then
-    printf '  저장소: 켜짐 (%s)\n' "${REPO_SERVER}"
-  else
-    printf '  저장소: 꺼짐 (켜기: sudo robinctl repo setup)\n'
-  fi
-  if pkg_installed robinos; then
-    printf '  패키지: %s (sudo robinctl update로 함께 업데이트해요)\n' "$(pacman -Q robinos)"
-  else
-    printf '  패키지: 아직 패키지가 아니에요 (저장소를 켜면 sudo robinctl update가 옮겨요)\n'
-  fi
-}
-
-# Trusts the release key in pacman's keyring and adds [robinos] to pacman.conf
-repo_setup() {
-  local dry_run="false" key
-  [[ "${1:-}" == "--dry-run" ]] && dry_run="true"
-  have_cmd pacman || die "pacman이 필요해요"
-  key="$(repo_key_file)" || die "RobinOS 서명 열쇠가 없어요: ${PROJECT_ROOT}/keys/robinos-release.asc"
-
-  if [[ "${dry_run}" == "true" ]]; then
-    printf '실행할 명령: pacman-key --add %s\n' "${key}"
-    printf '실행할 명령: pacman-key --lsign-key %s\n' "${REPO_KEY_FPR}"
-    if repo_configured; then
-      printf '%s에 [robinos] 저장소가 이미 있어요\n' "${PACMAN_CONF}"
-    else
-      printf '%s에 [robinos] 저장소를 넣어요 (%s)\n' "${PACMAN_CONF}" "${REPO_SERVER}"
-    fi
-    return
-  fi
-
-  need_root
-  # gpg talks a lot on stderr even when it works: show it only on failure
-  local out
-  out="$(pacman-key --add "${key}" 2>&1 && pacman-key --lsign-key "${REPO_KEY_FPR}" 2>&1)" || {
-    printf '%s\n' "${out}" >&2
-    die "pacman 열쇠고리에 RobinOS 서명 열쇠를 넣지 못했어요"
-  }
-  if ! repo_configured; then
-    printf '\n# RobinOS updates (robinctl repo setup, docs/design.md)\n[robinos]\nSigLevel = Required\nServer = %s\n' \
-      "${REPO_SERVER}" >>"${PACMAN_CONF}"
-  fi
-  printf 'RobinOS 저장소를 켰어요. 이제 sudo robinctl update가 RobinOS 파일도 업데이트해요.\n'
-}
-
-# --overwrite takes globs: a path matches only itself
-overwrite_glob() {
-  local path="$1"
-  path="${path//\\/\\\\}"
-  path="${path//\*/\\*}"
-  path="${path//\?/\\?}"
-  printf '%s' "${path//\[/\\[}"
-}
-
-# Hands RobinOS's files to pacman as the robinos package, from a package file (the
-# live ISO carries one, made from the same commit) or from the repository. The
-# installer copied the files without a package, so pacman would refuse to overwrite
-# them: --overwrite only the package's own paths. /etc/robinos/config.toml is a
-# backup file, so a changed one stays and the package's goes next to it as .pacnew.
-repo_adopt() {
-  local dry_run="false" file="" arg path confirm=() overwrite=()
-  for arg in "$@"; do
-    case "${arg}" in
-      --dry-run) dry_run="true" ;;
-      *) file="${arg}" ;;
-    esac
-  done
-  have_cmd pacman || die "pacman이 필요해요"
-  if pkg_installed robinos; then
-    printf 'RobinOS 파일은 이미 패키지예요: %s\n' "$(pacman -Q robinos)"
-    return
-  fi
-  [[ -z "${file}" || -f "${file}" ]] || die "패키지 파일이 없어요: ${file}"
-
-  if [[ "${dry_run}" == "true" ]]; then
-    if [[ -n "${file}" ]]; then
-      printf '실행할 명령: pacman -U %s --overwrite <이미 있는 RobinOS 파일>\n' "${file}"
-    else
-      printf '실행할 명령: pacman -S robinos --overwrite <이미 있는 RobinOS 파일>\n'
-    fi
-    return
-  fi
-
-  if [[ -z "${file}" ]] && ! repo_configured; then
-    die "RobinOS 저장소가 꺼져 있어요. 먼저: sudo robinctl repo setup"
-  fi
-
-  need_root
-  [[ "${ASSUME_YES}" == "true" ]] && confirm=(--noconfirm)
-  if [[ -z "${file}" ]]; then
-    # The file list comes from the package itself, so download it first
-    [[ -f "$(pacman-conf DBPath)sync/robinos.db" ]] || pacman -Sy
-    pacman -Sw --noconfirm robinos >/dev/null || return 1
-    file="$(pacman-conf CacheDir | head -n 1)$(pacman -Sp --print-format '%f' robinos)"
-    if [[ ! -f "${file}" ]]; then
-      printf '오류: 내려받은 패키지를 찾지 못했어요: %s\n' "${file}" >&2
-      return 1
-    fi
-  fi
-  while IFS= read -r path; do
-    [[ "${path}" == */ ]] && continue
-    if [[ -e "${path}" || -L "${path}" ]]; then
-      overwrite+=(--overwrite "$(overwrite_glob "${path}")")
-    fi
-  done < <(pacman -Qlpq "${file}" 2>/dev/null)
-
-  if [[ "${file}" == "$(pacman-conf CacheDir | head -n 1)"* ]]; then
-    pacman -S "${confirm[@]}" "${overwrite[@]}" robinos
-  else
-    pacman -U "${confirm[@]}" "${overwrite[@]}" "${file}"
-  fi
-}
-
-repo() {
-  case "${1:-}" in
-    ""|status)
-      repo_status
-      ;;
-    setup)
-      repo_setup "${2:-}"
-      ;;
-    adopt)
-      shift
-      repo_adopt "$@"
-      ;;
-    *)
-      die "사용법: robinctl repo [status|setup|adopt]"
-      ;;
-  esac
 }
 
 # ---- Snapshots: snapper + snap-pac + grub-btrfs on a Btrfs root ----
@@ -918,6 +1047,17 @@ snapshot_setup() {
 # Makes snapshot N the system: the current @ is kept as @.broken-<time> and a
 # writable copy of the snapshot becomes @. Takes effect after a reboot. Works
 # from the normal system or after booting the snapshot from the GRUB menu.
+# The snapshot this system was started from in the boot menu's "RobinOS snapshots"
+# (grub-btrfs puts rootflags=subvol=@snapshots/N/snapshot on the kernel line):
+# "N<TAB>description". Nothing, and status 1, on a normal start.
+snapshot_booted() {
+  local number description
+  number="$(sed -E -n 's:.*rootflags=([^ ]*,)?subvol=/?@snapshots/([0-9]+)/snapshot.*:\2:p' "${ROBINOS_CMDLINE:-/proc/cmdline}")"
+  [[ -n "${number}" ]] || return 1
+  description="$(sed -n 's:.*<description>\(.*\)</description>.*:\1:p' "${ROBINOS_SNAPSHOT_DIR:-/.snapshots}/${number}/info.xml" 2>/dev/null)"
+  printf '%s\t%s\n' "${number}" "${description}"
+}
+
 snapshot_rollback() {
   local number="${1:-}"
   [[ "${number}" =~ ^[0-9]+$ ]] ||
@@ -3915,17 +4055,16 @@ main() {
     audit)
       audit
       ;;
+    report)
+      report "${2:-}"
+      ;;
     app)
       shift
       app "$@"
       ;;
     update)
       shift
-      update_system "${1:-}"
-      ;;
-    repo)
-      shift
-      repo "$@"
+      update_system "$@"
       ;;
     snapshot)
       shift
@@ -3942,8 +4081,11 @@ main() {
         rollback)
           snapshot_rollback "${2:-}" "${3:-}"
           ;;
+        booted)
+          snapshot_booted
+          ;;
         *)
-          die "사용법: robinctl snapshot create|list|setup|rollback"
+          die "사용법: robinctl snapshot create|list|setup|rollback|booted"
           ;;
       esac
       ;;

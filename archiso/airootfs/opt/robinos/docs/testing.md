@@ -12,7 +12,7 @@ RobinOS는 GitHub Actions를 쓰지 않고 개발 PC에서 검증해요. 윈도�
 | Hyprland 설정, foot, 테마 | 데스크톱 설정 검사, ISO 빌드, 자동 부팅 테스트 |
 | 패키지 목록, `archiso/` | 패키지 검사, ISO 빌드, 자동 부팅 테스트 |
 | 설치와 복구 (`post-install.sh`, `robinctl snapshot`, `robin-install`) | 정적 검증, 설치기 테스트, 설치 테스트(셸이나 `robinctl`을 바꿨다면 커밋하고 ISO를 다시 빌드해서, 보통 `verify`) |
-| RobinOS 패키지와 저장소 (`packaging/`, `stage-robinos.sh`, `robinctl repo`) | 정적 검증, `wsl-build.ps1 package`, `verify` |
+| RobinOS 패키지와 저장소 (`packaging/`, `stage-robinos.sh`) | 정적 검증, `wsl-build.ps1 package`, `verify` |
 
 ## 정적 검증
 
@@ -70,7 +70,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 
 ## 자동 부팅 테스트
 
-`scripts/boot-test.sh`가 QEMU에서 ISO를 부팅하고, `scripts/boot-test-qmp.py`가 화면을 조작하면서 스크린샷을 찍어요(2026-10-10 기준 79장). 키는 QMP `send-key`로, 마우스는 VM에 붙인 `usb-tablet`에 QMP `input-send-event`로 화면 좌표(1600×900)를 찍어 눌러요(`click()`). 소리 창을 보려고 소리를 버리는 사운드 카드(`-audiodev none`, `hda-duplex`)도 붙여요.
+`scripts/boot-test.sh`가 QEMU에서 ISO를 부팅하고, `scripts/boot-test-qmp.py`가 화면을 조작하면서 스크린샷을 찍어요(2026-10-14 기준 96장, 상태로 판정하는 장면 21개). 키는 QMP `send-key`로, 마우스는 VM에 붙인 `usb-tablet`에 QMP `input-send-event`로 화면 좌표(1600×900)를 찍어 눌러요(`click()`). 소리 창을 보려고 소리를 버리는 사운드 카드(`-audiodev none`, `hda-duplex`)도 붙여요.
 
 1. 부팅과 첫 로그인
 2. 환영 마법사의 모든 단계, 마지막에 열리는 학습 센터(0/45)
@@ -79,7 +79,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 5. 설치기 첫 두 단계(테스트 VM에는 빈 64GB 디스크가 있어요)
 6. 빠른 설정, Tab으로 옮긴 키보드 포커스, 마우스로 누른 방해 금지 타일, Wi-Fi 타일 화살표로 연 연결 창(VM에는 Wi-Fi 장치가 없다는 안내), `Super+Alt+D`로 연 달력(그달의 공휴일 목록), `Super+F1`로 연 단축키 보기
 7. 터미널: `ipconfig` 힌트, `robinctl learn show 1`, `robinctl audit` 보안 점검, 런처에서 `eventvwr`로 연 시스템 기록(새 터미널 맨 위와 끝에 `journalctl` 명령, `Alt+F4`로 닫기), VM 종류(`systemd-detect-virt`), 실패한 서비스가 없고 systemd-networkd 없이 NetworkManager만 도는지(`systemctl --failed`, `systemctl is-active`)와 미션 1 풀기(라이트 모드 런처에 "1/45 완료"), 포털이 알려 주는 제목 표시줄 단추 배치(`button-layout`)
-8. 독처럼 최소화하고 되돌리기, `Super+←`(왼쪽 절반), `Super+↑`(최대화), `Super+↓` 두 번(원래 크기), `Super+Ctrl+→`(빈 작업 공간 2)와 `Super+Ctrl+←`, `Super+Ctrl+D`(새 작업 공간)에서 연 터미널을 `Super+Ctrl+F4`로 작업 공간 1에 데려오기, `Super+D` 두 번(바탕 화면 보기와 되돌리기, 그 사이에 빈 바탕 화면을 오른쪽 클릭해 연 메뉴), `Super+Shift+S`(영역 고르기 화면, Esc로 취소), `Shift+Print`로 찍은 전체 화면 알림("폴더 열기" 단추), `Super+V`(복사한 글이 클립보드 기록에), `Super+.`로 `heart`를 찾아 터미널에 넣은 이모지, `notify-send`로 띄운 한국어 알림(오른쪽 아래)과 `Super+N`으로 연 알림 센터, 알림 센터의 스크린샷 알림을 눌러 이미지 뷰어로 연 사진(`Ctrl+W`로 닫기), IPC로 연 블루투스 연결 창(창 밖을 눌러 닫기), 런처에서 윈도우 이름 `mixer`로 연 소리 창과 `Tab`으로 옮긴 장치 줄의 포커스(VM 사운드 카드가 출력·입력 장치로, `pw-play`가 앱별 음량에), 바의 트레이 아이콘(ISO에 든 테스트용 `scripts/sni-test-item.sh`를 띄우고, 아이콘을 눌러 앱에 닿는지), 바의 상태 아이콘 위 휠로 줄인 음량(음량 표시), 독의 터미널 위에 마우스를 올려 뜬 창 미리보기, Wallpaper 포털로 바꾼 배경화면과 런처의 "기본 배경화면으로", 독에서 계산기를 오른쪽 클릭해 연 메뉴(새 창, 독에 고정, 창 닫기)와 아래 화살표·`Enter`로 고정하기, `Alt`를 누른 채 `Tab`을 눌러 연 창 전환 화면(터미널과 계산기 미리보기)과 `Alt`를 놓아 바뀐 창, `Super+Tab` 작업 보기, 런처에서 오른쪽 클릭으로 연 메뉴(열기, 독에 고정, 제거)로 고정하기, 런처에서 계산기에 `Shift+Delete`(기본 앱이라 지우지 않는다는 안내)
+8. 독처럼 최소화하고 되돌리기, `Super+←`(왼쪽 절반), `Super+↑`(최대화), `Super+↓` 두 번(원래 크기), `Super+Ctrl+→`(빈 작업 공간 2)와 `Super+Ctrl+←`, `Super+Ctrl+D`(새 작업 공간)에서 연 터미널을 `Super+Ctrl+F4`로 작업 공간 1에 데려오기, `Super+D` 두 번(바탕 화면 보기와 되돌리기, 그 사이에 빈 바탕 화면을 오른쪽 클릭해 연 메뉴), `Super+Shift+S`(영역 고르기 화면, Esc로 취소), `Shift+Print`로 찍은 전체 화면 알림("폴더 열기" 단추), `Super+Alt+R`로 시작한 화면 녹화(바의 빨간 점 "녹화 중")와 멈춤, `Super+V`(복사한 글이 클립보드 기록에), `Super+.`로 `heart`를 찾아 터미널에 넣은 이모지, `notify-send`로 띄운 한국어 알림(오른쪽 아래)과 `Super+N`으로 연 알림 센터, 알림 센터의 스크린샷 알림을 눌러 이미지 뷰어로 연 사진(`Ctrl+W`로 닫기), IPC로 연 블루투스 연결 창(창 밖을 눌러 닫기), 런처에서 윈도우 이름 `mixer`로 연 소리 창과 `Tab`으로 옮긴 장치 줄의 포커스(VM 사운드 카드가 출력·입력 장치로, `pw-play`가 앱별 음량에), 바의 트레이 아이콘(ISO에 든 테스트용 `scripts/sni-test-item.sh`를 띄우고, 아이콘을 눌러 앱에 닿는지), 바의 상태 아이콘 위 휠로 줄인 음량(음량 표시), 독의 터미널 위에 마우스를 올려 뜬 창 미리보기, Wallpaper 포털로 바꾼 배경화면과 런처의 "기본 배경화면으로", 독에서 계산기를 오른쪽 클릭해 연 메뉴(새 창, 독에 고정, 창 닫기)와 아래 화살표·`Enter`로 고정하기, `Alt`를 누른 채 `Tab`을 눌러 연 창 전환 화면(터미널과 계산기 미리보기)과 `Alt`를 놓아 바뀐 창, `Super+Tab` 작업 보기, 런처에서 오른쪽 클릭으로 연 메뉴(열기, 독에 고정, 제거)로 고정하기, 런처에서 계산기에 `Shift+Delete`(기본 앱이라 지우지 않는다는 안내)
 9. 셸을 끄면 `robinos-shell`이 다시 띄우는지
 10. 라이트 모드(셸 IPC `setDark false`): 터미널(`robinctl learn` 목록), 런처(최근에 연 앱, recently-used.xbel에 적은 최근 파일)와 파일 찾기(`notes`), Alt+F4로 닫았다가 IPC로 다시 연 학습 센터(미션 1에 체크, 미션 2 줄을 눌러 터미널에 열기, 휠로 내린 목록 끝의 입문 CTF 10문제, 닫기 단추), 빠른 설정, 화면 배율 125%(저장된 파일 내용과 함께), 야간 모드(VM 그래픽에는 색 변환이 없어 `hyprsunset`이 켜지는지만 봐요). 찍은 뒤 다크로 돌려요
 11. 잠금 화면과 잠금 해제
@@ -87,6 +87,26 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 boot-test
 ```
+
+### 상태로 판정하는 장면
+
+스크린샷만 찍는 테스트는 화면이 틀려도 통과해요(2026-10-12: 터미널이 하나도 안 열렸는데 "통과"). 그래서 꼭 동작해야 하는 장면은 찍은 뒤 터미널에 `bash /opt/robinos/scripts/e2e-check.sh <장면>`을 쳐서 VM 안의 상태로 확인해요. 결과는 저널을 거쳐 `serial.log`에 `scenario=<장면> status=PASS|FAIL <근거>`로 남고, 테스트 끝에 모아서 보여 줘요. 하나라도 `FAIL`이거나 결과가 없으면 부팅 테스트가 실패해요.
+
+| 장면 | 확인하는 것 |
+|---|---|
+| `terminal` | `Super+Enter`로 연 창이 Ptyxis예요. 실패하면 tty3에서 진단하고 바로 멈춰요 |
+| `mission-1` | `robinctl learn check 1`이 통과해요 |
+| `maximized`, `restored` | `Super+↑` 뒤 창이 최대화(`fullscreen` 1)돼서 바 아래, 독 위에 있고 화면의 70% 넘게 차지해요. `Super+↓` 두 번 뒤에는 최대화가 풀려요 |
+| `count-save`, `one-more` | 새 작업 공간에서 `Super+Enter`를 누르면 Ptyxis 창이 딱 하나 늘어나요. 학습 센터에서 미션 줄을 눌렀을 때도 같은 방법으로 미션 터미널이 하나 열리고 명령을 받는지 봐요(`mission-terminal`) |
+| `recorded` | `Super+Alt+R` 두 번(시작과 멈춤) 뒤 `~/비디오/Screencasts`에 1초 넘는 mp4가 있고(`ffprobe`), 녹화가 멈춰 있어요 |
+| `zoomed`, `unzoomed` | `Super+=` 두 번 뒤 `cursor:zoom_factor`가 2, `Super+Esc` 뒤 1이에요 |
+| `windows-app` | 가짜 `KakaoTalk_Setup.exe`를 `gio open`으로 열면 "윈도우 프로그램" 창이 떠요(기본 앱 연결과 셸 IPC) |
+| `shell-restarted` | 셸을 끈 뒤 새 `qs`가 돌고 IPC에 답해요 |
+| `light`, `dark` | 셸이 저장한 값(`appearance.json`)과 GTK 설정(`color-scheme`)이 둘 다 바뀌어요 |
+| `input-changed`, `input-default` | 설정 앱의 마우스와 터치패드·키보드가 부르는 `setInput`으로 탭 클릭·스크롤 방향·포인터 속도·키 반복을 바꾸면 `hyprctl getoption`이 그 값을 주고(불리언 옵션의 JSON에는 `int`가 아닌 키가 와서 첫 값을 읽어요), `~/.local/state/robinos/input`에 저장돼요. 기본값으로 되돌려도 같아요 |
+| `power-changed`, `power-default` | 전원의 `setPower`로 시간을 바꾸면 `robinos-idle-config`가 hypridle 설정을 다시 쓰고(잠그기 1분이면 어두워지기 없이 `60 120 300`) hypridle이 그 파일로 돌아요. 기본값은 `240 300 600 900` |
+| `default-apps` | 기본 앱의 도구가 7종류를 주고 Firefox가 기본 브라우저이며, 고른 값이 `~/.config/mimeapps.list`에 들어가고 열 수 없는 앱은 거절돼요 |
+| `report` | `robinctl report`가 여덟 구역을 모두 쓰고 그래픽·네트워크 드라이버 줄이 있어요 |
 
 스크린샷과 `serial.log`는 `build\boot-test`에 생겨요. 테스트는 `robinos.debug`를 붙여 부팅해서 `robinos-session`이 Hyprland와 셸 출력을 저널로 보내고, 그 내용이 `serial.log`에 남아요. 셸이 안 뜨면 여기서 QML 오류를 찾으세요.
 
@@ -108,17 +128,23 @@ WHPX가 필요해요. TCG에서는 `build`, `boot-test`, `install-test`를 차�
 
 ## 설치 테스트
 
-`scripts/install-test.sh`는 빈 40GB 디스크에 RobinOS를 설치하고, 설치한 시스템을 시리얼 콘솔로 조작하면서 확인해요. RobinOS 파일은 ISO 안의 사본이 아니라 지금 저장소 것을 써요(읽기 전용 FAT 디스크로 넘겨요). 다만 설치 후 설정이 마지막에 ISO에 든 `robinos` 패키지(ISO를 빌드한 커밋)로 RobinOS 파일의 주인을 pacman에 넘기면서 그 커밋의 파일로 덮어써요. 설치기와 설치 후 설정 스크립트는 지금 저장소 것이 돌지만, 셸이나 `robinctl`을 바꿨다면 커밋하고 ISO를 다시 빌드해야 설치본에 들어가요(`verify`가 그렇게 해요).
+`scripts/install-test.sh`는 빈 40GB 디스크에 RobinOS를 설치하고, 설치한 시스템을 시리얼 콘솔로 조작하면서 확인해요. RobinOS 파일은 ISO 안의 사본이 아니라 지금 저장소 것을 써요(읽기 전용 FAT 디스크로 넘겨요).
 
 설치 방식은 세 가지예요.
 
 - `archinstall` (기본): [install.md](install.md)의 방법 A예요. archinstall로 Arch를 설치하고(기본 Btrfs 구성, GRUB, EFI는 `/boot`) `scripts/post-install.sh --yes`를 실행해요.
 - `robinos`: RobinOS 설치기 백엔드(`installer/robin-install`)로 디스크 전체에 설치해요(EFI는 `/efi`).
-- `windows`: 윈도우가 깔린 것처럼 꾸민 64GB 디스크(100MB EFI 파티션과 그 안의 윈도우 부팅 관리자 자리, MSR, 20GB NTFS "C:", 나머지 빈 공간)에 RobinOS 설치기로 "윈도우 옆에 설치"해요. 설치 뒤 윈도우 파티션 세 개의 위치와 C:의 앞부분이 그대로인지, 윈도우 부팅 파일이 남아 있고 `EFI/RobinOS`만 더해졌는지, 하드웨어 시계가 지역 시간인지 확인해요.
+- `windows`: 윈도우가 깔린 것처럼 꾸민 64GB 디스크(100MB EFI 파티션과 그 안의 윈도우 부팅 관리자 자리, MSR, 20GB NTFS "C:", 나머지 빈 공간)에 RobinOS 설치기로 설치해요. 순서는 이래요.
+  1. 빈 공간(약 44GB)이 있는 때의 설치 화면을 찍어요(`installer-free-space`): "윈도우 옆에 설치"가 고르는 중이고 크기가 빈 공간 전부인지.
+  2. 크기를 정해 보기: 진짜 `sgdisk`로 41GB 파티션이 만들어지는지, 남은 빈 공간이 2GB인지, 그 파티션이 "이전 RobinOS"로 알아봐지는지. 그다음 지워요.
+  3. 윈도우 디스크 관리가 남기는 것처럼 41GB NTFS "Data" 파티션을 만들고, 설치기가 그 파티션은 내놓고 윈도우가 든 C:(`windows_inside`가 읽기 전용 마운트로 확인)는 내놓지 않는지 봐요.
+  4. 설치 화면을 키보드로 확인 단계까지 몰아요(`qs ipc call shell installerState`로 상태를 읽어요): Data 파티션이 미리 골라져 있는지, 지울 파티션을 체크하기 전에는 "설치 시작"이 안 열리고 체크하면 열리는지. 그다음 "설치 시작"을 눌러(`installerNext`) 설치 화면이 직접 설치하게 해요(2026-10-14부터): 화면이 `sudo robin-install run -`에 계획을 넘기고, 진행 막대가 패키지를 설치하는 동안 움직이고(43~69% 구간을 지나는지), 끝나면 "설치가 끝났어요" 쪽으로 가는지(`installerState`의 `succeeded`) 봐요. 화면 스크린샷 `installer-installing`, `installer-finished`.
+  5. 그 설치가 그 파티션에 들어갔는지 확인해요(`mode: partition`, 계획의 `disk_id`·`partition_uuid`도 화면이 보내요). 파티션 이름이 RobinOS, 형식이 리눅스로 바뀌었는지, 윈도우 파티션 세 개의 위치와 C:의 앞부분이 그대로인지, 윈도우 부팅 파일이 남아 있고 `EFI/RobinOS`만 더해졌는지, 하드웨어 시계가 지역 시간인지, GRUB 메뉴에 윈도우가 나오는지 확인해요.
+  화면 스크린샷(`live-0N-installer-*`)은 다음 시험이 폴더를 비우기 전에 챙겨 둬요.
 
 설치한 뒤 확인하는 것:
 
-1. `robinctl doctor`, 스냅샷 설정, `/etc/fstab`의 `@snapshots`, grub-btrfs 항목, 부팅 메뉴 이름, 보안 프로필 목록, 설치본 전용 앱(`packages/apps.txt`: 인쇄 서비스가 응답하는지, LibreOffice 한국어판, 앱 스토어와 Flathub 저장소, 동영상·음악 재생 앱과 `gio`로 본 기본 앱, 디스크 관리(`gnome-disks`)와 디스크 사용량(`baobab`)), 바의 업데이트 점이 쓰는 `checkupdates`, Firefox 원격 측정을 끄는 정책, 배경화면 포털 백엔드와 포털 설정, `filesystem`을 다시 설치한 뒤에도 RobinOS인 os-release, RobinOS 파일이 `robinos` 패키지인지(`pacman -Qo`, `pacman -Qk`)와 `[robinos]` 저장소·릴리스 열쇠, 깃허브 저장소가 서명된 데이터베이스로 답하는지(`pacman -Sy`, `pacman -Si robinos`), 사용자 `~/.bashrc`의 RobinOS 설정, `which`·`ssh-keygen`·`gpg`·`wtype`·`lspci`·`lsusb`·`diff`(학습 미션, 이모지, 런처의 장치 관리자에 필요), 소리 서버의 실시간 우선순위(`rtkit`), 열린 포트
+1. `robinctl doctor`, 스냅샷 설정, `/etc/fstab`의 `@snapshots`, grub-btrfs 항목, 부팅 메뉴 이름, 보안 프로필 목록, 설치본 전용 앱(`packages/apps.txt`: 인쇄 서비스가 응답하는지, LibreOffice 한국어판, 앱 스토어와 Flathub 저장소, 동영상·음악 재생 앱과 `gio`로 본 기본 앱, 디스크 관리(`gnome-disks`)와 디스크 사용량(`baobab`)), 바의 업데이트 점이 쓰는 `checkupdates`, Firefox 원격 측정을 끄는 정책, 배경화면 포털 백엔드와 포털 설정, `filesystem`을 다시 설치한 뒤에도 RobinOS인 os-release, 사용자 `~/.bashrc`의 RobinOS 설정, `which`·`ssh-keygen`·`gpg`·`wtype`·`lspci`·`lsusb`·`diff`(학습 미션, 이모지, 런처의 장치 관리자에 필요), 소리 서버의 실시간 우선순위(`rtkit`), RobinOS 파일이 `robinos` 패키지 소유인지(설치기 방식만)와 `[robinos]` 저장소·열쇠·`pacman -Si robinos`, 다른 패키지가 가진 두 파일(`/etc/skel/.bashrc`, `/etc/xdg/foot/foot.ini`)이 RobinOS 내용인지, 열린 포트
 2. 재부팅해서 GRUB 메뉴와 스냅샷 하위 메뉴 스크린샷
 3. `pacman -S cowsay`로 snap-pac의 전후 스냅샷이 생기는지
 4. 다시 켜서 GRUB의 스냅샷 하위 메뉴로 cowsay 설치 전 스냅샷을 골라 부팅하고([recovery.md](recovery.md)의 비상 경로), 그 안에서 `robinctl snapshot rollback`
@@ -136,6 +162,16 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test -Lab
 
 설치 테스트는 VM을 켤 때마다 `scripts/install-test.py`를 새로 읽어요. 테스트가 도는 동안 이 파일을 고치면 남은 단계가 바뀐 확인으로 돌아서, 아직 설치하지 않은 것을 찾다가 실패할 수 있어요. 고칠 게 있으면 테스트가 끝난 뒤에 고쳐요.
 
+## 파티션 부팅 테스트
+
+[install.md](install.md)의 "USB 없이 켜 보기"가 되는지 봐요. ISO의 파일을 FAT32 "기본 데이터" 파티션(EFI 시스템 파티션이 아니에요) 하나뿐인 디스크에 복사하고, CD 없이 UEFI로 켜서 라이브가 로그인 프롬프트까지 오면 통과예요. 확인용으로 복사본의 GRUB 설정에만 `console=ttyS0`을 붙여요. ISO의 부트로더나 archiso 훅을 바꿨을 때 돌려요.
+
+```bash
+wsl.exe -d archlinux -u root -e bash -lc 'cd /mnt/c/.../RobinOS && PARTITION_BOOT_OUT=/root/partition-boot bash scripts/partition-boot-test.sh /root/RobinOS/out/robinos-*.iso'
+```
+
+루프 장치를 쓰니 결과 폴더는 WSL의 리눅스 파일 시스템(`PARTITION_BOOT_OUT`)에 둬요. KVM이 없으면 TCG로 돌아서 몇 분 걸려요. 실제 PC의 펌웨어가 `bcdedit`로 만든 부팅 항목을 받아 주는지는 VM으로 알 수 없어요.
+
 ## VM에서 직접 써 보기
 
 자동 테스트로 보기 어려운 것은 VM을 직접 띄워서 확인해요. Arch Linux(WSL 셸: `scripts/wsl-build.ps1 shell`)에서 실행해요.
@@ -152,7 +188,7 @@ scripts/run-vm.sh --gl
 
 ### 눈으로 확인할 것
 
-- 부팅 메뉴에 "RobinOS Security Learning Live"가 보여요.
+- 부팅 메뉴에 "RobinOS Live"가 보여요.
 - 라이브 세션으로 바로 로그인하고 환영 마법사가 떠요.
 - 데스크톱에 상단 바, 독, 점 격자 배경화면이 보여요.
 - `Super+Space`로 런처가, `Super+S`로 빠른 설정이 열려요.

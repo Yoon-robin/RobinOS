@@ -49,15 +49,48 @@ mapfile -t desktop_packages < <(package_file "${ROOT_DIR}/packages/desktop.txt")
 mapfile -t app_packages < <(package_file "${ROOT_DIR}/packages/apps.txt")
 
 run pacman "${PACMAN_ARGS[@]}" "${core_packages[@]}" "${desktop_packages[@]}" "${app_packages[@]}"
-run install -Dm755 "${ROOT_DIR}/bin/robinctl" /usr/local/bin/robinctl
-run install -Dm644 "${ROOT_DIR}/config/robinos.toml" /etc/robinos/config.toml
+
+# The RobinOS repository: its release key trusted locally, then [robinos] in
+# pacman.conf, so `robinctl update` brings new RobinOS files too (docs/design.md
+# "RobinOS 파일 업데이트")
+release_key="${ROOT_DIR}/keys/robinos-release.asc"
+if [[ -f "${release_key}" ]]; then
+  fingerprint="$(gpg --batch --show-keys --with-colons "${release_key}" | awk -F: '/^fpr:/ {print $10; exit}')"
+  run pacman-key --add "${release_key}"
+  run pacman-key --lsign-key "${fingerprint}"
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    printf '/etc/pacman.conf에 [robinos] 저장소를 넣어요\n'
+  elif ! grep -q '^\[robinos\]' /etc/pacman.conf; then
+    printf '\n# RobinOS files (docs/design.md "RobinOS 파일 업데이트")\n[robinos]\nSigLevel = Required DatabaseRequired\nServer = https://github.com/Yoon-robin/RobinOS/releases/download/repo\n' >>/etc/pacman.conf
+  fi
+  # Its database now, or every `pacman -S` fails with "database file for 'robinos'
+  # does not exist" until the first -Sy (install test, 2026-10-11). Offline, the next
+  # `robinctl update` fetches it.
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    printf '실행할 명령: pacman -Sy\n'
+  elif ! pacman -Sy --noconfirm >/dev/null; then
+    printf '알림: RobinOS 저장소 목록을 받지 못했어요. 인터넷이 될 때 sudo robinctl update를 실행하세요\n' >&2
+  fi
+fi
+
+# RobinOS's own files: the robinos package the ISO carries (built from the same
+# commit), so they belong to pacman. robin-install copied /opt/robinos already, and
+# only those files may be overwritten. A checkout without the package (Arch first,
+# then this script) copies the files as before.
+robinos_package="$(find "${ROOT_DIR}/pkg" -maxdepth 1 -name 'robinos-*.pkg.tar.zst' -print -quit 2>/dev/null || true)"
+if [[ -n "${robinos_package}" ]]; then
+  run pacman -U --noconfirm --overwrite '/opt/robinos/*' "${robinos_package}"
+else
+  run install -Dm755 "${ROOT_DIR}/bin/robinctl" /usr/local/bin/robinctl
+  run install -Dm644 "${ROOT_DIR}/config/robinos.toml" /etc/robinos/config.toml
+fi
 
 # Desktop: Hyprland + Quickshell shell, themes, input method and font defaults
 if [[ "${DRY_RUN}" == "true" ]]; then
   "${ROOT_DIR}/scripts/install-desktop.sh" --dry-run
   printf 'Geist와 Pretendard 글꼴을 /usr/share/fonts/robinos에 내려받아요\n'
 else
-  run "${ROOT_DIR}/scripts/install-desktop.sh"
+  [[ -n "${robinos_package}" ]] || run "${ROOT_DIR}/scripts/install-desktop.sh"
   # robin-install copies the fonts from the live ISO, so there is nothing to download
   if [[ -f "/usr/share/fonts/robinos/Geist[wght].ttf" && -f /usr/share/fonts/robinos/PretendardVariable.ttf ]]; then
     printf 'RobinOS 글꼴이 이미 있어요\n'
@@ -69,6 +102,13 @@ run dconf update
 run fc-cache -f
 # fastfetch and hostnamectl say RobinOS (a pacman hook keeps it after upgrades)
 run /usr/share/robinos/bin/robinos-os-release
+# The text console's login prompt (Ctrl+Alt+F3) said "Arch Linux 6.x (tty3)".
+# pacman keeps an edited /etc/issue across filesystem upgrades (it is in backup=)
+if [[ "${DRY_RUN}" == "true" ]]; then
+  printf '[dry-run] /etc/issue: RobinOS\n'
+else
+  printf 'RobinOS \\r (\\l)\n\n' >/etc/issue
+fi
 
 # New users get the defaults from /etc/skel; copy them for the user running sudo too.
 if [[ -n "${SUDO_USER:-}" && "${SUDO_USER}" != "root" ]]; then
@@ -130,25 +170,18 @@ for unit in NetworkManager.service sddm.service bluetooth.service power-profiles
   fi
 done
 
-run systemctl set-default graphical.target
-
-# RobinOS's own files become the robinos package from the [robinos] repository, so
-# robinctl update brings their fixes too (docs/design.md "RobinOS 파일 업데이트").
-# The live ISO carries the package made from its own commit (pkg/); a git checkout
-# gets it from the repository. Before the snapshot setup: no snapshots of the install.
-robinos_pkg=""
-if [[ -d "${ROOT_DIR}/pkg" ]]; then
-  robinos_pkg="$(find "${ROOT_DIR}/pkg" -maxdepth 1 -name 'robinos-*.pkg.tar.zst' -print | sort | tail -n 1)"
-fi
+# Firewall: ufw's defaults drop what comes in and let everything out; its
+# before.rules keep DHCP, ping and mDNS (printers, name.local) open. Turned on by
+# its config file, not `ufw enable`, which would load rules into the kernel the
+# installer runs on (robin-install runs this in a chroot)
 if [[ "${DRY_RUN}" == "true" ]]; then
-  "${ROOT_DIR}/bin/robinctl" repo setup --dry-run
-  "${ROOT_DIR}/bin/robinctl" repo adopt --dry-run ${robinos_pkg:+"${robinos_pkg}"}
-elif "${ROOT_DIR}/bin/robinctl" repo setup; then
-  "${ROOT_DIR}/bin/robinctl" repo adopt ${robinos_pkg:+"${robinos_pkg}"} \
-    || printf '알림: RobinOS 파일을 패키지로 옮기지 못했어요. 나중에 sudo robinctl update가 다시 해요\n'
-else
-  printf '알림: RobinOS 저장소를 켜지 못했어요. 나중에 sudo robinctl repo setup으로 켤 수 있어요\n'
+  printf '방화벽(ufw)을 켜요: 들어오는 연결은 막고 나가는 연결은 그대로\n'
+elif [[ -f /etc/ufw/ufw.conf ]]; then
+  sed -i 's/^ENABLED=.*/ENABLED=yes/' /etc/ufw/ufw.conf
+  run systemctl enable ufw.service
 fi
+
+run systemctl set-default graphical.target
 
 # Snapshots around every pacman transaction and in the GRUB menu (Btrfs root only).
 # Runs after install-branding.sh so its grub-mkconfig keeps the theme.

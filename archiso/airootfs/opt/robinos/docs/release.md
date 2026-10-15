@@ -36,7 +36,7 @@ build/logs/mkarchiso-*.log
 `scripts/build-iso.sh`는 빌드 PC에 릴리스 열쇠가 있으면 `SHA256SUMS`에 서명해서 `SHA256SUMS.sig`를 만들고, 저장소의 공개 열쇠([keys/robinos-release.asc](../keys/robinos-release.asc))만으로 바로 확인해요. 열쇠가 없으면 서명 없이 "note: no release key"만 남겨요.
 
 - 열쇠: `RobinOS Release Signing <115547263+Yoon-robin@users.noreply.github.com>`, RSA 4096, 서명 전용, 지문 `D8EB 0C49 5CBF 5B2B BB57 EACC FD9B 53B8 B79E 9AAD`, 2026-10-10에 만들고 2029-10-09에 끝나요(그 전에 `gpg --quick-set-expire`로 늘려요)
-- 개인 열쇠는 이 PC의 WSL(`archlinux`) 안 `/root/.robinos-signing`(권한 700)에만 있어요. 빌드가 사람 없이 서명하도록 암호를 걸지 않았어요. 저장소에는 절대 넣지 않아요
+- 개인 열쇠는 빌드하는 PC의 WSL(`archlinux`) 안 `/root/.robinos-signing`(권한 700)에만 있어요(처음 만든 PC, 2026-10-13부터 robin PC에도). 빌드가 사람 없이 서명하도록 암호를 걸지 않았어요. 저장소에는 절대 넣지 않아요
 - 폐기 인증서: 같은 폴더의 `openpgp-revocs.d/D8EB0C495CBF5B2BBB57EACCFD9B53B8B79E9AAD.rev`. 열쇠가 새면 이걸로 폐기를 알려요
 - 백업: PC가 망가지면 열쇠도 사라져요. 오프라인 USB 같은 곳에 따로 보관해 두는 걸 권해요: `wsl -d archlinux -u root -e env GNUPGHOME=/root/.robinos-signing gpg --armor --export-secret-keys D8EB0C495CBF5B2BBB57EACCFD9B53B8B79E9AAD > robinos-release-secret.asc` (이 파일은 USB에만 두고 PC에서는 지워요)
 - 같은 열쇠로 RobinOS 파일 업데이트(pacman 저장소)에도 서명해요(아래 "RobinOS 패키지 저장소")
@@ -55,9 +55,19 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 publish-repo
 
 패키지 버전은 `config/robinos.toml`의 버전과 커밋 수예요(예: `0.3.0.r400`). 검증을 통과한 main에서만 올려요.
 
-ISO 빌드(`build-iso.sh`)도 같은 커밋의 패키지를 만들어 라이브 ISO의 `/opt/robinos/pkg`에 넣어요. 설치기는 그 패키지로 설치하고, 업데이트부터 저장소를 봐요. 그래서 ISO를 공개할 때는 같은 커밋(또는 더 새것)으로 저장소도 올려요. 저장소가 더 오래되면 그 사이에는 RobinOS 파일 업데이트가 오지 않아요(pacman이 "local is newer"라고만 해요).
-
 ## 배포
 
 - `SHA256SUMS`, `SHA256SUMS.sig`, 공개 열쇠(`keys/robinos-release.asc`)와 함께 GitHub 릴리스에 올려요.
 - 릴리스 노트에는 v0.1 범위([design.md](design.md))에서 바뀐 점과 알려진 한계를 적어요.
+
+## 웹사이트
+
+랜딩 페이지는 `site/`에 있어요(빌드 없는 HTML, CSS, JS). GitHub Pages가 `gh-pages` 브랜치를 https://yoon-robin.github.io/RobinOS/ 로 무료로 보여 줘요. GitHub Actions는 쓰지 않아요.
+
+- 고치고 커밋한 뒤 `bash scripts/publish-site.sh`로 올려요. `site/`만 떼어 낸 커밋을 `gh-pages`에 밀어 넣어요(`--dry-run`이면 올릴 파일만 보여 줘요).
+- 처음 한 번은 저장소 Settings → Pages에서 "Deploy from a branch", `gh-pages`, `/ (root)`를 골라요(2026-10-13에 브랜치를 올리자 저절로 켜졌어요).
+- 미리 보기: `python -m http.server 8642 --directory site` 뒤 http://127.0.0.1:8642
+- 디자인 기준은 애플 제품 페이지처럼 단순하게예요(2026-10-13 사용자: "설명이 너무 많아. 애플처럼 심플하게, 비주얼로만"). 이름, 실제 화면, 기능 이름만 쓰는 짧은 제목만 두고, 설명 문장이나 기능을 파는 문구는 넣지 않아요. 가운데 정렬, 검정(다크)·흰색(라이트) 배경에 강조색은 빨강 하나예요. 반복되는 움직임은 없어요. 이름이 글자마다 떠오르고, 화면이 스크롤에 따라 일어서거나 커지고, 터미널 줄은 윈도우 명령에 줄을 긋고 리눅스 명령을 들여오고, 빠른 설정은 다크에서 라이트로 쓸려 바뀌어요. 움직임 줄이기면 모두 끝 모습 그대로예요. 스크롤 이벤트는 쓰지 않고 IntersectionObserver와 CSS 스크롤 타임라인만 써요. 실제 PC에서 확인 전이라는 한 줄은 마지막 내려받기 아래에 남겨요. 그 전 디자인(2026-10-13 오전)은 [taste-skill](https://github.com/Leonxlnx/taste-skill)(MIT) 기준이었고, 가짜 화면을 div로 그리지 않는 것 등은 그대로 지켜요.
+- 문구를 바꾸면 `python scripts/build-site.py --fonts build/site-fonts`를 다시 돌려요. 페이지의 명령 짝(`data-win` → `data-linux`)이 `desktop/bash/robinos-hints.sh`의 힌트와 같은지 확인하고, 페이지에 쓰인 글자만 남긴 Pretendard(`site/assets/fonts/Pretendard-*.woff2`, 굵기마다 약 30KB)를 만들어요. `build/site-fonts`에는 `scripts/fetch-fonts.sh`가 체크섬을 확인해 받아 둔 Pretendard 1.3.9 zip의 `web/static/woff2-subset/Pretendard-*.subset.woff2`를 넣어요(fontTools 필요). Geist와 Geist Mono는 같은 zip의 가변 woff2를 그대로 써요. 글꼴 라이선스(SIL OFL)는 `site/assets/fonts/*-OFL.txt`에 같이 둬요.
+- 화면 사진(`site/assets/screens/*.webp`)은 부팅·설치 테스트 스크린샷(`build/boot-test`, `build/install-test`)을 잘라 WebP로 만든 거예요. 링크 미리 보기 그림(`site/assets/og.jpg`, 1200×630)은 `python scripts/make-og.py`가 `scripts/og-image.html`(사이트의 글꼴과 첫 화면 사진)을 헤드리스 크롬으로 찍어 만들어요. 검색용으로 `site/robots.txt`, `site/sitemap.xml`, `index.html`의 canonical과 JSON-LD(SoftwareApplication, 버전과 내려받기 주소)가 있어요. 새 버전을 낼 때 JSON-LD의 `softwareVersion`과 내려받기 주소도 같이 고쳐요. `scripts/publish-site.sh`는 내려받기 단추가 가리키는 릴리스 태그가 실제로 있는지 확인하고 없으면 올리지 않아요.
+- 문구는 [design.md](design.md)의 목적과 약속을 따르고, 아직 안 되는 것을 된다고 쓰지 않아요(실제 PC 확인 전에는 "미리 보기").

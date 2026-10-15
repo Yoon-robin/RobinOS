@@ -91,6 +91,9 @@ function Invoke-WhpxBootTest {
         # Start-Process joins the arguments with spaces, so quote the ones that have them
         $qemuArgs = @(
             "-machine", "q35", "-accel", "whpx", "-m", "6144", "-smp", "4",
+            # The hardware clock in local time, as on a PC that runs Windows (the live
+            # ISO reads it that way, archiso/airootfs/etc/adjtime)
+            "-rtc", "base=localtime",
             "-kernel", "`"vm\$base\boot\x86_64\vmlinuz-linux`"",
             "-initrd", "`"vm\$base\boot\x86_64\initramfs-linux.img`"",
             "-append", "`"$kernelArgs`"",
@@ -109,16 +112,22 @@ function Invoke-WhpxBootTest {
             -RedirectStandardError "$out\qemu-stderr.log" -RedirectStandardOutput "$out\qemu-stdout.log"
 
         python "$root\scripts\boot-test-qmp.py" "tcp:127.0.0.1:$port" "boot-test" 1
+        $scenario = $LASTEXITCODE
         if (-not $proc.WaitForExit(30000)) { $proc.Kill() }
     } finally {
         Pop-Location
     }
 
     Write-Host "`n시리얼 로그의 주요 줄:"
-    Select-String -Path "$out\serial.log" -Pattern "robinos-session|Reached target .*Graphical|Startup finished in|Failed to start|hyprland.*(ERR|error|CRIT)" |
-        Select-Object -Last 20 | ForEach-Object { $_.Line -replace "\x1b\[[0-9;]*m", "" }
+    Select-String -Path "$out\serial.log" -Pattern "robinos-session|robinos-diag|Reached target .*Graphical|Startup finished in|Failed to start|hyprland.*(ERR|error|CRIT)" |
+        Select-Object -Last 30 | ForEach-Object { $_.Line -replace "\x1b\[[0-9;]*m", "" }
     Write-Host "`n스크린샷:"
     Get-ChildItem "$out\*.png" | ForEach-Object { "  $($_.Name)" }
+    # The scenario stops at the first scene that fails (boot-test-qmp.py); that is a failed test
+    if ($scenario -ne 0) {
+        Write-Host "`n부팅 테스트 시나리오가 중간에 멈췄어요 (종료 코드 $scenario)" -ForegroundColor Red
+        exit 1
+    }
 }
 
 # Install test with QEMU for Windows (WHPX), the same phases as scripts/install-test.sh:
@@ -228,7 +237,8 @@ if ($Task -eq "setup") {
 set -e
 pacman-key --init >/dev/null 2>&1 || true
 pacman-key --populate archlinux >/dev/null 2>&1 || true
-pacman -Syu --noconfirm --needed archiso git grub sudo qemu-full edk2-ovmf libarchive python openssl rsync quickshell qt6-declarative lua hyprland fakeroot
+# which: robinctl mission 27 in scripts/test-robinctl.sh (not in Arch's WSL image)
+pacman -Syu --noconfirm --needed archiso git grub sudo qemu-full edk2-ovmf libarchive python openssl rsync quickshell qt6-declarative lua hyprland fakeroot which
 echo 'WSL 빌드 환경이 준비됐어요.'
 "@
     exit 0

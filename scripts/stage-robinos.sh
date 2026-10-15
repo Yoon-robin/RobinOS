@@ -2,9 +2,8 @@
 set -euo pipefail
 
 # Puts RobinOS's own files under a root directory, laid out as on an installed system:
-# robinctl, /opt/robinos (package lists, scripts, docs, labs, the release key, the
-# desktop sources the installer copies), the desktop files from desktop/install-map.txt
-# and the branding.
+# robinctl, /opt/robinos (package lists, scripts, docs, labs, the desktop sources the
+# installer copies), the desktop files from desktop/install-map.txt and the branding.
 # One list for every place they go: the live ISO overlay (sync-archiso-files.sh) and
 # the robinos pacman package (packaging/robinos/PKGBUILD), so both match.
 #
@@ -42,10 +41,10 @@ cp -a "${ROOT_DIR}/config/." "${opt}/config/"
 # Only the Markdown: docs/screenshots (README pictures) stays out
 install -Dm644 "${ROOT_DIR}"/docs/*.md -t "${opt}/docs"
 install -Dm644 "${ROOT_DIR}"/packages/*.txt -t "${opt}/packages"
-# The release key robinctl repo setup trusts for the [robinos] repository
-install -Dm644 "${ROOT_DIR}/keys/robinos-release.asc" "${opt}/keys/robinos-release.asc"
 install -Dm755 "${ROOT_DIR}"/scripts/*.sh -t "${opt}/scripts"
 install -Dm644 "${ROOT_DIR}"/scripts/*.ps1 -t "${opt}/scripts"
+# The release key: post-install.sh trusts it for the RobinOS repository
+install -Dm644 "${ROOT_DIR}/keys/robinos-release.asc" "${opt}/keys/robinos-release.asc"
 rm -rf "${opt}/labs"
 cp -a "${ROOT_DIR}/labs" "${opt}/labs"
 rm -rf "${opt}/desktop"

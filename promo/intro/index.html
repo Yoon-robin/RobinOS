@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>RobinOS 소개 영상</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="stage">
+  <!-- Soft light behind everything: drifting glows (main.js moves them from t) -->
+  <div class="glows" id="glows"><div class="glow-beat" id="glow-beat">
+    <i class="glow g1"></i><i class="glow g2"></i><i class="glow g3"></i>
+  </div></div>
+
+  <!-- 0–8: the mark draws itself, the robin lands, the name rises -->
+  <section class="scene" id="s-logo">
+    <div class="lockup">
+      <div class="mark-slot" data-mark></div>
+      <div class="wordmark"><span class="wm-text">RobinOS</span><span class="wm-sweep" aria-hidden="true">RobinOS</span></div>
+    </div>
+  </section>
+
+  <!-- 8–16: the statement -->
+  <section class="scene" id="s-hero">
+    <div class="hero">
+      <p class="eyebrow" data-words>RobinOS</p>
+      <h1><span class="line" data-words>처음 쓰는</span><span class="line grad" data-words>리눅스.</span></h1>
+    </div>
+  </section>
+
+  <!-- 16–24: a screen rises and boots: boot menu → login → desktop -->
+  <section class="scene persp" id="s-screen">
+    <div class="display" id="display">
+      <div class="display-inner">
+        <div class="shot" id="sc-grub">
+          <div class="crop" data-src="grub.png" data-crop="0,0,1600,900" data-fit="display"></div>
+          <i class="patch" data-patch="grub.png" data-rect="180,118,260,32"></i>
+          <i class="patch" data-patch="grub.png" data-rect="520,768,560,32"></i>
+        </div>
+        <div class="shot" id="sc-login">
+          <div class="crop" data-src="login.png" data-crop="53,0,1493,840" data-fit="display"></div>
+          <div class="pw" id="pw"></div>
+        </div>
+        <div class="shot" id="sc-desk"><div class="crop" data-src="desktop-real.png" data-crop="0,0,1600,900" data-fit="display"></div></div>
+        <i class="flash" id="sc-flash"></i>
+      </div>
+      <i class="display-glare"></i>
+    </div>
+    <p class="caption" id="screen-caption" data-words>처음 켤 때부터 <b class="grad">한국어예요.</b></p>
+  </section>
+
+  <!-- 24–36: Windows habits, as keycaps and floating panels -->
+  <section class="scene persp" id="s-familiar">
+    <div class="side">
+      <h2><span class="line" data-words>윈도우에서 쓰던</span><span class="line grad" data-words>그대로.</span></h2>
+      <p class="side-sub" id="fam-sub"><span class="sub-item" data-words>앱 찾기</span><span class="sub-item" data-words>창 전환</span><span class="sub-item" data-words>이모지</span></p>
+      <div class="keyrow" id="keyrow"></div>
+    </div>
+    <div class="deck" id="deck">
+      <div class="card" id="c-launcher">
+        <div class="crop" data-src="launcher-dark.png" data-crop="480,153,640,318" data-scale="1.42" data-fade></div>
+        <div class="crop over" id="c-launcher-result" data-src="launcher-notepad.png" data-crop="480,153,640,272" data-scale="1.42"></div>
+        <div class="search-type" id="search-type"><span data-type="search"></span><i class="caret thin"></i></div>
+      </div>
+      <div class="card" id="c-alttab"><div class="crop" data-src="alt-tab.png" data-crop="566,348,468,204" data-scale="1.95"></div></div>
+      <div class="card" id="c-emoji"><div class="crop" data-src="emoji.png" data-crop="476,149,648,330" data-scale="1.42"></div></div>
+    </div>
+  </section>
+
+  <!-- 36–48: the terminal answers a Windows command; 45 missions -->
+  <section class="scene persp" id="s-terminal">
+    <h2 class="top" id="term-head"><span data-words>막히면</span> <span class="grad" data-words>알려 줘요.</span></h2>
+    <div class="term" id="term">
+      <div class="term-body">
+        <div class="tline"><span class="ps">robin@robinos ~ <b>&gt;</b> </span><span data-type="cmd"></span><i class="caret" id="cmd-caret"></i></div>
+        <div class="tline out" id="hint1"><strong>ipconfig</strong> 명령은 윈도우용이에요. 리눅스에서는</div>
+        <div class="tline out" id="hint2">  <span class="ok">ip a</span>  <span class="dim">IP 주소와 네트워크 장치를 보여 줘요</span></div>
+      </div>
+    </div>
+    <div class="count" id="count">
+      <div class="num grad"><span id="count-num">0</span></div>
+      <p class="count-label" data-words>개의 학습 미션</p>
+      <p class="count-sub" data-words>리눅스 기초부터 내 터미널에서 풀어요.</p>
+    </div>
+  </section>
+
+  <!-- 48–52: the breakdown: dark, then light spreads from the middle -->
+  <section class="scene" id="s-theme">
+    <div class="theme-card"><div class="crop" data-src="launcher-dark.png" data-crop="480,153,640,318" data-scale="1.25" data-fade></div></div>
+  </section>
+  <section class="scene light" id="s-theme-light">
+    <div class="theme-card"><div class="crop" data-src="launcher-light.png" data-crop="480,153,640,318" data-scale="1.25" data-fade></div></div>
+    <p class="theme-caption" id="day-word" data-words>라이트 모드도 있어요.</p>
+  </section>
+
+  <!-- 52–60: snapshots on a timeline, rolled back; the real boot menu -->
+  <section class="scene light persp" id="s-rollback">
+    <h2 class="top dark-text" id="rb-head"><span data-words>망가져도</span> <span class="grad" data-words>되돌리면 그만.</span></h2>
+    <div class="timeline" id="timeline">
+      <i class="track"></i><i class="track-fill" id="track-fill"></i>
+      <div class="node" data-n="0"><i></i><b>설치</b><span>처음 상태</span></div>
+      <div class="node" data-n="1"><i></i><b>업데이트 전</b><span>자동 스냅샷</span></div>
+      <div class="node" data-n="2"><i></i><b>업데이트 후</b><span>자동 스냅샷</span></div>
+      <div class="now" id="now"><span>지금</span></div>
+      <svg class="rewind" id="rewind" viewBox="0 0 400 120"><path d="M370 90 C 300 10, 120 10, 40 86"/><path d="M40 86 l 6 -26 M40 86 l 26 -6"/></svg>
+    </div>
+    <div class="bootcard" id="bootcard">
+      <div class="crop" data-src="grub-pick.png" data-crop="180,272,760,200" data-scale="1.55"></div>
+    </div>
+    <p class="caption dark-text" id="rb-caption" data-words>부팅 메뉴에서 바로 고를 수 있어요.</p>
+  </section>
+
+  <!-- 60–72: everyday screens, as a bento grid -->
+  <section class="scene persp" id="s-bento">
+    <h2 class="top" id="bento-head"><span data-words>매일 쓰는 것도</span> <span class="grad" data-words>다 있어요.</span></h2>
+    <div class="bento" id="bento">
+      <div class="tile" data-rect="120,250,390,760"><b>빠른 설정</b><div class="crop" data-src="quick-settings.png" data-crop="1246,40,348,552" data-fit="tile"></div></div>
+      <div class="tile" data-rect="530,250,640,470"><b>학습 센터</b><div class="crop" data-src="mission.png" data-crop="336,122,640,480" data-fit="tile"></div></div>
+      <div class="tile" data-rect="1190,250,295,470"><b>달력</b><div class="crop" data-src="calendar.png" data-crop="646,40,307,390" data-fit="tile"></div></div>
+      <div class="tile" data-rect="1505,250,295,470"><b>소리</b><div class="crop" data-src="sound.png" data-crop="1250,40,344,310" data-fit="tile"></div></div>
+      <div class="tile" data-rect="530,740,640,270"><b>클립보드 기록</b><div class="crop" data-src="clipboard.png" data-crop="476,149,648,248" data-fit="tile"></div></div>
+      <div class="tile light-tile" data-rect="1190,740,610,270"><b>라이트 모드</b><div class="crop" data-src="launcher-light.png" data-crop="480,153,640,318" data-fit="tile" data-fade></div></div>
+    </div>
+  </section>
+
+  <!-- 72–80: the end -->
+  <section class="scene" id="s-finale">
+    <i class="ring" id="ring"></i>
+    <div class="lockup end">
+      <div class="mark-slot" data-mark></div>
+      <div class="wordmark"><span class="wm-text">RobinOS</span><span class="wm-sweep" aria-hidden="true">RobinOS</span></div>
+    </div>
+    <p class="tagline" data-words>처음 쓰는 리눅스.</p>
+    <p class="url" id="url">github.com/Yoon-robin/RobinOS</p>
+  </section>
+
+  <i class="vignette"></i>
+  <i class="black-out" id="black-out"></i>
+</div>
+<script type="module" src="main.js"></script>
+</body>
+</html>

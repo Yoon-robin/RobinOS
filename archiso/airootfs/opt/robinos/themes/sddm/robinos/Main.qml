@@ -482,28 +482,6 @@ Rectangle {
     }
 
     Row {
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 28
-        spacing: 8
-
-        Glyph {
-            anchors.verticalCenter: parent.verticalCenter
-            name: "shield"
-            size: 14
-            color: root.muted
-        }
-
-        Text {
-            anchors.verticalCenter: parent.verticalCenter
-            text: "허가받은 환경에서만 쓰는 보안 학습용 시스템이에요"
-            color: root.muted
-            font.family: root.font
-            font.pixelSize: 12
-        }
-    }
-
-    Row {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.margins: 20

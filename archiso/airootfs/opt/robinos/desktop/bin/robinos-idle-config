@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+# Builds the idle policy for hypridle from the choices of the settings app ("전원")
+# and runs it:
+#
+#   robinos-idle-config start    write the policy, then run hypridle (robinos.lua, at login)
+#   robinos-idle-config apply    write the policy and restart hypridle (a choice changed)
+#   robinos-idle-config render   only write the policy and print where (the tests)
+#
+# The choices are minutes in ~/.local/state/robinos/power, one "name minutes" line each
+# (0 means never): lock (default 5), screen_off (10) and suspend (15, a laptop on battery
+# only: see robinos-idle-suspend). The backlight dims a minute before the lock. Anything
+# missing or odd keeps its default; with no file this is desktop/hypr/hypridle.conf.
+
+set -u
+
+state_dir="${XDG_STATE_HOME:-${HOME}/.local/state}/robinos"
+prefs="${state_dir}/power"
+policy="${state_dir}/hypridle.conf"
+fallback="/usr/share/robinos/hypr/hypridle.conf"
+bin_dir="/usr/share/robinos/bin"
+
+# minutes NAME DEFAULT: the saved value when it is a whole number of 0 to 1440
+minutes() {
+  local value
+  value="$(sed -n "s/^$1[[:space:]]\{1,\}\([0-9]\{1,4\}\)[[:space:]]*\$/\1/p" "${prefs}" 2>/dev/null | tail -n 1)"
+  # 10# keeps a leading zero (007) from being read as octal
+  if [[ -n "${value}" ]] && ((10#${value} <= 1440)); then
+    printf '%d' "$((10#${value}))"
+  else
+    printf '%d' "$2"
+  fi
+}
+
+render() {
+  local lock screen_off suspend
+  lock="$(minutes lock 5)"
+  screen_off="$(minutes screen_off 10)"
+  suspend="$(minutes suspend 15)"
+
+  mkdir -p "${state_dir}" || return 1
+  {
+    cat <<'EOF'
+# Written by robinos-idle-config from ~/.local/state/robinos/power (the settings app's
+# 전원 page). Do not edit: the next change writes it again.
+
+general {
+    lock_cmd = pidof hyprlock || hyprlock -c /usr/share/robinos/hypr/hyprlock.conf
+    before_sleep_cmd = loginctl lock-session
+    after_sleep_cmd = hyprctl dispatch 'hl.dsp.dpms({ action = "on" })'
+}
+EOF
+    # Dim the backlight to 30% a minute before locking (never brighten it)
+    if ((lock >= 2)); then
+      cat <<EOF
+
+listener {
+    timeout = $((lock * 60 - 60))
+    on-timeout = brightnessctl -s >/dev/null; [ "\$(brightnessctl -m | cut -d, -f4 | tr -d %)" -gt 30 ] && brightnessctl set 30%
+    on-resume = brightnessctl -r
+}
+EOF
+    fi
+    if ((lock > 0)); then
+      cat <<EOF
+
+listener {
+    timeout = $((lock * 60))
+    on-timeout = loginctl lock-session
+}
+EOF
+    fi
+    if ((screen_off > 0)); then
+      cat <<EOF
+
+listener {
+    timeout = $((screen_off * 60))
+    on-timeout = hyprctl dispatch 'hl.dsp.dpms({ action = "off" })'
+    on-resume = hyprctl dispatch 'hl.dsp.dpms({ action = "on" })'
+}
+EOF
+    fi
+    if ((suspend > 0)); then
+      cat <<EOF
+
+listener {
+    timeout = $((suspend * 60))
+    on-timeout = ${bin_dir}/robinos-idle-suspend
+}
+EOF
+    fi
+  } >"${policy}.new" && mv -f "${policy}.new" "${policy}"
+}
+
+case "${1:-}" in
+  render)
+    render && printf '%s\n' "${policy}"
+    ;;
+  start)
+    if render; then
+      exec hypridle -c "${policy}"
+    fi
+    exec hypridle -c "${fallback}"
+    ;;
+  apply)
+    render || exit 1
+    pkill -x hypridle
+    setsid -f hypridle -c "${policy}" >/dev/null 2>&1
+    ;;
+  *)
+    printf 'usage: robinos-idle-config start|apply|render\n' >&2
+    exit 2
+    ;;
+esac

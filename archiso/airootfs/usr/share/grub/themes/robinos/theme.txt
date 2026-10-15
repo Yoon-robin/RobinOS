@@ -23,16 +23,6 @@ terminal-border: "0"
   color = "#FAFAFA"
 }
 
-+ label {
-  left = 190
-  top = 124
-  width = 760
-  height = 30
-  text = "Security Learning Workstation"
-  font = "Unifont Regular 16"
-  color = "#A1A1AA"
-}
-
 + boot_menu {
   left = 10%
   top = 30%
@@ -46,17 +36,6 @@ terminal-border: "0"
   item_height = 42
   item_padding = 12
   item_spacing = 4
-}
-
-+ label {
-  left = 10%
-  top = 86%
-  width = 80%
-  height = 28
-  align = "center"
-  text = "Use only for legal learning, CTF practice, and authorized testing."
-  font = "Unifont Regular 14"
-  color = "#A1A1AA"
 }
 
 + label {

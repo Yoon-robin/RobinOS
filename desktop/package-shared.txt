@@ -1,0 +1,8 @@
+# RobinOS files at paths another Arch package owns (pacman -F, 2026-10-10). The robinos
+# package leaves them out, or pacman would refuse it, and its install script copies
+# them over after every install and upgrade (packaging/robinos/robinos.install). Both
+# are in their owner's backup list, so the owner's upgrades keep RobinOS's version and
+# leave a .pacnew next to it.
+# source (in /opt/robinos)        destination
+desktop/bash/bashrc               /etc/skel/.bashrc
+desktop/foot/foot.ini             /etc/xdg/foot/foot.ini

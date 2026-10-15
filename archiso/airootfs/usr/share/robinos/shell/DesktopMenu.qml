@@ -11,7 +11,7 @@ PopupMenu {
     onDismiss: ShellState.desktopMenuOpen = false
 
     items: [
-        { icon: "terminal", title: "터미널 열기", hint: "Win+Enter", run: () => Quickshell.execDetached(["foot"]) },
+        { icon: "terminal", title: "터미널 열기", hint: "Win+Enter", run: () => Quickshell.execDetached(ShellState.terminal) },
         { icon: "folder", title: "파일 탐색기", hint: "Win+E", run: () => Quickshell.execDetached(["nautilus", "--new-window"]) },
         { separator: true },
         { icon: "image", title: "배경화면 바꾸기", run: () => ShellState.chooseWallpaper() }

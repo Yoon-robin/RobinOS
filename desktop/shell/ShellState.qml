@@ -391,6 +391,46 @@ Singleton {
         learnCenterOpen = true;
     }
 
+    // Height free for a window between the bar and the dock on the first screen, so
+    // the shell's own windows open without the dock covering their bottom on small
+    // screens (a 1280x800 VM, 2026-10-12)
+    readonly property int windowRoom: (Quickshell.screens[0]?.height ?? 900) - Theme.barHeight - 96
+
+    // ---- Settings (Settings.qml, Win+I) ----
+
+    property bool settingsOpen: false
+    // The section to show when it opens ("appearance", "about"); "" keeps the last one
+    property string settingsSection: ""
+
+    function openSettings(section) {
+        launcherOpen = false;
+        quickSettingsOpen = false;
+        calendarOpen = false;
+        settingsSection = section ?? "";
+        // Already open (maybe behind other windows): map it again to bring it forward
+        if (settingsOpen)
+            settingsOpen = false;
+        settingsOpen = true;
+    }
+
+    // ---- Started from a snapshot (T-153) ----
+    // The bar keeps "스냅샷 N · 임시" in view after the notice is gone, so the
+    // temporary state isn't forgotten; a click brings the notice back.
+
+    property string bootedSnapshot: ""
+
+    Process {
+        running: true
+        command: ["robinctl", "snapshot", "booted"]
+        stdout: StdioCollector {
+            onStreamFinished: root.bootedSnapshot = text.split("\t")[0].trim()
+        }
+    }
+
+    function showSnapshotNotice() {
+        Quickshell.execDetached(["/usr/share/robinos/bin/robinos-snapshot-notice", "--now"]);
+    }
+
     // ---- First-login welcome wizard (Welcome.qml) ----
 
     property bool welcomeOpen: false
@@ -808,6 +848,29 @@ Singleton {
         desktopStore.writeAdapter();
     }
 
+    // ---- An .exe or .msi was opened (WindowsApp.qml, T-159) ----
+
+    property bool windowsAppOpen: false
+    property string windowsAppPath: ""
+
+    function openWindowsApp(path) {
+        windowsAppPath = path;
+        // Opened again for another file: show it from the top
+        if (windowsAppOpen)
+            windowsAppOpen = false;
+        windowsAppOpen = true;
+    }
+
+    // ---- Screen recording (robinos-screenshot record, Win+Alt+R) ----
+
+    // Set over IPC by robinos-screenshot when a recording starts and stops; the bar
+    // shows a red dot that stops it
+    property bool recording: false
+
+    function toggleRecording() {
+        Quickshell.execDetached(["/usr/share/robinos/bin/robinos-screenshot", "record"]);
+    }
+
     // ---- Korean input method (fcitx5-remote prints 2 when Hangul is active) ----
 
     property bool hangul: false
@@ -1006,11 +1069,140 @@ Singleton {
         monitorRefresh.restart();
     }
 
+    // ---- Pointer and keyboard settings (Settings.qml: 마우스와 터치패드, 키보드) ----
+    // Saved as "name value" lines in ~/.local/state/robinos/input. robinos.lua reads
+    // them at login, and robinos.applyInput (the same function) applies a change at once.
+
+    readonly property var inputDefaults: ({
+            tap: true,
+            natural: true,
+            typing_off: true,
+            wheel_flip: false,
+            speed: 0,
+            repeat_rate: 25,
+            repeat_delay: 600
+        })
+    // Same limits as input_ranges in robinos.lua
+    readonly property var inputRanges: ({
+            speed: [-1, 1],
+            repeat_rate: [10, 60],
+            repeat_delay: [200, 1000]
+        })
+    property var inputPrefs: inputDefaults
+
+    FileView {
+        id: inputFile
+
+        path: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state") + "/robinos/input"
+        printErrors: false
+        onLoaded: {
+            const prefs = Object.assign({}, root.inputDefaults);
+            for (const line of inputFile.text().split("\n")) {
+                const m = line.match(/^(\w+)\s+(\S+)$/);
+                if (!m || !(m[1] in prefs))
+                    continue;
+                const value = m[2] === "true" ? true : m[2] === "false" ? false : Number(m[2]);
+                if (root.inputValid(m[1], value))
+                    prefs[m[1]] = value;
+            }
+            root.inputPrefs = prefs;
+        }
+    }
+
+    function inputValid(name, value) {
+        const kind = typeof inputDefaults[name];
+        if (kind === "boolean")
+            return typeof value === "boolean";
+        const range = inputRanges[name];
+        return kind === "number" && range !== undefined && typeof value === "number" && isFinite(value) && value >= range[0] && value <= range[1];
+    }
+
+    // The screen follows the slider at once; the file and Hyprland get the last value
+    // a moment after it stops moving
+    Timer {
+        id: inputApply
+
+        interval: 150
+        onTriggered: {
+            const names = Object.keys(root.inputDefaults);
+            inputFile.setText(names.map(name => name + " " + root.inputPrefs[name]).join("\n") + "\n");
+            Quickshell.execDetached(["hyprctl", "eval", "robinos.applyInput({ " + names.map(name => name + " = " + root.inputPrefs[name]).join(", ") + " })"]);
+        }
+    }
+
+    function setInput(name, value) {
+        if (typeof value === "number")
+            value = Number(value.toFixed(2));
+        if (!inputValid(name, value) || inputPrefs[name] === value)
+            return;
+        const prefs = Object.assign({}, inputPrefs);
+        prefs[name] = value;
+        inputPrefs = prefs;
+        inputApply.restart();
+    }
+
+    function resetInput(names) {
+        const prefs = Object.assign({}, inputPrefs);
+        for (const name of names) {
+            if (name in inputDefaults)
+                prefs[name] = inputDefaults[name];
+        }
+        inputPrefs = prefs;
+        inputApply.restart();
+    }
+
+    // ---- Idle times (Settings.qml: 전원) ----
+    // Minutes of doing nothing before the screen locks, the screen turns off and a
+    // laptop on battery sleeps; 0 is never. Saved as "name minutes" lines in
+    // ~/.local/state/robinos/power, which robinos-idle-config turns into hypridle's
+    // policy (at login, and at once when one changes).
+
+    readonly property var powerDefaults: ({ lock: 5, screen_off: 10, suspend: 15 })
+    property var powerPrefs: powerDefaults
+
+    FileView {
+        id: powerFile
+
+        path: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state") + "/robinos/power"
+        printErrors: false
+        onLoaded: {
+            const prefs = Object.assign({}, root.powerDefaults);
+            for (const line of powerFile.text().split("\n")) {
+                const m = line.match(/^(\w+)\s+(\d{1,4})$/);
+                if (m && m[1] in prefs && Number(m[2]) <= 1440)
+                    prefs[m[1]] = Number(m[2]);
+            }
+            root.powerPrefs = prefs;
+        }
+    }
+
+    function applyPower(prefs) {
+        powerPrefs = prefs;
+        Quickshell.execDetached(["sh", "-c",
+            "d=\"${XDG_STATE_HOME:-$HOME/.local/state}/robinos\"; mkdir -p \"$d\" && printf 'lock %s\\nscreen_off %s\\nsuspend %s\\n' \"$1\" \"$2\" \"$3\" > \"$d/power\" && exec /usr/share/robinos/bin/robinos-idle-config apply",
+            "sh", String(prefs.lock), String(prefs.screen_off), String(prefs.suspend)]);
+    }
+
+    function setPower(name, minutes) {
+        if (!(name in powerDefaults) || typeof minutes !== "number" || !Number.isInteger(minutes) || minutes < 0 || minutes > 1440 || powerPrefs[name] === minutes)
+            return;
+        const prefs = Object.assign({}, powerPrefs);
+        prefs[name] = minutes;
+        applyPower(prefs);
+    }
+
+    function resetPower() {
+        applyPower(Object.assign({}, powerDefaults));
+    }
+
     // ---- Low battery warning, like Windows at 10% and 5% ----
     // A critical notification stays until dismissed. Near empty, UPower's own
     // CriticalPowerAction puts the laptop to sleep or turns it off.
 
     readonly property var battery: UPower.displayDevice
+    readonly property bool hasBattery: battery.ready && battery.isLaptopBattery
+    // A laptop off the charger (the installer asks to plug it in)
+    readonly property bool unplugged: hasBattery && battery.state === UPowerDeviceState.Discharging
     // The lowest level already warned about since the battery last charged
     property int batteryWarned: 100
 
@@ -1092,7 +1284,11 @@ Singleton {
     Process {
         id: updateProc
 
-        command: ["sh", "-c", "checkupdates 2>/dev/null | wc -l"]
+        // pacman's updates, and the app store's (Flathub apps are outside pacman)
+        command: ["sh", "-c", "p=$(checkupdates 2>/dev/null | wc -l); f=0; "
+                  + "if command -v flatpak >/dev/null 2>&1 && [ -n \"$(flatpak list --system --app --columns=application 2>/dev/null)\" ]; then "
+                  + "f=$(timeout 30 flatpak remote-ls --system --updates --columns=application 2>/dev/null | wc -l); fi; "
+                  + "echo $((p + f))"]
         stdout: StdioCollector {
             id: updateOut
 
@@ -1155,16 +1351,22 @@ Singleton {
         Quickshell.execDetached(command);
     }
 
-    // Runs a shell snippet in a floating foot window and waits for Enter before closing.
+    // The terminal (T-154). Ptyxis draws its own title bar, so its windows can be
+    // dragged with the mouse; Hyprland never lets foot draw one (XDGDecoration.cpp).
+    // foot stays installed, and its windows still count as the terminal.
+    readonly property var terminal: ["/usr/share/robinos/bin/robinos-terminal"]
+    readonly property var terminalAppIds: ["org.gnome.Ptyxis", "foot", "footclient", "robinos-float"]
+
+    // Runs a shell snippet in a terminal window and waits for Enter before closing.
     function runInTerminal(script) {
-        Quickshell.execDetached(["foot", "--app-id=robinos-float", "--title=RobinOS", "sh", "-c",
-                                 script + "; printf '\\n\\033[2mEnter를 누르면 창이 닫혀요\\033[0m'; read _"]);
+        Quickshell.execDetached(terminal.concat(["-T", "RobinOS", "--", "sh", "-c",
+                                 script + "; printf '\\n\\033[2mEnter를 누르면 창이 닫혀요\\033[0m'; read _"]));
     }
 
     // Opens a regular terminal that runs a command first and then stays at the prompt.
     // ROBINOS_NO_GREETING keeps ~/.bashrc from printing fastfetch over the output.
     function openTerminal(script) {
-        Quickshell.execDetached(["foot", "env", "ROBINOS_NO_GREETING=1", "bash", "-c", script + "; exec bash"]);
+        Quickshell.execDetached(terminal.concat(["--", "env", "ROBINOS_NO_GREETING=1", "bash", "-c", script + "; exec bash"]));
     }
 
     // Windows admin tools' jobs as commands (the launcher's Windows names, Win+X)
@@ -1203,5 +1405,10 @@ Singleton {
 
     function powerOff() {
         Quickshell.execDetached(["systemctl", "poweroff"]);
+    }
+
+    // hypridle locks the screen before the machine sleeps (before_sleep_cmd)
+    function suspend() {
+        Quickshell.execDetached(["systemctl", "suspend"]);
     }
 }

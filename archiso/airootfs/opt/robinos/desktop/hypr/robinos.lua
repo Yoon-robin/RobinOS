@@ -10,7 +10,7 @@
 local hypr_dir  = "/usr/share/robinos/hypr"
 local bin_dir   = "/usr/share/robinos/bin"
 
-local terminal    = "foot"
+local terminal    = "/usr/share/robinos/bin/robinos-terminal"
 local fileManager = "nautilus"
 local browser     = "firefox"
 
@@ -99,8 +99,11 @@ hl.on("hyprland.start", function()
     -- Keeps the shell running and falls back to software drawing when Qt can't use the GPU
     hl.exec_cmd(bin_dir .. "/robinos-shell")
     hl.exec_cmd(bin_dir .. "/robinos-vm-display")
+    -- Started from a snapshot in the boot menu: say so and offer to keep it (T-153)
+    hl.exec_cmd(bin_dir .. "/robinos-snapshot-notice")
     hl.exec_cmd("fcitx5 -d --replace")
-    hl.exec_cmd("hypridle -c " .. hypr_dir .. "/hypridle.conf")
+    -- The idle policy is hypridle.conf with the times chosen in the settings (전원)
+    hl.exec_cmd(bin_dir .. "/robinos-idle-config start")
     hl.exec_cmd("systemctl --user start hyprpolkitagent.service")
     hl.exec_cmd("xdg-user-dirs-update")
     -- Clipboard history for Win+V (desktop/shell/Launcher.qml). It lives in
@@ -150,11 +153,13 @@ hl.config({
             color        = 0x66000000,
         },
 
+        -- Wide and soft, so the glass panels (Theme.glass, T-152) show the desktop's
+        -- colour without its detail
         blur = {
             enabled  = true,
-            size     = 6,
+            size     = 10,
             passes   = 3,
-            vibrancy = 0.17,
+            vibrancy = 0.22,
         },
     },
 
@@ -230,13 +235,76 @@ hl.config({
         kb_options = "korean:ralt_hangul,korean:rctrl_hanja",
 
         follow_mouse = 1,
-        sensitivity  = 0,
-
-        touchpad = {
-            natural_scroll = true,
-        },
     },
 })
+
+-- Pointer and keyboard settings from the settings app ("마우스와 터치패드", "키보드"):
+-- "name value" lines in ~/.local/state/robinos/input. They are applied here at login
+-- and by ShellState.setInput through robinos.applyInput the moment one changes, so
+-- both paths take the same values. A missing or odd line keeps the default.
+local input_defaults = {
+    tap          = true,   -- tap the touchpad to click
+    natural      = true,   -- touchpad: content follows the fingers
+    typing_off   = true,   -- touchpad stays quiet while typing
+    wheel_flip   = false,  -- mouse wheel: content follows the wheel, like the touchpad
+    speed        = 0,      -- pointer speed, -1 (slow) to 1 (fast)
+    repeat_rate  = 25,     -- keys per second while a key is held
+    repeat_delay = 600,    -- milliseconds before a held key repeats
+}
+local input_ranges = {
+    speed        = { -1, 1 },
+    repeat_rate  = { 10, 60 },
+    repeat_delay = { 200, 1000 },
+}
+
+function robinos.applyInput(values)
+    local v = {}
+    for name, default in pairs(input_defaults) do
+        local given = values[name]
+        v[name] = default
+        if type(default) == "boolean" then
+            -- not `given and ... or default`: that would turn a saved false back into the default
+            if type(given) == "boolean" then
+                v[name] = given
+            end
+        elseif type(given) == "number" then
+            local range = input_ranges[name]
+            if given >= range[1] and given <= range[2] then
+                v[name] = given
+            end
+        end
+    end
+    hl.config({
+        input = {
+            sensitivity    = v.speed,
+            natural_scroll = v.wheel_flip,
+            repeat_rate    = v.repeat_rate,
+            repeat_delay   = v.repeat_delay,
+            touchpad = {
+                natural_scroll       = v.natural,
+                tap_to_click         = v.tap,
+                disable_while_typing = v.typing_off,
+            },
+        },
+    })
+end
+
+local saved_input = {}
+local input_file = io.open(state_dir .. "/robinos/input")
+if input_file then
+    for line in input_file:lines() do
+        local name, value = line:match("^(%w[%w_]*)%s+(%S+)$")
+        if name then
+            if value == "true" or value == "false" then
+                saved_input[name] = value == "true"
+            else
+                saved_input[name] = tonumber(value)
+            end
+        end
+    end
+    input_file:close()
+end
+robinos.applyInput(saved_input)
 
 hl.gesture({
     fingers   = 3,
@@ -255,7 +323,7 @@ local mainMod = "SUPER"
 hl.bind(mainMod .. " + space", hl.dsp.global("robinos:launcher"),      { description = "앱 런처" })
 hl.bind(mainMod .. " + A",     hl.dsp.global("robinos:launcher"),      { description = "앱 런처" })
 hl.bind(mainMod .. " + S",     hl.dsp.global("robinos:quicksettings"), { description = "빠른 설정" })
-hl.bind(mainMod .. " + I",     hl.dsp.global("robinos:quicksettings"), { description = "빠른 설정 (윈도우의 설정 Win+I)" })
+hl.bind(mainMod .. " + I",     hl.dsp.global("robinos:settings"), { description = "설정 (윈도우의 설정 Win+I)" })
 hl.bind(mainMod .. " + R",     hl.dsp.global("robinos:launcher"),      { description = "앱 런처 (윈도우의 실행 Win+R)" })
 hl.bind(mainMod .. " + N",     hl.dsp.global("robinos:notifications"), { description = "알림 센터" })
 hl.bind(mainMod .. " + D",     hl.dsp.global("robinos:desktop"),       { description = "바탕 화면 보기" })
@@ -276,6 +344,7 @@ hl.bind("Print",                hl.dsp.exec_cmd(bin_dir .. "/robinos-screenshot 
 hl.bind("SHIFT + Print",        hl.dsp.exec_cmd(bin_dir .. "/robinos-screenshot screen"), { description = "전체 스크린샷" })
 hl.bind(mainMod .. " + Print",  hl.dsp.exec_cmd(bin_dir .. "/robinos-screenshot screen"), { description = "전체 스크린샷 (윈도우의 Win+PrtSc)" })
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd(bin_dir .. "/robinos-screenshot region"), { description = "영역 스크린샷 (윈도우의 캡처 도구)" })
+hl.bind(mainMod .. " + ALT + R", hl.dsp.exec_cmd(bin_dir .. "/robinos-screenshot record"), { description = "화면 녹화 시작/멈춤 (윈도우의 Win+Alt+R)" })
 
 -- Windows (Windows-style shortcuts work too)
 hl.bind(mainMod .. " + Q", hl.dsp.window.close(), { description = "창 닫기" })
@@ -376,6 +445,18 @@ local function snap_down()
     hl.dispatch(hl.dsp.global("robinos:minimize"))
 end
 
+-- Windows' Magnifier keys (T-161): Win+Plus zooms in around the pointer, Win+Minus
+-- zooms out, Win+Esc goes back to normal
+local zoom = 1
+local function set_zoom(value)
+    zoom = math.max(1, math.min(value, 5))
+    hl.config({ cursor = { zoom_factor = zoom } })
+end
+
+hl.bind(mainMod .. " + equal",  function() set_zoom(zoom + 0.5) end, { description = "화면 확대 (윈도우의 돋보기 Win+더하기)" })
+hl.bind(mainMod .. " + minus",  function() set_zoom(zoom - 0.5) end, { description = "화면 축소" })
+hl.bind(mainMod .. " + Escape", function() set_zoom(1) end,          { description = "확대 끄기" })
+
 hl.bind(mainMod .. " + left",  function() snap("left") end,  { description = "창을 화면 왼쪽 절반에" })
 hl.bind(mainMod .. " + right", function() snap("right") end, { description = "창을 화면 오른쪽 절반에" })
 hl.bind(mainMod .. " + up",    hl.dsp.window.fullscreen({ mode = "maximized", action = "set" }), { description = "최대화" })
@@ -423,11 +504,10 @@ robinos.floatByDefault = hl.window_rule({
     float = true,
 })
 
-hl.window_rule({
-    name  = "suppress-maximize-events",
-    match = { class = ".*" },
-    suppress_event = "maximize",
-})
+-- Apps' own maximize requests are honoured (Hyprland's example config drops them):
+-- the maximize button on a title bar fills the space between the bar and the dock,
+-- like on Windows, and a second press (or Win+Down) brings the window back
+-- (2026-10-12: the learning center's button did nothing)
 
 hl.window_rule({
     name  = "fix-xwayland-drags",
@@ -459,10 +539,21 @@ hl.layer_rule({
     ignore_alpha = 0.2,
 })
 
+-- Only under the card: the dim around it (Theme.scrimSoft) stays sharp, like Spotlight
 hl.layer_rule({
-    name  = "robinos-launcher-blur",
-    match = { namespace = "^robinos-launcher$" },
-    blur  = true,
+    name         = "robinos-launcher-blur",
+    match        = { namespace = "^robinos-launcher$" },
+    blur         = true,
+    ignore_alpha = 0.5,
+})
+
+-- Floating panels are full-screen layers with one translucent card (Theme.glass);
+-- ignore_alpha keeps the blur under the card and off the clear area and the shadow
+hl.layer_rule({
+    name         = "robinos-panel-blur",
+    match        = { namespace = "^robinos-(quicksettings|calendar|connect|sound|notifications|toasts|osd|alttab|shortcuts|menu|desktopmenu|dockmenu|quicklinks)$" },
+    blur         = true,
+    ignore_alpha = 0.5,
 })
 
 hl.layer_rule({

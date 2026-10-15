@@ -8,8 +8,8 @@ pkgrel=1
 pkgdesc="RobinOS desktop shell, robinctl, learning missions and branding"
 arch=(any)
 url="https://github.com/Yoon-robin/RobinOS"
-# The project has no license file yet (docs/tasks.md "사용자 확인 필요")
-license=(unknown)
+# LICENSE, chosen 2026-10-11
+license=(GPL-3.0-only)
 depends=(bash python)
 # The user's settings; the desktop defaults under /etc/xdg follow each update
 backup=(etc/robinos/config.toml)
@@ -29,4 +29,11 @@ pkgver() {
 package() {
   "${_repo}/scripts/stage-robinos.sh" --root "${pkgdir}"
   install -Dm644 "${_repo}/config/robinos.toml" "${pkgdir}/etc/robinos/config.toml"
+  # Paths other packages own: robinos.install copies these after install
+  local src dest
+  while read -r src dest; do
+    case "${src}" in "" | \#*) continue ;; esac
+    rm -f "${pkgdir}${dest}"
+    rmdir --ignore-fail-on-non-empty "${pkgdir}$(dirname "${dest}")"
+  done <"${_repo}/desktop/package-shared.txt"
 }

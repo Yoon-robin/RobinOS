@@ -101,12 +101,15 @@ PanelWindow {
         anchors.topMargin: Theme.barHeight + 6
         width: 304
         height: content.implicitHeight + 28
-        radius: Theme.radiusLg
-        color: Theme.surface
+        radius: Theme.radiusPanel
+        color: Theme.glass
         border.width: 1
-        border.color: Theme.border
+        border.color: Theme.glassBorder
         opacity: root.revealed ? 1 : 0
         focus: true
+        // Grows out of where it opens and settles, like a spring (T-152)
+        transformOrigin: Item.Top
+        scale: root.revealed ? 1 : 0.96
 
         transform: Translate {
             y: root.revealed ? 0 : -6
@@ -114,6 +117,10 @@ PanelWindow {
             Behavior on y {
                 NumberAnimation { duration: Theme.dur; easing.type: Easing.OutCubic }
             }
+        }
+
+        Behavior on scale {
+            NumberAnimation { duration: Theme.durSpring; easing.type: Easing.OutBack; easing.overshoot: 0.9 }
         }
 
         Behavior on opacity {

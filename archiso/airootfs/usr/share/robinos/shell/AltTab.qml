@@ -94,10 +94,10 @@ PanelWindow {
         anchors.centerIn: parent
         width: perRow * (tileWidth + 12) - 12 + 32
         height: tiles.implicitHeight + 32
-        radius: Theme.radiusLg
-        color: Theme.surface
+        radius: Theme.radiusPanel
+        color: Theme.glass
         border.width: 1
-        border.color: Theme.border
+        border.color: Theme.glassBorder
 
         layer.enabled: !Theme.lowPower
         layer.effect: MultiEffect {

@@ -242,10 +242,15 @@ foreach ($path in $overlayPaths) {
 
 # Scripts must be executable in git, or Linux checkouts cannot run them.
 # Windows does not track the bit; fix with: git update-index --chmod=+x <file>
+# The ISO overlay's copies too: the live ISO takes their mode from git, so a new
+# script synced without the bit can't run there (2026-10-12: no terminal at all
+# in the live session because robinos-terminal's copy was 644).
 if (Get-Command git -ErrorAction SilentlyContinue) {
     Push-Location $root
     try {
-        $entries = git ls-files -s -- "scripts/*.sh" "scripts/*.py" "bin/*" "installer/*" "desktop/bin/*" 2>$null
+        $entries = git ls-files -s -- "scripts/*.sh" "scripts/*.py" "bin/*" "installer/*" "desktop/bin/*" `
+            "archiso/airootfs/usr/share/robinos/bin/*" "archiso/airootfs/opt/robinos/desktop/bin/*" `
+            "archiso/airootfs/opt/robinos/bin/*" "archiso/airootfs/usr/local/bin/*" 2>$null
         foreach ($entry in $entries) {
             $mode, $rest = $entry -split "\s+", 2
             $path = ($entry -split "`t", 2)[1]
@@ -255,6 +260,23 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
         }
     } finally {
         Pop-Location
+    }
+}
+
+# mkarchiso copies airootfs without the files' modes and sets only what profiledef.sh's
+# file_permissions lists. Every script desktop/install-map.txt installs as 755 under
+# /usr/share/robinos/bin must be listed there, or it can't run on the live ISO
+# (2026-10-12: robinos-terminal was 644 on the live ISO, so no terminal opened).
+$profiledef = Get-Content (Join-Path $root "archiso/profiledef.sh") -Raw
+foreach ($line in Get-Content (Join-Path $root "desktop/install-map.txt")) {
+    $fields = $line.Trim() -split "\s+"
+    if ($fields.Count -ge 3 -and $fields[2] -eq "755" -and $fields[1] -like "/usr/share/robinos/bin/*") {
+        $name = Split-Path -Leaf $fields[1]
+        foreach ($target in @($fields[1], "/opt/robinos/desktop/bin/$name")) {
+            if (-not $profiledef.Contains("[`"$target`"]=`"0:0:755`"")) {
+                Add-Error "archiso/profiledef.sh: file_permissions has no [`"$target`"]=`"0:0:755`" (the live ISO would get it as 644)"
+            }
+        }
     }
 }
 

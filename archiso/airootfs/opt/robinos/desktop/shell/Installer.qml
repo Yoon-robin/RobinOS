@@ -16,16 +16,41 @@ FloatingWindow {
     property var disks: []
     property bool disksLoading: false
     property string diskPath: ""
+    // "alongside" (a new partition in the free space, sizeGb big), "partition"
+    // (one that exists, partitionPath) or "whole"
     property string mode: ""
+    property int sizeGb: 0
+    property string partitionPath: ""
+    // Ticked on the confirm step: the files that go (the whole disk, or the
+    // partition chosen) and the BitLocker recovery key
     property bool eraseConfirmed: false
+    property bool recoveryConfirmed: false
+    property string timezone: "Asia/Seoul"
     property real percent: 0
     property string stage: ""
     property string errorText: ""
     property bool succeeded: false
     property var logLines: []
+    property bool showLog: false
+    property int tip: 0
 
+    readonly property real gib: 1073741824
+    readonly property real minSize: 40 * gib
     readonly property var disk: disks.find(d => d.path === diskPath) ?? null
     readonly property bool installing: step === 4
+    // The most RobinOS can take of the free space, in whole GB
+    readonly property int maxSizeGb: disk !== null ? Math.floor(disk.free / gib) : 0
+    readonly property var chosenPartition: disk !== null && partitionPath !== ""
+                                           ? (disk.partitions ?? []).find(p => p.path === partitionPath) ?? null : null
+    // BitLocker on a disk that stays, this one next to RobinOS or another one: a
+    // changed boot order can make Windows ask for its recovery key
+    readonly property bool bitlockerAtRisk: disk !== null
+                                            && ((mode !== "whole" && disk.bitlocker)
+                                                || disks.some(d => d.path !== diskPath && d.bitlocker && !d.removable))
+    // Windows ends up in the GRUB menu (robin-install decides the same way)
+    readonly property bool dualBoot: disk !== null
+                                     && ((mode !== "whole" && disk.windows)
+                                         || disks.some(d => d.path !== diskPath && d.windows && d.esp && !d.removable))
 
     readonly property bool userValid: /^[a-z_][a-z0-9_-]{0,31}$/.test(userField.text) && userField.text !== "root"
     readonly property bool hostValid: /^[a-zA-Z0-9][a-zA-Z0-9-]{0,62}$/.test(hostField.text)
@@ -34,13 +59,24 @@ FloatingWindow {
     readonly property bool canNext: {
         switch (step) {
         case 0:
-            return true;
+            // Every package comes from the internet
+            return ShellState.online;
         case 1:
-            return disk !== null && (mode === "whole" ? disk.can_whole : mode === "alongside" && disk.can_alongside);
+            if (disk === null)
+                return false;
+            if (mode === "whole")
+                return disk.can_whole;
+            if (mode === "alongside")
+                return disk.can_alongside && sizeGb >= 40 && sizeGb <= maxSizeGb;
+            return mode === "partition" && disk.can_partition && chosenPartition !== null && chosenPartition.usable;
         case 2:
             return userValid && hostValid && passwordValid;
         case 3:
-            return mode === "alongside" || eraseConfirmed;
+            if (mode === "whole")
+                return eraseConfirmed;
+            if (mode === "partition" && !eraseConfirmed)
+                return false;
+            return !bitlockerAtRisk || recoveryConfirmed;
         default:
             return false;
         }
@@ -55,27 +91,83 @@ FloatingWindow {
         ""
     ]
 
+    // What to know about RobinOS while the packages install
+    readonly property var tips: [
+        { title: "앱은 Win+Space로 찾아요", body: "메모장, 제어판처럼 윈도우에서 쓰던 이름으로 찾아도 나와요." },
+        { title: "터미널이 리눅스 명령을 알려 줘요", body: "ipconfig를 치면 리눅스에서는 ip a라고 알려 주고, 직접 해 볼 학습 미션도 이어 줘요." },
+        { title: "학습 센터에서 하나씩 익혀요", body: "미션 45개를 실제 터미널에서 풀어요. 채점은 robinctl이 해요." },
+        { title: "업데이트 전에 스냅샷을 찍어요", body: "문제가 생기면 부팅 메뉴의 \"RobinOS snapshots\"에서 이전 상태로 켜고 되돌려요." },
+        { title: "프로그램은 앱 스토어에서 받아요", body: ".exe 파일을 열면 리눅스에서 대신 쓸 앱을 알려 줘요." },
+        { title: "단축키가 생각나지 않으면 Win+F1", body: "Alt+Tab, Win+E, Win+D처럼 윈도우 단축키가 대부분 그대로예요." }
+    ]
+
     visible: ShellState.installerOpen
     title: "RobinOS 설치"
-    implicitWidth: 760
-    implicitHeight: 600
-    minimumSize: Qt.size(680, 560)
+    implicitWidth: 800
+    implicitHeight: 740
+    minimumSize: Qt.size(680, 600)
     color: Theme.bg
 
+    // Opened again, it starts over with the disks as they are now (a partition may
+    // have been made meanwhile); only a running install stays on its page
     onVisibleChanged: {
         if (!visible) {
             ShellState.installerOpen = false;
-        } else if (step === 0) {
+        } else if (step !== 4) {
+            step = 0;
+            eraseConfirmed = false;
+            recoveryConfirmed = false;
             refreshDisks();
         }
     }
 
     function gb(bytes) {
-        return Math.floor(bytes / 1073741824) + "GB";
+        return Math.floor(bytes / gib) + "GB";
     }
 
     function diskLabel(d) {
         return (d.model !== "" ? d.model : "디스크") + " · " + gb(d.size);
+    }
+
+    // What a partition is called in the list and in the questions
+    function partitionName(part) {
+        return part.kind === "robinos" ? "이전 RobinOS" : part.label !== "" ? part.label : part.name;
+    }
+
+    function zoneName(id) {
+        return zonePicker.nameOf(id);
+    }
+
+    // The disk after the install, for the second bar
+    function afterLayout(d) {
+        if (d === null)
+            return [];
+        const layout = d.layout ?? [];
+        if (mode === "whole")
+            return [{ kind: "efi", name: "EFI", size: gib, path: "" },
+                    { kind: "new", name: "RobinOS", size: Math.max(d.size - gib, 0), path: "" }];
+        if (mode === "partition")
+            return layout.map(s => s.path !== "" && s.path === partitionPath
+                                   ? { kind: "new", name: "RobinOS", size: s.size, path: s.path } : s);
+        // The free space: RobinOS first, then what is left of the block (under
+        // 1 GB left means robin-install takes all of it)
+        const want = sizeGb * gib;
+        const out = [];
+        let placed = false;
+        for (const s of layout) {
+            if (placed || s.kind !== "free" || s.size !== d.free) {
+                out.push(s);
+                continue;
+            }
+            placed = true;
+            if (want <= 0 || s.size - want < gib) {
+                out.push({ kind: "new", name: "RobinOS", size: s.size, path: "" });
+            } else {
+                out.push({ kind: "new", name: "RobinOS", size: want, path: "" });
+                out.push({ kind: "free", name: "빈 공간", size: s.size - want, path: "" });
+            }
+        }
+        return out;
     }
 
     function refreshDisks() {
@@ -88,12 +180,38 @@ FloatingWindow {
     function chooseDisk(d) {
         diskPath = d.path;
         eraseConfirmed = false;
+        recoveryConfirmed = false;
+        // All of the free space until the slider says less
+        sizeGb = Math.floor(d.free / gib);
+        // An earlier RobinOS partition is the likeliest one to put it in again
+        const usable = (d.partitions ?? []).filter(p => p.usable);
+        partitionPath = usable.length > 0 ? (usable.find(p => p.kind === "robinos") ?? usable[0]).path : "";
         // Keep Windows by default when it is possible
-        mode = d.can_alongside ? "alongside" : d.can_whole ? "whole" : "";
+        mode = d.can_alongside ? "alongside" : d.can_partition ? "partition" : d.can_whole ? "whole" : "";
+    }
+
+    // What the wizard shows, for the VM test (scripts/install-test.py asks through
+    // `qs ipc call shell installerState`); the password is not in it
+    function testState() {
+        return JSON.stringify({
+            step: step, mode: mode, disk: diskPath, partition: partitionPath, sizeGb: sizeGb,
+            canNext: canNext, eraseConfirmed: eraseConfirmed, recoveryConfirmed: recoveryConfirmed,
+            bitlockerAtRisk: bitlockerAtRisk, user: userField.text, installing: installing,
+            percent: Math.round(percent * 100), stage: stage, succeeded: succeeded, error: errorText
+        });
+    }
+
+    function chooseMode(key) {
+        mode = key;
+        eraseConfirmed = false;
+    }
+
+    function openZonePicker() {
+        zonePicker.show();
     }
 
     function next() {
-        if (!canNext)
+        if (zonePicker.open || !canNext)
             return;
         if (step === 3)
             startInstall();
@@ -112,6 +230,8 @@ FloatingWindow {
         errorText = "";
         succeeded = false;
         logLines = [];
+        showLog = false;
+        tip = 0;
         step = 4;
         installProc.running = true;
     }
@@ -167,14 +287,26 @@ FloatingWindow {
             onRead: data => root.handleLine(data)
         }
         onStarted: {
-            installProc.write(JSON.stringify({
+            const plan = {
                 disk: root.diskPath,
                 mode: root.mode,
                 user: userField.text,
                 password: passwordField.text,
                 hostname: hostField.text,
-                timezone: "Asia/Seoul"
-            }) + "\n");
+                timezone: root.timezone
+            };
+            if (root.mode === "partition")
+                plan.partition = root.partitionPath;
+            else if (root.mode === "alongside")
+                plan.size_gb = root.sizeGb;
+            if (root.bitlockerAtRisk)
+                plan.bitlocker_key_saved = root.recoveryConfirmed;
+            // So robin-install can tell that these are the disk and partition that were shown
+            if (root.disk)
+                plan.disk_id = root.disk.id;
+            if (root.mode === "partition" && root.chosenPartition)
+                plan.partition_uuid = root.chosenPartition.uuid;
+            installProc.write(JSON.stringify(plan) + "\n");
             // robin-install reads the plan until end of input
             installProc.stdinEnabled = false;
         }
@@ -187,6 +319,14 @@ FloatingWindow {
             installProc.stdinEnabled = true;
             root.step = 5;
         }
+    }
+
+    // A new tip every few seconds while installing; pointing at it holds it
+    Timer {
+        interval: 9000
+        repeat: true
+        running: root.installing && !tipMouse.containsMouse
+        onTriggered: root.tip = (root.tip + 1) % root.tips.length
     }
 
     Item {
@@ -268,11 +408,19 @@ FloatingWindow {
 
                     Repeater {
                         model: [
-                            { icon: ShellState.online ? "check" : "wifi-off", ok: ShellState.online,
-                              title: ShellState.online ? "인터넷에 연결돼 있어요" : "인터넷에 연결해 주세요",
-                              desc: "설치할 때 패키지를 내려받아요. 빠른 설정(Win+S)에서 네트워크를 연결할 수 있어요." },
-                            { icon: "battery-charging", ok: true, title: "노트북은 전원에 연결해 두세요",
-                              desc: "설치에는 10분에서 30분쯤 걸려요." },
+                            ShellState.online
+                                ? { icon: "check", ok: true, title: "인터넷에 연결돼 있어요",
+                                    desc: "설치할 때 패키지를 내려받아요." }
+                                : { icon: "wifi-off", ok: false, title: "인터넷에 연결해 주세요",
+                                    desc: "패키지를 내려받아야 해서, 연결해야 다음으로 넘어가요. 빠른 설정(Win+S)에서 네트워크를 골라요." },
+                            ShellState.unplugged
+                                ? { icon: "battery", ok: false, title: "노트북을 전원에 연결해 주세요",
+                                    desc: "설치하다 배터리가 다 되면 중간에 멈춰요. 설치에는 10분에서 30분쯤 걸려요." }
+                                : ShellState.hasBattery
+                                  ? { icon: "battery-charging", ok: true, title: "전원에 연결돼 있어요",
+                                      desc: "설치에는 10분에서 30분쯤 걸려요." }
+                                  : { icon: "history", ok: true, title: "설치에는 10분에서 30분쯤 걸려요",
+                                      desc: "인터넷 속도에 따라 달라요." },
                             { icon: "shield", ok: true, title: "중요한 파일은 먼저 백업하세요",
                               desc: "디스크 전체에 설치하면 그 디스크의 파일이 모두 지워져요." }
                         ]
@@ -331,232 +479,410 @@ FloatingWindow {
                 }
 
                 // 1. Disk and mode
-                ColumnLayout {
-                    spacing: 10
+                Flickable {
+                    id: whereFlick
 
-                    RowLayout {
-                        Layout.fillWidth: true
+                    clip: true
+                    contentHeight: whereColumn.implicitHeight
+                    boundsBehavior: Flickable.StopAtBounds
+
+                    ColumnLayout {
+                        id: whereColumn
+
+                        width: whereFlick.width
+                        spacing: 10
+
+                        RowLayout {
+                            Layout.fillWidth: true
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: root.disksLoading ? "디스크를 찾는 중이에요…" : root.disks.length === 0 ? "설치할 수 있는 디스크가 없어요" : "설치할 디스크를 고르세요"
+                                color: Theme.muted
+                                font.family: Theme.font
+                                font.pixelSize: 13
+                            }
+
+                            ActionButton {
+                                variant: "ghost"
+                                text: "다시 찾기"
+                                onClicked: root.refreshDisks()
+                            }
+                        }
+
+                        Repeater {
+                            model: root.disks
+
+                            Rectangle {
+                                id: diskCard
+
+                                required property var modelData
+                                readonly property bool selected: root.diskPath === modelData.path
+
+                                Layout.fillWidth: true
+                                implicitHeight: 60
+                                radius: Theme.radius
+                                color: diskMouse.containsMouse ? Theme.hover : "transparent"
+                                border.width: selected ? 2 : 1
+                                border.color: selected ? Theme.fg : Theme.border
+
+                                Accessible.role: Accessible.RadioButton
+                                Accessible.name: root.diskLabel(modelData)
+                                Accessible.checked: selected
+
+                                activeFocusOnTab: true
+                                Keys.onPressed: event => {
+                                    if (Keyboard.activates(event)) {
+                                        root.chooseDisk(diskCard.modelData);
+                                        event.accepted = true;
+                                    }
+                                }
+
+                                FocusRing {
+                                    baseRadius: diskCard.radius
+                                }
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: 14
+                                    anchors.rightMargin: 14
+                                    spacing: 14
+
+                                    Icon {
+                                        name: "hard-drive"
+                                        size: 20
+                                        color: Theme.fgSoft
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+
+                                        Text {
+                                            Layout.fillWidth: true
+                                            text: root.diskLabel(diskCard.modelData)
+                                            color: Theme.fg
+                                            font.family: Theme.font
+                                            font.pixelSize: 14
+                                            font.weight: Font.Medium
+                                        }
+
+                                        Text {
+                                            Layout.fillWidth: true
+                                            text: diskCard.modelData.path
+                                                  + (diskCard.modelData.windows ? " · 윈도우 있음" + (diskCard.modelData.bitlocker ? " (BitLocker)" : "") : "")
+                                                  + (diskCard.modelData.robinos ? " · 이전 RobinOS 있음" : "")
+                                                  + (diskCard.modelData.free > 0 ? " · 빈 공간 " + root.gb(diskCard.modelData.free) : "")
+                                            color: Theme.muted
+                                            font.family: Theme.mono
+                                            font.pixelSize: 12
+                                            elide: Text.ElideRight
+                                        }
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: diskMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.chooseDisk(diskCard.modelData)
+                                }
+                            }
+                        }
 
                         Text {
-                            Layout.fillWidth: true
-                            text: root.disksLoading ? "디스크를 찾는 중이에요…" : root.disks.length === 0 ? "설치할 수 있는 디스크가 없어요" : "설치할 디스크를 고르세요"
+                            visible: root.disk !== null
+                            Layout.topMargin: 8
+                            text: "설치 방식"
                             color: Theme.muted
                             font.family: Theme.font
                             font.pixelSize: 13
                         }
 
-                        ActionButton {
-                            variant: "ghost"
-                            text: "다시 찾기"
-                            onClicked: root.refreshDisks()
-                        }
-                    }
+                        Repeater {
+                            model: root.disk === null ? [] : [
+                                { key: "alongside", enabled: root.disk.can_alongside,
+                                  title: root.disk.windows ? "윈도우 옆에 설치" : "빈 공간에 설치",
+                                  desc: root.disk.can_alongside
+                                        ? "빈 공간 " + root.gb(root.disk.free) + " 중에서 RobinOS가 쓸 크기를 정해요. 윈도우와 파일은 그대로예요. 켤 때 부팅 메뉴에서 골라요."
+                                        : root.disk.windows
+                                          ? "빈 공간이 40GB보다 적어요. 윈도우의 '디스크 관리'에서 C: 드라이브를 '볼륨 축소'로 40GB 이상 줄인 뒤 다시 찾거나, 아래처럼 미리 만든 파티션에 설치해요."
+                                          : "GPT 디스크에 EFI 파티션과 40GB 이상의 빈 공간이 있을 때 쓸 수 있어요." },
+                                { key: "partition", enabled: root.disk.can_partition, title: "만들어 둔 파티션에 설치",
+                                  desc: root.disk.can_partition
+                                        ? "윈도우 디스크 관리 등에서 미리 만든 파티션이나 이전 RobinOS가 있던 파티션에 설치해요. 그 파티션의 파일은 지워지고 다른 파티션은 그대로예요."
+                                        : "고를 수 있는 파티션이 없어요. 40GB 이상이고 쓰고 있지 않아야 하고, 윈도우가 들어 있는 파티션은 고를 수 없어요." },
+                                { key: "whole", enabled: root.disk.can_whole, title: "디스크 전체 사용",
+                                  desc: root.disk.can_whole ? "이 디스크의 모든 파일과 운영체제가 지워지고 RobinOS만 남아요."
+                                                            : "40GB보다 작은 디스크에는 설치할 수 없어요." }
+                            ]
 
-                    Repeater {
-                        model: root.disks
+                            Rectangle {
+                                id: modeCard
 
-                        Rectangle {
-                            id: diskCard
+                                required property var modelData
+                                readonly property bool selected: root.mode === modelData.key
 
-                            required property var modelData
-                            readonly property bool selected: root.diskPath === modelData.path
+                                Layout.fillWidth: true
+                                implicitHeight: modeColumn.implicitHeight + 24
+                                radius: Theme.radius
+                                color: modeMouse.containsMouse && modelData.enabled ? Theme.hover : "transparent"
+                                border.width: 1
+                                border.color: selected ? Theme.fg : Theme.border
+                                opacity: modelData.enabled ? 1 : 0.55
 
-                            Layout.fillWidth: true
-                            implicitHeight: 60
-                            radius: Theme.radius
-                            color: diskMouse.containsMouse ? Theme.hover : "transparent"
-                            border.width: selected ? 2 : 1
-                            border.color: selected ? Theme.fg : Theme.border
+                                Accessible.role: Accessible.RadioButton
+                                Accessible.name: modelData.title
+                                Accessible.checked: selected
 
-                            Accessible.role: Accessible.RadioButton
-                            Accessible.name: root.diskLabel(modelData)
-                            Accessible.checked: selected
-
-                            activeFocusOnTab: true
-                            Keys.onPressed: event => {
-                                if (Keyboard.activates(event)) {
-                                    root.chooseDisk(diskCard.modelData);
-                                    event.accepted = true;
-                                }
-                            }
-
-                            FocusRing {
-                                baseRadius: diskCard.radius
-                            }
-
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 14
-                                anchors.rightMargin: 14
-                                spacing: 14
-
-                                Icon {
-                                    name: "hard-drive"
-                                    size: 20
-                                    color: Theme.fgSoft
+                                function choose() {
+                                    if (modelData.enabled)
+                                        root.chooseMode(modelData.key);
                                 }
 
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 2
-
-                                    Text {
-                                        Layout.fillWidth: true
-                                        text: root.diskLabel(diskCard.modelData)
-                                        color: Theme.fg
-                                        font.family: Theme.font
-                                        font.pixelSize: 14
-                                        font.weight: Font.Medium
-                                    }
-
-                                    Text {
-                                        Layout.fillWidth: true
-                                        text: diskCard.modelData.path
-                                              + (diskCard.modelData.windows ? " · 윈도우 있음" : "")
-                                              + (diskCard.modelData.free > 0 ? " · 빈 공간 " + root.gb(diskCard.modelData.free) : "")
-                                        color: Theme.muted
-                                        font.family: Theme.mono
-                                        font.pixelSize: 12
+                                activeFocusOnTab: modelData.enabled
+                                Keys.onPressed: event => {
+                                    if (Keyboard.activates(event)) {
+                                        modeCard.choose();
+                                        event.accepted = true;
                                     }
                                 }
-                            }
 
-                            MouseArea {
-                                id: diskMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: root.chooseDisk(diskCard.modelData)
-                            }
-                        }
-                    }
-
-                    Text {
-                        visible: root.disk !== null
-                        Layout.topMargin: 8
-                        text: "설치 방식"
-                        color: Theme.muted
-                        font.family: Theme.font
-                        font.pixelSize: 13
-                    }
-
-                    Repeater {
-                        model: root.disk === null ? [] : [
-                            { key: "alongside", enabled: root.disk.can_alongside, title: "윈도우 옆에 설치",
-                              desc: root.disk.can_alongside
-                                    ? "빈 공간 " + root.gb(root.disk.free) + "에 설치해요. 윈도우와 파일은 그대로예요. 켤 때 부팅 메뉴에서 골라요."
-                                    : root.disk.windows
-                                      ? "빈 공간이 40GB보다 적어요. 윈도우의 '디스크 관리'에서 '볼륨 축소'로 40GB 이상 비운 뒤 다시 찾아 주세요."
-                                      : "윈도우가 있고 빈 공간이 40GB 이상인 디스크에서 쓸 수 있어요." },
-                            { key: "whole", enabled: root.disk.can_whole, title: "디스크 전체 사용",
-                              desc: root.disk.can_whole ? "이 디스크의 모든 파일과 운영체제가 지워지고 RobinOS만 남아요."
-                                                        : "40GB보다 작은 디스크에는 설치할 수 없어요." }
-                        ]
-
-                        Rectangle {
-                            id: modeCard
-
-                            required property var modelData
-                            readonly property bool selected: root.mode === modelData.key
-
-                            Layout.fillWidth: true
-                            implicitHeight: modeColumn.implicitHeight + 24
-                            radius: Theme.radius
-                            color: modeMouse.containsMouse && modelData.enabled ? Theme.hover : "transparent"
-                            border.width: 1
-                            border.color: selected ? Theme.fg : Theme.border
-                            opacity: modelData.enabled ? 1 : 0.55
-
-                            Accessible.role: Accessible.RadioButton
-                            Accessible.name: modelData.title
-                            Accessible.checked: selected
-
-                            function choose() {
-                                if (modelData.enabled) {
-                                    root.mode = modelData.key;
-                                    root.eraseConfirmed = false;
+                                FocusRing {
+                                    baseRadius: modeCard.radius
                                 }
-                            }
 
-                            activeFocusOnTab: modelData.enabled
-                            Keys.onPressed: event => {
-                                if (Keyboard.activates(event)) {
-                                    modeCard.choose();
-                                    event.accepted = true;
+                                // Under the card's contents, so the slider and the
+                                // partition rows get their own clicks
+                                MouseArea {
+                                    id: modeMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: modeCard.modelData.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                    onClicked: modeCard.choose()
                                 }
-                            }
 
-                            FocusRing {
-                                baseRadius: modeCard.radius
-                            }
-
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 14
-                                anchors.rightMargin: 14
-                                spacing: 12
-
-                                Rectangle {
-                                    Layout.alignment: Qt.AlignTop
-                                    Layout.topMargin: 14
-                                    implicitWidth: 16
-                                    implicitHeight: 16
-                                    radius: 8
-                                    color: "transparent"
-                                    border.width: 1
-                                    border.color: modeCard.selected ? Theme.fg : Theme.borderStrong
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: 14
+                                    anchors.rightMargin: 14
+                                    spacing: 12
 
                                     Rectangle {
-                                        anchors.centerIn: parent
-                                        visible: modeCard.selected
-                                        width: 8
-                                        height: 8
-                                        radius: 4
-                                        color: Theme.fg
-                                    }
-                                }
+                                        Layout.alignment: Qt.AlignTop
+                                        Layout.topMargin: 14
+                                        implicitWidth: 16
+                                        implicitHeight: 16
+                                        radius: 8
+                                        color: "transparent"
+                                        border.width: 1
+                                        border.color: modeCard.selected ? Theme.fg : Theme.borderStrong
 
-                                ColumnLayout {
-                                    id: modeColumn
-
-                                    Layout.fillWidth: true
-                                    spacing: 2
-
-                                    Text {
-                                        text: modeCard.modelData.title
-                                        color: Theme.fg
-                                        font.family: Theme.font
-                                        font.pixelSize: 14
-                                        font.weight: Font.Medium
+                                        Rectangle {
+                                            anchors.centerIn: parent
+                                            visible: modeCard.selected
+                                            width: 8
+                                            height: 8
+                                            radius: 4
+                                            color: Theme.fg
+                                        }
                                     }
 
-                                    Text {
+                                    ColumnLayout {
+                                        id: modeColumn
+
                                         Layout.fillWidth: true
-                                        text: modeCard.modelData.desc
-                                        color: modeCard.modelData.key === "whole" && modeCard.selected ? Theme.destructive : Theme.muted
-                                        font.family: Theme.font
-                                        font.pixelSize: 13
-                                        wrapMode: Text.WordWrap
+                                        spacing: 2
+
+                                        Text {
+                                            text: modeCard.modelData.title
+                                            color: Theme.fg
+                                            font.family: Theme.font
+                                            font.pixelSize: 14
+                                            font.weight: Font.Medium
+                                        }
+
+                                        Text {
+                                            Layout.fillWidth: true
+                                            text: modeCard.modelData.desc
+                                            color: modeCard.modelData.key === "whole" && modeCard.selected ? Theme.destructive : Theme.muted
+                                            font.family: Theme.font
+                                            font.pixelSize: 13
+                                            wrapMode: Text.WordWrap
+                                        }
+
+                                        // How much of the free space RobinOS gets
+                                        RowLayout {
+                                            visible: modeCard.selected && modeCard.modelData.key === "alongside"
+                                                     && modeCard.modelData.enabled && root.maxSizeGb > 40
+                                            Layout.fillWidth: true
+                                            Layout.topMargin: 8
+                                            spacing: 12
+
+                                            Text {
+                                                text: "RobinOS에 줄 크기"
+                                                color: Theme.fg
+                                                font.family: Theme.font
+                                                font.pixelSize: 13
+                                                font.weight: Font.Medium
+                                            }
+
+                                            QsSlider {
+                                                Layout.fillWidth: true
+                                                label: "RobinOS에 줄 크기"
+                                                value: (root.sizeGb - 40) / Math.max(root.maxSizeGb - 40, 1)
+                                                onMoved: v => root.sizeGb = Math.round(40 + v * (root.maxSizeGb - 40))
+                                            }
+
+                                            Text {
+                                                Layout.preferredWidth: 56
+                                                horizontalAlignment: Text.AlignRight
+                                                text: root.sizeGb + "GB"
+                                                color: Theme.fg
+                                                font.family: Theme.mono
+                                                font.pixelSize: 13
+                                            }
+                                        }
+
+                                        Text {
+                                            visible: modeCard.selected && modeCard.modelData.key === "alongside"
+                                                     && modeCard.modelData.enabled && root.maxSizeGb > 40
+                                            Layout.fillWidth: true
+                                            text: root.disk.free - root.sizeGb * root.gib < root.gib
+                                                  ? "빈 공간을 모두 써요"
+                                                  : "남는 빈 공간 " + root.gb(root.disk.free - root.sizeGb * root.gib)
+                                            color: Theme.muted
+                                            font.family: Theme.font
+                                            font.pixelSize: 12
+                                        }
+
+                                        // The partitions that could take RobinOS, and why the others can't
+                                        Repeater {
+                                            model: modeCard.selected && modeCard.modelData.key === "partition" && root.disk !== null
+                                                   ? (root.disk.partitions ?? [])
+                                                         .filter(p => p.size >= root.minSize && p.kind !== "efi" && p.kind !== "system")
+                                                         .sort((a, b) => (b.usable ? 1 : 0) - (a.usable ? 1 : 0))
+                                                   : []
+
+                                            Rectangle {
+                                                id: partRow
+
+                                                required property var modelData
+                                                readonly property bool picked: modelData.usable && root.partitionPath === modelData.path
+
+                                                Layout.fillWidth: true
+                                                Layout.topMargin: 6
+                                                implicitHeight: 46
+                                                radius: Theme.radiusMd
+                                                color: partMouse.containsMouse && modelData.usable ? Theme.hover : "transparent"
+                                                border.width: 1
+                                                border.color: picked ? Theme.fg : Theme.border
+                                                opacity: modelData.usable ? 1 : 0.5
+
+                                                Accessible.role: Accessible.RadioButton
+                                                Accessible.name: root.partitionName(modelData) + " " + root.gb(modelData.size)
+                                                Accessible.checked: picked
+
+                                                activeFocusOnTab: modelData.usable
+                                                Keys.onPressed: event => {
+                                                    if (modelData.usable && Keyboard.activates(event)) {
+                                                        root.partitionPath = modelData.path;
+                                                        root.eraseConfirmed = false;
+                                                        event.accepted = true;
+                                                    }
+                                                }
+
+                                                FocusRing {
+                                                    baseRadius: partRow.radius
+                                                }
+
+                                                RowLayout {
+                                                    anchors.fill: parent
+                                                    anchors.leftMargin: 10
+                                                    anchors.rightMargin: 10
+                                                    spacing: 10
+
+                                                    Rectangle {
+                                                        implicitWidth: 14
+                                                        implicitHeight: 14
+                                                        radius: 7
+                                                        color: "transparent"
+                                                        border.width: 1
+                                                        border.color: partRow.picked ? Theme.fg : Theme.borderStrong
+
+                                                        Rectangle {
+                                                            anchors.centerIn: parent
+                                                            visible: partRow.picked
+                                                            width: 6
+                                                            height: 6
+                                                            radius: 3
+                                                            color: Theme.fg
+                                                        }
+                                                    }
+
+                                                    ColumnLayout {
+                                                        Layout.fillWidth: true
+                                                        spacing: 1
+
+                                                        Text {
+                                                            Layout.fillWidth: true
+                                                            text: root.partitionName(partRow.modelData) + " · " + root.gb(partRow.modelData.size)
+                                                                  + (partRow.modelData.fstype !== "" ? " · " + partRow.modelData.fstype : "")
+                                                            color: Theme.fg
+                                                            font.family: Theme.font
+                                                            font.pixelSize: 13
+                                                            font.weight: Font.Medium
+                                                            elide: Text.ElideRight
+                                                        }
+
+                                                        Text {
+                                                            Layout.fillWidth: true
+                                                            text: partRow.modelData.path + (partRow.modelData.usable ? "" : " · " + partRow.modelData.reason)
+                                                            color: Theme.muted
+                                                            font.family: Theme.mono
+                                                            font.pixelSize: 11
+                                                            elide: Text.ElideRight
+                                                        }
+                                                    }
+                                                }
+
+                                                MouseArea {
+                                                    id: partMouse
+                                                    anchors.fill: parent
+                                                    hoverEnabled: true
+                                                    cursorShape: partRow.modelData.usable ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                                    onClicked: {
+                                                        if (partRow.modelData.usable) {
+                                                            root.partitionPath = partRow.modelData.path;
+                                                            root.eraseConfirmed = false;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
-                            }
-
-                            MouseArea {
-                                id: modeMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: modeCard.modelData.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                onClicked: modeCard.choose()
                             }
                         }
-                    }
 
-                    Item {
-                        Layout.fillHeight: true
+                        // The disk now and after the install, partition by partition
+                        DiskBar {
+                            visible: root.disk !== null
+                            Layout.topMargin: 10
+                            caption: "지금"
+                            segments: root.disk ? (root.disk.layout ?? []) : []
+                        }
+
+                        DiskBar {
+                            visible: root.disk !== null && root.mode !== ""
+                            caption: "설치하면"
+                            segments: root.afterLayout(root.disk)
+                        }
                     }
                 }
 
-                // 2. User
+                // 2. User and time zone
                 GridLayout {
                     columns: 2
                     columnSpacing: 16
@@ -629,13 +955,105 @@ FloatingWindow {
                         onAccepted: root.next()
                     }
 
+                    // The two passwords differ (red), or the password is easy to guess (a
+                    // tip: it still works, like on other installers)
+                    Text {
+                        readonly property bool mismatch: password2Field.text !== "" && password2Field.text !== passwordField.text
+
+                        Layout.columnSpan: 2
+                        Layout.fillWidth: true
+                        text: mismatch ? "두 비밀번호가 달라요"
+                              : passwordField.text !== "" && passwordField.text === userField.text ? "사용자 이름과 같은 비밀번호는 쉽게 알아맞혀요. 그래도 쓸 수는 있어요."
+                              : passwordField.text !== "" && passwordField.text.length < 8 ? "짧은 비밀번호예요. 8글자 이상을 권해요. 그래도 쓸 수는 있어요." : ""
+                        color: mismatch ? Theme.destructive : Theme.muted
+                        font.family: Theme.font
+                        font.pixelSize: 12
+                        wrapMode: Text.WordWrap
+                    }
+
+                    Text {
+                        Layout.columnSpan: 2
+                        Layout.topMargin: 10
+                        text: "시간대"
+                        color: Theme.fg
+                        font.family: Theme.font
+                        font.pixelSize: 13
+                        font.weight: Font.Medium
+                    }
+
+                    // Opens the time zone list over the window
+                    Rectangle {
+                        id: zoneButton
+
+                        Layout.columnSpan: 2
+                        Layout.fillWidth: true
+                        implicitHeight: 38
+                        radius: Theme.radiusMd
+                        color: zoneMouse.containsMouse ? Theme.hover : "transparent"
+                        border.width: 1
+                        border.color: Theme.input
+
+                        Accessible.role: Accessible.Button
+                        Accessible.name: "시간대: " + root.zoneName(root.timezone) + ", 바꾸기"
+
+                        activeFocusOnTab: true
+                        Keys.onPressed: event => {
+                            if (Keyboard.activates(event)) {
+                                root.openZonePicker();
+                                event.accepted = true;
+                            }
+                        }
+
+                        FocusRing {
+                            baseRadius: zoneButton.radius
+                        }
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 12
+                            anchors.rightMargin: 12
+                            spacing: 10
+
+                            Icon {
+                                name: "globe"
+                                size: 15
+                                color: Theme.fgSoft
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: root.zoneName(root.timezone)
+                                color: Theme.fg
+                                font.family: Theme.font
+                                font.pixelSize: 14
+                                elide: Text.ElideRight
+                            }
+
+                            Text {
+                                text: "바꾸기"
+                                color: Theme.muted
+                                font.family: Theme.font
+                                font.pixelSize: 13
+                            }
+                        }
+
+                        MouseArea {
+                            id: zoneMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.openZonePicker()
+                        }
+                    }
+
                     Text {
                         Layout.columnSpan: 2
                         Layout.fillWidth: true
-                        text: password2Field.text !== "" && password2Field.text !== passwordField.text ? "두 비밀번호가 달라요" : ""
-                        color: Theme.destructive
+                        text: "시계가 이 시간대에 맞춰져요. 화면과 메뉴는 한국어예요."
+                        color: Theme.muted
                         font.family: Theme.font
                         font.pixelSize: 12
+                        wrapMode: Text.WordWrap
                     }
 
                     Item {
@@ -645,119 +1063,91 @@ FloatingWindow {
                 }
 
                 // 3. Confirm
-                ColumnLayout {
-                    spacing: 10
+                Flickable {
+                    id: confirmFlick
 
-                    Repeater {
-                        model: [
-                            { label: "디스크", value: root.disk ? root.diskLabel(root.disk) + " (" + root.disk.path + ")" : "" },
-                            { label: "설치 방식", value: root.mode === "whole" ? "디스크 전체 사용" : "윈도우 옆에 설치 (빈 공간 " + (root.disk ? root.gb(root.disk.free) : "") + ")" },
-                            { label: "사용자", value: userField.text },
-                            { label: "컴퓨터 이름", value: hostField.text },
-                            { label: "시간대와 언어", value: "서울 (Asia/Seoul), 한국어" },
-                            { label: "스냅샷", value: "업데이트 전후 자동, 부팅 메뉴에서 되돌리기" }
-                        ]
+                    clip: true
+                    contentHeight: confirmColumn.implicitHeight
+                    boundsBehavior: Flickable.StopAtBounds
 
-                        RowLayout {
-                            id: summaryRow
+                    ColumnLayout {
+                        id: confirmColumn
 
-                            required property var modelData
+                        width: confirmFlick.width
+                        spacing: 10
 
-                            Layout.fillWidth: true
-                            spacing: 16
+                        Repeater {
+                            model: [
+                                { label: "디스크", value: root.disk ? root.diskLabel(root.disk) + " (" + root.disk.path + ")" : "" },
+                                { label: "설치 방식", value: root.mode === "whole" ? "디스크 전체 사용"
+                                                             : root.mode === "partition" && root.chosenPartition
+                                                               ? "만들어 둔 파티션에 설치 (" + root.partitionName(root.chosenPartition) + ", " + root.chosenPartition.path + ")"
+                                                               : "빈 공간에 설치 (RobinOS에 " + root.sizeGb + "GB)" },
+                                { label: "부팅 메뉴", value: root.dualBoot ? "RobinOS와 윈도우, 켤 때 골라요" : "RobinOS" },
+                                { label: "사용자", value: userField.text },
+                                { label: "컴퓨터 이름", value: hostField.text },
+                                { label: "시간대", value: root.zoneName(root.timezone) },
+                                { label: "언어", value: "한국어 (한글 입력은 한/영 키)" },
+                                { label: "스냅샷", value: "업데이트 전후 자동, 부팅 메뉴에서 되돌리기" }
+                            ]
 
-                            Text {
-                                Layout.preferredWidth: 110
-                                text: summaryRow.modelData.label
-                                color: Theme.muted
-                                font.family: Theme.font
-                                font.pixelSize: 13
-                            }
+                            RowLayout {
+                                id: summaryRow
 
-                            Text {
+                                required property var modelData
+
                                 Layout.fillWidth: true
-                                text: summaryRow.modelData.value
-                                color: Theme.fg
-                                font.family: Theme.font
-                                font.pixelSize: 14
-                                elide: Text.ElideRight
-                            }
-                        }
-                    }
+                                spacing: 16
 
-                    Rectangle {
-                        id: eraseBox
+                                Text {
+                                    Layout.preferredWidth: 110
+                                    text: summaryRow.modelData.label
+                                    color: Theme.muted
+                                    font.family: Theme.font
+                                    font.pixelSize: 13
+                                }
 
-                        visible: root.mode === "whole"
-                        Layout.fillWidth: true
-                        Layout.topMargin: 10
-                        implicitHeight: warnRow.implicitHeight + 24
-                        radius: Theme.radius
-                        color: "transparent"
-                        border.width: 1
-                        border.color: Theme.destructive
-
-                        activeFocusOnTab: true
-                        Keys.onPressed: event => {
-                            if (Keyboard.activates(event)) {
-                                root.eraseConfirmed = !root.eraseConfirmed;
-                                event.accepted = true;
-                            }
-                        }
-
-                        FocusRing {
-                            baseRadius: eraseBox.radius
-                        }
-
-                        RowLayout {
-                            id: warnRow
-
-                            anchors.fill: parent
-                            anchors.margins: 12
-                            spacing: 12
-
-                            Rectangle {
-                                implicitWidth: 18
-                                implicitHeight: 18
-                                radius: Theme.radiusSm / 2
-                                color: root.eraseConfirmed ? Theme.destructive : "transparent"
-                                border.width: 1
-                                border.color: Theme.destructive
-
-                                Accessible.role: Accessible.CheckBox
-                                Accessible.name: "데이터가 지워지는 걸 이해했어요"
-                                Accessible.checked: root.eraseConfirmed
-
-                                Icon {
-                                    anchors.centerIn: parent
-                                    visible: root.eraseConfirmed
-                                    name: "check"
-                                    size: 12
-                                    stroke: 3
-                                    color: "#ffffff"
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: summaryRow.modelData.value
+                                    color: Theme.fg
+                                    font.family: Theme.font
+                                    font.pixelSize: 14
+                                    elide: Text.ElideRight
                                 }
                             }
-
-                            Text {
-                                Layout.fillWidth: true
-                                text: (root.disk ? root.disk.path : "") + "의 파일과 운영체제가 모두 지워지는 걸 이해했어요"
-                                color: Theme.destructive
-                                font.family: Theme.font
-                                font.pixelSize: 13
-                                font.weight: Font.Medium
-                                wrapMode: Text.WordWrap
-                            }
                         }
 
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.eraseConfirmed = !root.eraseConfirmed
+                        DiskBar {
+                            Layout.topMargin: 6
+                            caption: "설치하면"
+                            segments: root.afterLayout(root.disk)
                         }
-                    }
 
-                    Item {
-                        Layout.fillHeight: true
+                        ConfirmBox {
+                            visible: root.mode === "whole"
+                            checked: root.eraseConfirmed
+                            label: (root.disk ? root.disk.path : "") + "의 파일과 운영체제가 모두 지워지는 걸 이해했어요"
+                            onToggled: root.eraseConfirmed = !root.eraseConfirmed
+                        }
+
+                        ConfirmBox {
+                            visible: root.mode === "partition" && root.chosenPartition !== null
+                            checked: root.eraseConfirmed
+                            label: root.chosenPartition === null ? ""
+                                   : root.partitionName(root.chosenPartition) + " (" + root.chosenPartition.path + ", " + root.gb(root.chosenPartition.size)
+                                     + ")의 파일이 모두 지워지는 걸 이해했어요"
+                            onToggled: root.eraseConfirmed = !root.eraseConfirmed
+                        }
+
+                        // A BitLocker drive asks for its recovery key once the boot
+                        // order changes; without the key Windows' files are gone
+                        ConfirmBox {
+                            visible: root.bitlockerAtRisk
+                            checked: root.recoveryConfirmed
+                            label: "윈도우 드라이브가 BitLocker로 잠겨 있어요. 설치한 뒤 윈도우가 복구 키를 물을 수 있어요. 복구 키(aka.ms/myrecoverykey)를 따로 적어 두었어요"
+                            onToggled: root.recoveryConfirmed = !root.recoveryConfirmed
+                        }
                     }
                 }
 
@@ -807,42 +1197,103 @@ FloatingWindow {
                         }
                     }
 
-                    Text {
-                        Layout.topMargin: 6
-                        text: "설치기가 실행하는 명령"
-                        color: Theme.muted
-                        font.family: Theme.font
-                        font.pixelSize: 12
-                    }
-
+                    // One thing to know about RobinOS at a time
                     Rectangle {
                         Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        radius: Theme.radiusMd
+                        Layout.topMargin: 14
+                        visible: !root.showLog
+                        implicitHeight: tipColumn.implicitHeight + 40
+                        radius: Theme.radiusLg
                         color: Theme.raised
                         border.width: 1
                         border.color: Theme.border
-                        clip: true
 
-                        ListView {
-                            id: logView
+                        ColumnLayout {
+                            id: tipColumn
 
-                            anchors.fill: parent
-                            anchors.margins: 10
-                            model: root.logLines
-                            boundsBehavior: Flickable.StopAtBounds
-                            onCountChanged: positionViewAtEnd()
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.margins: 20
+                            spacing: 6
 
-                            delegate: Text {
-                                required property string modelData
-                                width: logView.width
-                                text: modelData
-                                color: modelData.startsWith("$ ") ? Theme.fg : Theme.muted
-                                font.family: Theme.mono
-                                font.pixelSize: 11
-                                elide: Text.ElideRight
+                            Text {
+                                text: "설치하는 동안 알아 두면 좋은 것"
+                                color: Theme.muted
+                                font.family: Theme.font
+                                font.pixelSize: 12
+                                font.weight: Font.Medium
+                            }
+
+                            Text {
+                                id: tipTitle
+                                Layout.fillWidth: true
+                                text: root.tips[root.tip].title
+                                color: Theme.fg
+                                font.family: Theme.font
+                                font.pixelSize: 18
+                                font.weight: Font.DemiBold
+                                wrapMode: Text.WordWrap
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: root.tips[root.tip].body
+                                color: Theme.muted
+                                font.family: Theme.font
+                                font.pixelSize: 14
+                                lineHeight: 1.3
+                                wrapMode: Text.WordWrap
+                            }
+
+                            Row {
+                                Layout.topMargin: 8
+                                spacing: 6
+
+                                Repeater {
+                                    model: root.tips.length
+
+                                    Rectangle {
+                                        required property int index
+                                        width: index === root.tip ? 16 : 6
+                                        height: 6
+                                        radius: 3
+                                        color: index === root.tip ? Theme.fg : Theme.borderStrong
+
+                                        Behavior on width {
+                                            NumberAnimation { duration: Theme.dur }
+                                        }
+                                    }
+                                }
                             }
                         }
+
+                        // Click for the next one
+                        MouseArea {
+                            id: tipMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.tip = (root.tip + 1) % root.tips.length
+                        }
+                    }
+
+                    ActionButton {
+                        variant: "ghost"
+                        text: root.showLog ? "설치 기록 숨기기" : "설치 기록 보기"
+                        onClicked: root.showLog = !root.showLog
+                    }
+
+                    LogBox {
+                        visible: root.showLog
+                        lines: root.logLines
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+
+                    Item {
+                        visible: !root.showLog
+                        Layout.fillHeight: true
                     }
                 }
 
@@ -853,7 +1304,7 @@ FloatingWindow {
                     Text {
                         Layout.fillWidth: true
                         text: root.succeeded
-                              ? "다시 시작하면 RobinOS로 부팅돼요. USB나 설치 디스크는 컴퓨터가 꺼진 뒤 빼 주세요."
+                              ? "다시 시작하면 RobinOS로 부팅돼요. USB는 컴퓨터가 꺼진 뒤 빼 주세요. 처음 켜면 환영 화면이 몇 가지를 안내해요."
                               : root.errorText
                         color: root.succeeded ? Theme.muted : Theme.destructive
                         font.family: Theme.font
@@ -865,14 +1316,22 @@ FloatingWindow {
                     Text {
                         visible: !root.succeeded
                         Layout.fillWidth: true
-                        text: "자세한 기록은 /var/log/robin-install.log에 있어요. 원인을 고친 뒤 처음부터 다시 할 수 있어요."
+                        text: "자세한 기록은 /var/log/robin-install.log에 있어요. 원인을 고친 뒤 \"처음으로\"를 누르면 다시 할 수 있어요. 윈도우 옆에 설치하다 멈췄다면 그때 만든 파티션에 다시 설치해요."
                         color: Theme.muted
                         font.family: Theme.font
                         font.pixelSize: 13
                         wrapMode: Text.WordWrap
                     }
 
+                    LogBox {
+                        visible: !root.succeeded
+                        lines: root.logLines
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+
                     Item {
+                        visible: root.succeeded
                         Layout.fillHeight: true
                     }
                 }
@@ -943,6 +1402,240 @@ FloatingWindow {
                     }
                 }
             }
+        }
+
+        // ---- Time zone list, over the window ----
+        ZonePicker {
+            id: zonePicker
+
+            anchors.fill: parent
+            current: root.timezone
+            onPicked: zone => {
+                root.timezone = zone;
+                zoneButton.forceActiveFocus();
+            }
+            onClosed: zoneButton.forceActiveFocus()
+        }
+    }
+
+    // A disk drawn as a bar of its partitions, with their names and sizes below
+    component DiskBar: ColumnLayout {
+        id: bar
+
+        property string caption
+        property var segments: []
+        readonly property real total: segments.reduce((sum, s) => sum + s.size, 0)
+
+        function colorOf(kind) {
+            switch (kind) {
+            case "new":
+                return Theme.accent;
+            case "robinos":
+                return Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.4);
+            case "windows":
+                return Theme.primaryMuted;
+            case "efi":
+            case "system":
+                return Theme.secondaryHover;
+            case "free":
+                return "transparent";
+            default:
+                return Theme.subtle;
+            }
+        }
+
+        function sizeText(bytes) {
+            return Math.floor(bytes / 1073741824) + "GB";
+        }
+
+        Layout.fillWidth: true
+        spacing: 6
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 10
+
+            Text {
+                Layout.preferredWidth: 56
+                text: bar.caption
+                color: Theme.muted
+                font.family: Theme.font
+                font.pixelSize: 12
+            }
+
+            Item {
+                id: track
+
+                Layout.fillWidth: true
+                implicitHeight: 22
+                clip: true
+
+                Row {
+                    anchors.fill: parent
+                    spacing: 2
+
+                    Repeater {
+                        model: bar.segments
+
+                        Rectangle {
+                            required property var modelData
+
+                            width: Math.max(4, (track.width - 2 * Math.max(bar.segments.length - 1, 0)) * modelData.size / Math.max(bar.total, 1))
+                            height: track.height
+                            radius: 4
+                            color: bar.colorOf(modelData.kind)
+                            border.width: modelData.kind === "free" ? 1 : 0
+                            border.color: Theme.borderStrong
+                        }
+                    }
+                }
+            }
+        }
+
+        Flow {
+            Layout.fillWidth: true
+            Layout.leftMargin: 66
+            spacing: 14
+
+            Repeater {
+                // Tiny partitions (Microsoft reserved, a 100 MB EFI) stay out of the legend
+                model: bar.segments.filter(s => s.size >= 512 * 1048576 || s.kind === "new")
+
+                Row {
+                    id: legendItem
+
+                    required property var modelData
+
+                    spacing: 6
+
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 8
+                        height: 8
+                        radius: 2
+                        color: bar.colorOf(legendItem.modelData.kind)
+                        border.width: legendItem.modelData.kind === "free" ? 1 : 0
+                        border.color: Theme.borderStrong
+                    }
+
+                    Text {
+                        text: (legendItem.modelData.kind === "new" ? "새 RobinOS" : legendItem.modelData.name) + " " + bar.sizeText(legendItem.modelData.size)
+                        color: legendItem.modelData.kind === "new" ? Theme.fg : Theme.muted
+                        font.family: Theme.font
+                        font.pixelSize: 12
+                        font.weight: legendItem.modelData.kind === "new" ? Font.Medium : Font.Normal
+                    }
+                }
+            }
+        }
+    }
+
+    // The installer's output, newest line at the bottom
+    component LogBox: Rectangle {
+        id: logBox
+
+        property var lines: []
+
+        radius: Theme.radiusMd
+        color: Theme.raised
+        border.width: 1
+        border.color: Theme.border
+        clip: true
+
+        ListView {
+            id: logView
+
+            anchors.fill: parent
+            anchors.margins: 10
+            model: logBox.lines
+            boundsBehavior: Flickable.StopAtBounds
+            onCountChanged: positionViewAtEnd()
+            Component.onCompleted: positionViewAtEnd()
+
+            delegate: Text {
+                required property string modelData
+                width: logView.width
+                text: modelData
+                color: modelData.startsWith("$ ") ? Theme.fg : Theme.muted
+                font.family: Theme.mono
+                font.pixelSize: 11
+                elide: Text.ElideRight
+            }
+        }
+    }
+
+    // A checkbox the person has to tick before installing, in the warning color
+    component ConfirmBox: Rectangle {
+        id: box
+
+        property bool checked: false
+        property string label: ""
+        signal toggled
+
+        Layout.fillWidth: true
+        Layout.topMargin: 10
+        implicitHeight: boxRow.implicitHeight + 24
+        radius: Theme.radius
+        color: "transparent"
+        border.width: 1
+        border.color: Theme.destructive
+
+        activeFocusOnTab: true
+        Keys.onPressed: event => {
+            if (Keyboard.activates(event)) {
+                box.toggled();
+                event.accepted = true;
+            }
+        }
+
+        FocusRing {
+            baseRadius: box.radius
+        }
+
+        RowLayout {
+            id: boxRow
+
+            anchors.fill: parent
+            anchors.margins: 12
+            spacing: 12
+
+            Rectangle {
+                implicitWidth: 18
+                implicitHeight: 18
+                radius: Theme.radiusSm / 2
+                color: box.checked ? Theme.destructive : "transparent"
+                border.width: 1
+                border.color: Theme.destructive
+
+                Accessible.role: Accessible.CheckBox
+                Accessible.name: box.label
+                Accessible.checked: box.checked
+
+                Icon {
+                    anchors.centerIn: parent
+                    visible: box.checked
+                    name: "check"
+                    size: 12
+                    stroke: 3
+                    color: "#ffffff"
+                }
+            }
+
+            Text {
+                Layout.fillWidth: true
+                text: box.label
+                color: Theme.destructive
+                font.family: Theme.font
+                font.pixelSize: 13
+                font.weight: Font.Medium
+                wrapMode: Text.WordWrap
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: box.toggled()
         }
     }
 }

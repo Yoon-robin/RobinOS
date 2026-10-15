@@ -5,7 +5,7 @@ Usage: boot-test-qmp.py <qmp-socket | tcp:host:port> <output-dir> [speed]
 
 speed multiplies every wait (1 with KVM, about 4 with TCG). The scenario:
 boot -> welcome wizard (every step, then its missions terminal) -> desktop ->
-launcher (search, Windows app name) -> installer (first two steps) -> quick settings
+launcher (search, Windows app name) -> installer (first three steps, the time zone list) -> quick settings
 (also with Tab) -> terminal with a Windows command and the first learning mission
 -> minimize and restore the terminal -> Super+D twice -> kill the shell and see
 it come back -> light mode (terminal,
@@ -14,6 +14,7 @@ launcher, quick settings) -> lock screen -> unlock with the live password.
 
 import json
 import os
+import re
 import socket
 import sys
 import time
@@ -29,7 +30,7 @@ QCODES = {" ": "spc", "\n": "ret", "-": "minus", ".": "dot", "/": "slash", ";": 
 # Characters typed with Shift on a US keyboard
 SHIFTED = {"(": "9", ")": "0", "&": "7", "~": "grave_accent", ">": "dot", "<": "comma", "?": "slash", "$": "4", "%": "5",
            '"': "apostrophe", "{": "bracket_left", "}": "bracket_right", ":": "semicolon", "_": "minus",
-           "*": "8", "+": "equal"}
+           "*": "8", "+": "equal", "|": "backslash"}
 
 
 class Qmp:
@@ -72,6 +73,14 @@ class Qmp:
                 continue
             return reply
 
+    def act(self, command, **arguments):
+        """execute() for input: a key or pointer event QEMU refused stops the test
+        instead of the scenario going on without it (third ChatGPT review)."""
+        reply = self.execute(command, **arguments)
+        if "error" in reply:
+            raise RuntimeError(f"QMP {command} failed: {reply['error']}")
+        return reply
+
 
 def wait(seconds):
     time.sleep(seconds * SPEED)
@@ -79,7 +88,7 @@ def wait(seconds):
 
 def keys(qmp, *names):
     """Press a key combination, e.g. keys(qmp, "meta_l", "spc")."""
-    qmp.execute("send-key", keys=[{"type": "qcode", "data": n} for n in names], **{"hold-time": 80})
+    qmp.act("send-key", keys=[{"type": "qcode", "data": n} for n in names], **{"hold-time": 80})
     # A slow (TCG) guest that falls behind sees the release late and auto-repeats
     # the key, so give it time to catch up between keys. Faster typing (20 ms a key)
     # left Shift stuck halfway through long text, so keep this pace.
@@ -88,7 +97,7 @@ def keys(qmp, *names):
 
 def hold(qmp, key, down):
     """Press (down=True) or let go of a key, for shots taken while it is held."""
-    qmp.execute("input-send-event", events=[{"type": "key", "data": {"down": down, "key": {"type": "qcode", "data": key}}}])
+    qmp.act("input-send-event", events=[{"type": "key", "data": {"down": down, "key": {"type": "qcode", "data": key}}}])
     time.sleep(0.15 * SPEED)
 
 
@@ -97,7 +106,7 @@ SCREEN = (1600, 900)  # the VGA mode in boot-test.sh and wsl-build.ps1
 
 def move(qmp, x, y):
     """Move the pointer to screen pixel (x, y) through the usb-tablet (absolute 0..32767)."""
-    qmp.execute("input-send-event", events=[
+    qmp.act("input-send-event", events=[
         {"type": "abs", "data": {"axis": "x", "value": round(x * 32767 / (SCREEN[0] - 1))}},
         {"type": "abs", "data": {"axis": "y", "value": round(y * 32767 / (SCREEN[1] - 1))}},
     ])
@@ -108,7 +117,7 @@ def click(qmp, x, y, button="left"):
     """Click at screen pixel (x, y)."""
     move(qmp, x, y)
     for down in (True, False):
-        qmp.execute("input-send-event", events=[{"type": "btn", "data": {"down": down, "button": button}}])
+        qmp.act("input-send-event", events=[{"type": "btn", "data": {"down": down, "button": button}}])
         time.sleep(0.1 * SPEED)
 
 
@@ -125,6 +134,91 @@ def type_text(qmp, text):
             keys(qmp, "shift", SHIFTED[ch])
         else:
             keys(qmp, QCODES.get(ch, ch))
+
+
+def expect_serial(marker, timeout=20):
+    """Waits for a marker in the serial log, where the journal is forwarded
+    (systemd.journald.forward_to_console=1). Screenshots alone missed a live ISO
+    without any terminal window (2026-10-12): the typed commands went nowhere."""
+    path = os.path.join(OUT, "serial.log")
+    deadline = time.time() + timeout * SPEED
+    while time.time() < deadline:
+        try:
+            with open(path, "rb") as f:
+                if marker.encode() in f.read():
+                    print(f"serial: {marker}", flush=True)
+                    return
+        except FileNotFoundError:
+            pass
+        time.sleep(1)
+    raise RuntimeError(f"no \"{marker}\" in the serial log after {timeout} s")
+
+
+def diagnose_on_tty(qmp, tag, commands):
+    """When the desktop can't run a command (no terminal window), log in on tty3
+    and send each command's output to the journal, which reaches the serial log."""
+    keys(qmp, "ctrl", "alt", "f3")
+    wait(3)
+    type_text(qmp, "robin\n")
+    wait(2)
+    type_text(qmp, LIVE_PASSWORD + "\n")
+    wait(4)
+    shot(qmp, "tty-diagnose")
+    for command in commands:
+        type_text(qmp, f"({command}) 2>&1 | logger -t {tag}\n")
+        wait(3)
+    wait(5)
+    shot(qmp, "tty-diagnose-done")
+
+
+# Verdicts of scripts/e2e-check.sh, scene name -> "PASS ...", "FAIL ..." or "missing"
+results = {}
+
+
+def serial_size():
+    path = os.path.join(OUT, "serial.log")
+    return os.path.getsize(path) if os.path.exists(path) else 0
+
+
+def check_scene(qmp, name, label=None, timeout=30):
+    """Types `e2e-check.sh <name>` into the focused terminal, which checks the scene's
+    state inside the guest and logs "scenario=<name> status=PASS|FAIL" (T-155). The
+    scenario goes on after a failure; main() fails the test at the end. label names
+    the result when a scene is checked more than once; only the serial log written
+    after the command was typed counts."""
+    start = serial_size()
+    type_text(qmp, f"clear; bash /opt/robinos/scripts/e2e-check.sh {name}\n")
+    return wait_verdict(name, label, start, timeout)
+
+
+def wait_verdict(name, label=None, start=0, timeout=30):
+    """Waits for e2e-check.sh's verdict on a scene in the serial log written after
+    `start`, for checks typed as part of a longer command."""
+    label = label or name
+    path = os.path.join(OUT, "serial.log")
+    marker = f"scenario={name} status=".encode()
+    deadline = time.time() + timeout * SPEED
+    while time.time() < deadline:
+        with open(path, "rb") as f:
+            f.seek(start)
+            data = f.read()
+        at = data.find(marker)
+        if at != -1:
+            end = data.find(b"\n", at)
+            line = data[at:end if end != -1 else len(data)].decode(errors="replace")
+            # The console colors the forwarded journal line; keep the words only
+            line = re.sub(r"\x1b\[[0-9;]*m", "", line).strip()
+            results[label] = line.split("status=", 1)[1]
+            print(f"check: {label}: {line}", flush=True)
+            return results[label].startswith("PASS")
+        time.sleep(1)
+    results[label] = "missing (no verdict in the serial log)"
+    print(f"check: {label}: missing", flush=True)
+    return False
+
+
+# The desktop session's environment, for commands started from tty3
+SESSION_ENV = "XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus"
 
 
 shot_number = 0
@@ -184,6 +278,12 @@ def main():
     type_text(qmp, "notepad")
     wait(2)
     shot(qmp, "launcher-windows-name")
+    # A Windows name with a Linux side (T-169): the app, "터미널: ps aux, top" and
+    # learning mission 31 under it
+    keys(qmp, "ctrl", "a")
+    type_text(qmp, "taskmgr")
+    wait(2)
+    shot(qmp, "launcher-windows-mission")
     # Math like the Start menu's search: the result first, Enter copies it
     keys(qmp, "ctrl", "a")
     type_text(qmp, "(12+3)*4")
@@ -207,6 +307,21 @@ def main():
     keys(qmp, "ret")
     wait(4)
     shot(qmp, "installer-disk")
+    # The blank disk is chosen ("디스크 전체 사용"), so Enter goes on to the user
+    keys(qmp, "ret")
+    wait(3)
+    shot(qmp, "installer-user")
+    # Tab past the user, computer and two password fields to the time zone
+    for _ in range(5):
+        keys(qmp, "tab")
+        wait(0.4)
+    keys(qmp, "ret")
+    wait(2)
+    type_text(qmp, "tokyo")
+    wait(2)
+    shot(qmp, "installer-timezone")
+    keys(qmp, "esc")
+    wait(1)
     keys(qmp, "alt", "f4")
     wait(2)
 
@@ -246,9 +361,30 @@ def main():
 
     keys(qmp, "meta_l", "ret")
     wait(6)
-    type_text(qmp, "ipconfig\n")
+    # The terminal really opened, runs what is typed, and is Ptyxis (not the foot
+    # fallback): the marker is logged only after the check passes
+    type_text(qmp, "bash /opt/robinos/scripts/e2e-check.sh terminal\n")
+    try:
+        expect_serial("scenario=terminal status=PASS")
+    except RuntimeError:
+        diagnose_on_tty(qmp, "robinos-diag", [
+            "ls -l /usr/share/robinos/bin/robinos-terminal; command -v ptyxis foot",
+            f"{SESSION_ENV} timeout 15 /usr/share/robinos/bin/robinos-terminal; echo exit $?",
+            "journalctl --user -b --no-pager | tail -n 25",
+        ])
+        raise
+    type_text(qmp, "clear; ipconfig\n")
     wait(2)
     shot(qmp, "terminal-windows-hint")
+    # The landing page's picture: a Windows command answered in the terminal, and a
+    # Windows name (the task manager) found in the launcher on top of it
+    keys(qmp, "meta_l", "spc")
+    wait(3)
+    type_text(qmp, "taskmgr")
+    wait(3)
+    shot(qmp, "showcase")
+    keys(qmp, "esc")
+    wait(2)
     type_text(qmp, "clear\n")
     type_text(qmp, "robinctl learn show 1\n")
     wait(2)
@@ -281,6 +417,7 @@ def main():
     # Solve mission 1, so the launcher's learning entry shows "1/45" in light-launcher
     type_text(qmp, "mkdir -p ~/practice/notes && robinctl learn check 1 >/dev/null\n")
     wait(1)
+    check_scene(qmp, "mission-1")
     # Title bar buttons (desktop/dconf) as GTK, Firefox and Qt apps read them
     type_text(qmp, "clear; gdbus call --session --dest org.freedesktop.portal.Desktop"
               " --object-path /org/freedesktop/portal/desktop --method org.freedesktop.portal.Settings.ReadOne"
@@ -292,7 +429,7 @@ def main():
     # same shell function as this IPC call. The focused terminal minimizes itself, and
     # a background job brings it back a few seconds later.
     ipc = "qs ipc -p /usr/share/robinos/shell call shell "
-    type_text(qmp, "clear; (sleep 6; " + ipc + "toggleApp foot) & " + ipc + "toggleApp foot\n")
+    type_text(qmp, "clear; (sleep 6; " + ipc + "toggleApp org.gnome.Ptyxis) & " + ipc + "toggleApp org.gnome.Ptyxis\n")
     wait(3)
     shot(qmp, "minimized")
     wait(7)
@@ -305,11 +442,13 @@ def main():
     keys(qmp, "meta_l", "up")
     wait(2)
     shot(qmp, "snap-maximized")
+    check_scene(qmp, "maximized")
     keys(qmp, "meta_l", "down")
     wait(1)
     keys(qmp, "meta_l", "down")
     wait(2)
     shot(qmp, "snap-restored")
+    check_scene(qmp, "restored")
     # Win+Ctrl+Right/Left like Windows' virtual desktops: an empty workspace 2, and back
     keys(qmp, "meta_l", "ctrl", "right")
     wait(2)
@@ -319,10 +458,14 @@ def main():
     # Win+Ctrl+D like Windows' new virtual desktop goes to the first empty workspace
     # (2); Win+Ctrl+F4 closes it and brings the terminal opened there to workspace 1.
     # Alt+F4 then closes one of the two terminals, so one is left as before.
+    check_scene(qmp, "count-save")
     keys(qmp, "meta_l", "ctrl", "d")
     wait(2)
     keys(qmp, "meta_l", "ret")
     wait(4)
+    # Win+Enter opens one terminal window, not two (--new-window with a command
+    # once left an empty extra window, 2026-10-12)
+    check_scene(qmp, "one-more")
     type_text(qmp, "echo moved-from-workspace-2\n")
     wait(1)
     shot(qmp, "workspace-new")
@@ -356,6 +499,36 @@ def main():
     keys(qmp, "shift", "print")
     wait(2)
     shot(qmp, "screenshot-toast")
+    # Win+Alt+R like Windows' Game Bar: a red dot in the bar while it records, the
+    # second press stops it and the video is there (T-160)
+    keys(qmp, "meta_l", "alt", "r")
+    wait(5)
+    shot(qmp, "recording")
+    keys(qmp, "meta_l", "alt", "r")
+    wait(4)
+    check_scene(qmp, "recorded")
+    # Opening a Windows installer (T-159): the window says it won't run here and,
+    # since the name is KakaoTalk's, what to do instead. The check runs from the
+    # terminal while the window has the focus; Esc closes it.
+    start = serial_size()
+    type_text(qmp, "clear; printf MZ > /tmp/KakaoTalk_Setup.exe; gio open /tmp/KakaoTalk_Setup.exe;"
+              " sleep 4; bash /opt/robinos/scripts/e2e-check.sh windows-app\n")
+    wait(6)
+    shot(qmp, "windows-app")
+    wait_verdict("windows-app", start=start)
+    keys(qmp, "esc")
+    wait(2)
+    # Windows' Magnifier keys (T-161): Win+Plus twice is 2x around the pointer,
+    # Win+Esc goes back
+    move(qmp, 800, 300)
+    keys(qmp, "meta_l", "equal")
+    keys(qmp, "meta_l", "equal")
+    wait(2)
+    shot(qmp, "zoom")
+    check_scene(qmp, "zoomed")
+    keys(qmp, "meta_l", "esc")
+    wait(2)
+    check_scene(qmp, "unzoomed")
     # Win+V like Windows' clipboard history: copy something, then open the list
     type_text(qmp, "clear; wl-copy clipboard-test-robinos\n")
     wait(2)
@@ -539,6 +712,7 @@ def main():
     type_text(qmp, "clear; pkill -x qs; sleep 4; grep -a robinos-shell .local/state/robinos/shell.log\n")
     wait(7)
     shot(qmp, "shell-restarted")
+    check_scene(qmp, "shell-restarted")
 
     # A file GTK apps noted as opened (recently-used.xbel): the empty launcher lists it
     # under "최근 파일" in light-launcher, like the Start menu's recommended files
@@ -553,6 +727,7 @@ def main():
     type_text(qmp, "robinctl learn\n")
     wait(2)
     shot(qmp, "light-terminal")
+    check_scene(qmp, "light")
     keys(qmp, "meta_l", "spc")
     wait(3)
     shot(qmp, "light-launcher")
@@ -563,13 +738,16 @@ def main():
     keys(qmp, "esc")
     wait(2)
     # The learning center opened again after Alt+F4 closed it: mission 1 is ticked off
+    check_scene(qmp, "count-save", "count-save-mission")
     type_text(qmp, "clear; " + ipc + "learnCenter\n")
     wait(3)
     shot(qmp, "light-learn-center")
-    # Clicking a mission opens it in a terminal (mission 2's row)
+    # Clicking a mission opens it in a terminal (mission 2's row): one new Ptyxis
+    # window, which has the focus and takes commands after the mission text
     click(qmp, 800, 437)
     wait(4)
     shot(qmp, "learn-center-mission")
+    check_scene(qmp, "one-more", "mission-terminal")
     keys(qmp, "alt", "f4")  # the new terminal has the focus
     wait(2)
     # At the end of the list, the ten CTF challenges as one more group
@@ -577,9 +755,56 @@ def main():
         click(qmp, 800, 500, "wheel-down")
     wait(1)
     shot(qmp, "learn-center-ctf")
+    # Its maximize button fills the space between the bar and the dock (Hyprland
+    # used to drop apps' maximize requests, 2026-10-12); Win+Down brings it back
+    click(qmp, 1120, 102)
+    wait(2)
+    shot(qmp, "learn-center-maximized")
+    keys(qmp, "meta_l", "down")
+    wait(2)
     # The learning center's own close button (its title bar, top right)
     click(qmp, 1156, 102)
     wait(2)
+    # Settings (T-149) with Win+I like Windows: 개인 설정, then Down to 정보 (version,
+    # kernel, CPU, memory read from the system); Esc closes it
+    keys(qmp, "meta_l", "i")
+    wait(3)
+    shot(qmp, "light-settings")
+    # Down: the update page (the live session doesn't update, and says so), then 정보
+    keys(qmp, "down")
+    wait(3)
+    shot(qmp, "light-settings-update")
+    # 날짜와 시간: the time zone and whether the clock follows the internet
+    keys(qmp, "down")
+    wait(3)
+    shot(qmp, "light-settings-datetime")
+    # 마우스와 터치패드, 키보드: a touchpad can't be tried in the VM, so Hyprland's own
+    # option values and the saved file are judged (below) instead of a feel
+    keys(qmp, "down")
+    wait(3)
+    shot(qmp, "light-settings-pointer")
+    keys(qmp, "down")
+    wait(3)
+    shot(qmp, "light-settings-keyboard")
+    keys(qmp, "down")
+    wait(3)
+    shot(qmp, "light-settings-apps")
+    keys(qmp, "down")
+    wait(3)
+    shot(qmp, "light-settings-power")
+    keys(qmp, "down")
+    wait(2)
+    shot(qmp, "light-settings-about")
+    keys(qmp, "esc")
+    wait(2)
+    # 기본 앱 with the browsers listed, the way the 바꾸기 button opens them; then the
+    # tool's own answers are judged (the default browser, a saved choice, a refused one)
+    type_text(qmp, "clear; " + ipc + "settingsAppsOpen browser\n")
+    wait(4)
+    shot(qmp, "light-settings-apps-open")
+    keys(qmp, "esc")
+    wait(2)
+    check_scene(qmp, "default-apps")
     keys(qmp, "meta_l", "s")
     wait(3)
     shot(qmp, "light-quick-settings")
@@ -592,6 +817,25 @@ def main():
     shot(qmp, "scale-125")
     type_text(qmp, "clear; " + ipc + "setScale 1\n")
     wait(3)
+    # 마우스와 터치패드 and 키보드 settings through the shell function the switches and
+    # sliders call: Hyprland takes the values at once and the file that robinos.lua reads
+    # at the next login is written (the Lua side is checked by scripts/test-hypr-input.lua)
+    type_text(qmp, "clear; for a in 'tap false' 'natural false' 'speed 0.4' 'repeat_rate 40'; do " + ipc + "setInput $a; done; sleep 2\n")
+    wait(4)
+    check_scene(qmp, "input-changed")
+    type_text(qmp, "clear; for a in 'tap true' 'natural true' 'speed 0' 'repeat_rate 25'; do " + ipc + "setInput $a; done; sleep 2\n")
+    wait(4)
+    check_scene(qmp, "input-default")
+    # 전원's idle times: the shell function behind the buttons writes hypridle's policy
+    # and restarts hypridle with it; a one minute lock has no dimming before it
+    type_text(qmp, "clear; for a in 'lock 1' 'screen_off 2' 'suspend 5'; do " + ipc + "setPower $a; sleep 1; done; sleep 2\n")
+    wait(8)
+    check_scene(qmp, "power-changed")
+    type_text(qmp, "clear; for a in 'lock 5' 'screen_off 10' 'suspend 15'; do " + ipc + "setPower $a; sleep 1; done; sleep 2\n")
+    wait(8)
+    check_scene(qmp, "power-default")
+    # The problem report (settings' 정보 has a button for it)
+    check_scene(qmp, "report", timeout=60)
     # 야간 모드 starts hyprsunset (4500 K) and the second call stops it. The colors
     # need the driver's KMS CTM, which the test VM's bochs-drm lacks, so the shot
     # shows the running process (and the tile's VM note) instead of a warm screen
@@ -602,6 +846,7 @@ def main():
     wait(2)
     type_text(qmp, "qs ipc -p /usr/share/robinos/shell call shell setDark true\n")
     wait(3)
+    check_scene(qmp, "dark")
 
     keys(qmp, "meta_l", "l")
     wait(5)
@@ -615,9 +860,19 @@ def main():
     except RuntimeError:
         pass  # QEMU closes the socket while quitting
 
+    print("\nScene checks (e2e-check.sh):", flush=True)
+    for name, verdict in results.items():
+        print(f"  {name}: {verdict}", flush=True)
+    failed = [name for name, verdict in results.items() if not verdict.startswith("PASS")]
+    if failed:
+        raise RuntimeError(f"scene checks failed: {', '.join(failed)}")
+
 
 if __name__ == "__main__":
     try:
         main()
-    except Exception as error:  # keep the screenshots taken so far
+    except Exception as error:  # the screenshots taken so far stay
         print(f"QMP scenario stopped: {error}", flush=True)
+        # A stopped scenario is a failed test: it used to end with status 0, and
+        # a run without any terminal window passed as a whole (2026-10-12)
+        sys.exit(1)

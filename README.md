@@ -2,11 +2,15 @@
 
 ![RobinOS 로고: 프롬프트 커서 위에 앉은 하얀 울새](assets/brand/robinos-logo-horizontal.svg)
 
-RobinOS는 직접 만든 데스크톱과 도구로 이루어진, 매일 쓰는 나만의 OS예요. Arch Linux 위에 RobinOS 전용 셸, 설치기, 업데이트 저장소, 스냅샷 복구를 얹어서, 켜는 순간부터 하나의 OS처럼 느껴지게 만들어요.
+**RobinOS로 시작하는 첫 리눅스**
 
-윈도우에서 와도 바로 쓸 수 있고, 배우고 싶을 때는 학습 센터에서 리눅스와 보안을 미션으로 배울 수 있어요. 방향과 설계는 [docs/design.md](docs/design.md), 왜 만드는지는 [docs/vision.md](docs/vision.md)에 있어요.
+RobinOS는 처음 쓰는 리눅스예요. 리눅스를 처음 써 보는 사람을 위해 만들었어요. 소개 페이지: https://yoon-robin.github.io/RobinOS/
 
-**내려받기**: 최신 프리뷰는 [v0.2.0](https://github.com/Yoon-robin/RobinOS/releases/tag/v0.2.0)이에요(2026-10-10). 아직 VM에서만 검증한 프리뷰라 중요한 자료는 꼭 백업하세요. USB에 담기 전에 체크섬과 서명을 확인하는 방법은 [docs/install.md](docs/install.md)의 "내려받은 ISO 확인하기"에 있어요. 대부분의 PC는 USB로 켜기 전에 펌웨어 설정에서 **보안 부팅(Secure Boot)을 꺼야 해요**(같은 문서의 "보안 부팅 끄기").
+윈도우에서 쓰던 단축키와 이름이 그대로 통해서 첫날부터 쓸 수 있어요. 터미널에 `ipconfig`를 치면 리눅스에서는 `ip a`라고 알려 주고, 업데이트하다 망가지면 부팅 메뉴에서 되돌려요. 더 배우고 싶으면 학습 센터의 미션 45개가 리눅스 기초부터 차근차근 이어 줘요.
+
+Arch Linux 위에 셸, 설치기, 업데이트 저장소, 스냅샷 복구를 RobinOS가 직접 만들어 얹었어요. 목적과 설계는 [docs/design.md](docs/design.md), 왜 만드는지는 [docs/vision.md](docs/vision.md)에 있어요.
+
+**내려받기**: 최신 프리뷰는 [v0.3.0](https://github.com/Yoon-robin/RobinOS/releases/tag/v0.3.0)이에요(2026-10-13, [무엇이 바뀌었나](docs/release-notes-v0.3.md)). VM에서 검증했고 실제 PC는 아직 몇 대만 확인한 프리뷰라 중요한 자료는 꼭 백업하세요. USB에 담기 전에 체크섬과 서명을 확인하는 방법은 [docs/install.md](docs/install.md)의 "내려받은 ISO 확인하기"에 있어요. 대부분의 PC는 USB로 켜기 전에 펌웨어 설정에서 **보안 부팅(Secure Boot)을 꺼야 해요**(같은 문서의 "보안 부팅 끄기").
 
 ## 화면
 
@@ -22,10 +26,10 @@ RobinOS는 직접 만든 데스크톱과 도구로 이루어진, 매일 쓰는 �
 
 이런 사람에게 맞아요:
 
-- 남과 다른, 깔끔하게 다듬어진 데스크톱을 매일 쓰고 싶은 사람
-- 윈도우에서 리눅스로 넘어오고 싶은데 어디서 시작할지 막막한 사람
-- 리눅스, 네트워크, 웹 보안, 리버싱, 포렌식을 배우는 학생과 CTF 입문자
-- 첫 부팅부터 글꼴, 한글 입력, 로캘, 문서가 자연스럽게 갖춰져 있길 바라는 한국어 사용자
+- 리눅스를 써 보고 싶은데 어디서 시작할지 막막한 사람(윈도우에서 오는 사람, 학생)
+- 매일 쓰는 컴퓨터로 리눅스를 익히고 싶은 사람
+- 리눅스 기초 다음으로 네트워크, 웹 보안, 리버싱, 포렌식, CTF까지 가 보고 싶은 사람
+- 첫 부팅부터 글꼴, 한글 입력, 로캘, 문서가 갖춰져 있길 바라는 한국어 사용자
 
 이런 용도로 만들지 않았어요:
 
@@ -60,8 +64,6 @@ bin/robinctl packages web
 bin/robinctl packages optional
 bin/robinctl snapshot setup --dry-run
 bin/robinctl snapshot list
-bin/robinctl repo
-bin/robinctl repo setup --dry-run
 bin/robinctl learn
 bin/robinctl learn show 1
 bin/robinctl learn check 1
@@ -72,7 +74,7 @@ bin/robinctl lab info net
 bin/robinctl lab status web
 ```
 
-`robinctl doctor`는 데스크톱(Hyprland, Quickshell, RobinOS 셸)과 브랜딩 요소(SDDM 테마, 설치된 시스템의 GRUB 테마)도 확인해요. NVIDIA 그래픽 카드가 있으면 드라이버가 떠 있는지, 설치본에서는 인쇄 서비스가 켜져 있는지도 알려 줘요.
+`robinctl doctor`는 데스크톱(Hyprland, Quickshell, RobinOS 셸)과 브랜딩 요소(SDDM 테마, 설치된 시스템의 GRUB 테마)도 확인해요. NVIDIA 그래픽 카드가 있으면 드라이버가 떠 있는지, 설치본에서는 인쇄 서비스가 켜져 있는지도 알려 줘요. 안 되는 게 있으면 `robinctl report`가 장치, 드라이버, 이번 부팅의 오류를 한 파일(`~/robinos-report.txt`)로 모아 줘요. 이름과 주소는 가리고 어디로도 보내지 않으니, 읽어 본 뒤 문제를 알릴 때 붙여 넣으면 돼요.
 
 `robinctl audit`은 윈도우 보안 화면처럼 내 컴퓨터의 보안 상태를 보여 줘요. 다른 컴퓨터가 접속할 수 있는 서비스, SSH 서버, 홈 폴더와 SSH 열쇠 권한, 스냅샷, 방화벽, 디스크 암호화를 보고, 줄마다 왜 중요한지와 바꾸는 방법(관련 미션 번호)을 알려 줘요. 아무것도 바꾸지 않고 관리자 권한도 필요 없어요. 런처에서 "보안 점검"이나 "Windows 보안"으로도 열려요.
 
@@ -165,3 +167,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test
 - [docs/README.md](docs/README.md): 문서 지도. 어떤 문서가 무엇의 원본인지 정리돼 있어요.
 - [docs/design.md](docs/design.md): 제품 설계와 v0.1 범위의 진행 상황
 - [docs/tasks.md](docs/tasks.md): 지금 할 일과 진행 중인 작업
+
+## 라이선스
+
+RobinOS가 직접 만든 코드와 문서는 [GPL-3.0](LICENSE)으로 공개해요(2026-10-11). 고쳐서 배포하면 그 결과물도 같은 조건으로 공개해야 해요. RobinOS가 쓰는 Arch Linux, Hyprland, Quickshell 같은 다른 소프트웨어는 각자의 라이선스를 따라요.

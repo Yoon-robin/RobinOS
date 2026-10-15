@@ -61,9 +61,9 @@ PanelWindow {
         return entry?.name ?? top.appId;
     }
 
-    // "Foot" means nothing to someone from Windows, and the shell's floating
-    // terminal (ShellState.runInTerminal) has no desktop entry at all
+    // "Ptyxis" and "Foot" mean nothing to someone from Windows
     readonly property var appNames: ({
+            "org.gnome.Ptyxis": "터미널",
             "foot": "터미널",
             "footclient": "터미널",
             "robinos-float": "터미널"
@@ -196,6 +196,51 @@ PanelWindow {
         anchors.rightMargin: 8
         anchors.verticalCenter: parent.verticalCenter
         spacing: 4
+
+        // Started from a snapshot (T-153): a reminder that this state is temporary
+        BarButton {
+            visible: ShellState.bootedSnapshot !== ""
+            label: "스냅샷 " + ShellState.bootedSnapshot + "번으로 켠 임시 상태, 눌러서 되돌리기"
+            color: Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.16)
+            onClicked: ShellState.showSnapshotNotice()
+
+            Icon {
+                name: "history"
+                size: 14
+                color: Theme.fg
+            }
+
+            Text {
+                text: "스냅샷 " + ShellState.bootedSnapshot + " · 임시"
+                color: Theme.fg
+                font.family: Theme.font
+                font.pixelSize: 12
+                font.weight: Font.Medium
+            }
+        }
+
+        // A screen recording is running (Win+Alt+R): a red dot that stops it
+        BarButton {
+            visible: ShellState.recording
+            label: "화면 녹화 중, 눌러서 멈추기"
+            color: Qt.rgba(Theme.destructive.r, Theme.destructive.g, Theme.destructive.b, 0.16)
+            onClicked: ShellState.toggleRecording()
+
+            Rectangle {
+                implicitWidth: 8
+                implicitHeight: 8
+                radius: 4
+                color: Theme.destructive
+            }
+
+            Text {
+                text: "녹화 중"
+                color: Theme.fg
+                font.family: Theme.font
+                font.pixelSize: 12
+                font.weight: Font.Medium
+            }
+        }
 
         // Apps' tray icons (Steam, Discord ...), like the Windows notification area:
         // click opens the app, right click its menu. fcitx5's is left out, the

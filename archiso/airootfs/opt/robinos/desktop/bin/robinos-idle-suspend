@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Puts a laptop to sleep when it has sat idle on battery. hypridle calls this after
+# 15 minutes without input (desktop/hypr/hypridle.conf); by then the screen has been
+# dimmed, locked and turned off. Like Windows, a laptop on the charger stays awake,
+# and so does a PC without a battery (nothing to save, and a desktop that sleeps in
+# the middle of a download is a nuisance).
+#
+# ROBINOS_POWER_SUPPLY points the check at another directory, for the tests.
+
+set -u
+
+supplies="${ROBINOS_POWER_SUPPLY:-/sys/class/power_supply}"
+
+has_battery="false"
+plugged="false"
+for supply in "${supplies}"/*; do
+  [[ -r "${supply}/type" ]] || continue
+  # A wireless mouse or a headset has a battery too, with scope "Device"
+  [[ "$(cat "${supply}/scope" 2>/dev/null)" == "Device" ]] && continue
+  case "$(cat "${supply}/type")" in
+    Battery) has_battery="true" ;;
+    Mains | USB | USB_C | USB_PD | USB_DCP | USB_CDP | USB_ACA | Wireless)
+      [[ "$(cat "${supply}/online" 2>/dev/null)" == "1" ]] && plugged="true"
+      ;;
+  esac
+done
+
+if [[ "${has_battery}" == "true" && "${plugged}" == "false" ]]; then
+  exec systemctl suspend
+fi
+exit 0

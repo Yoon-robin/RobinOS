@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Windows Program
+Name[ko]=윈도우 프로그램 안내
+Comment=Explains that Windows programs don't run here and what to use instead
+Comment[ko]=윈도우 프로그램 대신 쓸 앱을 알려 줘요
+Exec=/usr/share/robinos/bin/robinos-windows-app %f
+Icon=robinos
+NoDisplay=true
+Terminal=false
+MimeType=application/x-ms-dos-executable;application/x-msdownload;application/vnd.microsoft.portable-executable;application/x-msi;application/x-ms-installer;application/x-ms-shortcut;

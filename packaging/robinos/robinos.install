@@ -1,9 +1,22 @@
 # What scripts/post-install.sh runs after copying the files, for the package
 post_install() {
+  # RobinOS's versions of files other packages own (desktop/package-shared.txt)
+  while read -r src dest; do
+    case "${src}" in "" | \#*) continue ;; esac
+    install -Dm644 "/opt/robinos/${src}" "${dest}"
+  done </opt/robinos/desktop/package-shared.txt
   dconf update 2>/dev/null || true
   /usr/share/robinos/bin/robinos-os-release 2>/dev/null || true
+  # Nearly empty battery: power off. UPower's default, HybridSleep, needs disk swap to
+  # wake from, and RobinOS only has compressed swap in RAM
+  if [ -f /etc/UPower/UPower.conf ]; then
+    sed -i 's/^CriticalPowerAction=.*/CriticalPowerAction=PowerOff/' /etc/UPower/UPower.conf || true
+  fi
 }
 
 post_upgrade() {
   post_install
+  # A running desktop keeps the files it started with. `robinctl update` starts the
+  # shell again by itself; with plain pacman the person logs out and in
+  printf 'RobinOS 화면은 로그아웃했다가 다시 로그인하면 새 버전이 돼요(robinctl update는 알아서 다시 띄워요).\n'
 }

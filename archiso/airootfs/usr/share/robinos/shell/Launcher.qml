@@ -267,14 +267,14 @@ PanelWindow {
 
     // ---- Content ----
 
-    readonly property var pinnedApps: ["foot", "org.gnome.Nautilus", "firefox"]
-    // foot also installs a client and a server entry; the client fails without a
-    // running server, and both read as "Terminal" next to the real one. v4l-utils
-    // (pulled in by GStreamer) brings two webcam test tools that crowd "video".
-    readonly property var hiddenApps: ["footclient", "foot-server", "qv4l2", "qvidcap"]
+    readonly property var pinnedApps: ["org.gnome.Ptyxis", "org.gnome.Nautilus", "firefox"]
+    // Ptyxis is the terminal (T-154); foot stays installed as a fallback, and its
+    // three entries (foot, its client and server) would read as more terminals.
+    // v4l-utils (pulled in by GStreamer) brings two webcam test tools that crowd "video".
+    readonly property var hiddenApps: ["foot", "footclient", "foot-server", "qv4l2", "qvidcap"]
     // Apps whose desktop entry has no Korean description ("Foot · Terminal")
     readonly property var koreanSubtitles: ({
-            "foot": "터미널"
+            "org.gnome.Ptyxis": "터미널"
         })
     readonly property var labApps: ["org.wireshark.Wireshark", "ghidra", "virt-manager"]
 
@@ -289,7 +289,9 @@ PanelWindow {
         { key: "doctor", group: "system", icon: "activity", title: "시스템 점검", subtitle: "robinctl doctor", mono: true, words: "doctor check 점검 진단" },
         { key: "audit", group: "system", icon: "shield", title: "보안 점검", subtitle: "robinctl audit · 열린 포트, 원격 접속, 권한, 암호화", words: "audit security 보안 점검 보안 센터 방화벽 firewall 포트 암호화" },
         { key: "screenshot", group: "system", icon: "scan", title: "영역 스크린샷", subtitle: "Win + Shift + S", words: "screenshot capture 스크린샷 캡처 화면 캡처" },
-        { key: "settings", group: "system", icon: "sliders", title: "빠른 설정", subtitle: "Win + S", words: "settings quick 설정 빠른 설정 테마 다크 모드" },
+        { key: "record", group: "system", icon: "video", title: "화면 녹화", subtitle: "Win + Alt + R · 한 번 더 누르면 멈춰요", words: "record recording screen recorder screencast 녹화 화면 녹화 동영상 캡처 game bar 게임 바 xbox" },
+        { key: "control", group: "system", icon: "sliders", title: "설정", subtitle: "Win + I · 개인 설정, 정보", words: "settings control panel 설정 제어판 개인 설정 테마 강조색 투명도 정보 버전 사양" },
+        { key: "settings", group: "system", icon: "sliders", title: "빠른 설정", subtitle: "Win + S", words: "settings quick 설정 빠른 설정 다크 모드" },
         { key: "sound", group: "system", icon: "volume", title: "소리 설정", subtitle: "출력 장치, 마이크, 앱별 음량", words: "sound audio volume mixer speaker headphones microphone mic 소리 음량 볼륨 믹서 스피커 이어폰 헤드폰 마이크 출력" },
         { key: "wifi", group: "system", icon: "wifi", title: "Wi-Fi 연결", subtitle: "주변 네트워크에 연결해요", words: "wifi wi-fi wireless network internet nmtui 와이파이 무선 네트워크 인터넷 연결" },
         { key: "bluetooth", group: "system", icon: "bluetooth", title: "블루투스 장치", subtitle: "이어폰, 마우스, 키보드를 연결해요", words: "bluetooth 블루투스 이어폰 에어팟 airpods 버즈 buds 헤드셋 무선 마우스 키보드 장치 페어링 pairing" },
@@ -305,6 +307,7 @@ PanelWindow {
         { key: "shortcuts", group: "system", icon: "keyboard", title: "단축키 보기", subtitle: "Win + F1", words: "shortcut shortcuts keyboard hotkey 단축키 키보드 단축 도움말 help 복사 붙여넣기" },
         { key: "welcome", group: "system", icon: "sparkles", title: "환영 마법사", subtitle: "테마, 한/영 키, 단축키 안내", words: "welcome tour setup 환영 마법사 처음 시작 안내 투어 한영" },
         { key: "lock", group: "power", icon: "lock", title: "화면 잠금", subtitle: "Win + L", words: "lock 잠금" },
+        { key: "suspend", group: "power", icon: "moon", title: "잠자기", subtitle: "화면을 잠그고 대기해요", words: "sleep suspend standby 잠자기 절전 대기 절전 모드" },
         { key: "logout", group: "power", icon: "log-out", title: "로그아웃", subtitle: "", words: "logout exit 로그아웃" },
         { key: "reboot", group: "power", icon: "rotate-ccw", title: "다시 시작", subtitle: "", words: "reboot restart 재부팅 재시작" },
         { key: "poweroff", group: "power", icon: "power", title: "전원 끄기", subtitle: "", words: "poweroff shutdown 종료 전원" }
@@ -314,40 +317,55 @@ PanelWindow {
     // same job here. Searching "메모장" or "notepad" finds the text editor and says so.
     readonly property var windowsNames: [
         { win: "메모장", words: "메모장 notepad 워드패드 wordpad", app: "org.gnome.TextEditor" },
-        { win: "작업 관리자", words: "작업 관리자 task manager taskmgr 리소스 모니터 resource monitor", app: "io.missioncenter.MissionCenter" },
-        { win: "파일 탐색기", words: "파일 탐색기 explorer 내 pc 내 컴퓨터 this pc my computer", app: "org.gnome.Nautilus" },
-        { win: "명령 프롬프트", words: "명령 프롬프트 command prompt cmd powershell 파워셸 windows terminal wt 윈도우 터미널", app: "foot" },
+        { win: "작업 관리자", linux: "ps aux, top", learn: 31, words: "작업 관리자 task manager taskmgr 리소스 모니터 resource monitor", app: "io.missioncenter.MissionCenter" },
+        { win: "파일 탐색기", linux: "ls, cd", learn: 1, words: "파일 탐색기 explorer 내 pc 내 컴퓨터 this pc my computer", app: "org.gnome.Nautilus" },
+        { win: "명령 프롬프트", linux: "bash", learn: 1, words: "명령 프롬프트 command prompt cmd powershell 파워셸 windows terminal wt 윈도우 터미널", app: "org.gnome.Ptyxis" },
         { win: "Edge", words: "edge 엣지 internet explorer 인터넷 익스플로러 chrome 크롬", app: "firefox" },
         { win: "사진 앱", words: "사진 photos 사진 보기 image viewer", app: "org.gnome.Loupe" },
         { win: "반디집", words: "반디집 bandizip 알집 7-zip 7zip winrar 압축 풀기", app: "org.gnome.FileRoller" },
         { win: "볼륨 믹서", words: "볼륨 믹서 volume mixer 소리 설정 sound settings 사운드", cmd: "sound" },
-        { win: "네트워크 및 인터넷", words: "네트워크 및 인터넷 network and internet 네트워크 연결 network connections ncpa.cpl ncpa", cmd: "wifi" },
+        { win: "네트워크 및 인터넷", linux: "ip a", learn: 6, words: "네트워크 및 인터넷 network and internet 네트워크 연결 network connections ncpa.cpl ncpa", cmd: "wifi" },
         { win: "블루투스 및 장치", words: "블루투스 및 장치 bluetooth and devices 장치 추가 add device", cmd: "bluetooth" },
         { win: "Acrobat Reader", words: "acrobat 아크로뱃 adobe reader pdf 뷰어", app: "org.gnome.Evince" },
         { win: "캡처 도구", words: "캡처 도구 snipping tool 캡처 스크린샷 screenshot", cmd: "screenshot" },
+        { win: "Xbox Game Bar", words: "xbox game bar 게임 바 화면 녹화 녹화 screen recording", cmd: "record" },
         { win: "계산기", words: "계산기 calc calculator", app: "org.gnome.Calculator" },
-        { win: "저장소", words: "저장소 저장 공간 storage 디스크 정리 disk cleanup cleanmgr 용량 디스크 사용량 disk usage 공간 확보", app: "org.gnome.baobab" },
-        { win: "디스크 관리", words: "디스크 관리 disk management diskmgmt 포맷 format usb 파티션 partition", app: "org.gnome.DiskUtility" },
+        { win: "저장소", linux: "df -h, du -sh", learn: 33, words: "저장소 저장 공간 storage 디스크 정리 disk cleanup cleanmgr 용량 디스크 사용량 disk usage 공간 확보", app: "org.gnome.baobab" },
+        { win: "파일 히스토리", words: "파일 히스토리 file history windows 백업 windows backup 백업 backup 복원 되살리기 restore time machine 타임머신 개인 파일", app: "org.gnome.DejaDup" },
+        { win: "디스크 관리", linux: "lsblk", learn: 33, words: "디스크 관리 disk management diskmgmt 포맷 format usb 파티션 partition", app: "org.gnome.DiskUtility" },
         { win: "Word", words: "워드 word 문서 작성 docx 오피스 office", app: "libreoffice-writer" },
         { win: "Excel", words: "엑셀 excel 스프레드시트 spreadsheet xlsx 오피스 office", app: "libreoffice-calc" },
         { win: "PowerPoint", words: "파워포인트 powerpoint ppt pptx 프레젠테이션 발표 오피스 office", app: "libreoffice-impress" },
         { win: "Microsoft Store", words: "microsoft store 마이크로소프트 스토어 앱 스토어 app store 프로그램 설치 앱 설치 flathub", app: "org.gnome.Software" },
         { win: "미디어 플레이어", words: "미디어 플레이어 media player windows media player wmp 영화 및 tv movies tv 동영상 비디오 video mp4 영상", app: "org.gnome.Showtime" },
         { win: "그루브 음악", words: "그루브 음악 groove music 음악 노래 music audio 오디오 mp3", app: "org.gnome.Decibels" },
+        { win: "팩스 및 스캔", words: "팩스 및 스캔 windows fax and scan 스캔 스캐너 scan scanner 스캐너 앱 문서 스캔", app: "org.gnome.SimpleScan" },
         { win: "장치 및 프린터", words: "장치 및 프린터 devices and printers 프린터 printer 인쇄 print", app: "system-config-printer" },
         { win: "배경 화면", words: "배경 화면 바탕 화면 바탕화면 desktop background 개인 설정 personalization", cmd: "wallpaper" },
         { win: "Windows 보안", words: "windows 보안 windows security defender 디펜더 보안 센터 security center 백신 바이러스 antivirus 방화벽 firewall wf.msc", cmd: "audit" },
-        { win: "이벤트 뷰어", words: "이벤트 뷰어 event viewer eventvwr 이벤트 로그 event log", cmd: "logs" },
-        { win: "서비스", words: "서비스 services services.msc", cmd: "services" },
+        { win: "이벤트 뷰어", linux: "journalctl", learn: 35, words: "이벤트 뷰어 event viewer eventvwr 이벤트 로그 event log", cmd: "logs" },
+        { win: "서비스", linux: "systemctl", learn: 34, words: "서비스 services services.msc", cmd: "services" },
         { win: "작업 스케줄러", words: "작업 스케줄러 task scheduler taskschd 예약 작업", cmd: "timers" },
         { win: "장치 관리자", words: "장치 관리자 device manager devmgmt 드라이버 driver", cmd: "devices" },
         { win: "시스템 정보", words: "시스템 정보 system information msinfo32 winver dxdiag 사양", cmd: "sysinfo" },
         { win: "Windows Update", words: "windows update 윈도우 업데이트 업데이트 확인", cmd: "update" },
-        { win: "제어판", words: "제어판 control panel 윈도우 설정 windows settings", cmd: "settings" }
+        { win: "제어판", words: "제어판 control panel 윈도우 설정 windows settings", cmd: "control" }
     ]
 
+    // "윈도우의 작업 관리자에 해당해요 · 터미널: ps aux, top"
     function windowsHint(name) {
-        return "윈도우의 " + name + "에 해당해요";
+        return "윈도우의 " + name.win + "에 해당해요" + (name.linux ? " · 터미널: " + name.linux : "");
+    }
+
+    // The learning mission that practises the Linux side of a Windows name (T-169)
+    function missionItem(name) {
+        return {
+            kind: "mission",
+            icon: "graduation-cap",
+            title: "학습 미션 " + name.learn + " · 터미널에서 직접 해 봐요",
+            subtitle: "명령: " + name.linux,
+            number: name.learn
+        };
     }
 
     function appItem(entry) {
@@ -471,6 +489,7 @@ PanelWindow {
             const shownApps = {};
             const shownCmds = {};
             const known = [];
+            const lessons = [];
             if (q.length >= 2 || /[^\x00-\x7f]/.test(q)) {
                 for (const name of windowsNames.filter(w => matches(w.words, q))) {
                     let item = null;
@@ -487,14 +506,18 @@ PanelWindow {
                         }
                     }
                     if (item) {
-                        item.subtitle = windowsHint(name.win);
+                        item.subtitle = windowsHint(name);
                         known.push(item);
+                        if (name.learn && !lessons.some(l => l.number === name.learn))
+                            lessons.push(missionItem(name));
                     }
                 }
             }
             if (known.length > 0) {
                 out.push({ kind: "header", title: "윈도우에서 쓰던 이름" });
                 for (const item of known)
+                    out.push(item);
+                for (const item of lessons)
                     out.push(item);
             }
 
@@ -640,10 +663,15 @@ PanelWindow {
             return;
         }
 
+        if (item.kind === "mission") {
+            ShellState.openTerminal("robinctl learn show " + item.number);
+            return;
+        }
+
         if (item.kind === "app") {
             ShellState.noteRecentApp(item.entry.id);
             if (item.entry.runInTerminal)
-                Quickshell.execDetached(["foot"].concat(ShellState.toArray(item.entry.command)));
+                Quickshell.execDetached(ShellState.terminal.concat(["--"]).concat(ShellState.toArray(item.entry.command)));
             else
                 item.entry.execute();
             return;
@@ -656,6 +684,12 @@ PanelWindow {
         case "screenshot":
             // Wait for the launcher to fade out, or it would be in the picture
             Quickshell.execDetached(["sh", "-c", "sleep 0.4; exec /usr/share/robinos/bin/robinos-screenshot region"]);
+            break;
+        case "record":
+            Quickshell.execDetached(["sh", "-c", "sleep 0.4; exec /usr/share/robinos/bin/robinos-screenshot record"]);
+            break;
+        case "control":
+            ShellState.openSettings("");
             break;
         case "settings":
             ShellState.toggleQuickSettings();
@@ -722,6 +756,9 @@ PanelWindow {
         case "logout":
             ShellState.logout();
             break;
+        case "suspend":
+            ShellState.suspend();
+            break;
         case "reboot":
             ShellState.reboot();
             break;
@@ -735,7 +772,7 @@ PanelWindow {
 
     Rectangle {
         anchors.fill: parent
-        color: Theme.scrim
+        color: Theme.scrimSoft
         opacity: root.revealed ? 1 : 0
 
         Behavior on opacity {
@@ -753,22 +790,23 @@ PanelWindow {
 
         anchors.horizontalCenter: parent.horizontalCenter
         y: Math.round(parent.height * 0.17)
-        width: 640
+        width: 680
         height: column.implicitHeight
-        radius: Theme.radiusLg
-        color: Theme.surface
+        radius: Theme.radiusPanel
+        color: Theme.glass
         border.width: 1
-        border.color: Theme.border
+        border.color: Theme.glassBorder
         clip: true
         opacity: root.revealed ? 1 : 0
-        scale: root.revealed ? 1 : 0.98
+        scale: root.revealed ? 1 : 0.96
 
         Behavior on opacity {
             NumberAnimation { duration: Theme.dur; easing.type: Easing.OutCubic }
         }
 
+        // Opens with a small settle past full size, like a spring (T-152)
         Behavior on scale {
-            NumberAnimation { duration: Theme.dur; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Theme.durSpring; easing.type: Easing.OutBack; easing.overshoot: 0.9 }
         }
 
         layer.enabled: !Theme.lowPower
@@ -793,15 +831,15 @@ PanelWindow {
             // Search
             Item {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 54
+                Layout.preferredHeight: 62
 
                 Icon {
                     id: searchIcon
                     anchors.left: parent.left
-                    anchors.leftMargin: 16
+                    anchors.leftMargin: 18
                     anchors.verticalCenter: parent.verticalCenter
                     name: "search"
-                    size: 18
+                    size: 20
                     color: Theme.muted
                 }
 
@@ -817,7 +855,7 @@ PanelWindow {
                     selectionColor: Theme.secondaryHover
                     selectedTextColor: Theme.fg
                     font.family: Theme.font
-                    font.pixelSize: 15
+                    font.pixelSize: 18
                     clip: true
 
                     Accessible.role: Accessible.EditableText
@@ -938,7 +976,7 @@ PanelWindow {
                                 border.color: Theme.border
 
                                 Icon {
-                                    visible: ["cmd", "clip", "file", "calc", "web"].indexOf(row.modelData.kind) !== -1
+                                    visible: ["cmd", "clip", "file", "calc", "web", "mission"].indexOf(row.modelData.kind) !== -1
                                     anchors.centerIn: parent
                                     name: row.modelData.icon ?? ""
                                     size: 15

@@ -2,8 +2,10 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 
-// RobinOS wallpaper: zinc background, a faint dot grid and a soft light from the top.
-// Drawn in QML so it follows the theme and fits any resolution.
+// RobinOS wallpaper: zinc background, soft lights in the brand colours (Robin red,
+// orange, a little violet) and a faint dot grid. The lights give the glass panels
+// (Theme.glass, T-152) a colour to show through. Drawn in QML so it follows the
+// theme and fits any resolution.
 PanelWindow {
     id: root
 
@@ -43,11 +45,21 @@ PanelWindow {
             const h = height;
             ctx.reset();
 
-            const light = ctx.createRadialGradient(w / 2, 0, 0, w / 2, 0, Math.max(w, h) * 0.6);
-            light.addColorStop(0, Theme.dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.035)");
-            light.addColorStop(1, "rgba(0,0,0,0)");
-            ctx.fillStyle = light;
-            ctx.fillRect(0, 0, w, h);
+            // [x, y, radius] as parts of the screen, and the colour in dark / light
+            const size = Math.max(w, h);
+            const lights = [
+                [0.78, 0.12, 0.62, "229,72,77", 0.26, 0.18],
+                [0.12, 0.92, 0.58, "255,138,61", 0.18, 0.15],
+                [0.42, 1.08, 0.55, "150,70,255", 0.12, 0.09]
+            ];
+            for (const [lx, ly, lr, rgb, darkAlpha, lightAlpha] of lights) {
+                const g = ctx.createRadialGradient(w * lx, h * ly, 0, w * lx, h * ly, size * lr);
+                g.addColorStop(0, "rgba(" + rgb + "," + (Theme.dark ? darkAlpha : lightAlpha) + ")");
+                g.addColorStop(0.55, "rgba(" + rgb + "," + (Theme.dark ? darkAlpha : lightAlpha) * 0.3 + ")");
+                g.addColorStop(1, "rgba(" + rgb + ",0)");
+                ctx.fillStyle = g;
+                ctx.fillRect(0, 0, w, h);
+            }
 
             const step = 22;
             const r = 1;

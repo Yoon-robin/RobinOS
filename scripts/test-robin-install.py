@@ -82,6 +82,374 @@ for virt, vmware, want in (("vmware", True, (["open-vm-tools"], ["vmtoolsd.servi
     robin.is_vmware = lambda vmware=vmware: vmware
     check(f"{virt}, VMware answers: {vmware}", robin.guest_tools(), want)
 
+print("BitLocker (T-147)")
+GIB = 1024**3
+
+
+def lsblk_disk(windows_fstype):
+    """lsblk -J for a GPT disk with an ESP, a Windows partition and 100 GB free."""
+    return {"blockdevices": [{
+        "name": "nvme0n1", "path": "/dev/nvme0n1", "size": 512 * GIB, "type": "disk",
+        "model": "Test", "tran": "nvme", "rm": False, "ro": False, "pttype": "gpt",
+        "children": [
+            {"path": "/dev/nvme0n1p1", "parttype": robin.ESP_TYPE, "fstype": "vfat"},
+            {"path": "/dev/nvme0n1p2", "parttype": "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7",
+             "fstype": windows_fstype},
+        ]}]}
+
+
+def fake_output(listing):
+    def output(*args):
+        if args[0] == "lsblk":
+            return robin.json.dumps(listing)
+        # parted -m: the largest free block
+        return f"BYT;\n1:1048576B:{101 * GIB}B:{100 * GIB}B:free;\n"
+    return output
+
+
+real_live_disk = robin.live_disk
+robin.live_disk = lambda: None
+for fstype, want in (("ntfs", False), ("BitLocker", True)):
+    robin.output = fake_output(lsblk_disk(fstype))
+    disk = robin.list_disks()[0]
+    check(f"Windows partition {fstype}: windows", disk["windows"], True)
+    check(f"Windows partition {fstype}: bitlocker", disk["bitlocker"], want)
+    check(f"Windows partition {fstype}: can install alongside", disk["can_alongside"], True)
+
+robin.output = fake_output(lsblk_disk("BitLocker"))
+disk = robin.list_disks()[0]
+ran = []
+robin.run = lambda *args, **kwargs: ran.append(args)
+try:
+    robin.prepare_disk({"mode": "alongside"}, disk)
+    refused = False
+except robin.InstallError:
+    refused = True
+check("BitLocker without the recovery key confirmed: refused", refused, True)
+check("refused before touching the disk", ran, [])
+
+print("pacman progress (piped, pacman prints \"installing name...\" without counters)")
+pacman = robin.PacmanProgress()
+check("database downloads before the package list don't count", pacman.feed(" core downloading..."), None)
+check("the package list starts the download step", pacman.feed("Packages (40) a-1-1 b-1-1"), (12, "패키지 내려받기 (0/40)"))
+shown = [pacman.feed(f" pkg{n}-1-1-x86_64 downloading...") for n in range(40)]
+check("downloads report every tenth package", [s for s in shown if s],
+      [(19, "패키지 내려받기 (10/40)"), (27, "패키지 내려받기 (20/40)"),
+       (34, "패키지 내려받기 (30/40)"), (42, "패키지 내려받기 (40/40)")])
+check("other lines show nothing", pacman.feed(":: Processing package changes..."), None)
+check("checking steps with a counter show nothing", pacman.feed("(40/40) checking keys in keyring..."), None)
+shown = [pacman.feed(f"installing pkg{n}...") for n in range(40)]
+check("installing takes 42-70%, a tenth at a time", [s for s in shown if s],
+      [(49, "패키지 설치 (10/40)"), (56, "패키지 설치 (20/40)"),
+       (63, "패키지 설치 (30/40)"), (70, "패키지 설치 (40/40)")])
+check("a terminal's counter is taken as it is", robin.PacmanProgress().feed("( 20/40) installing glibc"),
+      (56, "패키지 설치 (20/40)"))
+
+print("Disk picture and the partitions RobinOS can go into")
+MIB = 1024**2
+windows_disk = {"blockdevices": [{
+    "name": "nvme0n1", "path": "/dev/nvme0n1", "size": 800 * GIB, "type": "disk",
+    "model": "Test", "tran": "nvme", "rm": False, "ro": False, "pttype": "gpt",
+    "children": [
+        {"path": "/dev/nvme0n1p1", "partn": 1, "size": 100 * MIB, "parttype": robin.ESP_TYPE, "fstype": "vfat"},
+        {"path": "/dev/nvme0n1p2", "partn": 2, "size": 16 * MIB, "parttype": robin.WINDOWS_RESERVED_TYPE},
+        {"path": "/dev/nvme0n1p3", "partn": 3, "size": 300 * GIB, "parttype": robin.WINDOWS_DATA_TYPE,
+         "fstype": "ntfs", "label": "OS"},
+        {"path": "/dev/nvme0n1p4", "partn": 4, "size": 150 * GIB, "parttype": robin.LINUX_TYPE,
+         "partlabel": "RobinOS", "fstype": "btrfs"},
+        {"path": "/dev/nvme0n1p5", "partn": 5, "size": 1 * GIB, "parttype": robin.WINDOWS_RECOVERY_TYPE,
+         "fstype": "ntfs"},
+        # made in Disk Management: "New Simple Volume", NTFS, named Data
+        {"path": "/dev/nvme0n1p6", "partn": 6, "size": 60 * GIB, "parttype": robin.WINDOWS_DATA_TYPE,
+         "fstype": "ntfs", "label": "Data"},
+        {"path": "/dev/nvme0n1p7", "partn": 7, "size": 70 * GIB, "parttype": robin.LINUX_TYPE,
+         "fstype": "ext4", "label": "usedhome", "mountpoints": ["/mnt/old"]},
+        {"path": "/dev/nvme0n1p8", "partn": 8, "size": 30 * GIB, "parttype": robin.WINDOWS_DATA_TYPE,
+         "fstype": "exfat", "label": "Small"},
+    ]}]}
+parted = ("BYT;\n/dev/nvme0n1:858993459200B:nvme:512:512:gpt:Test:;\n"
+          "1:17408B:1048575B:1031168B:free;\n"
+          f"1:1048576B:1B:{100 * MIB}B:fat32:EFI system partition:boot, esp;\n"
+          f"2:1B:1B:{16 * MIB}B::Microsoft reserved partition:msftres;\n"
+          f"3:1B:1B:{300 * GIB}B:ntfs:Basic data partition:msftdata;\n"
+          f"4:1B:1B:{150 * GIB}B:btrfs:RobinOS:;\n"
+          f"5:1B:1B:{1 * GIB}B:ntfs::hidden, diag;\n"
+          f"6:1B:1B:{60 * GIB}B:ntfs:Basic data partition:msftdata;\n"
+          f"7:1B:1B:{70 * GIB}B:ext4::;\n"
+          f"8:1B:1B:{30 * GIB}B:exfat:Basic data partition:msftdata;\n"
+          f"1:1B:1B:{20 * GIB}B:free;\n")
+
+
+def output_with(listing, table):
+    return lambda *args: robin.json.dumps(listing) if args[0] == "lsblk" else table
+
+
+# Windows' own partition holds Windows; the Data one doesn't
+robin.windows_inside = lambda path: {"/dev/nvme0n1p3": True, "/dev/nvme0n1p5": False}.get(path, False)
+robin.output = output_with(windows_disk, parted)
+disk = robin.list_disks()[0]
+check("the picture follows the disk, without the 1 MB alignment gap",
+      [(s["kind"], s["name"]) for s in disk["layout"]],
+      [("efi", "EFI"), ("system", "윈도우 예약"), ("windows", "OS"), ("robinos", "RobinOS"),
+       ("system", "윈도우 복구"), ("windows", "Data"), ("other", "usedhome"), ("windows", "Small"),
+       ("free", "빈 공간")])
+check("the earlier RobinOS partition is found", disk["robinos"], {"path": "/dev/nvme0n1p4", "size": 150 * GIB})
+check("free space is only 20 GB", disk["free"], 20 * GIB)
+check("so no new partition in the free space", disk["can_alongside"], False)
+check("but a partition can be chosen", disk["can_partition"], True)
+by_path = {s["path"]: s for s in disk["partitions"]}
+for path, usable, why in (
+        ("/dev/nvme0n1p1", False, "윈도우나 부팅에 쓰는 파티션이에요"),
+        ("/dev/nvme0n1p2", False, "윈도우나 부팅에 쓰는 파티션이에요"),
+        ("/dev/nvme0n1p3", False, "윈도우가 들어 있어요"),
+        ("/dev/nvme0n1p4", True, ""),
+        ("/dev/nvme0n1p5", False, "윈도우나 부팅에 쓰는 파티션이에요"),
+        ("/dev/nvme0n1p6", True, ""),
+        ("/dev/nvme0n1p7", False, "지금 쓰고 있어요"),
+        ("/dev/nvme0n1p8", False, "40GB보다 작아요")):
+    check(f"{path}: {'usable' if usable else why}", (by_path[path]["usable"], by_path[path]["reason"]), (usable, why))
+check("the partition's number is kept for sgdisk", by_path["/dev/nvme0n1p6"]["number"], 6)
+
+robin.windows_inside = lambda path: None  # an NTFS partition that can't be read
+check("an NTFS partition that can't be read isn't offered",
+      next(s for s in robin.list_disks()[0]["partitions"] if s["path"] == "/dev/nvme0n1p6")["usable"], False)
+robin.windows_inside = lambda path: {"/dev/nvme0n1p3": True}.get(path, False)
+
+ran = []
+robin.run = lambda *args, **kwargs: ran.append(args)
+robin.settle = lambda path: None
+disk = robin.list_disks()[0]
+esp, root = robin.prepare_disk({"mode": "partition", "partition": "/dev/nvme0n1p4"}, disk)
+check("into the earlier RobinOS partition", (esp, root), ("/dev/nvme0n1p1", "/dev/nvme0n1p4"))
+check("it gets the RobinOS name and the Linux type, and only it is wiped and formatted", ran,
+      [("sgdisk", "-t", "4:8300", "-c", "4:RobinOS", "/dev/nvme0n1"),
+       ("wipefs", "-a", "/dev/nvme0n1p4"),
+       ("mkfs.btrfs", "-f", "-L", "RobinOS", "/dev/nvme0n1p4")])
+ran.clear()
+esp, root = robin.prepare_disk({"mode": "partition", "partition": "/dev/nvme0n1p6"}, disk)
+check("into the Data partition made in Disk Management", (esp, root), ("/dev/nvme0n1p1", "/dev/nvme0n1p6"))
+check("no new partition is made, the type changes from NTFS", ran[0], ("sgdisk", "-t", "6:8300", "-c", "6:RobinOS", "/dev/nvme0n1"))
+for plan, what in (({"mode": "partition", "partition": "/dev/nvme0n1p3"}, "Windows' own partition"),
+                   ({"mode": "partition", "partition": "/dev/nvme0n1p7"}, "a partition in use"),
+                   ({"mode": "partition", "partition": "/dev/nvme0n1p2"}, "the Microsoft reserved partition"),
+                   ({"mode": "partition", "partition": "/dev/nvme0n1p1"}, "the EFI partition"),
+                   ({"mode": "partition", "partition": "/dev/nvme0n1p8"}, "a partition under 40 GB"),
+                   ({"mode": "partition", "partition": "/dev/sdz9"}, "a partition that isn't on the disk"),
+                   ({"mode": "alongside"}, "the free space with only 20 GB")):
+    ran = []
+    try:
+        robin.prepare_disk(plan, disk)
+        refused = False
+    except robin.InstallError:
+        refused = True
+    check(f"{what}: refused before touching the disk", (refused, ran), (True, []))
+
+print("The size RobinOS gets in the free space")
+robin.output = fake_output(lsblk_disk("ntfs"))  # a disk with 100 GB free
+big = robin.list_disks()[0]
+calls = []
+
+
+def two_tables(path):
+    calls.append(path)
+    return {1: "/dev/x1"} if len(calls) % 2 else {1: "/dev/x1", 4: "/dev/x4"}
+
+
+robin.partitions = two_tables
+for size, want, what in ((None, "0:0:0", "no size: all of the free space"),
+                         (60, "0:0:+60G", "60 GB"),
+                         (99, "0:0:+99G", "99 of 100 GB"),
+                         (100, "0:0:0", "all 100 GB: to the end of the block, not 100G exactly")):
+    ran = []
+    plan = {"mode": "alongside"}
+    if size:
+        plan["size_gb"] = size
+    robin.prepare_disk(plan, big)
+    check(f"{what}", ran[0][2], want)
+ran = []
+try:
+    robin.prepare_disk({"mode": "alongside", "size_gb": 101}, big)
+    refused = False
+except robin.InstallError:
+    refused = True
+check("more than the free space: refused before touching the disk", (refused, ran), (True, []))
+
+print("What is never offered (Codex review 2026-10-13)")
+# Windows' folders, by any spelling of the names, and the recovery and boot ones
+with tempfile.TemporaryDirectory() as tree:
+    def volume(*paths):
+        path = tempfile.mkdtemp(dir=tree)
+        for entry in paths:
+            os.makedirs(os.path.join(path, entry), exist_ok=True)
+        return path
+
+    for name, paths, want in (
+            ("Windows\\System32", ["Windows/System32"], True),
+            ("WINDOWS\\system32 in capitals (an old Windows)", ["WINDOWS/SYSTEM32"], True),
+            ("windows\\System32 in lower case (an image made offline)", ["windows/System32"], True),
+            ("WINNT (Windows 2000)", ["WINNT/System32"], True),
+            ("a Recovery folder (an OEM recovery partition)", ["Recovery/WindowsRE"], True),
+            ("the boot manager", ["bootmgr"], True),
+            ("a Windows upgrade in progress", ["$WINDOWS.~BT"], True),
+            ("only photos and documents", ["Photos", "Documents"], False),
+            ("a folder called Windows without System32 (a project folder)", ["Windows/notes"], False)):
+        check(f"{name}: {want}", robin.windows_in_tree(volume(*paths)), want)
+
+robin.windows_inside = lambda path: False
+robin.holders = lambda path: []
+robin.is_blank = lambda path: False
+
+
+def usable(**part):
+    base = {"path": "/dev/sdx9", "size": 100 * GIB, "fstype": "ext4", "parttype": robin.LINUX_TYPE}
+    base.update(part)
+    return robin.partition_usable(base, part.pop("kind", "other"))
+
+
+check("plain ext4 is fine", usable(), (True, ""))
+check("a hidden GPT partition (recovery) isn't offered", usable(fstype="ntfs", partflags="0x8000000000000001")[0], False)
+check("a read-only GPT partition isn't offered", usable(partflags="0x1000000000000000")[0], False)
+check("an ordinary Disk Management partition (no flags) is offered", usable(fstype="ntfs", partflags="0x0"), (True, ""))
+check("a partition with a mapped device on it isn't offered", usable(children=[{"path": "/dev/mapper/secret"}]),
+      (False, "지금 쓰고 있어요"))
+robin.holders = lambda path: ["dm-0"]
+check("a partition something is stacked on (sysfs holders) isn't offered", usable(), (False, "지금 쓰고 있어요"))
+robin.holders = lambda path: []
+for fstype in ("zfs_member", "LDM2_member", "crypto_LUKS", "LVM2_member", "linux_raid_member", "swap", "bcache", "ReFS"):
+    check(f"{fstype} isn't offered", usable(fstype=fstype)[0], False)
+check("BitLocker says why", usable(fstype="BitLocker"), (False, "BitLocker로 잠겨 있어요"))
+check("a partition blkid can't read isn't offered unless it is blank", usable(fstype="")[0], False)
+robin.is_blank = lambda path: True
+check("a blank, unformatted partition is offered", usable(fstype=""), (True, ""))
+robin.is_blank = lambda path: False
+check("a partition RobinOS made before the format is offered again",
+      robin.partition_usable({"path": "/dev/sdx9", "size": 100 * GIB, "fstype": ""}, "robinos"), (True, ""))
+robin.windows_inside = lambda path: True
+check("an NTFS partition with Windows in it isn't offered", usable(fstype="ntfs"), (False, "윈도우가 들어 있어요"))
+robin.windows_inside = lambda path: None
+check("an NTFS partition that can't be read isn't offered", usable(fstype="ntfs")[0], False)
+robin.windows_inside = lambda path: False
+
+print("The live USB, also behind Ventoy's mapped device")
+tables = {"/dev/sdb1": "part sdb", "/dev/mapper/ventoy": "dm sdb1", "/dev/sdb": "disk", "/dev/nvme0n1p5": "part nvme0n1"}
+
+
+def lsblk_chain(source):
+    def fake(*args):
+        if args[0] == "findmnt":
+            return source + "\n"
+        return tables[args[-1]] + "\n"
+    return fake
+
+
+for source, want in (("/dev/sdb1", "/dev/sdb"), ("/dev/mapper/ventoy", "/dev/sdb"), ("/dev/sdb", "/dev/sdb")):
+    robin.output = lsblk_chain(source)
+    check(f"{source} boots from the disk {want}", real_live_disk(), want)
+
+print("The disk and partition that were confirmed")
+shown = {"path": "/dev/sdb", "id": "64000000000:SN1:wwn1"}
+robin.check_same_disk({"disk_id": "64000000000:SN1:wwn1"}, shown)
+robin.check_same_disk({}, shown)
+try:
+    robin.check_same_disk({"disk_id": "64000000000:OTHER:wwn2"}, shown)
+    refused = False
+except robin.InstallError:
+    refused = True
+check("another disk under the same name is refused", refused, True)
+
+robin.output = fake_output(lsblk_disk("ntfs"))
+big = robin.list_disks()[0]
+check("a disk has an id", big["id"].startswith(str(512 * GIB)), True)
+
+print("BitLocker on a disk that stays")
+ran = []
+robin.run = lambda *args, **kwargs: ran.append(args)
+robin.settle = lambda path: None
+robin.partitions = lambda path: {1: "/dev/x1", 2: "/dev/x2"}
+whole = {"path": "/dev/sdz", "pttype": "gpt", "esp": None, "windows": False, "bitlocker": False,
+         "can_whole": True, "free": 0, "partitions": [], "layout": []}
+for key_saved, want_refused in ((None, True), (True, False)):
+    ran = []
+    plan = {"mode": "whole", "bitlocker_elsewhere": True}
+    if key_saved:
+        plan["bitlocker_key_saved"] = True
+    try:
+        robin.prepare_disk(plan, whole)
+        refused = False
+    except robin.InstallError:
+        refused = True
+    check(f"the whole disk with a BitLocker Windows on another disk, key saved: {key_saved}: refused={refused}",
+          (refused, ran == []), (want_refused, want_refused))
+
+print("Windows on another disk")
+data_disk = {"path": "/dev/sdb", "windows": True, "esp": None, "removable": False}
+windows_ssd = {"path": "/dev/sda", "windows": True, "esp": "/dev/sda1", "removable": False}
+usb_windows = {"path": "/dev/sdc", "windows": True, "esp": "/dev/sdc1", "removable": True}
+target = {"path": "/dev/nvme0n1", "windows": False, "esp": None, "removable": False}
+check("Windows on another SSD: in the boot menu", robin.windows_elsewhere([target, windows_ssd], "/dev/nvme0n1"), True)
+check("an NTFS data disk isn't Windows", robin.windows_elsewhere([target, data_disk], "/dev/nvme0n1"), False)
+check("a removable drive doesn't count", robin.windows_elsewhere([target, usb_windows], "/dev/nvme0n1"), False)
+check("the target disk itself doesn't count", robin.windows_elsewhere([windows_ssd], "/dev/sda"), False)
+
+print("Plan checks")
+
+
+def plan_refused_raw(plan):
+    fd, path = tempfile.mkstemp()
+    with os.fdopen(fd, "w") as f:
+        robin.json.dump(plan, f)
+    try:
+        robin.read_plan(path)
+        return False
+    except robin.InstallError:
+        return True
+
+
+def plan_refused(**changes):
+    plan = {"disk": "/dev/vda", "mode": "whole", "user": "robin", "password": "x",
+            "hostname": "robinos", "timezone": "Asia/Seoul", **changes}
+    fd, path = tempfile.mkstemp()
+    with os.fdopen(fd, "w") as f:
+        robin.json.dump(plan, f)
+    try:
+        robin.read_plan(path)
+        return False
+    except robin.InstallError:
+        return True
+
+
+if os.path.isfile("/usr/share/zoneinfo/Asia/Seoul"):
+    check("Asia/Seoul is fine", plan_refused(), False)
+check("a time zone outside zoneinfo is refused", plan_refused(timezone="../../../etc/passwd"), True)
+check("replace with the whole disk is refused", plan_refused(replace="/dev/vda2"), True)
+
+
+def read(**changes):
+    plan = {"disk": "/dev/vda", "mode": "alongside", "user": "robin", "password": "x",
+            "hostname": "robinos", "timezone": "Asia/Seoul", **changes}
+    fd, path = tempfile.mkstemp()
+    with os.fdopen(fd, "w") as f:
+        robin.json.dump(plan, f)
+    return robin.read_plan(path)
+
+
+if os.path.isfile("/usr/share/zoneinfo/Asia/Seoul"):
+    old_plan = read(replace="/dev/vda4")
+    check("an earlier plan's replace becomes the partition mode", (old_plan["mode"], old_plan["partition"]),
+          ("partition", "/dev/vda4"))
+    check("a size of 80 GB is fine", read(size_gb=80)["size_gb"], 80)
+check("a size under 40 GB is refused", plan_refused(mode="alongside", size_gb=39), True)
+check("a size that isn't a number is refused", plan_refused(mode="alongside", size_gb="80"), True)
+check("a size with the whole disk is refused", plan_refused(mode="whole", size_gb=80), True)
+check("a size with a partition is refused", plan_refused(mode="partition", partition="/dev/vda4", size_gb=80), True)
+check("the partition mode needs a partition", plan_refused(mode="partition"), True)
+check("a plan that isn't a dict is refused", plan_refused_raw([1, 2]), True)
+check("a user name that isn't a string is refused", plan_refused(user=["robin"]), True)
+check("a host name that isn't a string is refused", plan_refused(hostname={"a": 1}), True)
+check("a disk id that isn't a string is refused", plan_refused(disk_id=5), True)
+check("a partition that isn't a device path is refused", plan_refused(mode="partition", partition="vda4; rm -rf /"), True)
+check("a partition with the free-space mode is refused", plan_refused(mode="alongside", partition="/dev/vda4"), True)
+
 if failures:
     print(f"{failures} robin-install check(s) failed.")
     sys.exit(1)

@@ -2,6 +2,11 @@
 base
 linux
 linux-firmware
+# Same hardware support as the live ISO: sound on recent Intel/AMD laptops (SOF),
+# Marvell Wi-Fi, and the wireless regulatory database for the local channels
+sof-firmware
+linux-firmware-marvell
+wireless-regdb
 networkmanager
 sudo
 git
@@ -14,6 +19,8 @@ curl
 openssh
 # diff for learning mission 45 (diffutils isn't in Arch's base)
 diffutils
+# Firewall, on from the start: nothing comes in unless asked for (post-install.sh)
+ufw
 # lsusb: the launcher's 장치 관리자 and the devmgmt.msc hint (lspci comes with base)
 usbutils
 python
@@ -23,6 +30,8 @@ pacman-contrib
 # checkupdates (the shell's update dot) needs fakeroot to sync its own database copy
 fakeroot
 btrfs-progs
+# Compressed swap in RAM (desktop/systemd/zram-generator.conf)
+zram-generator
 snapper
 snap-pac
 grub-btrfs

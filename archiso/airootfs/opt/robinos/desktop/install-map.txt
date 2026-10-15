@@ -11,7 +11,13 @@ desktop/bin/robinos-shell                 /usr/share/robinos/bin/robinos-shell  
 desktop/bin/robinos-vm-display            /usr/share/robinos/bin/robinos-vm-display        755
 desktop/bin/robinos-screenshot            /usr/share/robinos/bin/robinos-screenshot        755
 desktop/bin/robinos-os-release            /usr/share/robinos/bin/robinos-os-release        755
+desktop/bin/robinos-idle-suspend          /usr/share/robinos/bin/robinos-idle-suspend      755
+desktop/bin/robinos-terminal              /usr/share/robinos/bin/robinos-terminal          755
+desktop/bin/robinos-snapshot-notice       /usr/share/robinos/bin/robinos-snapshot-notice   755
 desktop/bin/robinos-wallpaper-portal      /usr/share/robinos/bin/robinos-wallpaper-portal  755
+desktop/bin/robinos-windows-app           /usr/share/robinos/bin/robinos-windows-app       755
+desktop/bin/robinos-default-apps          /usr/share/robinos/bin/robinos-default-apps      755
+desktop/bin/robinos-idle-config           /usr/share/robinos/bin/robinos-idle-config       755
 desktop/portal/robinos.portal             /usr/share/xdg-desktop-portal/portals/robinos.portal 644
 desktop/portal/org.freedesktop.impl.portal.desktop.robinos.service /usr/share/dbus-1/services/org.freedesktop.impl.portal.desktop.robinos.service 644
 desktop/portal/hyprland-portals.conf      /etc/xdg/xdg-desktop-portal/hyprland-portals.conf 644
@@ -30,7 +36,9 @@ desktop/fcitx5/config                     /etc/skel/.config/fcitx5/config       
 desktop/fontconfig/56-robinos-fonts.conf  /etc/fonts/conf.d/56-robinos-fonts.conf          644
 desktop/dconf/profile-user                /etc/dconf/profile/user                          644
 desktop/dconf/00-robinos                  /etc/dconf/db/local.d/00-robinos                 644
+desktop/systemd/zram-generator.conf     /etc/systemd/zram-generator.conf                 644
 desktop/fastfetch/config.jsonc            /etc/xdg/fastfetch/config.jsonc                  644
 desktop/fastfetch/robinos-logo.ansi       /usr/share/robinos/fastfetch/robinos-logo.ansi   644
 desktop/firefox/policies.json             /etc/firefox/policies/policies.json              644
 desktop/mime/mimeapps.list                /etc/xdg/mimeapps.list                           644
+desktop/mime/robinos-windows-app.desktop  /usr/share/applications/robinos-windows-app.desktop 644

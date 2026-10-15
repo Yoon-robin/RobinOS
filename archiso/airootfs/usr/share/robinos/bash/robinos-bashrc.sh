@@ -38,7 +38,7 @@ if [[ -z "${ROBINOS_NO_GREETING:-}" && -z "${__robinos_greeted:-}" ]]; then
   if command -v fastfetch >/dev/null 2>&1; then
     fastfetch
   else
-    printf 'RobinOS 보안 학습 환경\n'
+    printf 'RobinOS\n'
   fi
   printf '리눅스가 처음이라면: robinctl learn\n'
 fi

@@ -7,6 +7,11 @@
 cups
 nss-mdns
 system-config-printer
+# Scanners: SANE drivers (sane-airscan finds network scanners and most new
+# USB ones without a driver) and GNOME's scan app ("팩스 및 스캔" in the launcher)
+sane
+sane-airscan
+simple-scan
 
 # Office: LibreOffice's stable branch with the Korean interface and help
 # ("워드", "엑셀", "파워포인트" in the launcher). About 150 MiB to download.
@@ -17,10 +22,17 @@ libreoffice-still-ko
 gnome-disk-utility
 # What fills the disk, like Windows' storage settings ("저장소", "디스크 정리")
 baobab
+# Backups of personal files to a USB disk or a network folder (Deja Dup), like
+# Windows' File History ("백업", "파일 히스토리" in the launcher). Snapshots only
+# cover the system (docs/recovery.md "스냅샷과 백업")
+deja-dup
 
 # App store for Flathub apps (flatpak ships the Flathub remote). Without
 # PackageKit it never touches pacman; robinctl update updates its apps too.
 gnome-software
+# Firmware updates (LVFS) for the PC's BIOS, SSD and devices; gnome-software
+# lists them under its updates when fwupd is installed
+fwupd
 
 # Video and music: GNOME's players ("동영상 재생 앱", "오디오 재생기"; "미디어
 # 플레이어", "그루브 음악" in the launcher). gst-libav plays H.264/AAC (MP4) through

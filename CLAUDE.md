@@ -1,6 +1,6 @@
 # RobinOS: Claude 작업 규칙
 
-RobinOS는 Arch Linux 기반의 한국어 우선 "나만의 OS"예요. Hyprland 위에 직접 만든 Quickshell 셸을 얹었고, 매일 쓰는 컴퓨터로 충분하면서 리눅스와 보안도 배울 수 있는 걸 목표로 해요. 중심은 RobinOS다운 경험이고, 윈도우 닮기와 보안 학습은 그 기능 중 하나예요(2026-10-10 사용자 결정). 제품 설계는 [docs/design.md](docs/design.md)에 있어요.
+RobinOS는 Arch Linux 기반의 한국어 우선 OS예요. 목적은 "처음 쓰는 리눅스"예요(2026-10-12 사용자 결정): 리눅스를 처음 써 보는 사람이 윈도우처럼 시작해서 매일 쓰는 동안 리눅스를 익혀요. 약속은 "RobinOS로 시작하는 첫 리눅스"(2026-10-13 사용자 결정)이고, 윈도우 습관에서 리눅스로 이어 주는 것이 핵심이에요. 새 기능은 평소 쓰다가 다음 리눅스 개념으로 이어지는지로 골라요. Hyprland 위에 직접 만든 Quickshell 셸을 얹었고, 화면과 도구는 "RobinOS라면 어떻게 할까"에서 시작해 직접 만들어요(2026-10-10). 보안 학습은 학습 과정의 뒷부분이고 앞세우지 않아요. 제품 설계는 [docs/design.md](docs/design.md)에 있어요.
 
 ## 꼭 지킬 것
 
@@ -34,6 +34,7 @@ powershell -ExecutionPolicy Bypass -File scripts/sync-archiso-files.ps1         
 
 - `archiso/airootfs/opt/robinos`와 `usr/share/robinos`는 원본이 아니라 동기화 스크립트가 만드는 사본이에요. 원본(`bin/`, `desktop/`, `scripts/` 등)을 고쳐요. 데스크톱 파일의 설치 위치는 `desktop/install-map.txt`예요.
 - `packages/apps.txt`는 설치본에만 들어가요. 라이브 ISO는 깃허브 첨부 한도(2GiB) 때문에 `archiso/packages.x86_64`에 넣지 않아요.
+- `promo/intro/`는 소개 영상의 소스예요. GSAP 웹 페이지를 헤드리스 크롬으로 한 프레임씩 찍어 mp4로 만들어요. 결과물(`out/`)과 글꼴은 git에 없고, 방법은 그 폴더의 README에 있어요.
 - `practice/`는 학습 미션 연습 프로그램의 소스예요. 각 `build.sh`가 만든 압축본이 `bin/robinctl` 안에 들어 있어서, 소스를 고치면 다시 만들어 넣어요.
 
 ## 이 환경에서 자주 걸리는 것
@@ -42,11 +43,14 @@ powershell -ExecutionPolicy Bypass -File scripts/sync-archiso-files.ps1         
 - **긴 작업은 `&`로 띄우지 않아요**: 명령이 끝난 것처럼 보여도 PowerShell과 QEMU가 살아남아서, 다음 실행과 같은 폴더·포트를 쓰다 서로 망가뜨려요(2026-10-08). 도구의 백그라운드 실행을 쓰고, 이상하면 `Get-CimInstance Win32_Process`로 `wsl-build`·`qemu-system` 프로세스부터 확인해요.
 - **설치 테스트는 작업 트리를 읽어요**: 시작할 때 HEAD가 아니라 윈도우 작업 트리(`bin/`, `scripts/`, `desktop/` 등)를 공유 폴더로 복사하고, `scripts/install-test.py`는 VM을 켤 때마다(단계마다) 다시 읽어요. 그래서 설치 테스트나 `verify`가 끝날 때까지 이 작업 트리를 고치지 않아요. 그동안의 작업은 `git worktree add ../RobinOS-wt -b work/batchN`에서 하고, 검증이 통과하면 합쳐요([docs/loop.md](docs/loop.md) "5. 검증").
 - **wsl.exe는 `-e`로**: `wsl.exe -- 명령`은 셸을 한 번 더 거쳐 `$?`나 따옴표가 깨져요. `wsl.exe -d archlinux -u root -e bash -lc '...'`처럼 쓰고, 긴 명령은 스크립트 파일로 만들어 실행해요.
+- **Node 24와 한글 경로**: `fs.rmSync`에 `바탕화면`이 든 절대 경로를 주면 node가 오류 메시지 없이 죽어요(0xC0000409, Node 24.13). 파일은 `fs.unlinkSync`로 지우거나 상대 경로를 써요.
 - **PowerShell 5.1과 한글**: BOM 없는 UTF-8 `.ps1`의 한글은 깨져요. 한글이 들어간 `.ps1`은 UTF-8 BOM으로 저장해요.
+- **PowerShell 5.1의 `git commit -m @'...'@`**: 메시지 안에 큰따옴표가 있으면 인자가 쪼개져서 `pathspec ... did not match`로 실패해요(2026-10-14). 큰따옴표가 든 메시지는 파일에 써 두고 `git commit -F 파일`로 해요.
 - **CRLF**: 윈도우 체크아웃의 `.ps1`은 CRLF예요. 그 안의 here-string을 bash에 넘기면 `\r`이 붙어요. `Invoke-Wsl`처럼 넘기기 전에 `\r`을 지워요.
 - **VM 테스트는 WHPX로**: Windows용 QEMU(`%USERPROFILE%\RobinOS-tools\qemu`)가 있으면 `boot-test`가 WHPX로 돌아요. WSL의 QEMU는 KVM이 없어 TCG로만 돌아요.
 - **Bash 도구의 heredoc과 sed**: `\n` 같은 이스케이프가 바뀌어 들어가요. 이스케이프나 여러 줄이 있는 수정은 Edit 도구로 해요.
 - **검사 결과를 파이프로 가리지 않아요**: `validate ... | tail -1 && git commit`은 검증이 실패해도 커밋해요(2026-10-08). `scripts/ready.ps1`의 종료 코드로 판단해요. 오버레이 동기화와 sddm 설정 줄 끝 되돌리기도 `ready.ps1`이 해요.
-- **실행 권한**: 윈도우는 실행 비트를 기록하지 않아요. 새 스크립트는 `git update-index --chmod=+x <파일>`로 남겨요. `validate-project.ps1`이 확인해요.
+- **실행 권한**: 윈도우는 실행 비트를 기록하지 않아요. 새 스크립트는 `git update-index --chmod=+x <파일>`로 남기고, 동기화가 만든 ISO 오버레이 사본(`archiso/airootfs/usr/share/robinos/bin/`, `opt/robinos/...`)에도 해요. **라이브 ISO 안의 권한은 git이 아니라 `archiso/profiledef.sh`의 `file_permissions`가 정해요**(mkarchiso가 권한 없이 복사해요). 새 실행 파일은 거기에도 넣어요. 빠지면 라이브에서 644가 돼서 실행이 안 돼요(2026-10-12: 터미널이 하나도 안 열림). `validate-project.ps1`이 셋 다 확인해요.
+- **부팅 테스트 "통과"는 화면을 찍었다는 뜻이에요**: 스크린샷을 직접 보고, 꼭 동작해야 하는 것은 `expect_serial`처럼 확인하는 줄을 넣어요.
 - **QML 한 줄 실수로 셸 전체가 안 떠요**: QML을 고치면 `wsl-build.ps1 check`(qmllint)를 꼭 돌려요. 셸이 안 뜨면 부팅 테스트의 `serial.log`에서 오류를 찾아요.
 - **느린 VM(TCG)의 키 반복**: 부팅 테스트에서 키가 반복 입력될 수 있어요. 테스트 결과가 이상하면 제품 문제인지 먼저 가려요.

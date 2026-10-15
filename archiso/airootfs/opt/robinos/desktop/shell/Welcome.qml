@@ -18,7 +18,7 @@ PanelWindow {
     property string goal: "basics"
 
     readonly property var steps: [
-        { title: "RobinOS에 오신 걸 환영해요", desc: "윈도우에서 넘어와 매일 쓰는 컴퓨터예요. 쓰다 보면 리눅스와 보안 실력이 늘어요. 몇 가지만 고르면 바로 시작할 수 있어요." },
+        { title: "RobinOS에 오신 걸 환영해요", desc: "몇 가지만 고르면 바로 시작할 수 있어요." },
         { title: "화면 모양을 골라요", desc: "나중에 빠른 설정(Win+S)에서 언제든 바꿀 수 있어요." },
         { title: "한/영 전환 키를 골라요", desc: "한/영 키와 오른쪽 Alt로는 언제나 한/영을 바꿀 수 있어요. 함께 쓸 단축키를 하나 더 고르세요." },
         { title: "무엇부터 해 볼까요?", desc: "고른 것은 마지막에 바로 열려요. 나머지도 런처에서 언제든 시작할 수 있어요." },
@@ -215,7 +215,7 @@ PanelWindow {
                         model: [
                             { icon: "grid", title: "익숙한 화면", desc: "아래 작업 표시줄, 자유롭게 띄우는 창, Alt+Tab이 윈도우와 같아요" },
                             { icon: "terminal", title: "조금씩 리눅스로", desc: "터미널에 윈도우 명령을 치면 같은 일을 하는 리눅스 명령을 알려 줘요" },
-                            { icon: "shield", title: "안전한 실습", desc: "보안 실습은 내 컴퓨터 안의 랩에서만 열려요" }
+                            { icon: "history", title: "망가져도 되돌리기", desc: "업데이트 전에 자동으로 스냅샷을 찍어 두고, 부팅 메뉴에서 되돌려요" }
                         ]
 
                         RowLayout {
@@ -606,7 +606,7 @@ PanelWindow {
 
                     Repeater {
                         model: [
-                            { key: "basics", icon: "graduation-cap", title: "리눅스 기초", desc: "터미널에서 미션 5개를 풀며 기본 명령을 익혀요" },
+                            { key: "basics", icon: "graduation-cap", title: "리눅스 기초", desc: "윈도우에서 하던 폴더 정리, IP 확인을 터미널로 해 봐요" },
                             { key: "web", icon: "flask", title: "웹 보안", desc: "내 컴퓨터 안의 Juice Shop과 DVWA로 연습해요" },
                             { key: "explore", icon: "globe", title: "먼저 둘러볼게요", desc: "학습은 나중에 런처에서 시작해도 돼요" }
                         ]
@@ -758,7 +758,7 @@ PanelWindow {
                     Text {
                         Layout.fillWidth: true
                         Layout.topMargin: 4
-                        text: "런처에서는 \"메모장\", \"제어판\"처럼 윈도우 이름으로 찾아도 돼요. 단축키 전체는 Win+F1로 언제든 볼 수 있어요."
+                        text: "런처에서는 \"메모장\", \"작업 관리자\"처럼 윈도우 이름으로 찾아도 돼요. 터미널에 ipconfig 같은 윈도우 명령을 치면 리눅스 명령과 연습할 미션을 알려 줘요. 단축키 전체는 Win+F1로 언제든 볼 수 있어요."
                         color: Theme.muted
                         font.family: Theme.font
                         font.pixelSize: 13
