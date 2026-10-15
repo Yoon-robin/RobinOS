@@ -8,9 +8,10 @@ post_install() {
   dconf update 2>/dev/null || true
   /usr/share/robinos/bin/robinos-os-release 2>/dev/null || true
   # Nearly empty battery: power off. UPower's default, HybridSleep, needs disk swap to
-  # wake from, and RobinOS only has compressed swap in RAM
+  # wake from, and RobinOS only has compressed swap in RAM. Only that default: this
+  # runs on every update, and a person who added disk swap may have chosen Hibernate
   if [ -f /etc/UPower/UPower.conf ]; then
-    sed -i 's/^CriticalPowerAction=.*/CriticalPowerAction=PowerOff/' /etc/UPower/UPower.conf || true
+    sed -i 's/^CriticalPowerAction=HybridSleep$/CriticalPowerAction=PowerOff/' /etc/UPower/UPower.conf || true
   fi
 }
 

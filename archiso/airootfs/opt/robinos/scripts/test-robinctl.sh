@@ -716,7 +716,7 @@ printf '0.3.0.r1-1\n' >"${WORK}/robinos-version"
 cat >"${RESTART_BIN}/pacman" <<EOF
 #!/bin/sh
 case "\$*" in
-  "-Q robinos") echo "robinos \$(cat '${WORK}/robinos-version')" ;;
+  "-Q robinos") [ -f '${WORK}/robinos-version' ] || exit 1; echo "robinos \$(cat '${WORK}/robinos-version')" ;;
   *-Syu*) echo "pacman \$*" >>'${WORK}/pacman-calls'; [ -f '${WORK}/new-version' ] && cp '${WORK}/new-version' '${WORK}/robinos-version'; exit 0 ;;
   *) exit 1 ;;
 esac
@@ -741,6 +741,12 @@ if [[ "${EUID}" -eq 0 ]]; then
   check "the same as plain root, without sudo" 0 env -u SUDO_USER PATH="${RESTART_BIN}:/usr/bin" bash "${ROBINCTL}" update --yes
   said "without a user it says to log in again" "다시 로그인"
   if [[ -s "${WORK}/pkill-calls" ]]; then bad "the shell was ended without a known user"; else ok "no shell is ended without a user"; fi
+  # Files copied without the package (a checkout, an older install): pacman -Q robinos
+  # fails, which under pipefail used to end the update before pacman -Syu
+  rm -f "${WORK}/robinos-version" "${WORK}/new-version"
+  : >"${WORK}/pacman-calls"
+  check "an update without the robinos package" 0 env SUDO_USER=learner PATH="${RESTART_BIN}:/usr/bin" bash "${ROBINCTL}" update --yes
+  if grep -q -- '-Syu' "${WORK}/pacman-calls"; then ok "pacman -Syu runs without the robinos package"; else bad "pacman -Syu didn't run without the robinos package"; fi
 fi
 
 printf '%s\n' "Idle suspend (robinos-idle-suspend): a laptop on battery sleeps, nothing else does"
@@ -821,7 +827,7 @@ mkdir -p "${REPORT_BIN}"
 printf '#!/bin/sh\necho robin\n' >"${REPORT_BIN}/id"
 printf '#!/bin/sh\n[ "$1" = "-n" ] && echo sandras-laptop || exec /usr/bin/uname "$@"\n' >"${REPORT_BIN}/uname"
 printf '#!/bin/sh\nprintf "00:02.0 VGA compatible controller [0300]: Intel Corporation Iris Xe [8086:46a6]\\n\\tKernel driver in use: i915\\n00:14.3 Network controller [0280]: Intel Wi-Fi 6 AX201 [8086:a0f0]\\n\\tKernel driver in use: iwlwifi\\n00:1f.3 ISA bridge [0601]: Intel LPC [8086:a082]\\n\\tKernel driver in use: lpc_ich\\n"\n' >"${REPORT_BIN}/lspci"
-printf '#!/bin/sh\ncase "$*" in\n  *"-p err"*) echo "Oct 14 robin@sandras-laptop kernel: eth0 aa:bb:cc:dd:ee:ff 192.168.0.12 fe80::1c2d:3e4f:5a6b:7c8d Serial Number: ABC123XYZ disk 0a1b2c3d-1111-2222-3333-444455556666 robinos robin" ;;\n  *) echo "iwlwifi 0000:00:14.3: loaded firmware version 77.0" ;;\nesac\n' >"${REPORT_BIN}/journalctl"
+printf '#!/bin/sh\ncase "$*" in\n  *"-p err"*) echo "Oct 14 robin@sandras-laptop kernel: eth0 aa:bb:cc:dd:ee:ff 192.168.0.12 fe80::1c2d:3e4f:5a6b:7c8d Serial Number: ABC123XYZ disk 0a1b2c3d-1111-2222-3333-444455556666 robinos robin"; echo "Oct 14 systemd[1]: dev-disk-by\\\\x2duuid-0a1b2c3d\\\\x2d1111\\\\x2d2222\\\\x2d3333\\\\x2d444455556666.device: Job timed out"; echo "Oct 14 bluetoothd: /org/bluez/hci0/dev_AA_BB_CC_DD_EE_FF failed"; echo "Oct 14 sudo: robin : 1 incorrect password attempt ; PWD=/home/sandra/Documents" ;;\n  *) echo "iwlwifi 0000:00:14.3: loaded firmware version 77.0" ;;\nesac\n' >"${REPORT_BIN}/journalctl"
 chmod 755 "${REPORT_BIN}"/*
 REPORT_FILE="${WORK}/report.txt"
 check "robinctl report writes a file" 0 env PATH="${REPORT_BIN}:${PATH}" HOME="${WORK}" bash "${ROBINCTL}" report "${REPORT_FILE}"
@@ -831,7 +837,7 @@ for heading in "## RobinOS" "## 컴퓨터" "## 장치와 드라이버" "## 화�
 done
 if grep -q 'Kernel driver in use: i915' "${REPORT_FILE}" && grep -q 'Kernel driver in use: iwlwifi' "${REPORT_FILE}"; then ok "the graphics and Wi-Fi drivers are in it"; else bad "the drivers of the graphics card and Wi-Fi are missing"; fi
 if grep -q 'ISA bridge' "${REPORT_FILE}"; then bad "parts that don't matter (the ISA bridge) are in it"; else ok "parts that don't matter are left out"; fi
-if grep -qE 'aa:bb:cc:dd:ee:ff|192\.168\.0\.12|fe80::|ABC123XYZ|0a1b2c3d-1111|sandra|\brobin\b' "${REPORT_FILE}"; then
+if grep -qE 'aa:bb:cc:dd:ee:ff|AA_BB_CC|192\.168\.0\.12|fe80::|ABC123XYZ|0a1b2c3d|sandra|\brobin\b' "${REPORT_FILE}"; then
   bad "something private is still in the report: $(grep -E 'aa:bb:cc|192\.168|fe80|ABC123|0a1b2c3d|sandra|\brobin\b' "${REPORT_FILE}" | head -n 3)"
 else
   ok "the MAC address, IPs, serial number, UUID and the names are masked"
@@ -840,6 +846,15 @@ if grep -q 'xx:xx:xx:xx:xx:xx' "${REPORT_FILE}" && grep -q '<ip>' "${REPORT_FILE
 if grep -q '8086:46a6' "${REPORT_FILE}"; then ok "PCI ids (vendor:device) are not taken for addresses"; else bad "a PCI id was masked"; fi
 if grep -qF "커널: $(uname -r)" "${REPORT_FILE}"; then ok "the kernel version is not taken for an address"; else bad "the kernel version was changed: $(grep '커널:' "${REPORT_FILE}")"; fi
 if grep -q ' robinos ' "${REPORT_FILE}" && ! grep -q '<user>os' "${REPORT_FILE}"; then ok "a user name inside a word (robinos) is left alone"; else bad "robinos was cut by the user mask"; fi
+if grep -qF 'by\x2duuid-<uuid>' "${REPORT_FILE}" && grep -q 'dev_xx_xx_xx_xx_xx_xx' "${REPORT_FILE}" && grep -qF 'PWD=/home/<user>/Documents' "${REPORT_FILE}"; then
+  ok "systemd's escaped UUIDs, BlueZ addresses and home folders are masked too"
+else
+  bad "escaped UUID, BlueZ address or home folder: $(grep -E 'systemd|bluetoothd|sudo:' "${REPORT_FILE}" | head -n 3)"
+fi
+# With sudo the report runs as root: the person's name (SUDO_USER) is masked, not root's
+printf '#!/bin/sh\necho root\n' >"${REPORT_BIN}/id"
+check "robinctl report with sudo" 0 env PATH="${REPORT_BIN}:${PATH}" HOME="${WORK}" SUDO_USER=robin bash "${ROBINCTL}" report "${REPORT_FILE}"
+if grep -qE '\brobin\b' "${REPORT_FILE}"; then bad "with sudo the person's name stays: $(grep -E '\brobin\b' "${REPORT_FILE}" | head -n 2)"; else ok "with sudo the person's name is masked"; fi
 check "a report that can't be written says so" fail env PATH="${REPORT_BIN}:${PATH}" HOME="${WORK}" bash "${ROBINCTL}" report "${WORK}/no-such-folder/report.txt"
 
 printf '%s\n' "Web lab (robinctl lab) with stand-in docker, sudo and systemctl"

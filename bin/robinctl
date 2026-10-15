@@ -415,13 +415,20 @@ report_mask() {
   local user host
   local -a expr=(
     -e 's/([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}/xx:xx:xx:xx:xx:xx/g'
+    # BlueZ and PipeWire write a device's address with underscores (dev_AA_BB_...)
+    -e 's/([0-9A-Fa-f]{2}_){5}[0-9A-Fa-f]{2}/xx_xx_xx_xx_xx_xx/g'
     -e 's/\b[0-9]{1,3}(\.[0-9]{1,3}){3}\b/<ip>/g'
     -e 's/\b([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}\b/<ipv6>/g'
     -e 's/[0-9A-Fa-f:]*[0-9A-Fa-f]::[0-9A-Fa-f:]*/<ipv6>/g'
     -e 's/\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b/<uuid>/g'
+    # systemd unit names escape the dashes: dev-disk-by\x2duuid-3f1c2b4a\x2d9c1e...
+    -e 's/[0-9a-fA-F]{8}(\\x2d[0-9a-fA-F]{4}){3}\\x2d[0-9a-fA-F]{12}/<uuid>/g'
+    # Home folders are named after people, whoever ran the report
+    -e 's#/home/[^/[:space:]]+#/home/<user>#g'
     -e 's/([Ss]erial( [Nn]umber)?|SerialNumber)[:=] *[^ ,;]+/\1: <hidden>/g'
   )
-  user="$(id -un 2>/dev/null)"
+  # With sudo the journal holds the person's lines too: mask their name, not root's
+  user="${SUDO_USER:-$(id -un 2>/dev/null)}"
   host="$(uname -n 2>/dev/null)"
   # Only names that are safe inside a pattern; the default computer name isn't private
   if [[ "${user}" =~ ^[a-z_][a-z0-9_-]*$ && "${user}" != root ]]; then
@@ -497,14 +504,19 @@ report_network() {
 }
 
 report_sound() {
-  timeout 10 wpctl status 2>/dev/null | sed -n '/^Audio/,/^Video/p' | head -n 30
+  # Bluetooth devices carry the names people give them ("Sandra's AirPods")
+  timeout 10 wpctl status 2>/dev/null | sed -n '/^Audio/,/^Video/p' | head -n 30 \
+    | sed -E 's/([0-9]+\. ).*(\[bluez5\])/\1<블루투스 장치> \2/'
 }
 
 report_battery() {
-  local supply
+  local supply name
   for supply in /sys/class/power_supply/*; do
     [[ -r "${supply}/type" ]] || continue
-    printf '%s: %s' "${supply##*/}" "$(<"${supply}/type")"
+    # A wireless mouse's battery is named after its serial number (hid-<serial>-battery)
+    name="${supply##*/}"
+    [[ "${name}" == hid-*-battery ]] && name="hid-<장치>-battery"
+    printf '%s: %s' "${name}" "$(<"${supply}/type")"
     [[ -r "${supply}/status" ]] && printf ', %s' "$(<"${supply}/status")"
     [[ -r "${supply}/capacity" ]] && printf ', %s%%' "$(<"${supply}/capacity")"
     printf '\n'
@@ -517,7 +529,8 @@ report_problems() {
   printf '\n이번 부팅의 오류 (마지막 40줄):\n'
   timeout 10 journalctl -b -p err --no-pager -q 2>/dev/null | tail -n 40
   printf '\n이번 부팅의 커널 경고 (마지막 30줄):\n'
-  timeout 10 journalctl -k -b -p warning --no-pager -q 2>/dev/null | tail -n 30
+  # Without the firewall's log of what it turned away, which would fill these lines
+  timeout 10 journalctl -k -b -p warning --no-pager -q 2>/dev/null | grep -v 'UFW BLOCK' | tail -n 30
   printf '\nRobinOS 셸 기록 (마지막 20줄):\n'
   tail -n 20 "${XDG_STATE_HOME:-${HOME}/.local/state}/robinos/shell.log" 2>/dev/null
 }
@@ -560,13 +573,15 @@ update_facts() {
   elif [[ "${rc}" -eq 0 ]]; then
     UPD_COUNT="$(printf '%s\n' "${UPD_LIST}" | wc -l)"
     UPD_BYTES="$(pacman -Sup --dbpath "${db}" --logfile /dev/null --print-format '%s' 2>/dev/null \
-      | awk '/^[0-9]+$/ { sum += $1 } END { print sum + 0 }')"
+      | awk '/^[0-9]+$/ { sum += $1 } END { print sum + 0 }')" || UPD_BYTES=0
   fi
   rm -rf "${db}"
 }
 
 update_has_kernel() {
-  printf '%s\n' "${UPD_LIST}" | grep -qE '^linux(-lts|-zen|-hardened)? '
+  # Not printf | grep -q: grep stops at the match and a long list's printf dies of
+  # SIGPIPE, which pipefail reports as "no kernel"
+  grep -qE '^linux(-lts|-zen|-hardened)? ' <<<"${UPD_LIST}"
 }
 
 # NetworkManager's Metered: 1 yes, 3 guessed yes (a phone hotspot)
@@ -580,7 +595,7 @@ update_metered() {
 # The number of the snapshot the update takes first
 update_next_snapshot() {
   # Only root can read the list; for anyone else this says nothing rather than "1"
-  snapper --no-dbus -c root list --columns number 2>/dev/null | awk 'BEGIN { n = -1 } $1 ~ /^[0-9]+$/ { n = $1 } END { if (n >= 0) print n + 1 }'
+  snapper --no-dbus -c root list --columns number 2>/dev/null | awk 'BEGIN { n = -1 } $1 ~ /^[0-9]+$/ { n = $1 } END { if (n >= 0) print n + 1 }' || true
 }
 
 # Apps from the app store (Flathub) that have a newer version; 0 without any
@@ -593,7 +608,9 @@ update_flatpak_count() {
 # The version of the robinos package (RobinOS's own files), or nothing
 robinos_version() {
   have_cmd pacman || return 0
-  pacman -Q robinos 2>/dev/null | awk 'NR == 1 { print $2 }' | tr -cd 'A-Za-z0-9._:+-'
+  # Not installed (a checkout, the live system) is no error: under pipefail it would
+  # end `robinctl update` before pacman runs
+  pacman -Q robinos 2>/dev/null | awk 'NR == 1 { print $2 }' | tr -cd 'A-Za-z0-9._:+-' || true
 }
 
 # robinctl update --status: one line of JSON for the settings app, no root needed
@@ -1054,7 +1071,9 @@ snapshot_booted() {
   local number description
   number="$(sed -E -n 's:.*rootflags=([^ ]*,)?subvol=/?@snapshots/([0-9]+)/snapshot.*:\2:p' "${ROBINOS_CMDLINE:-/proc/cmdline}")"
   [[ -n "${number}" ]] || return 1
-  description="$(sed -n 's:.*<description>\(.*\)</description>.*:\1:p' "${ROBINOS_SNAPSHOT_DIR:-/.snapshots}/${number}/info.xml" 2>/dev/null)"
+  # The snapshots folder is for wheel only: without the description, still the number
+  description="$(sed -n 's:.*<description>\(.*\)</description>.*:\1:p' "${ROBINOS_SNAPSHOT_DIR:-/.snapshots}/${number}/info.xml" 2>/dev/null)" \
+    || description=""
   printf '%s\t%s\n' "${number}" "${description}"
 }
 
