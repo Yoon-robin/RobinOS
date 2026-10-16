@@ -3,7 +3,7 @@
 # 돌린 뒤 결과를 zip 하나로 모아요. 그 zip을 Claude 대화창에 올리면 돼요.
 #
 # PowerShell에서 (관리자가 아니어도 돼요):
-#   [Net.ServicePointManager]::SecurityProtocol = 'Tls12'; iwr -UseBasicParsing https://raw.githubusercontent.com/Yoon-robin/RobinOS/claude/eoseohae-7nleia/scripts/verify-all-in-one.ps1 -OutFile $env:TEMP\rv.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File $env:TEMP\rv.ps1
+#   [Net.ServicePointManager]::SecurityProtocol = 'Tls12'; iwr -UseBasicParsing https://raw.githubusercontent.com/Yoon-robin/RobinOS/main/scripts/verify-all-in-one.ps1 -OutFile $env:TEMP\rv.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File $env:TEMP\rv.ps1
 #
 # - Tools go to %USERPROFILE%\RobinOS-tools, downloaded from their official sources and
 #   checked against the published checksums: QEMU for Windows (qemu.weilnetz.de, SHA-512),
@@ -14,7 +14,7 @@
 # - Safe to run again: it picks up where it stopped.
 
 param(
-    [string]$Branch = "claude/eoseohae-7nleia",
+    [string]$Branch = "main",
     [string]$Repo = "https://github.com/Yoon-robin/RobinOS.git",
     [string]$Work = "",
     [ValidateSet("robinos", "windows", "archinstall")]

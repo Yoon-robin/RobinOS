@@ -4,6 +4,9 @@
 
 ## 완료
 
+- 2026-10-16 작업 브랜치 `claude/eoseohae-7nleia`를 main에 합침(`dc373ec`, 학교 PC 올인원 4차: 빠른 검사 0.8분, verify 25.3분, 설치 테스트 다섯 단계 통과, 부팅 테스트 96장·판정 20개 PASS)
+  - 설치기 코드 검토 고침(`51d9fc3`), robinctl·데스크톱 스크립트 코드 검토 고침(`c2878a0`, `fd57e55`), 깃허브가 안 될 때 Arch 업데이트(T-177 ①), 부족한 점을 [unfinished.md](unfinished.md) 한 곳으로, VMware 확인 목록
+  - 처음 쓰는 PC용 `scripts/verify-all-in-one.ps1`과 1~3차가 찾은 것: UPower 기본값 `Auto`, 기본 앱 시험, 빠른 검사가 키 입력을 기다리며 몇 시간 멈춤(`robinctl update --preview`), 창에 출력이 안 나오던 것, `scripts/check.sh`, 두 단계 업데이트의 snap-pac 판정, QMP 2분 제한, 학습 센터가 뜰 때까지 기다리기
 - 2026-10-10 묶음 64 검증(`f96dd13`, verify 빌드 3.5분 + 테스트 14.4분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)
   - T-139 라이브 ISO 부팅이 NTP를 기다리지 않게(`f96dd13`): 시리얼 로그 `Startup finished ... = 13.993s`(전에는 83.7초), pacman 열쇠 준비 13.8초, 전원 모드 데몬 14.0초, 시계 동기화 대기 없음. `verify-boot.log`에 `Startup finished` 줄이 남음
 - 2026-10-10 묶음 63 검증(`a31a8f8`, verify 빌드 3.4분 + 테스트 14.4분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)

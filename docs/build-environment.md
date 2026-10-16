@@ -66,7 +66,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test
 RobinOS를 빌드해 본 적 없는 윈도우 PC(학교 PC 등)에서는 `scripts/verify-all-in-one.ps1` 하나로 준비부터 검증까지 해요. 저장소를 미리 받지 않아도 돼요. PowerShell에서 이 한 줄을 실행해요(관리자가 아니어도 돼요).
 
 ```powershell
-[Net.ServicePointManager]::SecurityProtocol = 'Tls12'; iwr -UseBasicParsing https://raw.githubusercontent.com/Yoon-robin/RobinOS/claude/eoseohae-7nleia/scripts/verify-all-in-one.ps1 -OutFile $env:TEMP\rv.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File $env:TEMP\rv.ps1
+[Net.ServicePointManager]::SecurityProtocol = 'Tls12'; iwr -UseBasicParsing https://raw.githubusercontent.com/Yoon-robin/RobinOS/main/scripts/verify-all-in-one.ps1 -OutFile $env:TEMP\rv.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File $env:TEMP\rv.ps1
 ```
 
 1. 이 PC를 확인해요: 윈도우 빌드, 메모리, 남은 공간(40GB 이상), 관리자 권한, 가상화
