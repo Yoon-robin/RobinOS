@@ -231,6 +231,54 @@ SESSION_ENV = "XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1 DBUS_SES
 shot_number = 0
 
 
+def screen(qmp):
+    """The screen as (width, RGB bytes), from a throwaway PPM screendump (no image
+    library needed: QEMU writes "P6 <w> <h> 255" and the pixels)."""
+    path = os.path.join(OUT, "probe.ppm")
+    qmp.execute("screendump", filename=path)
+    with open(path, "rb") as f:
+        data = f.read()
+    os.remove(path)
+    fields, pos = [], 0
+    while len(fields) < 4:
+        while data[pos:pos + 1].isspace():
+            pos += 1
+        start = pos
+        while not data[pos:pos + 1].isspace():
+            pos += 1
+        fields.append(data[start:pos])
+    return int(fields[1]), data[pos + 1:]
+
+
+def wait_red_box(qmp, x0, y0, x1, y1, what, timeout=60):
+    """Waits until the box holds a good part of RobinOS red (an app's icon showing),
+    so a click lands on a window that is really there. A slow VM (two at once in
+    verify) opened the learning center after the click meant for it, every run."""
+    deadline = time.time() + timeout * SPEED
+    while time.time() < deadline:
+        width, pixels = screen(qmp)
+        red = 0
+        for y in range(y0, y1):
+            for x in range(x0, x1):
+                i = (y * width + x) * 3
+                r, g, b = pixels[i], pixels[i + 1], pixels[i + 2]
+                if r > 180 and g < 120 and b < 130:
+                    red += 1
+        if red * 4 >= (x1 - x0) * (y1 - y0):
+            return True
+        time.sleep(1)
+    print(f"warning: {what} didn't show within {timeout} s", flush=True)
+    return False
+
+
+def open_learn_center(qmp, ipc):
+    """The learning center through the shell's IPC, typed into the focused terminal,
+    and waited for: its red icon at the top left of the window."""
+    type_text(qmp, "clear; " + ipc + "learnCenter\n")
+    wait(3)
+    wait_red_box(qmp, 452, 160, 482, 190, "the learning center")
+
+
 def shot(qmp, name):
     global shot_number
     shot_number += 1
@@ -746,8 +794,7 @@ def main():
     wait(2)
     # The learning center opened again after Alt+F4 closed it: mission 1 is ticked off
     check_scene(qmp, "count-save", "count-save-mission")
-    type_text(qmp, "clear; " + ipc + "learnCenter\n")
-    wait(3)
+    open_learn_center(qmp, ipc)
     shot(qmp, "light-learn-center")
     # Clicking a mission opens it in a terminal (mission 2's row): one new Ptyxis
     # window, which has the focus and takes commands after the mission text
@@ -756,9 +803,14 @@ def main():
     # this one (seen 2026-10-13 and 2026-10-15); the check types into the focused window
     wait(10)
     shot(qmp, "learn-center-mission")
-    check_scene(qmp, "one-more", "mission-terminal")
+    mission_terminal = check_scene(qmp, "one-more", "mission-terminal")
     keys(qmp, "alt", "f4")  # the new terminal has the focus
     wait(2)
+    if not mission_terminal:
+        # No new terminal: that Alt+F4 closed the learning center and the old terminal
+        # has the focus. Open it again, or the clicks below land on the terminal and
+        # close it, and every check after this one goes nowhere (2026-10-15, 10-16)
+        open_learn_center(qmp, ipc)
     # At the end of the list, the ten CTF challenges as one more group
     for _ in range(60):
         click(qmp, 800, 500, "wheel-down")
