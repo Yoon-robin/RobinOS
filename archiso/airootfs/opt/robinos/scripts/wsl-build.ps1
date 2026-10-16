@@ -357,8 +357,16 @@ switch ($Task) {
         $null = $boot.Handle
         $installError = $null
         try { Invoke-WhpxInstallTest } catch { $installError = $_ }
-        $boot.WaitForExit()
+        # The boot test writes only to its own log: say what it is doing while this waits,
+        # instead of a window that looks stuck (2026-10-16)
+        if (-not $boot.HasExited) { Write-Host "`n설치 테스트가 끝났어요. 함께 돌던 부팅 테스트를 기다려요 (기록: $bootLog)" }
+        while (-not $boot.WaitForExit(60000)) {
+            $last = Get-Content $bootLog -Tail 1 -ErrorAction SilentlyContinue
+            Write-Host "  부팅 테스트 진행 중: $last"
+        }
         Remove-Item Env:ROBINOS_VM_PREPARED -ErrorAction SilentlyContinue
+        Write-Host "`n부팅 테스트 기록의 끝:"
+        Get-Content $bootLog -Tail 15 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  $_" }
 
         Write-Host ("`n빌드 {0:N1}분, 테스트 {1:N1}분 (부팅 테스트 기록: {2})" -f `
             ($built - $started).TotalMinutes, ((Get-Date) - $built).TotalMinutes, $bootLog)
