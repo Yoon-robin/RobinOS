@@ -51,12 +51,19 @@ class Qmp:
                 time.sleep(1)
         if self.sock is None:
             raise RuntimeError("could not connect to QMP (did QEMU start?)")
+        # QEMU answers a command in well under a second, a screenshot in a few. Without
+        # a limit a QEMU that stopped answering held the test (and verify) for good
+        # (2026-10-16, after 93-scale-125 on the school PC)
+        self.sock.settimeout(120)
         self.file = self.sock.makefile("rwb")
         self._read()  # greeting
         self.execute("qmp_capabilities")
 
     def _read(self):
-        line = self.file.readline()
+        try:
+            line = self.file.readline()
+        except (TimeoutError, socket.timeout):
+            raise RuntimeError("QEMU didn't answer QMP for 2 minutes") from None
         if not line:
             raise RuntimeError("QMP connection closed")
         return json.loads(line)
