@@ -12,6 +12,8 @@ set -uo pipefail
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 LIMIT="${CHECK_LIMIT:-600}"
 cd "${ROOT_DIR}"
+# Python writes through a pipe in blocks; line by line, so progress shows as it happens
+export PYTHONUNBUFFERED=1
 
 failed=()
 
@@ -24,7 +26,7 @@ descendants() {
 
 # run_check <name> <command...>
 run_check() {
-  local name="$1" start="${SECONDS}" pid rc over="false" pids
+  local name="$1" start="${SECONDS}" pid rc over="false" pids beat=60
   shift
   printf '\n== %s\n' "${name}"
   # Not timeout(1): it moves the check out of the terminal's foreground process group,
@@ -32,6 +34,11 @@ run_check() {
   "$@" </dev/null &
   pid=$!
   while kill -0 "${pid}" 2>/dev/null; do
+    # A line a minute, so a slow check never looks like a hung one
+    if ((SECONDS - start >= beat)); then
+      printf '   ... %s: still running (%s min)\n' "${name}" "$((beat / 60))"
+      beat=$((beat + 60))
+    fi
     if ((SECONDS - start >= LIMIT)); then
       over="true"
       pids="$(descendants "${pid}" | paste -sd, -)"

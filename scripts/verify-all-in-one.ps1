@@ -25,6 +25,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"   # Invoke-WebRequest is many times slower with the bar
+# Python writes through a pipe in blocks; line by line, so the tests' progress shows as it happens
+$env:PYTHONUNBUFFERED = "1"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 # An ASCII path: QEMU for Windows breaks paths with Korean letters (docs/build-environment.md)
@@ -300,7 +302,13 @@ function Invoke-Task([string]$title, [string[]]$taskArgs, [int]$limit, [string]$
     $log = Join-Path $results (($taskArgs[0]) + ".txt")
     $stuck = Join-Path $results (($taskArgs[0]) + "-stuck.txt")
     $job = Start-Job -ScriptBlock $watchdog -ArgumentList $PID, $limit, $stuck
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $wslBuild @taskArgs 2>&1 | Tee-Object -FilePath $log -Append
+    # Every line on the screen as it comes, with the time, and in the step's log. Out-Host:
+    # what a function outputs is its return value, so `$ok = Invoke-Task` used to swallow
+    # it all and the window showed nothing for hours (2026-10-15). "$_" also turns
+    # PowerShell's stderr records back into plain lines.
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $wslBuild @taskArgs 2>&1 |
+        ForEach-Object { "[{0:HH:mm:ss}] {1}" -f (Get-Date), "$_" } |
+        Tee-Object -FilePath $log -Append | Out-Host
     $code = $LASTEXITCODE
     $minutes = ((Get-Date) - $t0).TotalMinutes
     # The job may still be ending what the task left in WSL
@@ -317,6 +325,7 @@ function Invoke-Task([string]$title, [string[]]$taskArgs, [int]$limit, [string]$
         # (the boot test inside verify writes to build\verify-boot.log)
         $logs = @($log, (Join-Path $repoDir "build\verify-boot.log")) | Where-Object { Test-Path $_ }
         Get-Content $logs -ErrorAction SilentlyContinue |
+            ForEach-Object { $_ -replace '^\[\d\d:\d\d:\d\d\] ', '' } |
             Where-Object { $_ -match '^\s*FAILED |\[install-test\] FAILED|: missing \(|: FAIL |scenario stopped|Desktop check failed|Quick checks FAILED' -and $_ -notmatch '^\s*\+' } |
             Select-Object -First 12 | ForEach-Object {
                 $line = ($_ -replace "\x1b\[[0-9;]*m", "").Trim()
