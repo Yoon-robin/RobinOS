@@ -698,6 +698,18 @@ pacman_conf_without_robinos() {
   awk '/^\[robinos\]/ { skip = 1; next } /^\[/ { skip = 0 } !skip' "$1"
 }
 
+# pacman_with <conf> <args...>: --config only for another file, so the usual update
+# shows up in snapper's list as "pacman -Su", not with the config path
+pacman_with() {
+  local conf="$1"
+  shift
+  if [[ "${conf}" == /etc/pacman.conf ]]; then
+    pacman "$@"
+  else
+    pacman --config "${conf}" "$@"
+  fi
+}
+
 update_system() {
   local dry_run="false" preview="false" status="false" arg
   for arg in "$@"; do
@@ -767,19 +779,19 @@ update_system() {
   # (security fixes among them) still come, and RobinOS's files the next time.
   # -Sy then -Su is -Syu in two steps; snap-pac only acts on the second.
   local conf="${ROBINOS_PACMAN_CONF:-/etc/pacman.conf}" fallback="" rc=0
-  if ! pacman --config "${conf}" -Sy; then
+  if ! pacman_with "${conf}" -Sy; then
     grep -q '^\[robinos\]' "${conf}" || die "패키지 목록을 받지 못했어요. 인터넷 연결을 확인해 주세요"
     fallback="$(mktemp)"
     pacman_conf_without_robinos "${conf}" >"${fallback}"
     printf '%s알림:%s RobinOS 저장소(깃허브)에 닿지 못했어요. 이번에는 Arch 패키지만 업데이트하고, RobinOS 파일은 다음 업데이트 때 받아요.\n' \
       "${C_YELLOW}" "${C_RESET}" >&2
-    if ! pacman --config "${fallback}" -Sy; then
+    if ! pacman_with "${fallback}" -Sy; then
       rm -f "${fallback}"
       die "패키지 목록을 받지 못했어요. 인터넷 연결을 확인해 주세요"
     fi
     conf="${fallback}"
   fi
-  pacman --config "${conf}" -Su "${pacman_args[@]}" || rc=$?
+  pacman_with "${conf}" -Su "${pacman_args[@]}" || rc=$?
   [[ -z "${fallback}" ]] || rm -f "${fallback}"
   ((rc == 0)) || return "${rc}"
   restart_shell_after "${before}"

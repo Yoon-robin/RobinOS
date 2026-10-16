@@ -634,7 +634,8 @@ def check_update(con):
         # snap-pac took a pair around it, and the version name shows in /etc/os-release
         _, listing = con.capture("snapper --no-dbus --csvout -c root list --columns number,type,description")
         print(listing, flush=True)
-        if not any(f.split(",")[1:2] == ["pre"] and "Syu" in f for f in listing.splitlines()):
+        # robinctl runs -Sy then -Su, so the pre snapshot says "pacman -Su --noconfirm"
+        if not any(f.split(",")[1:2] == ["pre"] and re.search(r"pacman .*-Su", f) for f in listing.splitlines()):
             raise RuntimeError("snap-pac took no snapshot before pacman -Syu")
         con.run("(. /etc/os-release && [ \"$ID\" = robinos ])")
         # The shell would be started again here, with nobody logged in to a desktop to ask

@@ -729,7 +729,7 @@ case "\$*" in
     [ -f '${WORK}/all-down' ] && exit 1
     [ -f '${WORK}/github-down' ] && grep -q '^\[robinos\]' "\$2" && exit 1
     exit 0 ;;
-  *-Su*) echo "pacman \$*" >>'${WORK}/pacman-calls'; cp "\$2" '${WORK}/su-conf'
+  *-Su*) echo "pacman \$*" >>'${WORK}/pacman-calls'; [ "\$1" = --config ] && cp "\$2" '${WORK}/su-conf'
     [ -f '${WORK}/new-version' ] && cp '${WORK}/new-version' '${WORK}/robinos-version'; exit 0 ;;
   *) exit 1 ;;
 esac
@@ -744,6 +744,8 @@ if [[ "${EUID}" -eq 0 ]]; then
   check "an update with no new RobinOS files" 0 env SUDO_USER=learner PATH="${RESTART_BIN}:/usr/bin" bash "${ROBINCTL}" update --yes
   if [[ -s "${WORK}/pkill-calls" ]]; then bad "the shell was ended without new RobinOS files"; else ok "the shell stays when nothing changed"; fi
   if grep -q -- '-Su --noconfirm$' "${WORK}/pacman-calls"; then ok "update passes --yes on to pacman"; else bad "pacman didn't get --noconfirm: $(cat "${WORK}/pacman-calls")"; fi
+  # snapper's list shows the command snap-pac saw: the usual pacman.conf isn't spelled out
+  if grep -qx 'pacman -Su --noconfirm' "${WORK}/pacman-calls"; then ok "the usual update is a plain pacman -Su"; else bad "the usual update ran as: $(cat "${WORK}/pacman-calls")"; fi
   printf '0.3.0.r2-1\n' >"${WORK}/new-version"
   check "an update that brings new RobinOS files" 0 env SUDO_USER=learner PATH="${RESTART_BIN}:/usr/bin" bash "${ROBINCTL}" update --yes
   said "it tells which versions" "0.3.0.r1-1에서 0.3.0.r2-1로"
