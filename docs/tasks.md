@@ -122,11 +122,11 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: `test-robin-install.py`에 exFAT만 있는 디스크 경우, 부팅 테스트 `default-apps` 판정
 
 ### T-183 터미널의 한글 글자 사이가 벌어져요
-- 상태: 할 일
+- 상태: 검증 대기 (2026-11-24 새벽 고침: `56-robinos-fonts.conf`에서 Noto Sans Mono CJK KR만 1.15배로 그려요. foot.ini는 같은 크기(`size=11`)로 바꿔 두 번 키우지 않아요)
 - 출처: 2026-11-24 묶음 검증의 부팅 테스트 `31-terminal-learn.png`. 미션 안내가 "미 션 1 · 폴 더"처럼 한 글자씩 떨어져 보여요
-- 까닭: 코드 글꼴 Cascadia Mono에는 한글이 없어서 fontconfig가 Noto Sans Mono CJK KR로 대신 그려요. 한글은 두 칸을 쓰는데, Cascadia의 한 칸(0.6em)이 Noto 한글의 절반(0.5em)보다 넓어서 두 칸에 남는 자리가 생겨요. foot는 대신 그리는 글꼴의 크기를 따로 줘서(`size=12.5`) 맞추지만 Ptyxis(VTE)는 그럴 수 없어요
-- 할 것: 후보를 VM 없이 비교해요. WSL에 `ptyxis`를 깔고 `shell-load.sh`와 같은 화면 없는 sway에서 `grim`으로 찍어요. 후보: ① Cascadia 다음에 한글 폭이 칸에 맞는 글꼴(`ttf-d2coding-nerd`, `ttf-sarasa-gothic`)을 두기 ② 한글이 들어 있는 고정폭 글꼴을 터미널 글꼴로(키트의 Cascadia와 라틴 모양이 달라지니 brand.md와 맞춰 보기) ③ fontconfig `matrix`로 대신 그리는 한글만 넓히기
-- 완료 기준: 부팅 테스트 터미널 장면에서 한글이 붙어 보이고, 영어 코드는 Cascadia 그대로
+- 까닭: 코드 글꼴 Cascadia Mono에는 한글이 없어서 fontconfig가 Noto Sans Mono CJK KR로 대신 그려요. 한글은 두 칸을 쓰는데, Cascadia 두 칸(1.2em)이 Noto 한글(1em)보다 넓어서 남는 자리가 생겨요
+- 비교(VM 없이, WSL의 화면 없는 sway에서 VTE 창을 띄워 `grim`으로): 그대로는 벌어지고, 1.15배·1.2배는 붙어 보이고 잘리지 않아요. 1.15배를 골랐어요(라틴 글자처럼 옆 여백이 조금 남아요). foot는 원래 `size=12.5`로 키우고 있어서, 그대로 두면 두 번 커져 글자 위가 잘려요. Qt(셸)는 이 규칙을 안 따라서 셸 화면은 그대로예요
+- 완료 기준: 부팅 테스트 터미널 장면(`31-terminal-learn.png`)에서 한글이 붙어 보이고, 영어 코드는 Cascadia 그대로
 
 ### T-176 반쪽 작업 끝내기 (진행 중 21개)
 - 상태: 할 일 (2026-10-15)
