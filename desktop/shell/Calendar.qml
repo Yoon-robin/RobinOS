@@ -107,12 +107,12 @@ PanelWindow {
         border.color: Theme.panelBorder
         opacity: root.revealed ? 1 : 0
         focus: true
-        // Grows out of where it opens and settles, like a spring (T-152)
+        // Comes in by 4px and fades, short and without overshoot (robin-ui V5)
         transformOrigin: Item.Top
-        scale: root.revealed ? 1 : 0.96
+        scale: root.revealed ? 1 : 0.985
 
         transform: Translate {
-            y: root.revealed ? 0 : -6
+            y: root.revealed ? 0 : -4
 
             Behavior on y {
                 NumberAnimation { duration: Theme.dur; easing.type: Easing.OutCubic }
@@ -120,7 +120,7 @@ PanelWindow {
         }
 
         Behavior on scale {
-            NumberAnimation { duration: Theme.durSpring; easing.type: Easing.OutBack; easing.overshoot: 0.9 }
+            NumberAnimation { duration: Theme.durSpring; easing.type: Easing.OutQuint }
         }
 
         Behavior on opacity {

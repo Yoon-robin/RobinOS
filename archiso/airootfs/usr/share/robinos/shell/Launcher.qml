@@ -772,15 +772,15 @@ PanelWindow {
         border.color: Theme.panelBorder
         clip: true
         opacity: root.revealed ? 1 : 0
-        scale: root.revealed ? 1 : 0.96
+        scale: root.revealed ? 1 : 0.985
 
         Behavior on opacity {
             NumberAnimation { duration: Theme.dur; easing.type: Easing.OutCubic }
         }
 
-        // Opens with a small settle past full size, like a spring (T-152)
+        // Opens short and without overshoot (robin-ui V5)
         Behavior on scale {
-            NumberAnimation { duration: Theme.durSpring; easing.type: Easing.OutBack; easing.overshoot: 0.9 }
+            NumberAnimation { duration: Theme.durSpring; easing.type: Easing.OutQuint }
         }
 
         layer.enabled: !Theme.lowPower
