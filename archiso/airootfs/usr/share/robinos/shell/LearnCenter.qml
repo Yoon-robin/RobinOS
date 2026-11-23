@@ -100,6 +100,12 @@ FloatingWindow {
         id: listProc
 
         command: ["robinctl", "learn", "tsv"]
+        // A robinctl that can't start sends no exit code: without this the window
+        // stayed blank instead of saying the list couldn't be read
+        onRunningChanged: {
+            if (!running && !root.loaded)
+                root.failed = true;
+        }
         stdout: StdioCollector {
             id: listOut
 

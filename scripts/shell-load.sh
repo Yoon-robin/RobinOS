@@ -64,6 +64,9 @@ if [[ -z "${socket}" ]]; then
   exit 1
 fi
 export WAYLAND_DISPLAY="${socket}"
+# swaymsg finds sway only through this (it closes the windows between screenshots)
+SWAYSOCK="$(find "${XDG_RUNTIME_DIR}" -maxdepth 1 -name 'sway-ipc.*.sock' 2>/dev/null | head -n 1)"
+export SWAYSOCK
 
 # A copy, so Quickshell's state files stay out of the checkout
 cp -r "${ROOT_DIR}/desktop/shell" "${work}/shell"
@@ -113,8 +116,10 @@ if [[ -n "${shot}" ]]; then
       out="${shot%.png}-${panel//:/-}.png"
       grim "${out}" && printf 'shell-load: screenshot %s\n' "${out}"
       qs ipc -p "${work}/shell" call shell "${call[@]}" >/dev/null 2>&1
-      # Windows (settings, the learning center) don't toggle: close them, the bar
-      # and the panels are layer surfaces that this doesn't touch
+      # Windows (settings, the learning center) don't toggle, the second call maps
+      # them again: let it, then close them. The bar and the panels are layer
+      # surfaces that this doesn't touch.
+      sleep 0.7
       swaymsg -q '[title=".*"] kill' >/dev/null 2>&1
       sleep 0.5
     done
