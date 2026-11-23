@@ -2,10 +2,9 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 
-// RobinOS wallpaper: zinc background, soft lights in the brand colours (Robin red,
-// orange, a little violet) and a faint dot grid. The lights give the glass panels
-// (Theme.glass, T-152) a colour to show through. Drawn in QML so it follows the
-// theme and fits any resolution.
+// RobinOS wallpaper (robin-ui V5): the blue-black page, one faint glow of the
+// one blue (like the brand mark's) and a faint dot grid. No other colours, no
+// glass to show through. Drawn in QML so it follows the theme and fits any resolution.
 PanelWindow {
     id: root
 
@@ -48,9 +47,7 @@ PanelWindow {
             // [x, y, radius] as parts of the screen, and the colour in dark / light
             const size = Math.max(w, h);
             const lights = [
-                [0.78, 0.12, 0.62, "229,72,77", 0.26, 0.18],
-                [0.12, 0.92, 0.58, "255,138,61", 0.18, 0.15],
-                [0.42, 1.08, 0.55, "150,70,255", 0.12, 0.09]
+                [0.80, 0.08, 0.70, "75,125,254", 0.14, 0.08]
             ];
             for (const [lx, ly, lr, rgb, darkAlpha, lightAlpha] of lights) {
                 const g = ctx.createRadialGradient(w * lx, h * ly, 0, w * lx, h * ly, size * lr);
@@ -63,7 +60,7 @@ PanelWindow {
 
             const step = 22;
             const r = 1;
-            ctx.fillStyle = Theme.dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.08)";
+            ctx.fillStyle = Theme.dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.06)";
             ctx.beginPath();
             for (let y = step / 2; y < h; y += step) {
                 for (let x = step / 2; x < w; x += step) {

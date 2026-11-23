@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0e1012">
+<title>robin-ui 견본</title>
+<!-- The kit's specimen: every part once, named as the part it is (nothing here is a real setting).
+     Open it as a file or serve the folder. The words are Pretendard when the project ships it;
+     this page takes it from the CDN its makers publish it on. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="robin-ui.css">
+<style>
+  /* the page's own layout only: every part below is the kit's */
+  .wrap { width: min(100%, 1180px); margin: 0 auto; padding: 0 20px 80px; }
+  .head { display: flex; align-items: flex-end; gap: 16px; margin: 20px 0 8px; }
+  .head h1 { font-size: 26px; }
+  .head p { margin: 0 0 3px; color: var(--rk-soft); font-size: 13px; }
+  section { margin-top: 44px; }
+  .rk section > h2 { margin: 0 0 9px 14px; font-size: 12px; font-weight: 500; letter-spacing: 0.02em; color: var(--rk-faint); }
+  .grid { display: grid; gap: 13px; }
+  .g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .line { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+  .stack { display: grid; gap: 12px; justify-items: start; }
+  .sw { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .sw div { display: grid; gap: 6px; font-size: 11.5px; color: var(--rk-soft); }
+  .sw i { display: block; height: 44px; border-radius: var(--rk-r); box-shadow: inset 0 0 0 1px var(--rk-control-line); }
+  .sw b { font: 500 11.5px var(--rk-mono); color: var(--rk-text); }
+  .scene { padding: 28px; border-radius: var(--rk-r-win); background: linear-gradient(135deg, #3b4252, #20242c 60%, #2b3038); }
+  [data-theme="light"] .scene { background: linear-gradient(135deg, #cfd6e2, #eef1f6 60%, #dfe4ec); }
+  .radii { display: flex; flex-wrap: wrap; gap: 14px; }
+  .radii div { display: grid; place-items: center; width: 110px; height: 64px; background: var(--rk-control); box-shadow: inset 0 0 0 1px var(--rk-control-line); font-size: 12px; color: var(--rk-soft); }
+  @media (max-width: 860px) { .g2, .g4 { grid-template-columns: minmax(0, 1fr); } .head { flex-wrap: wrap; } }
+</style>
+</head>
+<body class="rk">
+<!-- icons:start -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <!-- The kit's line icons: a 24 box, 1.8 stroke, round ends (drawn for robin's services; not from an icon set).
+       <svg class="rk-ico"><use href="#rk-i-mail"/></svg> with this file's contents pasted once into the page,
+       or <use href="icons.svg#rk-i-mail"/> when the page is served over http. -->
+  <symbol id="rk-i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7M6 9.5V20h12V9.5M10 20v-5h4v5"/></symbol>
+  <symbol id="rk-i-mail" viewBox="0 0 24 24"><path d="M4 6h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1zM3.5 7l8.5 6 8.5-6"/></symbol>
+  <symbol id="rk-i-cloud" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></symbol>
+  <symbol id="rk-i-lock" viewBox="0 0 24 24"><path d="M6 11h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1zM8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="rk-i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="rk-i-spark" viewBox="0 0 24 24"><path d="M12 3.5c.6 4.7 3.3 7.4 8 8-4.7.6-7.4 3.3-8 8-.6-4.7-3.3-7.4-8-8 4.7-.6 7.4-3.3 8-8z"/></symbol>
+  <symbol id="rk-i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
+  <symbol id="rk-i-globe" viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
+  <symbol id="rk-i-image" viewBox="0 0 24 24"><path d="M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM4 16l4.5-4.5 4 4L15 13l5 5M15.5 9h.01"/></symbol>
+  <symbol id="rk-i-film" viewBox="0 0 24 24"><path d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM10 9v6l5-3z"/></symbol>
+  <symbol id="rk-i-music" viewBox="0 0 24 24"><path d="M9 18V6l10-2v12M9 18a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM19 16a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/></symbol>
+  <symbol id="rk-i-pulse" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+  <symbol id="rk-i-bars" viewBox="0 0 24 24"><path d="M6 20V11M12 20V4M18 20v-6"/></symbol>
+  <symbol id="rk-i-sliders" viewBox="0 0 24 24"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/></symbol>
+  <symbol id="rk-i-terminal" viewBox="0 0 24 24"><path d="M4 17l6-6-6-6M12 19h8"/></symbol>
+  <symbol id="rk-i-keys" viewBox="0 0 24 24"><path d="M4 4h6v16H4zM14 4h6v6h-6zM14 14h6v6h-6z"/></symbol>
+  <symbol id="rk-i-search" viewBox="0 0 24 24"><path d="M11 4.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM16 16l4.5 4.5"/></symbol>
+  <symbol id="rk-i-user" viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20a7.5 7.5 0 0 1 15 0"/></symbol>
+  <symbol id="rk-i-clock" viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2"/></symbol>
+  <symbol id="rk-i-target" viewBox="0 0 24 24"><path d="M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM12 2v5M12 17v5M2 12h5M17 12h5"/></symbol>
+  <symbol id="rk-i-alarm" viewBox="0 0 24 24"><path d="M12 4l9 16H3zM12 10v4M12 17h.01"/></symbol>
+  <symbol id="rk-i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="rk-i-minus" viewBox="0 0 24 24"><path d="M6 12h12"/></symbol>
+  <symbol id="rk-i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="rk-i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="rk-i-right" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="rk-i-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="rk-i-copy" viewBox="0 0 24 24"><path d="M9 9h10a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V10a1 1 0 0 1 1-1zM5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></symbol>
+  <symbol id="rk-i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></symbol>
+  <symbol id="rk-i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.5-5.8M20 4v5h-5"/></symbol>
+  <symbol id="rk-i-out" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4"/></symbol>
+</svg>
+<!-- icons:end -->
+
+<header class="rk-header wrap" style="padding-bottom: 16px">
+  <span class="rk-hud rk-hud--pill rk-hud--bare" style="height: 44px"><span class="rk-watermark__mark">R</span></span>
+  <nav class="rk-pilltabs" aria-label="견본의 구역">
+    <a href="#colors" aria-current="page">색</a><a href="#menu">메뉴</a><a href="#controls">컨트롤</a><a href="#indicators">표시기</a>
+  </nav>
+  <span class="rk-gap"></span>
+  <button class="rk-btn" id="theme" type="button"><svg class="rk-ico"><use href="#rk-i-refresh"/></svg><span>밝게</span></button>
+</header>
+
+<main class="wrap">
+  <div class="head"><h1>robin-ui</h1><p class="rk-num">V5 · 부품 견본</p></div>
+
+  <section id="colors">
+    <h2>면</h2>
+    <div class="rk-card rk-card--pad"><div class="sw">
+      <div><i style="background: var(--rk-side)"></i><b>--rk-side</b>옆 기둥</div>
+      <div><i style="background: var(--rk-page)"></i><b>--rk-page</b>바탕·판</div>
+      <div><i style="background: var(--rk-card)"></i><b>--rk-card</b>카드</div>
+      <div><i style="background: var(--rk-control)"></i><b>--rk-control</b>컨트롤 면</div>
+      <div><i style="background: var(--rk-chosen)"></i><b>--rk-chosen</b>고른 줄</div>
+      <div><i style="background: var(--rk-hud)"></i><b>--rk-hud</b>표시기 면</div>
+      <div><i style="background: var(--rk-line)"></i><b>--rk-line</b>선</div>
+      <div><i style="background: var(--rk-control-line)"></i><b>--rk-control-line</b>컨트롤 선</div>
+    </div></div>
+    <h2 style="margin-top: 18px">뜻이 있는 색</h2>
+    <div class="rk-card rk-card--pad"><div class="sw">
+      <div><i style="background: var(--rk-accent)"></i><b>--rk-accent</b>켜짐·고름·링크</div>
+      <div><i style="background: var(--rk-accent-fill)"></i><b>--rk-accent-fill</b>흰 글자가 올라가는 채움</div>
+      <div><i style="background: var(--rk-plain)"></i><b>--rk-plain</b>보통</div>
+      <div><i style="background: var(--rk-note)"></i><b>--rk-note</b>알림·주의</div>
+      <div><i style="background: var(--rk-alarm)"></i><b>--rk-alarm</b>실패·멈춤</div>
+      <div><i style="background: var(--rk-head)"></i><b>--rk-head</b>제목 글자</div>
+      <div><i style="background: var(--rk-soft)"></i><b>--rk-soft</b>흐린 글자</div>
+      <div><i style="background: var(--rk-faint)"></i><b>--rk-faint</b>이름표 글자</div>
+    </div></div>
+  </section>
+
+  <section id="menu">
+    <h2>메뉴: 창</h2>
+    <div class="rk-window" style="min-height: 520px">
+      <aside class="rk-side">
+        <div class="rk-brand"><span class="rk-mark">R</span><span><b>앱 이름</b><small>아랫줄</small></span></div>
+        <p class="rk-label" style="margin-top: 6px">묶음 이름표</p>
+        <a class="rk-nav" href="#menu"><svg class="rk-ico"><use href="#rk-i-home"/></svg>옆 줄</a>
+        <a class="rk-nav" href="#menu" aria-current="page"><svg class="rk-ico"><use href="#rk-i-sliders"/></svg>고른 줄</a>
+        <a class="rk-nav" href="#menu"><svg class="rk-ico"><use href="#rk-i-pulse"/></svg>옆 줄</a>
+        <p class="rk-label">묶음 이름표</p>
+        <a class="rk-nav" href="#menu"><svg class="rk-ico"><use href="#rk-i-mail"/></svg>옆 줄</a>
+        <a class="rk-nav" href="#menu"><svg class="rk-ico"><use href="#rk-i-cloud"/></svg>옆 줄</a>
+        <a class="rk-account" href="#menu"><span class="rk-avatar">R</span><span><b>계정 이름</b><small>아랫줄</small></span><svg class="rk-ico"><use href="#rk-i-right"/></svg></a>
+      </aside>
+      <div class="rk-main">
+        <div class="rk-bar">
+          <button class="rk-pick" type="button">고르기<svg class="rk-ico"><use href="#rk-i-down"/></svg></button>
+          <button class="rk-pick" type="button">고르기<svg class="rk-ico"><use href="#rk-i-down"/></svg></button>
+          <span class="rk-gap"></span>
+          <button class="rk-btn rk-btn--bare rk-btn--icon" type="button" aria-label="찾기"><svg class="rk-ico"><use href="#rk-i-search"/></svg></button>
+        </div>
+        <div class="rk-body rk-body--2">
+          <div>
+            <p class="rk-label">묶음 이름표</p>
+            <div class="rk-card">
+              <div class="rk-row"><span>스위치가 있는 줄</span><span class="rk-more" aria-hidden="true"><i></i><i></i><i></i></span><button class="rk-switch" type="button" role="switch" aria-checked="true" aria-label="켜짐"></button></div>
+              <div class="rk-row"><span>꺼진 스위치</span><button class="rk-switch" type="button" role="switch" aria-checked="false" aria-label="꺼짐"></button></div>
+              <div class="rk-row"><span>고르기가 있는 줄</span><select class="rk-select rk-select--row" aria-label="고르기"><option>값 하나</option><option>값 둘</option></select></div>
+              <div class="rk-row"><span>막대와 값</span><input class="rk-slider" type="range" min="0" max="100" value="60" style="--rk-at: 60%" aria-label="막대"><span class="rk-value">60%</span></div>
+            </div>
+          </div>
+          <div>
+            <p class="rk-label">묶음 이름표</p>
+            <div class="rk-card">
+              <a class="rk-row" href="#menu"><span>안으로 들어가는 줄</span><svg class="rk-ico"><use href="#rk-i-right"/></svg></a>
+              <a class="rk-row" href="#menu"><span>두 줄짜리 줄<small>아랫줄은 사실만</small></span><span class="rk-chip">보통</span><svg class="rk-ico"><use href="#rk-i-right"/></svg></a>
+              <a class="rk-row" href="#menu"><span>상태가 붙은 줄</span><span class="rk-chip" data-tone="alarm">멈춤</span><svg class="rk-ico"><use href="#rk-i-right"/></svg></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <h2 style="margin-top: 18px">메뉴: 숫자 타일</h2>
+    <div class="grid g4">
+      <dl class="rk-tile" style="margin: 0"><dt>이름표</dt><dd>16%</dd><span class="rk-meter"><i style="width: 16%"></i></span><small class="rk-num">61.9GB / 386GB</small></dl>
+      <dl class="rk-tile" style="margin: 0"><dt>이름표</dt><dd>0.60</dd><small>아랫줄</small></dl>
+      <dl class="rk-tile" style="margin: 0"><dt>주의</dt><dd style="color: var(--rk-note)">91%</dd><span class="rk-meter" data-tone="note"><i style="width: 91%"></i></span></dl>
+      <dl class="rk-tile" style="margin: 0"><dt>이름표</dt><dd>27일</dd></dl>
+    </div>
+  </section>
+
+  <section id="controls">
+    <h2>단추</h2>
+    <div class="rk-card rk-card--pad line">
+      <button class="rk-btn rk-btn--primary" type="button"><svg class="rk-ico"><use href="#rk-i-plus"/></svg>주 동작</button>
+      <button class="rk-btn" type="button">컨트롤</button>
+      <button class="rk-btn" type="button"><svg class="rk-ico"><use href="#rk-i-copy"/></svg>아이콘과 글</button>
+      <button class="rk-btn rk-btn--icon" type="button" aria-label="새로 고침"><svg class="rk-ico"><use href="#rk-i-refresh"/></svg></button>
+      <button class="rk-btn rk-btn--bare" type="button">면 없는 것</button>
+      <button class="rk-btn rk-btn--danger" type="button"><svg class="rk-ico"><use href="#rk-i-trash"/></svg>지우기</button>
+      <button class="rk-btn rk-btn--small" type="button">작은 것</button>
+      <button class="rk-btn" type="button" disabled>못 누름</button>
+      <button class="rk-btn" type="button" id="open-dialog">대화창 열기</button>
+    </div>
+    <h2 style="margin-top: 18px">입력</h2>
+    <div class="grid g2">
+      <div class="rk-card rk-card--pad stack" style="justify-items: stretch">
+        <label class="rk-field"><span>이름표</span><input class="rk-input" type="text" placeholder="자리표시가 할 일을 말해요"></label>
+        <label class="rk-field"><span>이름표</span><select class="rk-select"><option>값 하나</option><option>값 둘</option></select></label>
+        <label class="rk-field"><span>이름표</span><textarea class="rk-textarea" rows="2" placeholder="여러 줄"></textarea></label>
+      </div>
+      <div class="rk-card rk-card--pad stack">
+        <div class="line"><button class="rk-switch" type="button" role="switch" aria-checked="true" aria-label="켜짐"></button><button class="rk-switch" type="button" role="switch" aria-checked="false" aria-label="꺼짐"></button><label class="line" style="gap: 8px"><input class="rk-check" type="checkbox" checked>고름</label><label class="line" style="gap: 8px"><input class="rk-check" type="checkbox">안 고름</label></div>
+        <div class="line"><input class="rk-slider" type="range" min="0" max="100" value="35" style="--rk-at: 35%; width: 160px" aria-label="막대"><span class="rk-value">35</span></div>
+        <div class="rk-tabs" role="tablist"><button class="rk-tab" type="button" role="tab" aria-selected="true">고른 것</button><button class="rk-tab" type="button" role="tab" aria-selected="false">다른 것</button><button class="rk-tab" type="button" role="tab" aria-selected="false">다른 것</button></div>
+        <div class="line"><span class="rk-tag">MP4</span><span class="rk-tag rk-num">12</span><kbd class="rk-kbd">Enter</kbd><code class="rk-code">code</code></div>
+        <div class="rk-loading" style="width: 200px"></div>
+      </div>
+    </div>
+    <h2 style="margin-top: 18px">표 · 빈 곳 · 메뉴</h2>
+    <div class="grid g2">
+      <div class="rk-card" style="padding: 4px 6px"><table class="rk-table"><thead><tr><th>이름</th><th>값</th><th>상태</th></tr></thead><tbody>
+        <tr><td>줄 하나</td><td class="rk-num">1.2GB</td><td><span class="rk-chip" data-tone="on">하는 중</span></td></tr>
+        <tr><td>줄 둘</td><td class="rk-num">0B</td><td><span class="rk-chip">보통</span></td></tr>
+        <tr><td>줄 셋</td><td class="rk-num">71.8MB</td><td><span class="rk-chip" data-tone="note">주의</span></td></tr>
+      </tbody></table></div>
+      <div class="grid" style="grid-template-columns: 1fr auto; align-items: start">
+        <div class="rk-card rk-empty"><svg class="rk-ico"><use href="#rk-i-download"/></svg>아직 없어요</div>
+        <div class="rk-menu" role="menu"><button class="rk-menu__item" type="button" role="menuitem"><svg class="rk-ico"><use href="#rk-i-copy"/></svg>메뉴의 줄</button><button class="rk-menu__item" type="button" role="menuitem"><svg class="rk-ico"><use href="#rk-i-user"/></svg>메뉴의 줄</button><hr><button class="rk-menu__item rk-menu__item--danger" type="button" role="menuitem"><svg class="rk-ico"><use href="#rk-i-trash"/></svg>지우는 줄</button></div>
+      </div>
+    </div>
+    <h2 style="margin-top: 18px">모서리</h2>
+    <div class="rk-card rk-card--pad radii">
+      <div style="border-radius: var(--rk-r-chip)">칩 6</div><div style="border-radius: var(--rk-r)">컨트롤 7</div><div style="border-radius: var(--rk-r-toast)">토스트 10</div><div style="border-radius: var(--rk-r-card)">카드 12</div><div style="border-radius: var(--rk-r-win)">창 14</div><div style="border-radius: 9999px">알약: 표시기만</div>
+    </div>
+  </section>
+
+  <section id="indicators">
+    <h2>표시기: 떠 있는 것 (장면 위에서)</h2>
+    <div class="scene grid g2" style="align-items: start">
+      <div class="stack">
+        <p class="rk-toast" style="margin: 0"><svg class="rk-ico"><use href="#rk-i-target"/></svg><span>기록 줄: 방금 일어난 일</span><button class="rk-btn rk-btn--bare rk-btn--small rk-btn--icon" type="button" aria-label="닫기"><svg class="rk-ico"><use href="#rk-i-close"/></svg></button></p>
+        <p class="rk-toast" data-tone="on" style="margin: 0"><svg class="rk-ico"><use href="#rk-i-check"/></svg><span>끝난 일은 파랑</span></p>
+        <p class="rk-toast" data-tone="alarm" style="margin: 0"><svg class="rk-ico"><use href="#rk-i-alarm"/></svg><span>못 한 일은 빨강</span></p>
+        <div class="line"><span class="rk-chip">보통</span><span class="rk-chip" data-tone="on">켜짐</span><span class="rk-chip" data-tone="note">주의</span><span class="rk-chip" data-tone="alarm">멈춤</span></div>
+        <div class="rk-keys"><span class="rk-hud rk-hud--bare"><svg class="rk-ico" style="color: var(--rk-accent)"><use href="#rk-i-keys"/></svg>단축키</span><dl><dt>Enter</dt><dd>보내기</dd><dt>Shift+Enter</dt><dd>줄바꿈</dd><dt>Esc</dt><dd>멈추기</dd></dl></div>
+      </div>
+      <div class="stack" style="justify-items: end">
+        <p class="rk-watermark" style="margin: 0"><span class="rk-watermark__mark">R</span><span><svg class="rk-ico"><use href="#rk-i-bars"/></svg>값 16%</span><span><svg class="rk-ico"><use href="#rk-i-user"/></svg>이름</span><span><svg class="rk-ico"><use href="#rk-i-clock"/></svg>23:31</span><button class="rk-round" type="button" aria-label="접기"><svg class="rk-ico"><use href="#rk-i-minus"/></svg></button></p>
+        <span class="rk-person">이름<button class="rk-round" type="button" aria-label="빼기"><svg class="rk-ico"><use href="#rk-i-minus"/></svg></button></span>
+        <span class="rk-person">다른 이름<button class="rk-round" type="button" aria-label="빼기"><svg class="rk-ico"><use href="#rk-i-minus"/></svg></button></span>
+        <span class="rk-hud rk-hud--pill" data-tone="note"><svg class="rk-ico" style="color: var(--rk-note)"><use href="#rk-i-target"/></svg><span style="color: var(--rk-note)">알림</span></span>
+        <p class="rk-alert" data-tone="alarm" style="margin: 0"><svg class="rk-ico"><use href="#rk-i-alarm"/></svg><span><b>무엇이 · 얼마 동안</b><em>멈춤</em></span></p>
+      </div>
+    </div>
+    <h2 style="margin-top: 18px">표시기: 쪽 안에서</h2>
+    <div class="stack" style="justify-items: stretch">
+      <p class="rk-alert" data-tone="note" style="margin: 0"><svg class="rk-ico"><use href="#rk-i-alarm"/></svg><span><b>주의할 일 한 줄</b></span><button class="rk-btn rk-btn--small" type="button">할 일</button></p>
+      <p class="rk-hud rk-hud--block" data-tone="on" style="margin: 0">쪽 안의 안내 상자예요. 무언가 잘못됐거나 결정이 필요한 자리에만 문장을 써요.</p>
+    </div>
+  </section>
+</main>
+
+<dialog class="rk-dialog" id="dialog">
+  <h2>대화창 제목</h2>
+  <p style="margin: 8px 0 0; color: var(--rk-soft)">되돌릴 수 없는 일은 무엇이 사라지는지 한 줄로 말해요.</p>
+  <div class="rk-dialog__foot"><button class="rk-btn" type="button" data-close>취소</button><button class="rk-btn rk-btn--danger-fill" type="button" data-close>지우기</button></div>
+</dialog>
+
+<script>
+  // the specimen's own: the theme button, the dialog, the switches and sliders answering
+  const root = document.documentElement, theme = document.getElementById('theme');
+  theme.addEventListener('click', () => {
+    const light = root.dataset.theme !== 'light';
+    root.dataset.theme = light ? 'light' : 'dark';
+    theme.querySelector('span').textContent = light ? '어둡게' : '밝게';
+  });
+  const dialog = document.getElementById('dialog');
+  document.getElementById('open-dialog').addEventListener('click', () => dialog.showModal());
+  dialog.addEventListener('click', (e) => { if (e.target.closest('[data-close]')) dialog.close(); });
+  document.addEventListener('click', (e) => { const s = e.target.closest('.rk-switch'); if (s) s.setAttribute('aria-checked', String(s.getAttribute('aria-checked') !== 'true')); });
+  document.addEventListener('input', (e) => {
+    if (!e.target.classList.contains('rk-slider')) return;
+    const at = (e.target.value - e.target.min) / (e.target.max - e.target.min) * 100;
+    e.target.style.setProperty('--rk-at', at + '%');
+    const v = e.target.nextElementSibling; if (v && v.classList.contains('rk-value')) v.textContent = v.textContent.includes('%') ? Math.round(at) + '%' : e.target.value;
+  });
+</script>
+</body>
+</html>

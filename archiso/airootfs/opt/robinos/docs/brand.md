@@ -1,6 +1,6 @@
 # RobinOS 브랜드
 
-RobinOS는 처음 쓰는 리눅스예요([design.md](design.md)의 목적 결정, 2026-10-12). 리눅스를 처음 쓰는 사람이 겁먹지 않게, 화면은 차분하고 믿음직하게 만들어요.
+RobinOS는 예쁜 UI를 가진 OS예요([design.md](design.md)의 "정체성 다시 정하기", 2026-11-24). 모든 화면은 robin-ui V5 키트 하나를 따라요. 키트는 `assets/brand/robin-ui/`에 있고, 견본은 그 폴더의 `index.html`을 브라우저로 열면 돼요.
 
 ## 로고 파일
 
@@ -8,58 +8,86 @@ RobinOS는 처음 쓰는 리눅스예요([design.md](design.md)의 목적 결정
 - `assets/brand/robinos-logo.svg`: 전체 로고 락업 (마크, 이름, 한 줄 소개)
 - `assets/brand/robinos-logo-horizontal.svg`: 헤더에 쓰기 좋은 가로형 로고 (README 맨 위)
 - `assets/brand/robinos-glyph.svg`: 아주 작은 곳(셸의 바, 런처, 설치기, 로그인 화면)에 쓰는 하얀 울새 실루엣. 강조색 네모 위에 올려요
-- `assets/brand/build-logo.py`: 위 네 파일을 만드는 스크립트. 이름과 한 줄 소개는 Geist·Pretendard를 윤곽선으로 바꿔 넣어서 글꼴이 없는 곳에서도 똑같이 보여요
-- `desktop/fastfetch/robinos-logo.ansi`: 터미널을 열면 fastfetch 옆에 나오는 울새 그림(31×15칸). 반 칸 블록 문자 하나에 점 두 개를 그려요. 하얀 부분은 터미널 글자색을 써서 라이트 모드에서는 검은 울새가 돼요. 마크를 고치면 `python3 assets/brand/build-terminal-logo.py desktop/fastfetch/robinos-logo.ansi`로 다시 만들고, 알려 주는 크기를 `desktop/fastfetch/config.jsonc`에 적어요(`check-desktop.sh`가 맞는지 봐요)
+- `assets/brand/build-logo.py`: 위 네 파일을 만드는 스크립트. 이름과 한 줄 소개는 글꼴을 윤곽선으로 바꿔 넣어서 글꼴이 없는 곳에서도 똑같이 보여요
+- `desktop/fastfetch/robinos-logo.ansi`: 터미널을 열면 fastfetch 옆에 나오는 울새 그림(31×15칸). 마크를 고치면 `python3 assets/brand/build-terminal-logo.py desktop/fastfetch/robinos-logo.ansi`로 다시 만들고, 알려 주는 크기를 `desktop/fastfetch/config.jsonc`에 적어요(`check-desktop.sh`가 맞는지 봐요)
+
+로고 SVG는 아직 예전 팔레트(zinc, 빨간 `>`)와 예전 한 줄 소개("처음 쓰는 리눅스")예요. `build-logo.py`의 색을 키트 값으로 바꾸고 한 줄 소개를 빼서 다시 만들어요(T-168).
 
 ## 콘셉트
 
 **프롬프트의 커서 위에 앉은 울새(Robin)** 예요(2026-10-09). 원 두 개로 만든 하얀 울새가 터미널 프롬프트 `> _`의 커서 위에 앉아 있어요.
 
-- 울새: 이름 그대로의 RobinOS. 둥글고 차분한 모양으로, 처음 쓰는 사람도 겁먹지 않는 친근한 OS를 뜻해요
+- 울새: 이름 그대로의 RobinOS. 둥글고 차분한 모양
 - 터미널 프롬프트 `>`와 커서 `_`: 직접 만든 도구로 손수 다루는 컴퓨터
-- 빨간 강조색: 프롬프트의 `>`에만 써요. 울새 가슴에 빨강을 칠한 안도 그려 봤지만 덩어리처럼 어색해서 뺐어요
-- 한 줄 소개: "처음 쓰는 리눅스"(2026-10-12). 로고와 README, 소개 영상에만 써요. 부팅 메뉴, 로그인·잠금 화면, 배경화면에는 이름만 둬요. 로고 SVG에 윤곽선으로 들어 있어서, 바꾸면 `build-logo.py`로 다시 만들어요
+- 색: 프롬프트의 `>`만 강조색이에요. 2026-11-24부터 강조색은 파랑(`#4b7dfe`)이에요
+- 한 줄 소개: 화면에는 이름만 둬요. 키트가 설명 문장을 쓰지 않아서, 로고 아래에도 소개를 넣지 않아요. 정체성("예쁜 UI를 가진 OS")은 README와 소개 영상처럼 설명이 필요한 곳에만 써요
 
-예전 마크(방패, 말풍선, 날개를 겹친 모양)는 작게 보면 무엇인지 읽히지 않고 셸의 `>_` 마크와도 달라서 바꿨어요.
+## 키트: robin-ui V5
 
-## 팔레트
+출처: 모양과 값은 Figma Community의 "Recurrence Design"(Jellyx Design, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/))에서 잰 것이에요. 키트를 공개하는 곳(README, 릴리스 노트)에는 이 출처를 같이 적어요. 원래 제품의 이름·로고·그림은 쓰지 않아요.
 
-RobinOS는 shadcn/ui의 zinc 팔레트를 따르고, 강조색은 Robin red 하나만 써요. 원본은 `desktop/shell/Theme.qml`이에요.
+### 두 가지 문법
 
-| 토큰 | 다크 (기본) | 라이트 |
+화면의 모든 것은 둘 중 하나예요. 만들기 전에 어느 쪽인지 먼저 정해요.
+
+| | 메뉴 | 표시기 |
 |---|---|---|
-| background | `#09090b` | `#ffffff` |
-| surface | `#121214` | `#ffffff` |
-| secondary | `#27272a` | `#f4f4f5` |
-| foreground | `#fafafa` | `#09090b` |
-| muted foreground | `#a1a1aa` | `#71717a` |
-| border | 흰색 10% | 검은색 9% |
-| primary | `#fafafa` | `#18181b` |
-| accent (Robin red) | `#e5484d` | `#e5484d` |
-| destructive | `#f87171` | `#dc2626` |
-| success | `#4ade80` | `#16a34a` |
+| 무엇 | 면 위에 놓인 것: 창, 옆 기둥, 카드, 줄, 컨트롤 | 떠 있는 것: 상태 칩, 토스트, 알림, 독, 떠 있는 패널 |
+| 면 | 푸른 검정 셋: 기둥 `#0a0e11` < 판 `#0e1012` < 카드 `#0f1115`, 1px 선으로 나눠요 | 짙은 면 `#08090b` + 1px 선 + 둘레 그림자 |
+| 모서리 | 컨트롤 7, 칩 6, 카드 12, 창 14 | 알약(칩), 토스트 10, 알림 14 |
+| 색 | 파랑 하나: 켜짐·고름·링크 | 왼쪽의 짧은 막대가 뜻: 보통·파랑·살구색·빨강 |
 
-사용자는 다른 강조색도 고를 수 있어요. 주황 `#f76b15`, 초록 `#30a46c`, 파랑 `#3e63dd`, 보라 `#8e4ec6`, 무채색 `#a1a1aa`.
+### 팔레트
 
-## 글꼴과 모양
+원본은 `assets/brand/robin-ui/robin-ui.css`(그리고 같은 값의 `tokens.json`)이고, 셸은 `desktop/shell/Theme.qml`이 같은 값을 들고 있어요.
 
-- 인터페이스: Geist, 한글은 Pretendard
-- 코드와 터미널: Geist Mono, 한글은 Noto Sans Mono CJK KR
-- 모서리 반경: 6 (작은 요소), 8 (입력창, 버튼), 10 (카드), 12 (빠른 설정 타일), 14 (창), 16 (떠 있는 패널), 18 (독)
-- 아이콘: Lucide 선 아이콘, 24px 그리드에 2px 선
+| 키트 토큰 | Theme.qml | 다크 (기본) | 라이트 |
+|---|---|---|---|
+| side (옆 기둥, 바) | `side`, `barBg` | `#0a0e11` | `#f4f5f7` |
+| page (판) | `bg` | `#0e1012` | `#ffffff` |
+| card (카드) | `surface` | `#0f1115` | `#f8f8f9` |
+| control (단추·입력·타일) | `secondary`, `raised`, `tile` | `#14151c` | `#f1f1f2` |
+| chosen (고른 것) | `chosen` | `#222629` | `#dfe3e9` |
+| line (선) | `border` | `#181a1d` | `#e3e6eb` |
+| control-line | `borderStrong`, `input` | `#26272d` | `#dedee3` |
+| head (제목) | `head` | `#f0f0f0` | `#000000` |
+| text (글) | `fg` | `#e6e7e9` | `#1a1a1a` |
+| soft | `muted` | `#8a8e94` | `#616161` |
+| faint | `subtle` | `#7d8187` | `#727272` |
+| accent (파랑) | `accent`, `success` | `#4b7dfe` | `#3566e8` |
+| accent-fill (파란 채움) | `primary` | `#3d6af0` | `#3566e8` |
+| note (살구색, 주의) | `note` | `#c27463` | `#a4523f` |
+| alarm (빨강, 실패) | `destructiveSolid` | `#d52236` | `#c0263a` |
+| alarm-text | `destructive` | `#e5475a` | `#c0263a` |
+| hud (표시기 면) | `panel`, `dockBg` | `#08090b` | `#ffffff` |
+| hud-line | `panelBorder` | `#1c1e22` | `#dedee3` |
 
-## 재질과 움직임 (shadcn × macOS, 2026-10-12)
+**초록과 노랑은 쓰지 않아요.** 성공은 파랑, 주의는 살구색, 실패는 빨강이에요. 강조색을 고르는 곳도 없어요(파랑 하나).
 
-사용자 제안("SHADCN과 mac os의 콜라보 같은 느낌", T-152)으로 정한 기준이에요. 색, 테두리, 글꼴, 아이콘은 shadcn/ui 그대로 두고, macOS에서는 재질과 움직임만 가져와요.
+### 글꼴과 모양
 
-- **유리**: 바, 독, 떠 있는 패널(빠른 설정, 달력, 알림, 런처, 메뉴)은 반투명하고 Hyprland가 뒤를 흐려요. 패널은 `Theme.glass`(다크 70%, 라이트 72% 불투명)와 1px `glassBorder`, 바 55%, 독 58%예요. 패널 안의 타일과 버튼은 단색 대신 유리 위 옅은 색조(`glassTile`)예요.
-- **GPU가 없을 때**: 소프트웨어 렌더링(대부분의 VM)에서는 블러가 없어서 거의 불투명하게 둬요(`Theme.lowPower`). 글자가 배경에 묻히지 않는 게 먼저예요.
-- **배경화면**: zinc 위에 Robin red, 주황, 보라의 부드러운 빛을 화면 가장자리에 둬요. 창이 자주 뜨는 가운데는 조용하게, 유리가 비쳐 보일 색은 가장자리에.
-- **움직임**: 패널은 열 때 96%에서 살짝 넘쳤다가 자리를 잡아요(`Easing.OutBack`, 260ms). 창은 Hyprland의 "easy" 스프링이에요. 매일 수백 번 쓰는 것(Alt+Tab, 키보드로 여는 것)은 짧게 둬요.
-- **가져오지 않는 것**: 창의 신호등 단추, 바에 앱 메뉴를 올리는 전역 메뉴, Cmd 단축키. 윈도우에서 온 사람이 아는 닫기 위치와 단축키를 지켜요.
-- **화면의 글**: 부팅 메뉴, 로그인·잠금 화면, 배경화면에는 소개 없이 이름만 둬요. 한 줄 소개("처음 쓰는 리눅스")는 로고 아래, README, 소개 영상에만 써요.
+- 인터페이스: Pretendard(`Pretendard Variable`), 굵기 450 / 550 / 650(`Theme.weight`, `weightStrong`, `weightHead`). 가늘게 바꾸지 않아요
+- 코드와 터미널: 지금은 Geist Mono 그대로예요. 키트의 코드 글꼴(Cascadia)로 바꿀지는 T-168에서 정해요
+- 모서리: 칩 6, 컨트롤 7, 토스트 10, 카드 12, 창·떠 있는 패널 14. 알약 모양은 표시기에만
+- 아이콘: 키트의 선 아이콘(`icons.svg`, 24 칸, 선 1.8, 둥근 끝, 채우지 않음). 셸은 아직 Lucide예요(모양이 거의 같아요). 이모지나 글자 기호로 대신하지 않아요
 
-로고 파일(`assets/brand/*.svg`)도 이 팔레트를 따라요. 배경은 zinc-950(`#09090b`), 울새와 커서는 `#fafafa`, 날개는 `#e4e4e7`, 부리·꼬리·다리와 한 줄 소개는 `#a1a1aa`이고, 프롬프트 `>`만 Robin red예요. 배경화면 SVG(`assets/wallpapers/`)와 GRUB 테마(`themes/grub/robinos`)도 같은 팔레트예요. GRUB 메뉴는 고른 항목만 Robin red예요.
+### 재질과 움직임
+
+- **유리·흐림 없음**: 바, 독, 패널 모두 불투명한 면이에요. Hyprland도 셸에는 블러를 걸지 않아요(`robinos.lua`). 2026-10-12의 macOS 유리(T-152)는 이걸로 바뀌었어요
+- **배경화면**: 판 색 위에 파랑의 옅은 번짐 하나와 옅은 점 격자(`Wallpaper.qml`). 다른 색은 없어요
+- **움직임**: 짧게(150~240ms, `Theme.durFast`·`dur`·`durSpring`), 들어올 때 4px. "움직임 줄이기"를 켜면 멈춰요
+- **창**: 모서리 14, 1px 테두리(다크 `#32343b`·`#181a1d`, 라이트 `#c6cad2`·`#e3e6eb`)
+
+### 지키는 것
+
+1. **설명 문장을 쓰지 않아요.** 제목은 이름, 아랫줄은 사실(날짜·시각·숫자). 문장은 무언가 잘못됐을 때, 켜고 끌 때 따라오는 결과, 한 번 눌러야 보이는 곳에만 둬요
+2. **알약은 표시기에만.** 단추·입력 칸은 모서리 7
+3. **파란 채움은 한 화면에 하나**(그 화면의 주 동작). 지우기처럼 되돌릴 수 없는 것은 빨간 테 + 빨간 글자, 채운 빨강은 확인 창의 한 단추뿐
+4. **상태는 낱말로 말하고** 색은 되풀이만 해요
+5. **묶음 이름표는 카드 밖**에, 작고 흐리게. 카드 안에 제목을 넣지 않아요
+6. 꾸미려고 지어낸 내용(가짜 숫자, 가짜 설정)을 넣지 않아요
+
+에이전트가 화면을 고칠 때 지킬 규칙은 `assets/brand/robin-ui/AGENTS.md`에 있어요.
 
 ## 사용처
 
@@ -73,13 +101,14 @@ RobinOS는 shadcn/ui의 zinc 팔레트를 따르고, 강조색은 Robin red 하�
 쓸 곳:
 
 - 부팅 스플래시(T-150): 정사각형 마크
-- 웹사이트와 파비콘, 릴리스 노트 머리 그림: 가로형 로고나 전체 로고 락업
+- 웹사이트와 파비콘, 릴리스 노트 머리 그림: 가로형 로고나 전체 로고 락업. 웹은 `robin-ui.css`를 그대로 써요
 
 ## 부팅 브랜딩
 
-1차 부팅 브랜딩에 들어간 파일:
+1차 부팅 브랜딩에 들어간 파일이에요. 아직 예전 팔레트라 키트 값으로 옮겨요(T-168).
 
 - `themes/grub/robinos`: GRUB 부팅 메뉴 테마
 - `themes/sddm/robinos`: SDDM 로그인 테마
-- `assets/wallpapers/robinos-default.svg`: 데스크톱 배경화면
+- `themes/syslinux/colors.cfg`: 라이브 ISO의 BIOS 부팅 메뉴
+- `assets/wallpapers/robinos-default.svg`: 데스크톱 배경화면 그림(셸은 `Wallpaper.qml`이 그려요)
 - `assets/wallpapers/robinos-lock.svg`: 로그인·잠금 화면 배경화면

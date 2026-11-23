@@ -290,7 +290,7 @@ PanelWindow {
         { key: "audit", group: "system", icon: "shield", title: "보안 점검", subtitle: "robinctl audit · 열린 포트, 원격 접속, 권한, 암호화", words: "audit security 보안 점검 보안 센터 방화벽 firewall 포트 암호화" },
         { key: "screenshot", group: "system", icon: "scan", title: "영역 스크린샷", subtitle: "Win + Shift + S", words: "screenshot capture 스크린샷 캡처 화면 캡처" },
         { key: "record", group: "system", icon: "video", title: "화면 녹화", subtitle: "Win + Alt + R · 한 번 더 누르면 멈춰요", words: "record recording screen recorder screencast 녹화 화면 녹화 동영상 캡처 game bar 게임 바 xbox" },
-        { key: "control", group: "system", icon: "sliders", title: "설정", subtitle: "Win + I · 개인 설정, 정보", words: "settings control panel 설정 제어판 개인 설정 테마 강조색 투명도 정보 버전 사양" },
+        { key: "control", group: "system", icon: "sliders", title: "설정", subtitle: "Win + I · 개인 설정, 정보", words: "settings control panel 설정 제어판 개인 설정 테마 정보 버전 사양" },
         { key: "settings", group: "system", icon: "sliders", title: "빠른 설정", subtitle: "Win + S", words: "settings quick 설정 빠른 설정 다크 모드" },
         { key: "sound", group: "system", icon: "volume", title: "소리 설정", subtitle: "출력 장치, 마이크, 앱별 음량", words: "sound audio volume mixer speaker headphones microphone mic 소리 음량 볼륨 믹서 스피커 이어폰 헤드폰 마이크 출력" },
         { key: "wifi", group: "system", icon: "wifi", title: "Wi-Fi 연결", subtitle: "주변 네트워크에 연결해요", words: "wifi wi-fi wireless network internet nmtui 와이파이 무선 네트워크 인터넷 연결" },
@@ -767,9 +767,9 @@ PanelWindow {
         width: 680
         height: column.implicitHeight
         radius: Theme.radiusPanel
-        color: Theme.glass
+        color: Theme.panel
         border.width: 1
-        border.color: Theme.glassBorder
+        border.color: Theme.panelBorder
         clip: true
         opacity: root.revealed ? 1 : 0
         scale: root.revealed ? 1 : 0.96

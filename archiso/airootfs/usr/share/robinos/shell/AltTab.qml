@@ -95,9 +95,9 @@ PanelWindow {
         width: perRow * (tileWidth + 12) - 12 + 32
         height: tiles.implicitHeight + 32
         radius: Theme.radiusPanel
-        color: Theme.glass
+        color: Theme.panel
         border.width: 1
-        border.color: Theme.glassBorder
+        border.color: Theme.panelBorder
 
         layer.enabled: !Theme.lowPower
         layer.effect: MultiEffect {

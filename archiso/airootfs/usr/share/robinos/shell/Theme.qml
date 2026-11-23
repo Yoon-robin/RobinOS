@@ -4,108 +4,108 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// RobinOS design tokens (shadcn/ui zinc palette) and the user's appearance choices.
-// The same values live in docs/brand.md, foot.ini, hyprlock.conf and the qt6ct palettes.
+// RobinOS design tokens (robin-ui V5, assets/brand/robin-ui) and the user's appearance
+// choices. The values come from assets/brand/robin-ui/tokens.json; docs/brand.md says
+// which kit token each one is. Two grammars: menus (things on a face: windows, cards,
+// rows, controls) and indicators (floating things: chips, toasts, notifications).
+// One blue, no glass, no blur, no green or yellow.
 Singleton {
     id: root
 
     readonly property bool dark: saved.dark
-    readonly property string accentName: saved.accent
 
-    readonly property var accents: ({
-        "red": "#e5484d",
-        "orange": "#f76b15",
-        "green": "#30a46c",
-        "blue": "#3e63dd",
-        "violet": "#8e4ec6",
-        "neutral": "#a1a1aa"
-    })
-    readonly property var accentLabels: ({
-        "red": "Robin 레드",
-        "orange": "오렌지",
-        "green": "그린",
-        "blue": "블루",
-        "violet": "바이올렛",
-        "neutral": "뉴트럴"
-    })
-    readonly property color accent: accents[accentName] ?? accents.red
+    // The one colour: on, chosen, link, progress, the window border
+    readonly property color accent: dark ? "#4b7dfe" : "#3566e8"
+    readonly property color accentSoft: dark ? Qt.rgba(75 / 255, 125 / 255, 254 / 255, 0.14) : Qt.rgba(53 / 255, 102 / 255, 232 / 255, 0.12)
 
-    readonly property color bg: dark ? "#09090b" : "#ffffff"
-    readonly property color surface: dark ? "#121214" : "#ffffff"
-    readonly property color raised: dark ? "#18181b" : "#f4f4f5"
-    readonly property color secondary: dark ? "#27272a" : "#f4f4f5"
-    readonly property color secondaryHover: dark ? "#3f3f46" : "#e4e4e7"
-    readonly property color hover: dark ? Qt.rgba(1, 1, 1, 0.06) : Qt.rgba(0, 0, 0, 0.05)
-    readonly property color fg: dark ? "#fafafa" : "#09090b"
-    readonly property color fgSoft: dark ? "#e4e4e7" : "#27272a"
-    readonly property color muted: dark ? "#a1a1aa" : "#71717a"
-    readonly property color subtle: dark ? "#71717a" : "#a1a1aa"
-    readonly property color border: dark ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(0, 0, 0, 0.09)
-    readonly property color borderStrong: dark ? Qt.rgba(1, 1, 1, 0.18) : Qt.rgba(0, 0, 0, 0.16)
-    readonly property color input: dark ? Qt.rgba(1, 1, 1, 0.15) : Qt.rgba(0, 0, 0, 0.12)
-    readonly property color primary: dark ? "#fafafa" : "#18181b"
-    readonly property color primaryFg: dark ? "#18181b" : "#fafafa"
-    readonly property color primaryMuted: dark ? "#52525b" : "#a1a1aa"
-    readonly property color ring: dark ? "#71717a" : "#a1a1aa"
-    readonly property color success: dark ? "#4ade80" : "#16a34a"
-    readonly property color destructive: dark ? "#f87171" : "#dc2626"
-    readonly property color destructiveSolid: "#dc2626"
-    // Glass (T-152, shadcn x macOS): the bar, the dock and floating panels are
-    // translucent and Hyprland blurs the desktop behind them (robinos.lua layer
-    // rules). Without a GPU (lowPower) Hyprland has no blur, so they stay nearly solid;
-    // the same when the user turns on "투명도 줄이기" in the settings (solid).
-    readonly property color barBg: dark ? Qt.rgba(9 / 255, 9 / 255, 11 / 255, reduceTransparency ? 1 : solid ? 0.72 : 0.55)
-                                        : Qt.rgba(1, 1, 1, reduceTransparency ? 1 : solid ? 0.78 : 0.62)
-    readonly property color dockBg: dark ? Qt.rgba(18 / 255, 18 / 255, 20 / 255, reduceTransparency ? 1 : solid ? 0.82 : 0.58)
-                                         : Qt.rgba(1, 1, 1, reduceTransparency ? 1 : solid ? 0.85 : 0.64)
-    readonly property color glass: solid ? surface
-                                            : dark ? Qt.rgba(24 / 255, 24 / 255, 27 / 255, 0.70) : Qt.rgba(1, 1, 1, 0.72)
-    readonly property color glassBorder: dark ? Qt.rgba(1, 1, 1, 0.13) : Qt.rgba(0, 0, 0, 0.10)
-    // Tiles and buttons inside a glass panel (quick settings): a tint over the glass,
-    // like Control Center's modules, instead of a solid block
-    readonly property color glassTile: solid ? secondary : dark ? Qt.rgba(1, 1, 1, 0.07) : Qt.rgba(0, 0, 0, 0.05)
-    readonly property color glassTileHover: solid ? secondaryHover : dark ? Qt.rgba(1, 1, 1, 0.13) : Qt.rgba(0, 0, 0, 0.09)
-    readonly property color scrim: dark ? Qt.rgba(0, 0, 0, 0.55) : Qt.rgba(0, 0, 0, 0.25)
-    // Behind the launcher: the desktop stays in view, a little dimmer (like Spotlight)
+    // Faces (menu grammar): side < page < card, split by 1px lines
+    readonly property color side: dark ? "#0a0e11" : "#f4f5f7"
+    readonly property color bg: dark ? "#0e1012" : "#ffffff"
+    readonly property color surface: dark ? "#0f1115" : "#f8f8f9"
+    // Controls: buttons, fields, tiles
+    readonly property color raised: dark ? "#14151c" : "#f1f1f2"
+    readonly property color secondary: dark ? "#14151c" : "#f1f1f2"
+    readonly property color secondaryHover: dark ? "#1b1d25" : "#e9ecf0"
+    readonly property color chosen: dark ? "#222629" : "#dfe3e9"
+    readonly property color hover: dark ? "#15181b" : "#e9ecf0"
+    readonly property color track: dark ? "#1c1e24" : "#e3e6eb"
+
+    // Words: head (titles) > fg (text) > muted (soft) > subtle (faint)
+    readonly property color head: dark ? "#f0f0f0" : "#000000"
+    readonly property color fg: dark ? "#e6e7e9" : "#1a1a1a"
+    readonly property color fgSoft: dark ? "#e6e7e9" : "#1a1a1a"
+    readonly property color muted: dark ? "#8a8e94" : "#616161"
+    readonly property color subtle: dark ? "#7d8187" : "#727272"
+
+    readonly property color border: dark ? "#181a1d" : "#e3e6eb"
+    readonly property color borderStrong: dark ? "#26272d" : "#dedee3"
+    readonly property color input: dark ? "#26272d" : "#dedee3"
+
+    // The filled button: blue with white words, one per screen
+    readonly property color primary: dark ? "#3d6af0" : "#3566e8"
+    readonly property color primaryHover: dark ? "#4b7dfe" : "#2f5cd6"
+    readonly property color primaryFg: "#ffffff"
+    readonly property color primaryMuted: dark ? "#26272d" : "#dedee3"
+    readonly property color ring: dark ? Qt.rgba(75 / 255, 125 / 255, 254 / 255, 0.6) : Qt.rgba(53 / 255, 102 / 255, 232 / 255, 0.55)
+
+    // Tones (indicator grammar): plain, on (blue), note (apricot), alarm (red).
+    // Success is the blue: there is no green.
+    readonly property color plain: dark ? "#98a4b8" : "#6b7480"
+    readonly property color success: accent
+    readonly property color note: dark ? "#c27463" : "#a4523f"
+    readonly property color destructive: dark ? "#e5475a" : "#c0263a"
+    readonly property color destructiveSolid: dark ? "#d52236" : "#c0263a"
+    readonly property color destructiveSoft: dark ? Qt.rgba(213 / 255, 34 / 255, 54 / 255, 0.12) : Qt.rgba(192 / 255, 38 / 255, 58 / 255, 0.09)
+
+    // The bar is the side column's face across the top; the dock and the floating
+    // panels are indicators: the dark HUD face, a 1px line and a shadow all round
+    readonly property color barBg: side
+    readonly property color dockBg: panel
+    readonly property color panel: dark ? "#08090b" : "#ffffff"
+    readonly property color panelBorder: dark ? "#1c1e22" : "#dedee3"
+    // Tiles and buttons inside a panel (quick settings)
+    readonly property color tile: secondary
+    readonly property color tileHover: secondaryHover
+    readonly property color scrim: dark ? Qt.rgba(0, 0, 0, 0.55) : Qt.rgba(0, 0, 0, 0.30)
+    // Behind the launcher: the desktop stays in view, a little dimmer
     readonly property color scrimSoft: dark ? Qt.rgba(0, 0, 0, 0.28) : Qt.rgba(0, 0, 0, 0.10)
-    readonly property color shadow: dark ? Qt.rgba(0, 0, 0, 0.7) : Qt.rgba(0, 0, 0, 0.18)
+    readonly property color shadow: dark ? Qt.rgba(0, 0, 0, 0.6) : Qt.rgba(20 / 255, 24 / 255, 30 / 255, 0.12)
 
+    // Corners: chip 6, control 7, toast 10, card 12, window 14. Pills only on indicators.
     readonly property int radiusSm: 6
-    readonly property int radiusMd: 8
-    readonly property int radius: 10
+    readonly property int radiusMd: 7
+    readonly property int radius: 12
     readonly property int radiusLg: 14
     readonly property int radiusTile: 12
-    readonly property int radiusPanel: 16
-    readonly property int radiusDock: 18
+    readonly property int radiusToast: 10
+    readonly property int radiusPanel: 14
+    readonly property int radiusDock: 14
 
     readonly property int barHeight: 36
-    readonly property string font: "Geist"
+    readonly property string font: "Pretendard Variable"
     readonly property string mono: "Geist Mono"
+    // Pretendard at 450 / 550 / 650; never thinner
+    readonly property int weight: 450
+    readonly property int weightStrong: 550
+    readonly property int weightHead: 650
 
     // "움직임 줄이기" (Settings.qml, T-161) turns the shell's animations off
     readonly property bool reduceMotion: saved.reduceMotion
     // "앱 글자 크게": GTK apps' text at 125% (the shell itself grows with 화면 배율)
     readonly property bool largeText: saved.largeText
-    readonly property int durFast: reduceMotion ? 0 : 120
-    readonly property int dur: reduceMotion ? 0 : 180
-    readonly property int durSpring: reduceMotion ? 0 : 260
+    // Short motion: 150-240ms, coming in by 4px
+    readonly property int durFast: reduceMotion ? 0 : 150
+    readonly property int dur: reduceMotion ? 0 : 200
+    readonly property int durSpring: reduceMotion ? 0 : 240
 
     // Set by robinos-session when there is no GPU acceleration (most VMs):
-    // the shell then skips shadow effects, and Hyprland turns off blur.
+    // the shell then skips shadow effects.
     readonly property bool lowPower: Quickshell.env("ROBINOS_RENDER") === "software"
-    // "투명도 줄이기" (Settings.qml), like macOS' Reduce transparency
-    readonly property bool reduceTransparency: saved.reduceTransparency
-    readonly property bool solid: lowPower || reduceTransparency
 
     function setDark(value) {
         saved.dark = value;
         store.writeAdapter();
         applySystem();
-    }
-
-    function setReduceTransparency(value) {
-        saved.reduceTransparency = value;
-        store.writeAdapter();
     }
 
     function setReduceMotion(value) {
@@ -120,38 +120,22 @@ Singleton {
         applySystem();
     }
 
-    function setAccent(name) {
-        if (!(name in accents))
-            return;
-        saved.accent = name;
-        store.writeAdapter();
-        applySystem();
-    }
-
     // Push the choice to GTK/libadwaita, foot, qt6ct and Hyprland's window borders.
     function applySystem() {
-        const gnomeAccent = {
-            "red": "red",
-            "orange": "orange",
-            "green": "green",
-            "blue": "blue",
-            "violet": "purple",
-            "neutral": "slate"
-        }[accentName] ?? "red";
         const scheme = dark ? "prefer-dark" : "default";
         const gtkTheme = dark ? "adw-gtk3-dark" : "adw-gtk3";
         const icons = dark ? "Papirus-Dark" : "Papirus";
         const palette = dark ? "RobinOS-Dark.conf" : "RobinOS-Light.conf";
         const footSignal = dark ? "USR1" : "USR2";
-        const active = dark ? "rgba(ffffff38)" : "rgba(00000033)";
-        const inactive = dark ? "rgba(ffffff14)" : "rgba(0000001a)";
-        const background = dark ? "0xff09090b" : "0xffffffff";
+        const active = dark ? "rgba(32343bff)" : "rgba(c6cad2ff)";
+        const inactive = dark ? "rgba(181a1dff)" : "rgba(e3e6ebff)";
+        const background = dark ? "0xff0a0e11" : "0xfff4f5f7";
 
         const script = [
             "gsettings set org.gnome.desktop.interface color-scheme '" + scheme + "'",
             "gsettings set org.gnome.desktop.interface gtk-theme '" + gtkTheme + "'",
             "gsettings set org.gnome.desktop.interface icon-theme '" + icons + "'",
-            "gsettings set org.gnome.desktop.interface accent-color '" + gnomeAccent + "'",
+            "gsettings set org.gnome.desktop.interface accent-color 'blue'",
             "gsettings set org.gnome.desktop.interface enable-animations " + (reduceMotion ? "false" : "true"),
             "gsettings set org.gnome.desktop.interface text-scaling-factor " + (largeText ? "1.25" : "1.0"),
             "hyprctl eval 'hl.config({ animations = { enabled = " + (reduceMotion ? "false" : "true") + " } })'",
@@ -185,8 +169,6 @@ Singleton {
             id: saved
 
             property bool dark: true
-            property string accent: "red"
-            property bool reduceTransparency: false
             property bool reduceMotion: false
             property bool largeText: false
         }

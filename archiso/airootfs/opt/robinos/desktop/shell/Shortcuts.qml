@@ -125,9 +125,9 @@ PanelWindow {
         width: Math.min(parent.width - 48, 1120)
         height: content.implicitHeight + 56
         radius: Theme.radiusPanel
-        color: Theme.glass
+        color: Theme.panel
         border.width: 1
-        border.color: Theme.glassBorder
+        border.color: Theme.panelBorder
         opacity: root.revealed ? 1 : 0
         scale: root.revealed ? 1 : 0.98
         focus: true

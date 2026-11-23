@@ -12,7 +12,7 @@ cursor-size=24
 font-name='Geist 11'
 document-font-name='Geist 11'
 monospace-font-name='Geist Mono 11'
-accent-color='red'
+accent-color='blue'
 enable-hot-corners=false
 
 # Title bar buttons of GTK, Firefox and Qt apps. Hyprland 0.56 ignores an app's

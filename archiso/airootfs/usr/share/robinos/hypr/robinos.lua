@@ -119,7 +119,7 @@ end)
 ---- LOOK AND FEEL ----
 -----------------------
 
--- Colors follow the RobinOS zinc tokens (desktop/shell/Theme.qml).
+-- Colors follow the RobinOS robin-ui V5 tokens (desktop/shell/Theme.qml).
 -- The shell rewrites the border colors at runtime when the light theme is picked.
 hl.config({
     general = {
@@ -129,8 +129,8 @@ hl.config({
         border_size = 1,
 
         col = {
-            active_border   = "rgba(ffffff38)",
-            inactive_border = "rgba(ffffff14)",
+            active_border   = "rgba(32343bff)",
+            inactive_border = "rgba(181a1dff)",
         },
 
         resize_on_border = true,
@@ -139,7 +139,7 @@ hl.config({
     },
 
     decoration = {
-        rounding       = 12,
+        rounding       = 14,
         rounding_power = 2,
 
         active_opacity   = 1.0,
@@ -152,13 +152,12 @@ hl.config({
             color        = 0x66000000,
         },
 
-        -- Wide and soft, so the glass panels (Theme.glass, T-152) show the desktop's
-        -- colour without its detail
+        -- robin-ui V5 has no glass: nothing in the shell asks for blur (no layer
+        -- rules below). It stays on for apps that ask for it themselves.
         blur = {
             enabled  = true,
-            size     = 10,
-            passes   = 3,
-            vibrancy = 0.22,
+            size     = 6,
+            passes   = 2,
         },
     },
 
@@ -174,7 +173,7 @@ hl.config({
         force_default_wallpaper  = 0,
         disable_hyprland_logo    = true,
         disable_splash_rendering = true,
-        background_color         = 0xff09090b,
+        background_color         = 0xff0a0e11,
         focus_on_activate        = true,
         -- robinos-session starts Hyprland directly so it can fall back to software rendering.
         disable_watchdog_warning = true,
@@ -468,30 +467,7 @@ hl.window_rule({
 })
 
 -- Shell surfaces from desktop/shell. Their own QML handles enter/exit motion.
-hl.layer_rule({
-    name         = "robinos-shell-blur",
-    match        = { namespace = "^robinos-(bar|dock)$" },
-    blur         = true,
-    ignore_alpha = 0.2,
-})
-
--- Only under the card: the dim around it (Theme.scrimSoft) stays sharp, like Spotlight
-hl.layer_rule({
-    name         = "robinos-launcher-blur",
-    match        = { namespace = "^robinos-launcher$" },
-    blur         = true,
-    ignore_alpha = 0.5,
-})
-
--- Floating panels are full-screen layers with one translucent card (Theme.glass);
--- ignore_alpha keeps the blur under the card and off the clear area and the shadow
-hl.layer_rule({
-    name         = "robinos-panel-blur",
-    match        = { namespace = "^robinos-(quicksettings|calendar|connect|sound|notifications|toasts|osd|alttab|shortcuts|menu|desktopmenu|dockmenu|quicklinks)$" },
-    blur         = true,
-    ignore_alpha = 0.5,
-})
-
+-- Their faces are solid (robin-ui V5: no glass), so there is no blur rule for them.
 hl.layer_rule({
     name    = "robinos-shell-no-anim",
     match   = { namespace = "^robinos-.*$" },

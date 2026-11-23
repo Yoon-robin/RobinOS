@@ -374,7 +374,7 @@ FloatingWindow {
                                 width: 176
                                 height: 112
                                 radius: Theme.radius
-                                color: mode.modelData.dark ? "#09090b" : "#ffffff"
+                                color: mode.modelData.dark ? "#0e1012" : "#ffffff"
                                 border.width: mode.selected ? 2 : 1
                                 border.color: mode.selected ? Theme.primary : Theme.border
 
@@ -457,113 +457,6 @@ FloatingWindow {
                 }
             }
 
-            Group {
-                title: "강조색"
-                hint: "선택한 것, 진행 막대, 창 테두리의 색이에요. 지금: " + (Theme.accentLabels[Theme.accentName] ?? "")
-
-                Row {
-                    spacing: 12
-
-                    Repeater {
-                        model: Object.keys(Theme.accents)
-
-                        Rectangle {
-                            id: swatch
-
-                            required property string modelData
-                            readonly property bool selected: Theme.accentName === modelData
-
-                            width: 32
-                            height: 32
-                            radius: 16
-                            color: "transparent"
-                            border.width: selected ? 2 : 0
-                            border.color: Theme.accents[modelData]
-
-                            Accessible.role: Accessible.RadioButton
-                            Accessible.name: Theme.accentLabels[modelData]
-                            Accessible.checked: selected
-
-                            activeFocusOnTab: true
-                            Keys.onPressed: event => {
-                                if (Keyboard.activates(event)) {
-                                    Theme.setAccent(swatch.modelData);
-                                    event.accepted = true;
-                                }
-                            }
-
-                            FocusRing {
-                                baseRadius: swatch.radius
-                            }
-
-                            Rectangle {
-                                anchors.centerIn: parent
-                                width: 22
-                                height: 22
-                                radius: 11
-                                color: Theme.accents[swatch.modelData]
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: Theme.setAccent(swatch.modelData)
-                            }
-                        }
-                    }
-                }
-            }
-
-            Group {
-                title: "투명도"
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    implicitHeight: 64
-                    radius: Theme.radius
-                    color: "transparent"
-                    border.width: 1
-                    border.color: Theme.border
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 16
-                        anchors.rightMargin: 16
-                        spacing: 16
-
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 2
-
-                            Text {
-                                text: "투명도 줄이기"
-                                color: Theme.fg
-                                font.family: Theme.font
-                                font.pixelSize: 13
-                                font.weight: Font.Medium
-                            }
-
-                            Text {
-                                Layout.fillWidth: true
-                                text: Theme.lowPower ? "이 컴퓨터는 그래픽 가속이 없어서 이미 불투명하게 보여요."
-                                                     : "바, 독, 패널을 불투명하게 해요. 뒤가 비치지 않아 글자가 더 또렷해요."
-                                color: Theme.muted
-                                font.family: Theme.font
-                                font.pixelSize: 12
-                                wrapMode: Text.WordWrap
-                            }
-                        }
-
-                        Switch {
-                            enabled: !Theme.lowPower
-                            checked: Theme.reduceTransparency || Theme.lowPower
-                            label: "투명도 줄이기"
-                            onToggled: Theme.setReduceTransparency(!Theme.reduceTransparency)
-                        }
-                    }
-                }
-            }
-
             // T-161, like Windows' 접근성 and macOS' 손쉬운 사용
             Group {
                 title: "손쉬운 사용"
@@ -634,7 +527,7 @@ FloatingWindow {
                     }
 
                     Text {
-                        text: "처음 쓰는 리눅스 · Arch Linux 기반"
+                        text: "Arch Linux 기반"
                         color: Theme.muted
                         font.family: Theme.font
                         font.pixelSize: 13

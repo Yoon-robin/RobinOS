@@ -297,7 +297,7 @@ PanelWindow {
                                     Layout.fillWidth: true
                                     implicitHeight: 120
                                     radius: Theme.radius
-                                    color: themeChoice.modelData.dark ? "#09090b" : "#ffffff"
+                                    color: themeChoice.modelData.dark ? "#0e1012" : "#ffffff"
                                     border.width: themeChoice.selected ? 2 : 1
                                     border.color: themeChoice.selected ? Theme.fg : Theme.border
 
@@ -376,71 +376,6 @@ PanelWindow {
                         }
                     }
 
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 10
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: "강조 색상 · " + (Theme.accentLabels[Theme.accentName] ?? "")
-                            color: Theme.muted
-                            font.family: Theme.font
-                            font.pixelSize: 13
-                            font.weight: Font.Medium
-                        }
-
-                        Repeater {
-                            model: ["red", "orange", "green", "blue", "violet", "neutral"]
-
-                            Rectangle {
-                                id: swatch
-
-                                required property string modelData
-                                readonly property bool selected: Theme.accentName === modelData
-
-                                implicitWidth: 26
-                                implicitHeight: 26
-                                radius: 13
-                                color: "transparent"
-                                border.width: selected ? 2 : 0
-                                border.color: Theme.accents[modelData]
-
-                                Accessible.role: Accessible.RadioButton
-                                Accessible.name: Theme.accentLabels[modelData]
-                                Accessible.checked: selected
-
-                                activeFocusOnTab: true
-                                Keys.onPressed: event => {
-                                    if (Keyboard.activates(event)) {
-                                        Theme.setAccent(swatch.modelData);
-                                        event.accepted = true;
-                                    }
-                                }
-
-                                FocusRing {
-                                    baseRadius: swatch.radius
-                                }
-
-                                Rectangle {
-                                    anchors.centerIn: parent
-                                    width: swatch.selected ? 16 : 22
-                                    height: width
-                                    radius: width / 2
-                                    color: Theme.accents[swatch.modelData]
-
-                                    Behavior on width {
-                                        NumberAnimation { duration: Theme.durFast }
-                                    }
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: Theme.setAccent(swatch.modelData)
-                                }
-                            }
-                        }
-                    }
                 }
 
                 // 2. 한/영 shortcut, with a box to try it

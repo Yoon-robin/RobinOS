@@ -1,6 +1,6 @@
 # RobinOS 데스크톱
 
-RobinOS의 데스크톱은 Hyprland 위에 직접 만든 Quickshell 셸이에요. 디자인은 shadcn/ui의 zinc 팔레트를 따라요. 윈도우에서 온 사람도 바로 쓸 수 있게 익숙한 단축키와 이름을 입구로 뒀어요. 왜 이렇게 만들었는지는 [design.md](design.md)에 있어요.
+RobinOS의 데스크톱은 Hyprland 위에 직접 만든 Quickshell 셸이에요. 디자인은 robin-ui V5 키트를 따라요([brand.md](brand.md)). 윈도우에서 온 사람도 바로 쓸 수 있게 익숙한 단축키와 이름을 입구로 뒀어요. 왜 이렇게 만들었는지는 [design.md](design.md)에 있어요.
 
 ## 구성 요소
 

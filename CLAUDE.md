@@ -1,6 +1,6 @@
 # RobinOS: Claude 작업 규칙
 
-RobinOS는 Arch Linux 기반의 한국어 우선 OS예요. 목적은 "처음 쓰는 리눅스"예요(2026-10-12 사용자 결정): 리눅스를 처음 써 보는 사람이 윈도우처럼 시작해서 매일 쓰는 동안 리눅스를 익혀요. Hyprland 위에 직접 만든 Quickshell 셸을 얹었고, 화면과 도구는 "RobinOS라면 어떻게 할까"에서 시작해 직접 만들어요(2026-10-10). 보안 학습은 학습 과정의 뒷부분이고 앞세우지 않아요. 제품 설계는 [docs/design.md](docs/design.md)에 있어요.
+RobinOS는 Arch Linux 기반의 한국어 우선 OS예요. 정체성은 "예쁜 UI를 가진 OS"예요(2026-11-24 사용자 결정): 모든 화면이 robin-ui V5 키트(`assets/brand/robin-ui/`) 하나를 따라요. Hyprland 위에 직접 만든 Quickshell 셸을 얹었고, 화면과 도구는 "RobinOS라면 어떻게 할까"에서 시작해 직접 만들어요(2026-10-10). 리눅스를 처음 쓰는 사람을 위한 장치(윈도우 단축키, 터미널 힌트, 학습 센터)는 그대로 있지만 앞세우지 않아요. 제품 설계는 [docs/design.md](docs/design.md), 화면 규칙은 [docs/brand.md](docs/brand.md)에 있어요.
 
 ## 꼭 지킬 것
 
@@ -8,6 +8,7 @@ RobinOS는 Arch Linux 기반의 한국어 우선 OS예요. 목적은 "처음 쓰
 - **문서와 사용자에게 보이는 글은 한국어 해요체**로 써요. 말투는 [docs/design.md](docs/design.md)를 따라요.
 - **검증은 이 PC에서 해요.** GitHub Actions는 수동 실행 전용이고 쓰지 않아요. 방법은 [docs/testing.md](docs/testing.md)에 있어요.
 - **스스로 판단해서 진행해요.** 사용자가 "알아서 해"라고 했어요. 다만 관리자 권한, 윈도우 시스템 설정, force push, 푸시한 히스토리 다시 쓰기, 릴리스나 원격 브랜치 삭제, 돈이 드는 일, 제품 방향을 크게 바꾸는 결정은 직접 하지 않고 [docs/tasks.md](docs/tasks.md)의 "사용자 확인 필요"에 적은 뒤 다른 일을 계속해요(답을 기다리며 멈추지 않아요). 내가 만든 로컬 작업 브랜치(`work/batch*`)는 main에 합친 뒤 지워도 돼요. 공식 출처의 개발 도구는 내려받아도 돼요(체크섬 확인).
+- **화면은 robin-ui V5 키트를 따라요.** 화면을 만들거나 고치기 전에 `assets/brand/robin-ui/AGENTS.md`를 읽어요. 색·모서리 값은 `desktop/shell/Theme.qml`의 토큰만 쓰고(새로 짓지 않아요), 유리·흐림·초록·노랑을 쓰지 않고, 파란 채움은 한 화면에 하나예요.
 - **푸시는 검증이 끝난 뒤에만 해요.** 기준은 [docs/loop.md](docs/loop.md)의 "푸시"를 따라요.
 
 ## 루프로 일할 때

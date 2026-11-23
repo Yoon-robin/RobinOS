@@ -55,9 +55,9 @@ PanelWindow {
                 Layout.fillWidth: true
                 implicitHeight: body.implicitHeight + 28
                 radius: 12
-                color: Theme.glass
+                color: Theme.panel
                 border.width: 1
-                border.color: critical ? Theme.destructive : Theme.glassBorder
+                border.color: critical ? Theme.destructive : Theme.panelBorder
 
                 layer.enabled: !Theme.lowPower
                 layer.effect: MultiEffect {

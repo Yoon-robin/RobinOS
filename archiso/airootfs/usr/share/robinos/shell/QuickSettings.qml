@@ -80,9 +80,9 @@ PanelWindow {
         width: 344
         height: content.implicitHeight + 24
         radius: Theme.radiusPanel
-        color: Theme.glass
+        color: Theme.panel
         border.width: 1
-        border.color: Theme.glassBorder
+        border.color: Theme.panelBorder
         opacity: root.revealed ? 1 : 0
         focus: true
         // Grows out of its corner under the bar and settles, like a spring (T-152)
@@ -217,7 +217,7 @@ PanelWindow {
                         implicitHeight: 34
                         radius: Theme.radiusMd
                         color: danger ? (powerMouse.containsMouse ? "#b91c1c" : Theme.destructiveSolid)
-                                      : (powerMouse.containsMouse ? Theme.glassTileHover : Theme.glassTile)
+                                      : (powerMouse.containsMouse ? Theme.tileHover : Theme.tile)
 
                         Accessible.role: Accessible.Button
                         Accessible.name: modelData.title
@@ -282,7 +282,7 @@ PanelWindow {
                 Layout.fillWidth: true
                 implicitHeight: 40
                 radius: Theme.radiusMd
-                color: updateMouse.containsMouse ? Theme.glassTileHover : Theme.glassTile
+                color: updateMouse.containsMouse ? Theme.tileHover : Theme.tile
 
                 Accessible.role: Accessible.Button
                 Accessible.name: "업데이트 " + ShellState.updateCount + "개 설치하기"
@@ -470,7 +470,7 @@ PanelWindow {
                         Layout.fillWidth: true
                         implicitHeight: 30
                         radius: Theme.radiusMd
-                        color: selected ? Theme.primary : (modeMouse.containsMouse ? Theme.glassTileHover : Theme.glassTile)
+                        color: selected ? Theme.primary : (modeMouse.containsMouse ? Theme.tileHover : Theme.tile)
 
                         Accessible.role: Accessible.RadioButton
                         Accessible.name: "전원 모드 " + modelData.title
@@ -540,7 +540,7 @@ PanelWindow {
                         Layout.fillWidth: true
                         implicitHeight: 30
                         radius: Theme.radiusMd
-                        color: selected ? Theme.primary : (scaleMouse.containsMouse ? Theme.glassTileHover : Theme.glassTile)
+                        color: selected ? Theme.primary : (scaleMouse.containsMouse ? Theme.tileHover : Theme.tile)
 
                         Accessible.role: Accessible.RadioButton
                         Accessible.name: "화면 배율 " + Math.round(modelData * 100) + "%"
@@ -634,81 +634,6 @@ PanelWindow {
                         iconColor: Theme.muted
                         label: "소리 설정"
                         onClicked: ShellState.openDetail("sound")
-                    }
-                }
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: 1
-                color: Theme.border
-            }
-
-            // ---- Accent color ----
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.leftMargin: 2
-                Layout.rightMargin: 2
-                spacing: 10
-
-                Text {
-                    Layout.fillWidth: true
-                    text: "강조 색상"
-                    color: Theme.muted
-                    font.family: Theme.font
-                    font.pixelSize: 12
-                    font.weight: Font.Medium
-                }
-
-                Repeater {
-                    model: ["red", "orange", "green", "blue", "violet", "neutral"]
-
-                    Rectangle {
-                        id: swatch
-
-                        required property string modelData
-                        readonly property bool selected: Theme.accentName === modelData
-
-                        implicitWidth: 22
-                        implicitHeight: 22
-                        radius: 11
-                        color: "transparent"
-                        border.width: selected ? 2 : 0
-                        border.color: Theme.accents[modelData]
-
-                        Accessible.role: Accessible.RadioButton
-                        Accessible.name: Theme.accentLabels[modelData]
-                        Accessible.checked: selected
-
-                        activeFocusOnTab: true
-                        Keys.onPressed: event => {
-                            if (Keyboard.activates(event)) {
-                                Theme.setAccent(swatch.modelData);
-                                event.accepted = true;
-                            }
-                        }
-
-                        FocusRing {
-                            baseRadius: swatch.radius
-                        }
-
-                        Rectangle {
-                            anchors.centerIn: parent
-                            width: swatch.selected ? 14 : 18
-                            height: width
-                            radius: width / 2
-                            color: Theme.accents[swatch.modelData]
-
-                            Behavior on width {
-                                NumberAnimation { duration: Theme.durFast }
-                            }
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: Theme.setAccent(swatch.modelData)
-                        }
                     }
                 }
             }

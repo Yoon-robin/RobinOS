@@ -88,9 +88,9 @@ PanelWindow {
         width: 360
         height: Math.min(content.implicitHeight + 28, parent.height - Theme.barHeight - 120)
         radius: Theme.radiusPanel
-        color: Theme.glass
+        color: Theme.panel
         border.width: 1
-        border.color: Theme.glassBorder
+        border.color: Theme.panelBorder
         opacity: root.revealed ? 1 : 0
         focus: true
         // Grows out of where it opens and settles, like a spring (T-152)
