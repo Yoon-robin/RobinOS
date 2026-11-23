@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>RobinOS link preview</title>
+<!-- The picture a chat or a search shows for https://yoon-robin.github.io/RobinOS/
+     (site/assets/og.jpg, 1200x630). scripts/make-og.py shoots this page with
+     headless Chrome; the fonts and the screenshot are the site's own. -->
+<style>
+  @font-face { font-family: "Geist"; src: url("../site/assets/fonts/Geist-Variable.woff2"); font-weight: 100 900; }
+  @font-face { font-family: "Pretendard"; src: url("../site/assets/fonts/Pretendard-SemiBold.woff2"); font-weight: 600; }
+  html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: #000; }
+  body { position: relative; font-family: "Geist", "Pretendard", sans-serif; color: #f5f5f7; text-align: center; }
+  .glow { position: absolute; left: 50%; bottom: -140px; width: 900px; height: 360px; transform: translateX(-50%);
+          background: radial-gradient(50% 60% at 30% 45%, rgba(229, 72, 77, .65), transparent 70%),
+                      radial-gradient(45% 55% at 78% 60%, rgba(247, 107, 21, .40), transparent 70%),
+                      radial-gradient(40% 50% at 55% 85%, rgba(139, 92, 246, .35), transparent 70%);
+          filter: blur(60px); }
+  h1 { position: relative; margin: 54px 0 0; font-size: 188px; font-weight: 700; line-height: .92; letter-spacing: -.055em; }
+  p { position: relative; margin: 18px 0 0; font-family: "Pretendard", "Geist", sans-serif; font-size: 34px; font-weight: 600;
+      letter-spacing: -.015em; color: #a1a1aa; }
+  .shot { position: absolute; left: 50%; top: 392px; width: 820px; transform: translateX(-50%) perspective(1000px) rotateX(26deg);
+          transform-origin: 50% 0; border: 1px solid rgba(255, 255, 255, .16); border-radius: 16px; }
+</style>
+</head>
+<body>
+  <div class="glow"></div>
+  <h1>RobinOS</h1>
+  <p>RobinOS로 시작하는 첫 리눅스</p>
+  <img class="shot" src="../site/assets/screens/desktop.webp" alt="">
+</body>
+</html>

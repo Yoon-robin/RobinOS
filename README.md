@@ -4,15 +4,17 @@
 
 RobinOS는 예쁜 UI를 가진 OS예요. 바, 독, 런처, 설정, 설치기, 로그인 화면까지 한 디자인 언어로 직접 그렸어요. 리눅스를 처음 써 보는 사람도 쓸 수 있어요.
 
+소개 페이지: https://yoon-robin.github.io/RobinOS/
+
 윈도우에서 쓰던 단축키와 이름이 그대로 통해서 첫날부터 쓸 수 있어요. 터미널에 `ipconfig`를 치면 리눅스에서는 `ip a`라고 알려 주고, 업데이트하다 망가지면 부팅 메뉴에서 되돌려요. 더 배우고 싶으면 학습 센터의 미션 45개가 리눅스 기초부터 차근차근 이어 줘요.
 
 Arch Linux 위에 셸, 설치기, 업데이트 저장소, 스냅샷 복구를 RobinOS가 직접 만들어 얹었어요. 목적과 설계는 [docs/design.md](docs/design.md), 왜 만드는지는 [docs/vision.md](docs/vision.md)에 있어요.
 
-**내려받기**: 최신 프리뷰는 [v0.2.0](https://github.com/Yoon-robin/RobinOS/releases/tag/v0.2.0)이에요(2026-10-10). 아직 VM에서만 검증한 프리뷰라 중요한 자료는 꼭 백업하세요. USB에 담기 전에 체크섬과 서명을 확인하는 방법은 [docs/install.md](docs/install.md)의 "내려받은 ISO 확인하기"에 있어요. 대부분의 PC는 USB로 켜기 전에 펌웨어 설정에서 **보안 부팅(Secure Boot)을 꺼야 해요**(같은 문서의 "보안 부팅 끄기").
+**내려받기**: 최신 프리뷰는 [v0.3.0](https://github.com/Yoon-robin/RobinOS/releases/tag/v0.3.0)이에요(2026-10-13, [무엇이 바뀌었나](docs/release-notes-v0.3.md)). VM에서 검증했고 실제 PC는 아직 몇 대만 확인한 프리뷰라 중요한 자료는 꼭 백업하세요. USB에 담기 전에 체크섬과 서명을 확인하는 방법은 [docs/install.md](docs/install.md)의 "내려받은 ISO 확인하기"에 있어요. 대부분의 PC는 USB로 켜기 전에 펌웨어 설정에서 **보안 부팅(Secure Boot)을 꺼야 해요**(같은 문서의 "보안 부팅 끄기").
 
 ## 화면
 
-부팅 테스트(VM, 1600×900)가 찍은 화면이에요. 다크·라이트 모드를 고를 수 있어요. 아래 스크린샷은 robin-ui V5로 바꾸기 전 모습이라 새로 찍을 거예요(T-168).
+부팅 테스트(VM, 1600×900)가 찍은 화면이에요. 다크·라이트 모드를 고를 수 있어요. 아래 스크린샷은 robin-ui V5로 바꾸기 전 모습이라 새로 찍을 거예요(T-180).
 
 | 런처 (`Win+Space`) | 빠른 설정 (`Win+S`) |
 |---|---|
@@ -72,7 +74,7 @@ bin/robinctl lab info net
 bin/robinctl lab status web
 ```
 
-`robinctl doctor`는 데스크톱(Hyprland, Quickshell, RobinOS 셸)과 브랜딩 요소(SDDM 테마, 설치된 시스템의 GRUB 테마)도 확인해요. NVIDIA 그래픽 카드가 있으면 드라이버가 떠 있는지, 설치본에서는 인쇄 서비스가 켜져 있는지도 알려 줘요.
+`robinctl doctor`는 데스크톱(Hyprland, Quickshell, RobinOS 셸)과 브랜딩 요소(SDDM 테마, 설치된 시스템의 GRUB 테마)도 확인해요. NVIDIA 그래픽 카드가 있으면 드라이버가 떠 있는지, 설치본에서는 인쇄 서비스가 켜져 있는지도 알려 줘요. 안 되는 게 있으면 `robinctl report`가 장치, 드라이버, 이번 부팅의 오류를 한 파일(`~/robinos-report.txt`)로 모아 줘요. 이름과 주소는 가리고 어디로도 보내지 않으니, 읽어 본 뒤 문제를 알릴 때 붙여 넣으면 돼요.
 
 `robinctl audit`은 윈도우 보안 화면처럼 내 컴퓨터의 보안 상태를 보여 줘요. 다른 컴퓨터가 접속할 수 있는 서비스, SSH 서버, 홈 폴더와 SSH 열쇠 권한, 스냅샷, 방화벽, 디스크 암호화를 보고, 줄마다 왜 중요한지와 바꾸는 방법(관련 미션 번호)을 알려 줘요. 아무것도 바꾸지 않고 관리자 권한도 필요 없어요. 런처에서 "보안 점검"이나 "Windows 보안"으로도 열려요.
 

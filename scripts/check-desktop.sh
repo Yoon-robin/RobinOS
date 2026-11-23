@@ -5,6 +5,8 @@ set -euo pipefail
 #
 #   - Lua syntax of the Hyprland config      (luac -p)
 #   - Hyprland config validation             (Hyprland --verify-config)
+#   - Pointer and keyboard settings          (lua scripts/test-hypr-input.lua)
+#   - Default apps tool of the settings      (python3 scripts/test-default-apps.py)
 #   - QML syntax of the shell and SDDM theme (qmlformat)
 #   - Syntax of desktop scripts              (bash -n, Python ast)
 #   - JSON syntax of the Firefox policies    (python3 -m json.tool)
@@ -61,6 +63,30 @@ if command -v Hyprland >/dev/null 2>&1; then
   fi
 else
   skip "Hyprland not found (pacman -S hyprland)"
+fi
+
+printf 'Pointer and keyboard settings (Lua)\n'
+if command -v lua >/dev/null 2>&1; then
+  input_state="$(mktemp -d)"
+  if XDG_STATE_HOME="${input_state}" lua "${ROOT_DIR}/scripts/test-hypr-input.lua" "${ROOT_DIR}/desktop/hypr/robinos.lua"; then
+    ok "scripts/test-hypr-input.lua"
+  else
+    fail "scripts/test-hypr-input.lua"
+  fi
+  rm -rf "${input_state}"
+else
+  skip "lua not found (pacman -S lua)"
+fi
+
+printf 'Default apps (robinos-default-apps)\n'
+if command -v python3 >/dev/null 2>&1; then
+  if python3 "${ROOT_DIR}/scripts/test-default-apps.py"; then
+    ok "scripts/test-default-apps.py"
+  else
+    fail "scripts/test-default-apps.py"
+  fi
+else
+  skip "python3 not found"
 fi
 
 printf 'QML syntax\n'
@@ -222,6 +248,14 @@ QtObject {
             ["7z2301-x64.exe", "압축 프로그램"], ["GOMPLAYERGLOBALSETUP.EXE", "동영상 플레이어"],
             ["DiscordSetup.exe", "Discord"], ["VSCodeUserSetup-x64-1.95.exe", "Visual Studio Code"],
             ["Git-2.47.0-64-bit.exe", "Git"], ["npp.8.7.Installer.x64.exe", "메모장 프로그램"],
+            ["MicrosoftEdgeSetup.exe", "Microsoft Edge"], ["OperaSetup.exe", "Opera"], ["FirefoxSetup.exe", "Firefox"],
+            ["SteamSetup.exe", "Steam"], ["TeamsSetup_c_w_.exe", "Microsoft Teams"], ["TeamViewer_Setup.exe", "TeamViewer"],
+            ["Adobe_Photoshop_Setup.exe", "Adobe 프로그램"], ["AcroRdrDC2300820380_en_US.exe", "PDF 보기"],
+            ["Adobe Acrobat Reader.exe", "PDF 보기"], ["qbittorrent_4.6.4_x64_setup.exe", "토렌트 프로그램"],
+            ["EpicInstaller-15.17.exe", "게임 런처"], ["Bandicam_Setup.exe", "화면 녹화 프로그램"],
+            ["ALYac_Setup.exe", "백신 프로그램"], ["TouchEnKey_Setup.exe", "은행·공공기관 보안 프로그램"],
+            ["nProtect Online Security.exe", "은행·공공기관 보안 프로그램"], ["WizveraVeraport.exe", "은행·공공기관 보안 프로그램"],
+            ["Slack Setup.exe", "Slack"], ["notes.exe", null], ["Signal.exe", null], ["cooperate_setup.exe", null],
             ["DigitalClock.exe", null], ["setup.exe", null], ["game.msi", null], ["jobs.exe", null]
         ];
         let bad = 0;

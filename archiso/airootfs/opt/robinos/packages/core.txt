@@ -30,6 +30,8 @@ pacman-contrib
 # checkupdates (the shell's update dot) needs fakeroot to sync its own database copy
 fakeroot
 btrfs-progs
+# Compressed swap in RAM (desktop/systemd/zram-generator.conf)
+zram-generator
 snapper
 snap-pac
 grub-btrfs

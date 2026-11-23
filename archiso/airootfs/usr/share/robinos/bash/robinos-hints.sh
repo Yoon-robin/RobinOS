@@ -58,14 +58,14 @@ __robinos_windows_hint() {
     mspaint)             printf '%s' 'loupe 그림|사진 보기는 loupe예요. 그림판은 없어서 앱 스토어에서 그리기 앱을 받아요' ;;
     doskey)              printf '%s' "alias 이름='명령'|명령에 짧은 이름을 붙여요 (~/.bashrc에 적으면 계속 써요)" ;;
     bcdedit)             printf '%s' 'efibootmgr|부팅 항목을 보여 줘요 (부팅 메뉴는 GRUB이 맡아요)' ;;
-    certutil)            printf '%s' 'sha256sum 파일|파일의 해시를 봐요 (certutil -hashfile 자리, 미션 39)' ;;
-    cipher)              printf '%s' 'gpg -c 파일|파일을 비밀번호로 암호화해요 (미션 40)' ;;
-    runas)               printf '%s' 'sudo 명령|관리자(root) 권한으로 실행해요 (wheel 그룹만 돼요, 미션 36)' ;;
-    cacls)               printf '%s' 'chmod 600 파일|나만 읽고 쓰게 해요 (권한은 ls -l로 봐요, 미션 37)' ;;
+    certutil)            printf '%s' 'sha256sum 파일|파일의 해시를 봐요 (certutil -hashfile 자리)' ;;
+    cipher)              printf '%s' 'gpg -c 파일|파일을 비밀번호로 암호화해요' ;;
+    runas)               printf '%s' 'sudo 명령|관리자(root) 권한으로 실행해요 (wheel 그룹만 돼요)' ;;
+    cacls)               printf '%s' 'chmod 600 파일|나만 읽고 쓰게 해요 (권한은 ls -l로 봐요)' ;;
     netsh)               printf '%s' 'nmcli|네트워크와 Wi-Fi를 설정해요 (빠른 설정의 Wi-Fi 화살표도 돼요)' ;;
     tree)                printf '%s' 'find . -maxdepth 2|폴더 구조를 보여 줘요 (ls -R도 돼요)' ;;
     comp)                printf '%s' 'cmp 파일1 파일2|두 파일이 바이트까지 같은지 봐요 (다른 줄은 diff)' ;;
-    sc)                  printf '%s' 'systemctl status 서비스|서비스 상태를 보고 켜고 꺼요 (미션 34)' ;;
+    sc)                  printf '%s' 'systemctl status 서비스|서비스 상태를 보고 켜고 꺼요' ;;
     schtasks)            printf '%s' 'systemctl list-timers|예약된 작업을 보여 줘요' ;;
     pathping)            printf '%s' 'tracepath 주소|목적지까지의 경로와 지연을 함께 봐요' ;;
     cleanmgr)            printf '%s' 'baobab|디스크를 무엇이 차지하는지 봐요 (패키지 캐시는 sudo pacman -Sc로 비워요)' ;;
@@ -73,15 +73,44 @@ __robinos_windows_hint() {
   esac
 }
 
+# The learning mission that practises the Linux side of a Windows command (T-169),
+# or nothing. Missions are numbered in bin/robinctl (learn_title).
+__robinos_hint_mission() {
+  case "$1" in
+    dir|md|cd..)                                   printf '1' ;;
+    copy|xcopy|robocopy|move|ren|del|erase|rd)     printf '3' ;;
+    findstr)                                       printf '5' ;;
+    ipconfig|getmac)                               printf '6' ;;
+    nslookup)                                      printf '7' ;;
+    netstat)                                       printf '9' ;;
+    where)                                         printf '27' ;;
+    doskey)                                        printf '28' ;;
+    tasklist|taskmgr|perfmon|resmon)               printf '31' ;;
+    taskkill)                                      printf '32' ;;
+    diskpart|cleanmgr|diskmgmt.msc)                printf '33' ;;
+    sc|services.msc)                               printf '34' ;;
+    eventvwr|eventvwr.msc)                         printf '35' ;;
+    net|runas)                                     printf '36' ;;
+    attrib|icacls|cacls)                           printf '37' ;;
+    certutil)                                      printf '39' ;;
+    cipher)                                        printf '40' ;;
+    comp)                                          printf '45' ;;
+  esac
+}
+
 command_not_found_handle() {
   local name="${1,,}"
-  local hint
+  local hint mission
   name="${name%.exe}"
   hint="$(__robinos_windows_hint "${name}")"
 
   if [[ -n "${hint}" ]]; then
     printf '\033[1m%s\033[0m 명령은 윈도우용이에요. 리눅스에서는\n  \033[1;32m%s\033[0m  \033[2m%s\033[0m\n' \
       "$1" "${hint%%|*}" "${hint#*|}" >&2
+    mission="$(__robinos_hint_mission "${name}")"
+    if [[ -n "${mission}" ]]; then
+      printf '  \033[2m직접 해 보기: 학습 미션 %s →\033[0m robinctl learn show %s\n' "${mission}" "${mission}" >&2
+    fi
   else
     printf 'bash: %s: 명령을 찾을 수 없어요\n' "$1" >&2
   fi

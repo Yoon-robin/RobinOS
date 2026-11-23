@@ -39,7 +39,7 @@ INSTALLER = os.environ.get("ROBINOS_INSTALLER", "archinstall")
 TEST_LAB = os.environ.get("ROBINOS_TEST_LAB") == "1"
 # robin-install next to Windows puts RobinOS on the fourth partition
 ROOT_PART = "/dev/vda4" if INSTALLER == "windows" else "/dev/vda2"
-# "encrypted": robin-install on the whole disk with LUKS2 (T-167); Btrfs is then on
+# "encrypted": robin-install on the whole disk with LUKS2 (T-179); Btrfs is then on
 # the opened volume, and GRUB asks for the password before its menu
 ENCRYPTED = INSTALLER == "encrypted"
 ROOT_DEV = "/dev/mapper/cryptroot" if ENCRYPTED else ROOT_PART
@@ -419,6 +419,250 @@ def check_windows_kept(con, before):
     log("Windows partitions, its EFI files and C: are unchanged")
 
 
+# The robin-install the live system runs is this checkout's, loaded as a module so
+# the test can call its functions (the file has no .py)
+LOAD_INSTALLER = """
+import importlib.machinery, importlib.util
+loader = importlib.machinery.SourceFileLoader("ri", "/usr/local/bin/robin-install")
+ri = importlib.util.module_from_spec(importlib.util.spec_from_loader("ri", loader))
+loader.exec_module(ri)
+"""
+
+# prepare_disk with a size: sgdisk must really make a partition of that size in the
+# free space (the unit tests only see the arguments), and robin-install's own
+# lsblk columns must work on the live system's util-linux
+SIZE_CHECK = LOAD_INSTALLER + """
+import subprocess
+disk = next(d for d in ri.list_disks() if d["path"] == "/dev/vda")
+free = disk["free"] // ri.GIB
+print("free space:", free, "GB")
+assert disk["can_alongside"] and not disk["can_partition"], (disk["can_alongside"], disk["can_partition"])
+esp, root = ri.prepare_disk({"mode": "alongside", "size_gb": 41}, disk)
+size = int(subprocess.check_output(["lsblk", "-bno", "SIZE", root]).split()[0])
+print(root, size)
+assert abs(size - 41 * ri.GIB) <= 1048576, size
+after = next(d for d in ri.list_disks() if d["path"] == "/dev/vda")
+print("left over:", after["free"] // ri.GIB, "GB")
+assert after["free"] < 40 * ri.GIB and after["free"] >= (free - 42) * ri.GIB
+earlier = [p for p in after["partitions"] if p["kind"] == "robinos"]
+print("earlier RobinOS:", earlier)
+assert len(earlier) == 1 and earlier[0]["usable"] and earlier[0]["path"] == root
+assert after["can_partition"] and not after["can_alongside"]
+"""
+
+# What robin-install offers when Disk Management made a "Data" partition (NTFS)
+# next to Windows' own C:
+DISKS_CHECK = LOAD_INSTALLER + """
+import json, subprocess
+disk = json.loads(subprocess.check_output(["robin-install", "disks"]))[0]
+by = {p["path"]: p for p in disk["partitions"]}
+print({path: (p["kind"], p["fstype"], p["label"], p["usable"], p["reason"]) for path, p in by.items()})
+assert disk["can_partition"] and not disk["can_alongside"]
+assert by["/dev/vda4"]["usable"] and by["/dev/vda4"]["fstype"] == "ntfs" and by["/dev/vda4"]["label"] == "Data"
+for path in ("/dev/vda1", "/dev/vda2", "/dev/vda3"):
+    assert not by[path]["usable"] and by[path]["reason"], path
+assert ri.windows_inside("/dev/vda3") is True
+assert ri.windows_inside("/dev/vda4") is False
+"""
+
+SESSION_ENV = "XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus"
+
+
+def make_data_partition(con):
+    """A partition like Disk Management's "New Simple Volume": NTFS, named Data."""
+    con.run("sgdisk -n 4:0:+41G -t 4:0700 -c '4:Basic data partition' /dev/vda > /dev/null"
+            " && partprobe /dev/vda && udevadm settle && mkfs.ntfs -Q -L Data /dev/vda4 > /dev/null"
+            " && mkdir -p /tmp/data && mount -t ntfs-3g /dev/vda4 /tmp/data"
+            " && echo robinos-data > /tmp/data/marker.txt && umount /tmp/data")
+
+
+INSTALLER_IPC = f"runuser -u robin -- env {SESSION_ENV} qs ipc -p /usr/share/robinos/shell call shell "
+
+
+def installer_state(con):
+    """What the wizard on the live desktop says about itself (Installer.testState)."""
+    _, text = con.capture(INSTALLER_IPC + "installerState", timeout=60)
+    for line in text.splitlines():
+        if line.strip().startswith("{"):
+            return json.loads(line.strip())
+    raise RuntimeError(f"the installer answered no state: {text!r}")
+
+
+def wait_installer(con, what, test, timeout=90):
+    """Polls the wizard's state until test(state) holds."""
+    deadline = time.time() + timeout * SPEED
+    state = None
+    while time.time() < deadline:
+        state = installer_state(con)
+        if test(state):
+            log(f"installer: {what}: {state}")
+            return state
+        sleep(3)
+    raise RuntimeError(f"the installer never got to: {what}; last state {state}")
+
+
+def show_free_space(con, qmp):
+    """The installer on a disk with about 44 GB free next to Windows: the free space is
+    offered, RobinOS gets all of it until the slider says less."""
+    qmp.keys("esc")  # the welcome wizard of the first login is on top and takes the keys
+    sleep(3)
+    con.run(INSTALLER_IPC + "installer", check=False)
+    sleep(5)
+    qmp.keys("ret")
+    state = wait_installer(con, "the free space is offered",
+                           lambda st: st["step"] == 1 and st["disk"] == "/dev/vda")
+    shot(qmp, "installer-free-space")
+    if state["mode"] != "alongside" or state["sizeGb"] < 40 or not state["canNext"]:
+        raise RuntimeError(f"the installer didn't offer the free space with a size: {state}")
+    qmp.keys("alt", "f4")
+    sleep(2)
+
+
+def drive_installer(con, qmp, install=False):
+    """The installer as a person uses it, with the keyboard, up to the last question:
+    the partition made in Disk Management is preselected, the wizard cannot go on
+    before the files that go are confirmed, and it does after. With install=True the
+    last button is pressed too, and the wizard itself installs: `sudo robin-install run -`
+    with its plan, its progress bar, its finished page (the whole path a person takes)."""
+    # The welcome wizard of the first login is on top and takes the keys: Esc skips it
+    qmp.keys("esc")
+    sleep(3)
+    con.run(INSTALLER_IPC + "installer", check=False)
+    sleep(5)
+    qmp.keys("ret")  # the first page: what you need
+    state = wait_installer(con, "step 2, the disk and the partition",
+                           lambda st: st["step"] == 1 and st["disk"] == "/dev/vda")
+    shot(qmp, "installer-partitions")
+    if state["mode"] != "partition" or state["partition"] != "/dev/vda4" or not state["canNext"]:
+        raise RuntimeError(f"the installer didn't preselect the Data partition: {state}")
+    qmp.keys("ret")
+    wait_installer(con, "step 3, the user", lambda st: st["step"] == 2 and not st["canNext"])
+    # Tab goes to the first field: user name, then the computer name (kept), the
+    # password and its repeat
+    qmp.keys("tab")
+    qmp.type_text("robin")
+    qmp.keys("tab")  # (keys() with several names presses them together)
+    qmp.keys("tab")
+    qmp.type_text(PASSWORD)
+    qmp.keys("tab")
+    qmp.type_text(PASSWORD)
+    state = wait_installer(con, "the user and password are in", lambda st: st["user"] == "robin" and st["canNext"])
+    shot(qmp, "installer-user")
+    qmp.keys("ret")
+    state = wait_installer(con, "step 4, the confirmation", lambda st: st["step"] == 3)
+    if state["canNext"] or state["eraseConfirmed"]:
+        raise RuntimeError(f"the installer lets 설치 시작 through before the files that go are confirmed: {state}")
+    shot(qmp, "installer-confirm")
+    # The first thing Tab reaches is the check box "the files of this partition are erased"
+    qmp.keys("tab")
+    qmp.keys("spc")
+    state = wait_installer(con, "the erase is confirmed", lambda st: st["eraseConfirmed"])
+    if not state["canNext"] or state["partition"] != "/dev/vda4" or state["mode"] != "partition":
+        raise RuntimeError(f"the confirmed installer is not ready for the Data partition: {state}")
+    shot(qmp, "installer-confirmed")
+    if not install:
+        qmp.keys("alt", "f4")
+        sleep(2)
+        return
+
+    # "설치 시작" (the focus is on the check box, where Enter would tick it off again)
+    con.run(INSTALLER_IPC + "installerNext", check=False)
+    wait_installer(con, "installing", lambda st: st["step"] == 4, timeout=60)
+    shot(qmp, "installer-installing")
+    percents = set()
+
+    def over(st):
+        if st["percent"] not in percents:
+            log(f"installer: {st['percent']}% {st['stage']}")
+        percents.add(st["percent"])
+        return st["step"] == 5
+
+    state = wait_installer(con, "the install is over", over, timeout=5400)
+    shot(qmp, "installer-finished")
+    if not state["succeeded"]:
+        raise RuntimeError(f"the installer says it failed: {state}")
+    # The bar moves while the packages install (it stood at 12% before 2026-10-13)
+    log(f"installer: progress seen: {sorted(percents)}")
+    if len(percents) < 4 or not any(43 <= p <= 69 for p in percents):
+        raise RuntimeError(f"the progress bar didn't move through the package install: {sorted(percents)}")
+    qmp.keys("alt", "f4")
+    sleep(2)
+
+
+# The real `robinctl update` on the installed system. A local repository (file://, no
+# signatures) takes the place of [robinos] and holds a robinos package that is the
+# installed one with a higher version and one changed file: an update that brings new
+# RobinOS files. pacman -Syu runs for real, so Arch's packages come along if they
+# moved since the ISO was built.
+LOCAL_REPO = "/srv/robinos-test-repo"  # not under /root: pacman downloads as the alpm user
+
+POINT_AT_LOCAL_REPO = """
+import re
+path = "/etc/pacman.conf"
+conf = open(path).read()
+open(path + ".before-update-test", "w").write(conf)
+new = re.sub(r"(?ms)^\\[robinos\\]\\n.*?(?=^\\[|\\Z)",
+             "[robinos]\\nSigLevel = Never\\nServer = file://%s\\n\\n", conf)
+assert new != conf, "no [robinos] section in pacman.conf"
+open(path, "w").write(new)
+""" % LOCAL_REPO
+
+
+def check_update(con):
+    """robinctl update, from the status the settings app reads to the snapshots around it."""
+    con.run("ls /opt/robinos/pkg/robinos-*.pkg.tar.zst")
+    con.run(f"rm -rf /root/newpkg {LOCAL_REPO} && mkdir -p /root/newpkg {LOCAL_REPO} && chmod 755 {LOCAL_REPO}"
+            " && cd /root/newpkg && bsdtar -xf /opt/robinos/pkg/robinos-*.pkg.tar.zst"
+            " && sed -i 's/^pkgver = .*/pkgver = 0.3.0.r99999-1/' .PKGINFO"
+            # pacman builds the file list from the package's .MTREE, so a file that is not in it
+            # is skipped ("could not find file in the file list"): change one that is
+            " && echo '# update-test' >> usr/share/robinos/bin/robinos-session"
+            f" && ls -A | bsdtar --zstd -cf {LOCAL_REPO}/robinos-0.3.0.r99999-1-any.pkg.tar.zst -T -"
+            f" && repo-add -q {LOCAL_REPO}/robinos.db.tar.gz {LOCAL_REPO}/robinos-0.3.0.r99999-1-any.pkg.tar.zst")
+    con.put_file("/root/local-repo.py", POINT_AT_LOCAL_REPO)
+    con.run("python3 /root/local-repo.py && grep -A3 '^\\[robinos\\]' /etc/pacman.conf")
+    try:
+        _, before = con.capture("pacman -Q robinos; snapper --no-dbus -c root list --columns number"
+                                " | awk '$1 ~ /^[0-9]+$/ { n = $1 } END { print \"last snapshot\", n + 0 }'")
+        print(before, flush=True)
+        # What the settings app reads: one JSON line, an update waiting, root's snapshot number
+        con.run("pacman -Sy > /dev/null && robinctl update --status | tee /root/update-status.json"
+                " && python3 -c 'import json; d = json.load(open(\"/root/update-status.json\"));"
+                " assert d[\"state\"] == \"updates\" and d[\"count\"] >= 1 and d[\"next_snapshot\"] > 0"
+                " and d[\"robinos\"].startswith(\"0.3.0.r\"), d'", timeout=300)
+        # The update itself, without asking
+        # (a subshell: a bare exit would end the test's login shell)
+        con.run("(robinctl update --yes > /root/update.out 2>&1; rc=$?; tail -n 25 /root/update.out; exit $rc)", timeout=1800)
+        con.run("grep -q '0.3.0.r99999-1' /root/update.out && grep -q '^# update-test$' /usr/share/robinos/bin/robinos-session"
+                " && [ \"$(pacman -Q robinos | cut -d' ' -f2)\" = 0.3.0.r99999-1 ]")
+        # snap-pac took a pair around it, and the version name shows in /etc/os-release
+        _, listing = con.capture("snapper --no-dbus --csvout -c root list --columns number,type,description")
+        print(listing, flush=True)
+        # robinctl runs -Sy then -Su, so the pre snapshot says "pacman -Su --noconfirm"
+        if not any(f.split(",")[1:2] == ["pre"] and re.search(r"pacman .*-Su", f) for f in listing.splitlines()):
+            raise RuntimeError("snap-pac took no snapshot before pacman -Syu")
+        con.run("(. /etc/os-release && [ \"$ID\" = robinos ])")
+        # The shell would be started again here, with nobody logged in to a desktop to ask
+        con.run("grep -q '다시 로그인' /root/update.out")
+    finally:
+        # The real [robinos] again, and its database: the one from the local
+        # repository has no signature, which `pacman -S` rejects afterwards
+        con.run("mv /etc/pacman.conf.before-update-test /etc/pacman.conf", check=False)
+        con.run("pacman -Sy > /dev/null", check=False, timeout=300)
+
+
+def check_exit_path(con):
+    """The way out (docs/exit.md): without the [robinos] repository, pacman still brings
+    Arch's updates, robinos stays as a package no repository has, and nothing depends on it."""
+    con.run("sed '/^\\[robinos\\]/,/^$/d' /etc/pacman.conf > /tmp/pacman-arch.conf"
+            " && ! grep -q '^\\[robinos\\]' /tmp/pacman-arch.conf && grep -q '^\\[core\\]' /tmp/pacman-arch.conf")
+    con.run("pacman --config /tmp/pacman-arch.conf -Sy > /dev/null"
+            " && pacman --config /tmp/pacman-arch.conf -Su --print > /dev/null"
+            " && pacman --config /tmp/pacman-arch.conf -Qm | grep -q '^robinos '"
+            " && pacman -R --print robinos > /dev/null", timeout=300)
+    con.run("rm -f /tmp/pacman-arch.conf")
+
+
 # ---- Phases ----
 
 def phase_live(con, qmp):
@@ -439,8 +683,25 @@ def phase_live(con, qmp):
     if INSTALLER == "windows":
         make_windows_disk(con)
         before = windows_state(con)
-        install_with_robin_install(con, mode="alongside")
+        use_checkout_installer(con)
+        show_free_space(con, qmp)
+        # The free space with a size: 41 of the ~44 GB become RobinOS's partition,
+        # which then counts as an earlier RobinOS one; remove it again
+        con.put_file("/root/size-check.py", SIZE_CHECK)
+        con.run("PYTHONIOENCODING=utf-8 python3 /root/size-check.py")
+        con.run("sgdisk -d 4 /dev/vda > /dev/null && partprobe /dev/vda && udevadm settle")
+        # What Disk Management leaves behind (an NTFS partition) is offered, Windows' own is not
+        make_data_partition(con)
+        con.put_file("/root/disks-check.py", DISKS_CHECK)
+        con.run("PYTHONIOENCODING=utf-8 python3 /root/disks-check.py")
+        # The partition install goes through the wizard itself (the whole-disk one, the
+        # other test run, still calls robin-install directly)
+        drive_installer(con, qmp, install=True)
+        mount_installed(con)
         check_windows_kept(con, before)
+        # The partition got RobinOS's name and the Linux type, so a next install knows it
+        con.run("sgdisk -i 4 /dev/vda | grep -q \"Partition name: 'RobinOS'\""
+                " && sgdisk -i 4 /dev/vda | grep -qi '0FC63DAF-8483-4772-8E79-3D69D8477DE4'")
     elif INSTALLER in ("robinos", "encrypted"):
         install_with_robin_install(con, encrypt=ENCRYPTED)
     else:
@@ -464,15 +725,22 @@ def phase_live(con, qmp):
     con.wait_closed(180)
 
 
-def install_with_robin_install(con, mode="whole", encrypt=False):
-    """installer/robin-install from this checkout; leaves the target on /mnt."""
+def use_checkout_installer(con):
+    """The live system runs installer/robin-install from this checkout, not the ISO's."""
     con.run("cp -r /share/robinos/. /opt/robinos/"
             " && chmod +x /opt/robinos/bin/* /opt/robinos/installer/* /opt/robinos/scripts/*.sh"
             " /opt/robinos/scripts/*.py /opt/robinos/desktop/bin/*"
             " && install -m755 /opt/robinos/installer/robin-install /usr/local/bin/robin-install")
+
+
+def install_with_robin_install(con, mode="whole", partition=None, encrypt=False):
+    """installer/robin-install from this checkout; leaves the target on /mnt."""
+    use_checkout_installer(con)
     con.run("robin-install disks", check=False)
     plan = {"disk": "/dev/vda", "mode": mode, "user": "robin", "password": PASSWORD,
             "hostname": "robinos", "timezone": "Asia/Seoul", "encrypt": encrypt}
+    if partition:
+        plan["partition"] = partition
     con.put_file("/root/plan.json", json.dumps(plan))
     con.run("chmod 600 /root/plan.json")
 
@@ -482,6 +750,10 @@ def install_with_robin_install(con, mode="whole", encrypt=False):
     con.run("grep '^@@' /root/robin-install.out", check=False)
     if status != 0:
         raise RuntimeError(f"robin-install failed with {status}")
+    # The bar moves while packages install (42-70%); it stood at 12% until 72% when the
+    # installer waited for "(3/987) installing", which pacman only prints on a terminal
+    con.run("grep -Eq '^@@ (4[3-9]|5[0-9]|6[0-9]) ' /root/robin-install.out")
+    con.run("grep -Ec '^@@ (1[3-9]|2[0-9]|3[0-9]|4[01]) ' /root/robin-install.out", check=False)
 
     if encrypt:
         # The recovery key went to the screen only, never into the log file
@@ -495,6 +767,11 @@ def install_with_robin_install(con, mode="whole", encrypt=False):
         con.run(f"cryptsetup luksDump {ROOT_PART} | grep -E '^(Version|\\s+PBKDF|\\s+Memory)'", check=False)
         # Closed at the end of the install; open it again to finish the test setup
         con.run(f"printf %s {PASSWORD} | cryptsetup open --key-file - {ROOT_PART} cryptroot")
+    mount_installed(con)
+
+
+def mount_installed(con):
+    """The installed system on /mnt again (robin-install unmounts it when it is done)."""
     con.run(f"mount -o subvol=@ {ROOT_DEV} /mnt && mount /dev/vda1 /mnt/efi")
     # robin-install locks root; the test logs in on the serial console as root
     con.run("arch-chroot /mnt sh -c 'echo root:robin | chpasswd'")
@@ -638,7 +915,8 @@ def phase_installed(con, qmp):
     con.run("pacman -Q deja-dup && test -f /usr/share/applications/org.gnome.DejaDup.desktop")
     # The shell's update dot asks checkupdates: 0 = updates, 2 = none, 1 = it failed
     con.run("checkupdates | tail -n 3; rc=${PIPESTATUS[0]}; echo checkupdates=$rc; [ $rc -ne 1 ]")
-    con.run("flatpak remotes --system", check=False)
+    # (the flatpak package ships /usr/share/flatpak/remotes.d/flathub.flatpakrepo)
+    con.run("flatpak remotes --system | grep -qw flathub")
     # What the default install opens to the network (docs/ethics.md): CUPS only on
     # localhost, no sshd; Avahi's 5353/udp is the one service the LAN can reach
     con.run("ss -Htuln", check=False)
@@ -648,8 +926,18 @@ def phase_installed(con, qmp):
     # Arch's os-release back (pacman hook; SNAP_PAC_SKIP keeps the snapshot list
     # as the later phases expect). The user's ~/.bashrc loads the RobinOS prompt.
     con.run("SNAP_PAC_SKIP=y pacman -S --noconfirm filesystem > /dev/null"
-            " && (. /etc/os-release && [ \"$ID\" = robinos ] && [ \"$ID_LIKE\" = arch ] && echo \"$PRETTY_NAME\")",
+            " && (. /etc/os-release && [ \"$ID\" = robinos ] && [ \"$ID_LIKE\" = arch ] && echo \"$PRETTY_NAME\")"
+            # and the text console's login prompt too (it said "Arch Linux")
+            " && head -n 1 /etc/issue && grep -q '^RobinOS ' /etc/issue && ! grep -q Arch /etc/issue",
             timeout=600)
+    # A nearly empty battery powers off (UPower's HybridSleep needs disk swap), and a
+    # laptop on battery sleeps after 15 minutes idle
+    con.run("grep -qx 'CriticalPowerAction=PowerOff' /etc/UPower/UPower.conf"
+            " && grep -q 'robinos-idle-suspend' /usr/share/robinos/hypr/hypridle.conf"
+            " && test -x /usr/share/robinos/bin/robinos-idle-suspend && /usr/share/robinos/bin/robinos-idle-suspend")
+    # Compressed swap in RAM (zram-generator), so a full memory slows down
+    # instead of apps getting killed
+    con.run("swapon --show && swapon --show=NAME --noheadings | grep -qx /dev/zram0")
     con.run("grep -q robinos-bashrc.sh /etc/skel/.bashrc && grep -l robinos-bashrc.sh /home/*/.bashrc")
     # which isn't in Arch's base; the where hint and learning mission 27 need it.
     # ssh-keygen (mission 38) and gpg (mission 40, CTF 8) for the security missions,
@@ -674,6 +962,11 @@ def phase_installed(con, qmp):
     con.run(r"pacman -Sy >/dev/null && pacman -Si robinos | head -n 3")
     con.run(r'[ "$(sha256sum < /etc/skel/.bashrc)" = "$(sha256sum < /opt/robinos/desktop/bash/bashrc)" ]'
             r' && [ "$(sha256sum < /etc/xdg/foot/foot.ini)" = "$(sha256sum < /opt/robinos/desktop/foot/foot.ini)" ]')
+
+    # A real update, last: it changes the system the next phases boot (docs/testing.md)
+    if INSTALLER != "archinstall":
+        check_exit_path(con)
+        check_update(con)
 
     # QEMU's WHPX can't reset a VM that reboots itself ("Unexpected VP exit code 4"),
     # so every boot is its own QEMU run: power off here, the next phase boots again.

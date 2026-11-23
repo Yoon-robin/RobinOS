@@ -5,7 +5,7 @@ Usage: boot-test-qmp.py <qmp-socket | tcp:host:port> <output-dir> [speed]
 
 speed multiplies every wait (1 with KVM, about 4 with TCG). The scenario:
 boot -> welcome wizard (every step, then its missions terminal) -> desktop ->
-launcher (search, Windows app name) -> installer (first two steps) -> quick settings
+launcher (search, Windows app name) -> installer (first three steps, the time zone list) -> quick settings
 (also with Tab) -> terminal with a Windows command and the first learning mission
 -> minimize and restore the terminal -> Super+D twice -> kill the shell and see
 it come back -> light mode (terminal,
@@ -51,12 +51,19 @@ class Qmp:
                 time.sleep(1)
         if self.sock is None:
             raise RuntimeError("could not connect to QMP (did QEMU start?)")
+        # QEMU answers a command in well under a second, a screenshot in a few. Without
+        # a limit a QEMU that stopped answering held the test (and verify) for good
+        # (2026-10-16, after 93-scale-125 on the school PC)
+        self.sock.settimeout(120)
         self.file = self.sock.makefile("rwb")
         self._read()  # greeting
         self.execute("qmp_capabilities")
 
     def _read(self):
-        line = self.file.readline()
+        try:
+            line = self.file.readline()
+        except (TimeoutError, socket.timeout):
+            raise RuntimeError("QEMU didn't answer QMP for 2 minutes") from None
         if not line:
             raise RuntimeError("QMP connection closed")
         return json.loads(line)
@@ -224,6 +231,54 @@ SESSION_ENV = "XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1 DBUS_SES
 shot_number = 0
 
 
+def screen(qmp):
+    """The screen as (width, RGB bytes), from a throwaway PPM screendump (no image
+    library needed: QEMU writes "P6 <w> <h> 255" and the pixels)."""
+    path = os.path.join(OUT, "probe.ppm")
+    qmp.execute("screendump", filename=path)
+    with open(path, "rb") as f:
+        data = f.read()
+    os.remove(path)
+    fields, pos = [], 0
+    while len(fields) < 4:
+        while data[pos:pos + 1].isspace():
+            pos += 1
+        start = pos
+        while not data[pos:pos + 1].isspace():
+            pos += 1
+        fields.append(data[start:pos])
+    return int(fields[1]), data[pos + 1:]
+
+
+def wait_red_box(qmp, x0, y0, x1, y1, what, timeout=60):
+    """Waits until the box holds a good part of RobinOS red (an app's icon showing),
+    so a click lands on a window that is really there. A slow VM (two at once in
+    verify) opened the learning center after the click meant for it, every run."""
+    deadline = time.time() + timeout * SPEED
+    while time.time() < deadline:
+        width, pixels = screen(qmp)
+        red = 0
+        for y in range(y0, y1):
+            for x in range(x0, x1):
+                i = (y * width + x) * 3
+                r, g, b = pixels[i], pixels[i + 1], pixels[i + 2]
+                if r > 180 and g < 120 and b < 130:
+                    red += 1
+        if red * 4 >= (x1 - x0) * (y1 - y0):
+            return True
+        time.sleep(1)
+    print(f"warning: {what} didn't show within {timeout} s", flush=True)
+    return False
+
+
+def open_learn_center(qmp, ipc):
+    """The learning center through the shell's IPC, typed into the focused terminal,
+    and waited for: its red icon at the top left of the window."""
+    type_text(qmp, "clear; " + ipc + "learnCenter\n")
+    wait(3)
+    wait_red_box(qmp, 452, 160, 482, 190, "the learning center")
+
+
 def shot(qmp, name):
     global shot_number
     shot_number += 1
@@ -278,6 +333,12 @@ def main():
     type_text(qmp, "notepad")
     wait(2)
     shot(qmp, "launcher-windows-name")
+    # A Windows name with a Linux side (T-169): the app, "터미널: ps aux, top" and
+    # learning mission 31 under it
+    keys(qmp, "ctrl", "a")
+    type_text(qmp, "taskmgr")
+    wait(2)
+    shot(qmp, "launcher-windows-mission")
     # Math like the Start menu's search: the result first, Enter copies it
     keys(qmp, "ctrl", "a")
     type_text(qmp, "(12+3)*4")
@@ -301,6 +362,21 @@ def main():
     keys(qmp, "ret")
     wait(4)
     shot(qmp, "installer-disk")
+    # The blank disk is chosen ("디스크 전체 사용"), so Enter goes on to the user
+    keys(qmp, "ret")
+    wait(3)
+    shot(qmp, "installer-user")
+    # Tab past the user, computer and two password fields to the time zone
+    for _ in range(5):
+        keys(qmp, "tab")
+        wait(0.4)
+    keys(qmp, "ret")
+    wait(2)
+    type_text(qmp, "tokyo")
+    wait(2)
+    shot(qmp, "installer-timezone")
+    keys(qmp, "esc")
+    wait(1)
     keys(qmp, "alt", "f4")
     wait(2)
 
@@ -355,6 +431,15 @@ def main():
     type_text(qmp, "clear; ipconfig\n")
     wait(2)
     shot(qmp, "terminal-windows-hint")
+    # The landing page's picture: a Windows command answered in the terminal, and a
+    # Windows name (the task manager) found in the launcher on top of it
+    keys(qmp, "meta_l", "spc")
+    wait(3)
+    type_text(qmp, "taskmgr")
+    wait(3)
+    shot(qmp, "showcase")
+    keys(qmp, "esc")
+    wait(2)
     type_text(qmp, "clear\n")
     type_text(qmp, "robinctl learn show 1\n")
     wait(2)
@@ -709,17 +794,23 @@ def main():
     wait(2)
     # The learning center opened again after Alt+F4 closed it: mission 1 is ticked off
     check_scene(qmp, "count-save", "count-save-mission")
-    type_text(qmp, "clear; " + ipc + "learnCenter\n")
-    wait(3)
+    open_learn_center(qmp, ipc)
     shot(qmp, "light-learn-center")
     # Clicking a mission opens it in a terminal (mission 2's row): one new Ptyxis
     # window, which has the focus and takes commands after the mission text
     click(qmp, 800, 437)
-    wait(4)
+    # Ptyxis can take more than 4 s to show up while the install test VM runs next to
+    # this one (seen 2026-10-13 and 2026-10-15); the check types into the focused window
+    wait(10)
     shot(qmp, "learn-center-mission")
-    check_scene(qmp, "one-more", "mission-terminal")
+    mission_terminal = check_scene(qmp, "one-more", "mission-terminal")
     keys(qmp, "alt", "f4")  # the new terminal has the focus
     wait(2)
+    if not mission_terminal:
+        # No new terminal: that Alt+F4 closed the learning center and the old terminal
+        # has the focus. Open it again, or the clicks below land on the terminal and
+        # close it, and every check after this one goes nowhere (2026-10-15, 10-16)
+        open_learn_center(qmp, ipc)
     # At the end of the list, the ten CTF challenges as one more group
     for _ in range(60):
         click(qmp, 800, 500, "wheel-down")
@@ -740,11 +831,41 @@ def main():
     keys(qmp, "meta_l", "i")
     wait(3)
     shot(qmp, "light-settings")
+    # Down: the update page (the live session doesn't update, and says so), then 정보
+    keys(qmp, "down")
+    wait(3)
+    shot(qmp, "light-settings-update")
+    # 날짜와 시간: the time zone and whether the clock follows the internet
+    keys(qmp, "down")
+    wait(3)
+    shot(qmp, "light-settings-datetime")
+    # 마우스와 터치패드, 키보드: a touchpad can't be tried in the VM, so Hyprland's own
+    # option values and the saved file are judged (below) instead of a feel
+    keys(qmp, "down")
+    wait(3)
+    shot(qmp, "light-settings-pointer")
+    keys(qmp, "down")
+    wait(3)
+    shot(qmp, "light-settings-keyboard")
+    keys(qmp, "down")
+    wait(3)
+    shot(qmp, "light-settings-apps")
+    keys(qmp, "down")
+    wait(3)
+    shot(qmp, "light-settings-power")
     keys(qmp, "down")
     wait(2)
     shot(qmp, "light-settings-about")
     keys(qmp, "esc")
     wait(2)
+    # 기본 앱 with the browsers listed, the way the 바꾸기 button opens them; then the
+    # tool's own answers are judged (the default browser, a saved choice, a refused one)
+    type_text(qmp, "clear; " + ipc + "settingsAppsOpen browser\n")
+    wait(4)
+    shot(qmp, "light-settings-apps-open")
+    keys(qmp, "esc")
+    wait(2)
+    check_scene(qmp, "default-apps")
     keys(qmp, "meta_l", "s")
     wait(3)
     shot(qmp, "light-quick-settings")
@@ -757,6 +878,25 @@ def main():
     shot(qmp, "scale-125")
     type_text(qmp, "clear; " + ipc + "setScale 1\n")
     wait(3)
+    # 마우스와 터치패드 and 키보드 settings through the shell function the switches and
+    # sliders call: Hyprland takes the values at once and the file that robinos.lua reads
+    # at the next login is written (the Lua side is checked by scripts/test-hypr-input.lua)
+    type_text(qmp, "clear; for a in 'tap false' 'natural false' 'speed 0.4' 'repeat_rate 40'; do " + ipc + "setInput $a; done; sleep 2\n")
+    wait(4)
+    check_scene(qmp, "input-changed")
+    type_text(qmp, "clear; for a in 'tap true' 'natural true' 'speed 0' 'repeat_rate 25'; do " + ipc + "setInput $a; done; sleep 2\n")
+    wait(4)
+    check_scene(qmp, "input-default")
+    # 전원's idle times: the shell function behind the buttons writes hypridle's policy
+    # and restarts hypridle with it; a one minute lock has no dimming before it
+    type_text(qmp, "clear; for a in 'lock 1' 'screen_off 2' 'suspend 5'; do " + ipc + "setPower $a; sleep 1; done; sleep 2\n")
+    wait(8)
+    check_scene(qmp, "power-changed")
+    type_text(qmp, "clear; for a in 'lock 5' 'screen_off 10' 'suspend 15'; do " + ipc + "setPower $a; sleep 1; done; sleep 2\n")
+    wait(8)
+    check_scene(qmp, "power-default")
+    # The problem report (settings' 정보 has a button for it)
+    check_scene(qmp, "report", timeout=60)
     # 야간 모드 starts hyprsunset (4500 K) and the second call stops it. The colors
     # need the driver's KMS CTM, which the test VM's bochs-drm lacks, so the shot
     # shows the running process (and the tile's VM note) instead of a warm screen

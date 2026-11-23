@@ -15,6 +15,8 @@ desktop.ini
 .idea/
 .vscode/
 /.claude/worktrees/
+# Local preview servers (the landing page: python -m http.server)
+/.claude/launch.json
 
 
 # Python

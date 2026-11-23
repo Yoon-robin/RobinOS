@@ -4,6 +4,17 @@
 
 ## 완료
 
+- 2026-10-16 작업 브랜치 `claude/eoseohae-7nleia`를 main에 합침(`dc373ec`, 학교 PC 올인원 4차: 빠른 검사 0.8분, verify 25.3분, 설치 테스트 다섯 단계 통과, 부팅 테스트 96장·판정 20개 PASS)
+  - 설치기 코드 검토 고침(`51d9fc3`), robinctl·데스크톱 스크립트 코드 검토 고침(`c2878a0`, `fd57e55`), 깃허브가 안 될 때 Arch 업데이트(T-177 ①), 부족한 점을 [unfinished.md](unfinished.md) 한 곳으로, VMware 확인 목록
+  - 처음 쓰는 PC용 `scripts/verify-all-in-one.ps1`과 1~3차가 찾은 것: UPower 기본값 `Auto`, 기본 앱 시험, 빠른 검사가 키 입력을 기다리며 몇 시간 멈춤(`robinctl update --preview`), 창에 출력이 안 나오던 것, `scripts/check.sh`, 두 단계 업데이트의 snap-pac 판정, QMP 2분 제한, 학습 센터가 뜰 때까지 기다리기
+- 2026-10-10 묶음 64 검증(`f96dd13`, verify 빌드 3.5분 + 테스트 14.4분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)
+  - T-139 라이브 ISO 부팅이 NTP를 기다리지 않게(`f96dd13`): 시리얼 로그 `Startup finished ... = 13.993s`(전에는 83.7초), pacman 열쇠 준비 13.8초, 전원 모드 데몬 14.0초, 시계 동기화 대기 없음. `verify-boot.log`에 `Startup finished` 줄이 남음
+- 2026-10-10 묶음 63 검증(`a31a8f8`, verify 빌드 3.4분 + 테스트 14.4분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)
+  - T-138 텍스트 다루기 미션 41~45(`a31a8f8`): robinctl 테스트가 다섯 미션을 틀린 답과 맞는 답으로 채점(목록에 "텍스트 다루기", 45/45). `72-light-learn-center`에 1/45, `74-learn-center-ctf`는 휠 60번으로 목록 끝의 입문 CTF까지. 설치 테스트에 `/usr/bin/diff`
+- 2026-10-10 묶음 62 검증(`eab6589`, verify 빌드 3.4분 + 테스트 14.2분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)
+  - T-137 VMware가 아닌 VM의 VMware 도구(`eab6589`): QEMU(WHPX) 테스트 VM은 여전히 `vmware`로 감지되지만, 라이브 단계 vmtoolsd가 `ExecCondition`(vmware-checkvm)으로 건너뛰어 `ConditionResult=no`, 실패한 서비스 없음. 설치본에는 `open-vm-tools`가 깔리지 않고 실패한 서비스 없음. `30-failed-units`에 0 loaded units, networkd inactive, NetworkManager active
+- 2026-10-10 묶음 61 검증(`b1319d5`, verify 빌드 3.6분 + 테스트 14.3분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)
+  - T-137 원인 찾기(`b1319d5`): 설치 테스트 로그에서 QEMU(WHPX) 테스트 VM을 systemd가 라이브·설치본 모두 `vmware`로 감지(`ConditionResult=yes`), 설치기가 `open-vm-tools`를 깔고 설치본에서도 vmtoolsd가 실패. 고침은 다음 묶음
 - 2026-10-10 묶음 60 검증(`0d7c3bf`, verify 빌드 3.3분 + 테스트 14.2분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)
   - T-137 테스트 VM의 vmtoolsd(`0d7c3bf`): `vmport=off`로도 라이브 세션의 vmtoolsd가 그대로 시작해서 원인이 아니었어요. `30-failed-units`는 명령 결과가 나오기 전에 찍혀 `systemd-detect-virt` 값을 못 봤어요. 다음 묶음에서 설치 테스트 로그로 가려요
 - 2026-10-10 묶음 59 검증(`8f96fba`, verify 빌드 3.4분 + 테스트 14.1분, 설치 테스트 다섯 단계 통과, 부팅 테스트 79장)

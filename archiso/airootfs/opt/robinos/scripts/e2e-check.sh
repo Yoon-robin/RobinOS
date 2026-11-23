@@ -21,6 +21,12 @@
 #   zoomed          Win+Plus twice: the screen is zoomed to 2x around the pointer
 #   unzoomed        Win+Esc: back to 1x
 #   shell-restarted a new shell (qs) runs and answers over IPC
+#   input-changed   pointer and keyboard settings changed from the shell reached Hyprland and the saved file
+#   input-default   the same after setting them back
+#   report          robinctl report makes a file with all its sections and the drivers
+#   power-changed   idle times set from the shell reached hypridle and the saved file
+#   power-default   the same after setting the defaults
+#   default-apps    settings' 기본 앱: Firefox is the default browser, a choice is saved, a wrong one refused
 
 set -uo pipefail
 
@@ -127,6 +133,85 @@ case "${name}" in
   shell-restarted)
     pids="$(pgrep -x qs | tr '\n' ' ')"
     check "qs=${pids:-none}" bash -c "[ -n '${pids}' ] && timeout 10 ${SHELL_IPC[*]} show >/dev/null"
+    ;;
+  default-apps)
+    # Settings' 기본 앱 (robinos-default-apps): the list names the installed browser as the
+    # default one, a choice lands in ~/.config/mimeapps.list, and an app that can't open
+    # the kind is refused
+    tool=/usr/share/robinos/bin/robinos-default-apps
+    summary="$("${tool}" list | python3 -c 'import json, sys
+kinds = {k["key"]: k for k in json.load(sys.stdin)}
+b = kinds["browser"]
+print(len(kinds), b["current"], b["currentName"], len(b["apps"]))')"
+    "${tool}" set text org.gnome.TextEditor.desktop
+    set_status=$?
+    "${tool}" set text firefox.desktop 2>/dev/null
+    refused=$?
+    check "kinds/browser/name/apps=${summary:-none} set=${set_status} refused=${refused} file=$(grep -c '^text/plain=org.gnome.TextEditor.desktop' "${XDG_CONFIG_HOME:-${HOME}/.config}/mimeapps.list" 2>/dev/null)" \
+      bash -c "[[ '${summary}' == '7 firefox.desktop Firefox '* ]] && [ ${set_status} = 0 ] && [ ${refused} = 1 ] \
+        && grep -q '^text/plain=org.gnome.TextEditor.desktop' '${XDG_CONFIG_HOME:-${HOME}/.config}/mimeapps.list'"
+    ;;
+  report)
+    # robinctl report (settings' 정보): all the sections, the graphics driver, and the
+    # name of the computer is masked when it isn't the default one
+    file="${XDG_RUNTIME_DIR:-/tmp}/robinos-report-test.txt"
+    robinctl report "${file}" >/dev/null 2>&1
+    sections="$(grep -c '^## ' "${file}" 2>/dev/null)"
+    check "sections=${sections} drivers=$(grep -c 'Kernel driver in use' "${file}" 2>/dev/null) lines=$(wc -l <"${file}")" \
+      bash -c "[ '${sections}' = 8 ] && grep -q 'Kernel driver in use' '${file}' && grep -q '^커널: ' '${file}'"
+    ;;
+  power-changed | power-default)
+    # Settings' 전원 (ShellState.setPower): robinos-idle-config wrote hypridle's policy from
+    # the minutes, hypridle runs with that file, and the choices are saved for the next
+    # login. The boot test sets lock 1, screen off 2 and sleep 5 first (no dimming for a
+    # one minute lock), then the defaults
+    state="${XDG_STATE_HOME:-${HOME}/.local/state}/robinos"
+    timeouts="$(sed -n 's/^ *timeout = //p' "${state}/hypridle.conf" 2>/dev/null | tr '\n' ' ' | sed 's/ $//')"
+    running="$(pgrep -a -x hypridle | grep -c 'robinos/hypridle.conf')"
+    saved="$(tr '\n' ',' <"${state}/power" 2>/dev/null)"
+    if [[ "${name}" == power-changed ]]; then
+      want_timeouts="60 120 300" want_saved="lock 1,screen_off 2,suspend 5,"
+    else
+      want_timeouts="240 300 600 900" want_saved="lock 5,screen_off 10,suspend 15,"
+    fi
+    check "timeouts=${timeouts:-none} hypridle=${running} saved=${saved:-none}" \
+      bash -c "[ '${timeouts}' = '${want_timeouts}' ] && [ '${running}' = 1 ] && [ '${saved}' = '${want_saved}' ]"
+    ;;
+  input-changed | input-default)
+    # Settings' 마우스와 터치패드 and 키보드 (ShellState.setInput): Hyprland runs with the
+    # new values, and the file robinos.lua reads at the next login has them too.
+    # The boot test sets tap off, natural scroll off, speed 0.4, key repeat 40 first
+    # The value of a Hyprland option, whatever its type (int, float or bool); 1 and 0 for
+    # a bool. When there is no value it prints the answer itself, to see what it was
+    opt() {
+      local name raw
+      for name in "$1" "${1//_/-}"; do
+        raw="$(hyprctl getoption "${name}" -j 2>&1)"
+        python3 -c 'import json, sys
+try:
+    d = json.loads(sys.argv[1])
+    values = [v for k, v in d.items() if k not in ("option", "set")]
+    v = values[0]
+    print(int(v) if isinstance(v, bool) else v)
+except Exception:
+    sys.exit(1)' "${raw}" 2>/dev/null && return 0
+      done
+      printf 'none(%s)' "$(printf '%s' "${raw}" | tr -d '\n ' | cut -c1-80)"
+    }
+    tap="$(opt input:touchpad:tap_to_click)"
+    natural="$(opt input:touchpad:natural_scroll)"
+    speed="$(opt input:sensitivity)"
+    rate="$(opt input:repeat_rate)"
+    saved="$(tr '\n' ',' <"${XDG_STATE_HOME:-${HOME}/.local/state}/robinos/input" 2>/dev/null)"
+    if [[ "${name}" == input-changed ]]; then
+      want_tap=0 want_natural=0 want_speed=0.4 want_rate=40
+    else
+      want_tap=1 want_natural=1 want_speed=0 want_rate=25
+    fi
+    check "tap=${tap} natural=${natural} speed=${speed} rate=${rate} file=${saved:-none}" \
+      bash -c "[ '${tap}' = ${want_tap} ] && [ '${natural}' = ${want_natural} ] && [ '${rate}' = ${want_rate} ] \
+        && awk -v s='${speed}' 'BEGIN { exit !(s - ${want_speed} < 0.001 && ${want_speed} - s < 0.001) }' \
+        && [[ '${saved}' == *'speed ${want_speed},'* && '${saved}' == *'repeat_rate ${want_rate},'* ]]"
     ;;
   *)
     printf 'usage: %s <scene>  (see the top of this file)\n' "$0" >&2

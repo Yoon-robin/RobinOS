@@ -280,6 +280,21 @@ foreach ($line in Get-Content (Join-Path $root "desktop/install-map.txt")) {
     }
 }
 
+# PowerShell reads Korean letters as part of a variable name: $limit followed directly
+# by a Hangul syllable is a different (empty) variable. Write "${limit}" before
+# the Hangul instead (2026-10-15). The range is escaped: PowerShell 5.1 reads
+# this BOM-less file in the ANSI code page.
+foreach ($script in Get-ChildItem (Join-Path $root "scripts") -Filter *.ps1) {
+    $lineNumber = 0
+    foreach ($line in Get-Content $script.FullName -Encoding UTF8) {
+        $lineNumber++
+        $match = [regex]::Match($line, '\$[A-Za-z_][A-Za-z0-9_]*[\uAC00-\uD7A3]')
+        if ($match.Success) {
+            Add-Error "scripts/$($script.Name):${lineNumber}: $($match.Value) is one variable name to PowerShell; write `${...} around the name"
+        }
+    }
+}
+
 if ($errors.Count -gt 0) {
     Write-Host ""
     Write-Host "Validation failed:" -ForegroundColor Red

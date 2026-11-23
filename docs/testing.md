@@ -48,9 +48,9 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 check
 
 Arch Linux에서는 `scripts/check-desktop.sh`와 `scripts/qmllint.sh`를 직접 실행해요.
 
-`check`는 화면이 robin-ui V5 키트를 벗어나지 않았는지도 봐요(`scripts/check-kit.py`, 2026-11-24). `Theme.qml`과 시스템 화면(hyprlock, SDDM, GRUB, syslinux)의 색이 모두 `assets/brand/robin-ui/tokens.json`의 값인지, 셸 QML이 테마 밖에서 키트에 없는 색·`Font.*` 굵기·튀는 스프링(`Easing.OutBack`)을 쓰지 않는지, 초록·노랑이 없는지, `Theme.qml`의 모서리가 키트 값(6, 7, 10, 12, 14)인지, Hyprland가 셸 화면에 블러를 걸지 않는지예요. 윈도우에서도 `python scripts/check-kit.py`로 바로 돌릴 수 있어요.
+`check`는 `scripts/check.sh`로 빠른 검사 여섯 개를 차례로 돌려요. 하나가 실패해도 나머지를 다 돌리고, 시험마다 입력 없이(`</dev/null`) 10분 제한을 둬요(넘으면 그때 돌던 프로세스를 보여 주고 끝내요). 1분이 넘는 시험은 1분마다 진행 줄을 찍어요. PowerShell 창에서 부른 WSL은 표준 입력이 터미널이라, 묻는 코드가 있으면 시험이 보이지 않는 질문 앞에서 몇 시간 멈췄어요(2026-10-15). ISO 빌드가 WSL에서 하는 오버레이 동기화(`scripts/sync-archiso-files.sh`)를 작업 트리의 임시 복사본에서 미리 돌려 보고(`scripts/check-sync.sh`, 2초쯤), VM 없이 도는 빠른 테스트 두 개도 함께 돌려요. `scripts/test-robinctl.sh`는 미션 채점, 입문 CTF(9번 서버가 시간이 되면 스스로 꺼지는 것까지), 보안 프로필, 랩, 윈도우 명령 힌트, 보안 점검(`audit`), 앱 제거, NVIDIA 진단, 업데이트, RobinOS 저장소(`repo`)를 보고, `scripts/test-robin-install.py`는 설치기가 그래픽 카드에 맞는 드라이버를 고르는지(가짜 `/sys/bus/pci/devices`로), initramfs 훅, fstab 정리를 봐요. 실제 NVIDIA 카드에서 드라이버가 뜨는지는 실기기에서만 확인할 수 있어요.
 
-`check`는 ISO 빌드가 WSL에서 하는 오버레이 동기화(`scripts/sync-archiso-files.sh`)를 작업 트리의 임시 복사본에서 미리 돌려 보고(`scripts/check-sync.sh`, 2초쯤), VM 없이 도는 빠른 테스트 두 개도 함께 돌려요. `scripts/test-robinctl.sh`는 미션 채점, 입문 CTF(9번 서버가 시간이 되면 스스로 꺼지는 것까지), 보안 프로필, 랩, 윈도우 명령 힌트, 보안 점검(`audit`), 앱 제거, NVIDIA 진단, 업데이트, RobinOS 저장소(`repo`)를 보고, `scripts/test-robin-install.py`는 설치기가 그래픽 카드에 맞는 드라이버를 고르는지(가짜 `/sys/bus/pci/devices`로), initramfs 훅, fstab 정리를 봐요. 실제 NVIDIA 카드에서 드라이버가 뜨는지는 실기기에서만 확인할 수 있어요.
+`check`는 화면이 robin-ui V5 키트를 벗어나지 않았는지도 봐요(`scripts/check-kit.py`, 2026-11-24). `Theme.qml`과 시스템 화면(hyprlock, SDDM, GRUB, syslinux)의 색이 모두 `assets/brand/robin-ui/tokens.json`의 값인지, 셸 QML이 테마 밖에서 키트에 없는 색·`Font.*` 굵기·튀는 스프링(`Easing.OutBack`)을 쓰지 않는지, 초록·노랑이 없는지, `Theme.qml`의 모서리가 키트 값(6, 7, 10, 12, 14)인지, Hyprland가 셸 화면에 블러를 걸지 않는지예요. 윈도우에서도 `python scripts/check-kit.py`로 바로 돌릴 수 있어요.
 
 ## 패키지 검사
 
@@ -72,7 +72,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 build
 
 ## 자동 부팅 테스트
 
-`scripts/boot-test.sh`가 QEMU에서 ISO를 부팅하고, `scripts/boot-test-qmp.py`가 화면을 조작하면서 스크린샷을 찍어요(2026-10-10 기준 79장). 키는 QMP `send-key`로, 마우스는 VM에 붙인 `usb-tablet`에 QMP `input-send-event`로 화면 좌표(1600×900)를 찍어 눌러요(`click()`). 소리 창을 보려고 소리를 버리는 사운드 카드(`-audiodev none`, `hda-duplex`)도 붙여요.
+`scripts/boot-test.sh`가 QEMU에서 ISO를 부팅하고, `scripts/boot-test-qmp.py`가 화면을 조작하면서 스크린샷을 찍어요(2026-10-14 기준 96장, 상태로 판정하는 장면 21개). 키는 QMP `send-key`로, 마우스는 VM에 붙인 `usb-tablet`에 QMP `input-send-event`로 화면 좌표(1600×900)를 찍어 눌러요(`click()`). 소리 창을 보려고 소리를 버리는 사운드 카드(`-audiodev none`, `hda-duplex`)도 붙여요.
 
 1. 부팅과 첫 로그인
 2. 환영 마법사의 모든 단계, 마지막에 열리는 학습 센터(0/45)
@@ -105,6 +105,10 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 boot-test
 | `windows-app` | 가짜 `KakaoTalk_Setup.exe`를 `gio open`으로 열면 "윈도우 프로그램" 창이 떠요(기본 앱 연결과 셸 IPC) |
 | `shell-restarted` | 셸을 끈 뒤 새 `qs`가 돌고 IPC에 답해요 |
 | `light`, `dark` | 셸이 저장한 값(`appearance.json`)과 GTK 설정(`color-scheme`)이 둘 다 바뀌어요 |
+| `input-changed`, `input-default` | 설정 앱의 마우스와 터치패드·키보드가 부르는 `setInput`으로 탭 클릭·스크롤 방향·포인터 속도·키 반복을 바꾸면 `hyprctl getoption`이 그 값을 주고(불리언 옵션의 JSON에는 `int`가 아닌 키가 와서 첫 값을 읽어요), `~/.local/state/robinos/input`에 저장돼요. 기본값으로 되돌려도 같아요 |
+| `power-changed`, `power-default` | 전원의 `setPower`로 시간을 바꾸면 `robinos-idle-config`가 hypridle 설정을 다시 쓰고(잠그기 1분이면 어두워지기 없이 `60 120 300`) hypridle이 그 파일로 돌아요. 기본값은 `240 300 600 900` |
+| `default-apps` | 기본 앱의 도구가 7종류를 주고 Firefox가 기본 브라우저이며, 고른 값이 `~/.config/mimeapps.list`에 들어가고 열 수 없는 앱은 거절돼요 |
+| `report` | `robinctl report`가 여덟 구역을 모두 쓰고 그래픽·네트워크 드라이버 줄이 있어요 |
 
 스크린샷과 `serial.log`는 `build\boot-test`에 생겨요. 테스트는 `robinos.debug`를 붙여 부팅해서 `robinos-session`이 Hyprland와 셸 출력을 저널로 보내고, 그 내용이 `serial.log`에 남아요. 셸이 안 뜨면 여기서 QML 오류를 찾으세요.
 
@@ -112,7 +116,7 @@ Windows용 QEMU가 준비돼 있으면 WHPX 가속으로 돌아요([build-enviro
 
 ## 묶음 검증 (verify)
 
-여러 커밋을 한 번에 검증할 때는 빌드와 두 테스트를 따로 돌리지 않고 이렇게 해요.
+여러 커밋을 한 번에 검증할 때는 빌드와 두 테스트를 따로 돌리지 않고 이렇게 해요. 빌드 환경이 없는 PC(학교 PC 등)에서는 [build-environment.md](build-environment.md) "처음 쓰는 PC에서 한 번에 검증하기"의 `scripts/verify-all-in-one.ps1`이 준비까지 하고 이걸 돌려요.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 verify -Installer robinos
@@ -132,8 +136,14 @@ WHPX가 필요해요. TCG에서는 `build`, `boot-test`, `install-test`를 차�
 
 - `archinstall` (기본): [install.md](install.md)의 방법 A예요. archinstall로 Arch를 설치하고(기본 Btrfs 구성, GRUB, EFI는 `/boot`) `scripts/post-install.sh --yes`를 실행해요.
 - `robinos`: RobinOS 설치기 백엔드(`installer/robin-install`)로 디스크 전체에 설치해요(EFI는 `/efi`).
-- `encrypted`: `robinos`와 같지만 디스크 암호화를 켜요(LUKS2, T-166·T-167). 설치 뒤 복구 키가 화면 줄(`@@ recovery-key`)에만 있고 로그 파일에는 없는지 봐요. 설치본을 켤 때마다 GRUB이 화면에서 비밀번호를 물어서, 시리얼에 메뉴가 안 보이면 QMP로 비밀번호를 쳐요(`grub-password` 스크린샷, 잠금 해제에 걸린 시간을 기록). 두 번째 부팅(snapshots)은 비밀번호 대신 복구 키로 열어요.
-- `windows`: 윈도우가 깔린 것처럼 꾸민 64GB 디스크(100MB EFI 파티션과 그 안의 윈도우 부팅 관리자 자리, MSR, 20GB NTFS "C:", 나머지 빈 공간)에 RobinOS 설치기로 "윈도우 옆에 설치"해요. 설치 뒤 윈도우 파티션 세 개의 위치와 C:의 앞부분이 그대로인지, 윈도우 부팅 파일이 남아 있고 `EFI/RobinOS`만 더해졌는지, 하드웨어 시계가 지역 시간인지 확인해요.
+- `encrypted`: `robinos`와 같지만 디스크 암호화를 켜요(LUKS2, T-178·T-179). 설치 뒤 복구 키가 화면 줄(`@@ recovery-key`)에만 있고 로그 파일에는 없는지 봐요. 설치본을 켤 때마다 GRUB이 화면에서 비밀번호를 물어서, 시리얼에 메뉴가 안 보이면 QMP로 비밀번호를 쳐요(`grub-password` 스크린샷, 잠금 해제에 걸린 시간을 기록). 두 번째 부팅(snapshots)은 비밀번호 대신 복구 키로 열어요.
+- `windows`: 윈도우가 깔린 것처럼 꾸민 64GB 디스크(100MB EFI 파티션과 그 안의 윈도우 부팅 관리자 자리, MSR, 20GB NTFS "C:", 나머지 빈 공간)에 RobinOS 설치기로 설치해요. 순서는 이래요.
+  1. 빈 공간(약 44GB)이 있는 때의 설치 화면을 찍어요(`installer-free-space`): "윈도우 옆에 설치"가 고르는 중이고 크기가 빈 공간 전부인지.
+  2. 크기를 정해 보기: 진짜 `sgdisk`로 41GB 파티션이 만들어지는지, 남은 빈 공간이 2GB인지, 그 파티션이 "이전 RobinOS"로 알아봐지는지. 그다음 지워요.
+  3. 윈도우 디스크 관리가 남기는 것처럼 41GB NTFS "Data" 파티션을 만들고, 설치기가 그 파티션은 내놓고 윈도우가 든 C:(`windows_inside`가 읽기 전용 마운트로 확인)는 내놓지 않는지 봐요.
+  4. 설치 화면을 키보드로 확인 단계까지 몰아요(`qs ipc call shell installerState`로 상태를 읽어요): Data 파티션이 미리 골라져 있는지, 지울 파티션을 체크하기 전에는 "설치 시작"이 안 열리고 체크하면 열리는지. 그다음 "설치 시작"을 눌러(`installerNext`) 설치 화면이 직접 설치하게 해요(2026-10-14부터): 화면이 `sudo robin-install run -`에 계획을 넘기고, 진행 막대가 패키지를 설치하는 동안 움직이고(43~69% 구간을 지나는지), 끝나면 "설치가 끝났어요" 쪽으로 가는지(`installerState`의 `succeeded`) 봐요. 화면 스크린샷 `installer-installing`, `installer-finished`.
+  5. 그 설치가 그 파티션에 들어갔는지 확인해요(`mode: partition`, 계획의 `disk_id`·`partition_uuid`도 화면이 보내요). 파티션 이름이 RobinOS, 형식이 리눅스로 바뀌었는지, 윈도우 파티션 세 개의 위치와 C:의 앞부분이 그대로인지, 윈도우 부팅 파일이 남아 있고 `EFI/RobinOS`만 더해졌는지, 하드웨어 시계가 지역 시간인지, GRUB 메뉴에 윈도우가 나오는지 확인해요.
+  화면 스크린샷(`live-0N-installer-*`)은 다음 시험이 폴더를 비우기 전에 챙겨 둬요.
 
 설치한 뒤 확인하는 것:
 
@@ -154,6 +164,16 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test -Lab
 패키지를 내려받으니 인터넷이 필요해요. Windows용 QEMU가 있으면 부팅 테스트처럼 WHPX로 돌아요(UEFI 펌웨어는 QEMU에 들어 있는 `edk2-x86_64-code.fd`, 공유 폴더는 `fat:` 디스크). 없으면 WSL 안에서 TCG로 돌아서 한 시간 넘게 걸릴 수 있어요. 결과(스크린샷, 단계별 시리얼 로그)는 `build\install-test`에 생겨요.
 
 설치 테스트는 VM을 켤 때마다 `scripts/install-test.py`를 새로 읽어요. 테스트가 도는 동안 이 파일을 고치면 남은 단계가 바뀐 확인으로 돌아서, 아직 설치하지 않은 것을 찾다가 실패할 수 있어요. 고칠 게 있으면 테스트가 끝난 뒤에 고쳐요.
+
+## 파티션 부팅 테스트
+
+[install.md](install.md)의 "USB 없이 켜 보기"가 되는지 봐요. ISO의 파일을 FAT32 "기본 데이터" 파티션(EFI 시스템 파티션이 아니에요) 하나뿐인 디스크에 복사하고, CD 없이 UEFI로 켜서 라이브가 로그인 프롬프트까지 오면 통과예요. 확인용으로 복사본의 GRUB 설정에만 `console=ttyS0`을 붙여요. ISO의 부트로더나 archiso 훅을 바꿨을 때 돌려요.
+
+```bash
+wsl.exe -d archlinux -u root -e bash -lc 'cd /mnt/c/.../RobinOS && PARTITION_BOOT_OUT=/root/partition-boot bash scripts/partition-boot-test.sh /root/RobinOS/out/robinos-*.iso'
+```
+
+루프 장치를 쓰니 결과 폴더는 WSL의 리눅스 파일 시스템(`PARTITION_BOOT_OUT`)에 둬요. KVM이 없으면 TCG로 돌아서 몇 분 걸려요. 실제 PC의 펌웨어가 `bcdedit`로 만든 부팅 항목을 받아 주는지는 VM으로 알 수 없어요.
 
 ## VM에서 직접 써 보기
 
@@ -188,3 +208,34 @@ robinctl doctor
 robinctl lab info web
 ls /opt/robinos /usr/share/sddm/themes/robinos /usr/share/grub/themes/robinos
 ```
+
+## VMware로 실기기 대신 확인하기
+
+2026-10-15 사용자 결정: 실제 PC 대신 VMware Workstation에서 확인해요(사용자가 실기기와 VMware에서 똑같이 동작하는 걸 봤어요, T-167). QEMU 자동 테스트보다 실제 PC에 가까운 것들을 VMware 설정으로 흉내 낼 수 있어요. VMware는 화면을 보며 손으로 해야 해서 사용자가 해요. 결과는 [tasks.md](tasks.md) T-167에 적어요.
+
+### VM 설정
+
+- 펌웨어 UEFI, 메모리 8GB, CPU 4개, 디스크 64GB(NVMe)
+- 디스플레이: 3D 가속을 켠 채로 한 번, 끈 채로 한 번. 모니터 두 대로도 한 번(VM 설정 → 디스플레이 → 모니터 수)
+- 노트북에서 VMware를 쓴다면: 옵션 → 전원 → "배터리 정보를 게스트에 보고"를 켜요. 그러면 배터리 알림과 배터리일 때 자동 잠자기를 볼 수 있어요
+- USB: 쓰고 있는 USB 메모리, 있으면 USB 와이파이 동글·블루투스 동글·프린터를 VM에 연결해요
+
+### VMware에서 확인할 것
+
+1. **보안 부팅**: 옵션 → 고급에서 보안 부팅을 켠 채로 ISO를 켜면 켜지지 않는지(안내가 맞는지), 끄면 켜지는지
+2. **라이브**: 환영 마법사, 한/영 키, 소리(VMware 소리 장치), 화면 크기를 바꿔도 따라가는지, 3D 가속을 켰을 때 셸이 그려지는지
+3. **디스크 전체 설치**: 설치 화면으로 끝까지, 다시 켜서 로그인, 설정 앱의 각 쪽(디스플레이, 소리, 네트워크, 날짜와 시간, 키보드, 마우스, 기본 앱, 전원, 업데이트, 정보)
+4. **윈도우 옆 설치(진짜 윈도우)**: VM에 윈도우 11을 먼저 설치하고(VMware의 가상 TPM이 필요해서 VM 암호화를 켜요), BitLocker(장치 암호화)를 켠 뒤 RobinOS를 옆에 설치해요. 부팅 메뉴에 윈도우가 나오는지, 윈도우가 복구 키를 묻는지, 윈도우 파일이 그대로인지. 가짜 디스크로만 확인한 T-006을 대신해요
+5. **업데이트와 되돌리기**: `sudo robinctl update`, 부팅 메뉴의 스냅샷으로 켜기, 알림의 "이 상태로 되돌리기"
+6. **잠자기**: 전원 메뉴의 잠자기와 깨우기(VMware는 게스트의 잠자기를 받아 줘요), 배터리 정보를 켰다면 15분 뒤 자동 잠자기
+7. **USB**: USB 메모리를 파일 앱에서 열고 꺼내기, 연결한 프린터로 인쇄 한 장, 블루투스 동글이 있으면 이어폰 연결
+8. **여러 모니터**: 두 화면에 바와 배경이 나오는지, 창을 옮길 수 있는지
+
+### VMware로는 못 보는 것
+
+VMware는 장치를 흉내 낸 가상 장치를 보여 줘서, 아래는 VMware에서 잘 돼도 실제 PC에서는 다를 수 있어요. 문서와 사이트에서는 이것들을 "확인 안 됨"으로 둬요.
+
+- 노트북 안의 와이파이 칩과 그 펌웨어(VM에서는 유선 네트워크로 보여요)
+- NVIDIA·인텔·AMD 그래픽 드라이버, 노트북의 그래픽 카드 두 개(하이브리드), 실제 GPU에서 블러와 움직임
+- 노트북 덮개, 터치패드, 밝기 키, 내장 스피커·마이크, HDMI 소리, 카메라
+- 실제 펌웨어가 부팅 항목을 다루는 방식(제조사마다 다른 부팅 메뉴, OEM 복구 파티션, USB 없이 파티션으로 켜기 T-168)

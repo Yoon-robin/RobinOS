@@ -15,6 +15,7 @@ pacman-contrib
 fakeroot
 fastfetch
 btrfs-progs
+zram-generator
 snapper
 snap-pac
 grub-btrfs

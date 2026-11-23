@@ -7,8 +7,21 @@ post_install() {
   done </opt/robinos/desktop/package-shared.txt
   dconf update 2>/dev/null || true
   /usr/share/robinos/bin/robinos-os-release 2>/dev/null || true
+  robinos_upower_conf /etc/UPower/UPower.conf
+}
+
+# Nearly empty battery: power off. UPower's default (Auto in 1.91, HybridSleep before)
+# ends in sleep that needs disk swap to wake from, and RobinOS only has compressed swap
+# in RAM. Only those defaults: this runs on every update, and a person who added disk
+# swap may have chosen Hibernate (scripts/test-robinctl.sh)
+robinos_upower_conf() {
+  [ -f "$1" ] || return 0
+  sed -i -E 's/^CriticalPowerAction=(Auto|HybridSleep)[[:space:]]*$/CriticalPowerAction=PowerOff/' "$1" || true
 }
 
 post_upgrade() {
   post_install
+  # A running desktop keeps the files it started with. `robinctl update` starts the
+  # shell again by itself; with plain pacman the person logs out and in
+  printf 'RobinOS 화면은 로그아웃했다가 다시 로그인하면 새 버전이 돼요(robinctl update는 알아서 다시 띄워요).\n'
 }

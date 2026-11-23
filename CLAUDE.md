@@ -1,6 +1,6 @@
 # RobinOS: Claude 작업 규칙
 
-RobinOS는 Arch Linux 기반의 한국어 우선 OS예요. 정체성은 "예쁜 UI를 가진 OS"예요(2026-11-24 사용자 결정): 모든 화면이 robin-ui V5 키트(`assets/brand/robin-ui/`) 하나를 따라요. Hyprland 위에 직접 만든 Quickshell 셸을 얹었고, 화면과 도구는 "RobinOS라면 어떻게 할까"에서 시작해 직접 만들어요(2026-10-10). 리눅스를 처음 쓰는 사람을 위한 장치(윈도우 단축키, 터미널 힌트, 학습 센터)는 그대로 있지만 앞세우지 않아요. 제품 설계는 [docs/design.md](docs/design.md), 화면 규칙은 [docs/brand.md](docs/brand.md)에 있어요.
+RobinOS는 Arch Linux 기반의 한국어 우선 OS예요. 정체성은 "예쁜 UI를 가진 OS"예요(2026-11-24 사용자 결정): 모든 화면이 robin-ui V5 키트(`assets/brand/robin-ui/`) 하나를 따라요. Hyprland 위에 직접 만든 Quickshell 셸을 얹었고, 화면과 도구는 "RobinOS라면 어떻게 할까"에서 시작해 직접 만들어요(2026-10-10). 리눅스를 처음 쓰는 사람을 위한 장치(윈도우 단축키, 터미널 힌트, 학습 센터, 윈도우 습관에서 리눅스 개념으로 이어 주기, 2026-10-12·13 결정)는 그대로 있지만 앞세우지 않아요. 제품 설계는 [docs/design.md](docs/design.md), 화면 규칙은 [docs/brand.md](docs/brand.md)에 있어요.
 
 ## 꼭 지킬 것
 
@@ -46,11 +46,14 @@ powershell -ExecutionPolicy Bypass -File scripts/sync-archiso-files.ps1         
 - **wsl.exe는 `-e`로**: `wsl.exe -- 명령`은 셸을 한 번 더 거쳐 `$?`나 따옴표가 깨져요. `wsl.exe -d archlinux -u root -e bash -lc '...'`처럼 쓰고, 긴 명령은 스크립트 파일로 만들어 실행해요.
 - **Node 24와 한글 경로**: `fs.rmSync`에 `바탕화면`이 든 절대 경로를 주면 node가 오류 메시지 없이 죽어요(0xC0000409, Node 24.13). 파일은 `fs.unlinkSync`로 지우거나 상대 경로를 써요.
 - **PowerShell 5.1과 한글**: BOM 없는 UTF-8 `.ps1`의 한글은 깨져요. 한글이 들어간 `.ps1`은 UTF-8 BOM으로 저장해요.
+- **PowerShell 5.1의 `git commit -m @'...'@`**: 메시지 안에 큰따옴표가 있으면 인자가 쪼개져서 `pathspec ... did not match`로 실패해요(2026-10-14). 큰따옴표가 든 메시지는 파일에 써 두고 `git commit -F 파일`로 해요.
 - **CRLF**: 윈도우 체크아웃의 `.ps1`은 CRLF예요. 그 안의 here-string을 bash에 넘기면 `\r`이 붙어요. `Invoke-Wsl`처럼 넘기기 전에 `\r`을 지워요.
 - **VM 테스트는 WHPX로**: Windows용 QEMU(`%USERPROFILE%\RobinOS-tools\qemu`)가 있으면 `boot-test`가 WHPX로 돌아요. WSL의 QEMU는 KVM이 없어 TCG로만 돌아요.
 - **Bash 도구의 heredoc과 sed**: `\n` 같은 이스케이프가 바뀌어 들어가요. 이스케이프나 여러 줄이 있는 수정은 Edit 도구로 해요.
 - **검사 결과를 파이프로 가리지 않아요**: `validate ... | tail -1 && git commit`은 검증이 실패해도 커밋해요(2026-10-08). `scripts/ready.ps1`의 종료 코드로 판단해요. 오버레이 동기화와 sddm 설정 줄 끝 되돌리기도 `ready.ps1`이 해요.
 - **실행 권한**: 윈도우는 실행 비트를 기록하지 않아요. 새 스크립트는 `git update-index --chmod=+x <파일>`로 남기고, 동기화가 만든 ISO 오버레이 사본(`archiso/airootfs/usr/share/robinos/bin/`, `opt/robinos/...`)에도 해요. **라이브 ISO 안의 권한은 git이 아니라 `archiso/profiledef.sh`의 `file_permissions`가 정해요**(mkarchiso가 권한 없이 복사해요). 새 실행 파일은 거기에도 넣어요. 빠지면 라이브에서 644가 돼서 실행이 안 돼요(2026-10-12: 터미널이 하나도 안 열림). `validate-project.ps1`이 셋 다 확인해요.
 - **부팅 테스트 "통과"는 화면을 찍었다는 뜻이에요**: 스크린샷을 직접 보고, 꼭 동작해야 하는 것은 `expect_serial`처럼 확인하는 줄을 넣어요.
+- **PowerShell 창에서 부른 WSL의 표준 입력은 터미널이에요**: `[[ -t 0 ]]`로 묻는 코드가 시험 안에서 키를 기다리고, 줄바꿈 없는 질문은 창에 보이지도 않아요(2026-10-15, 올인원이 몇 시간 멈춤). 시험은 `scripts/check.sh`처럼 `</dev/null`로 돌리고, 묻는 코드는 실제로 할 때만 물어요.
+- **PowerShell 문자열에서 변수 바로 뒤에 한글을 붙이지 않아요**: 한글까지 변수 이름이 돼요. `${limit}분`처럼 써요. `validate-project.ps1`이 `scripts/*.ps1`에서 잡아요.
 - **QML 한 줄 실수로 셸 전체가 안 떠요**: QML을 고치면 `wsl-build.ps1 check`(qmllint)를 꼭 돌려요. 셸이 안 뜨면 부팅 테스트의 `serial.log`에서 오류를 찾아요.
 - **느린 VM(TCG)의 키 반복**: 부팅 테스트에서 키가 반복 입력될 수 있어요. 테스트 결과가 이상하면 제품 문제인지 먼저 가려요.

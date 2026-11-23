@@ -12,8 +12,8 @@
 # and loses file modes). build, boot-test and install-test first reset that
 # clone to this checkout's HEAD, so commit before running; uncommitted changes
 # don't reach WSL. They refuse to start while another build or VM is running,
-# because the reset would pull files out from under it. check (desktop config
-# and qmllint) and status read this checkout directly and are always safe.
+# because the reset would pull files out from under it. check (the quick checks,
+# scripts/check.sh) and status read this checkout directly and are always safe.
 # Test results (screenshots, serial logs) are copied back to build\ here.
 # Needs WSL 2 and the archlinux distro: wsl --install archlinux
 
@@ -37,6 +37,9 @@ param(
     # install-test: also start the web lab on the installed system (downloads its images)
     [switch]$Lab,
     [string]$Distro = "archlinux",
+    # Memory of each WHPX test VM; verify runs two at once (scripts/verify-all-in-one.ps1
+    # gives 4096 on a PC with less than 12 GB)
+    [int]$MemoryMB = 6144,
     # Internal: the boot test that verify starts next to its install test (no busy
     # check, no reset of the WSL clone, the VM files verify already prepared)
     [switch]$Inner
@@ -90,7 +93,7 @@ function Invoke-WhpxBootTest {
         $kernelArgs = "archisobasedir=$base archisolabel=$label console=tty0 console=ttyS0,115200 systemd.journald.forward_to_console=1 robinos.debug"
         # Start-Process joins the arguments with spaces, so quote the ones that have them
         $qemuArgs = @(
-            "-machine", "q35", "-accel", "whpx", "-m", "6144", "-smp", "4",
+            "-machine", "q35", "-accel", "whpx", "-m", "$MemoryMB", "-smp", "4",
             # The hardware clock in local time, as on a PC that runs Windows (the live
             # ISO reads it that way, archiso/airootfs/etc/adjtime)
             "-rtc", "base=localtime",
@@ -174,7 +177,7 @@ function Invoke-WhpxInstallTest {
     $env:ROBINOS_SERIAL = "tcp:127.0.0.1:47021"
     $env:ROBINOS_QMP = "tcp:127.0.0.1:47022"
     $common = @(
-        "-machine", "q35", "-accel", "whpx", "-m", "6144", "-smp", "4",
+        "-machine", "q35", "-accel", "whpx", "-m", "$MemoryMB", "-smp", "4",
         "-drive", "`"if=pflash,format=raw,readonly=on,file=install-test\OVMF_CODE.fd`"",
         "-drive", "`"if=pflash,format=raw,file=install-test\OVMF_VARS.fd`"",
         "-drive", "`"file=install-test\disk.qcow2,format=qcow2,if=virtio`"",
@@ -245,7 +248,8 @@ echo 'WSL 빌드 환경이 준비됐어요.'
 }
 
 if ($Task -eq "check") {
-    Invoke-Wsl "cd '$wslRoot' && bash scripts/check-desktop.sh && python3 scripts/check-kit.py && bash scripts/qmllint.sh && bash scripts/check-sync.sh && bash scripts/test-robinctl.sh && python3 scripts/test-robin-install.py"
+    # Every quick check, each with a time limit and no input (scripts/check.sh)
+    Invoke-Wsl "cd '$wslRoot' && bash scripts/check.sh"
     exit 0
 }
 
@@ -346,15 +350,23 @@ switch ($Task) {
         $env:ROBINOS_VM_PREPARED = Get-VmFiles
 
         $bootLog = Join-Path $root "build\verify-boot.log"
-        $bootArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`" boot-test -Inner -Accel whpx -Qemu `"$Qemu`" -Distro $Distro"
+        $bootArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`" boot-test -Inner -Accel whpx -Qemu `"$Qemu`" -Distro $Distro -MemoryMB $MemoryMB"
         $boot = Start-Process powershell.exe -ArgumentList $bootArgs -PassThru -WindowStyle Hidden `
             -RedirectStandardOutput $bootLog -RedirectStandardError "$bootLog.err"
         # Without holding the handle now, ExitCode comes back empty once the process is gone
         $null = $boot.Handle
         $installError = $null
         try { Invoke-WhpxInstallTest } catch { $installError = $_ }
-        $boot.WaitForExit()
+        # The boot test writes only to its own log: say what it is doing while this waits,
+        # instead of a window that looks stuck (2026-10-16)
+        if (-not $boot.HasExited) { Write-Host "`n설치 테스트가 끝났어요. 함께 돌던 부팅 테스트를 기다려요 (기록: $bootLog)" }
+        while (-not $boot.WaitForExit(60000)) {
+            $last = Get-Content $bootLog -Tail 1 -ErrorAction SilentlyContinue
+            Write-Host "  부팅 테스트 진행 중: $last"
+        }
         Remove-Item Env:ROBINOS_VM_PREPARED -ErrorAction SilentlyContinue
+        Write-Host "`n부팅 테스트 기록의 끝:"
+        Get-Content $bootLog -Tail 15 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  $_" }
 
         Write-Host ("`n빌드 {0:N1}분, 테스트 {1:N1}분 (부팅 테스트 기록: {2})" -f `
             ($built - $started).TotalMinutes, ((Get-Date) - $built).TotalMinutes, $bootLog)
