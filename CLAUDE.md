@@ -29,7 +29,10 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 boot-test        
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test      # 설치 테스트 → build\install-test
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 verify -Installer robinos  # 묶음 검증: 빠른 ISO + 부팅·설치 테스트 동시에
 powershell -ExecutionPolicy Bypass -File scripts/sync-archiso-files.ps1          # ISO 오버레이 맞추기
+wsl.exe -d archlinux -u root -e bash -lc 'cd "$(wslpath -a .)" && bash scripts/shell-load.sh -s /tmp/s.png quickSettings settingsSection:power'  # VM 없이 셸을 띄워 화면 찍기
 ```
+
+화면을 고쳤으면 `shell-load.sh`로 몇 초 만에 찍어서 직접 봐요(`함수:값` 문법과 쓸 수 있는 함수는 [docs/testing.md](docs/testing.md)). ISO를 빌드해 부팅 테스트를 돌리는 것보다 훨씬 빨라요.
 
 ## 저장소에서 코드만으로는 모르는 것
 

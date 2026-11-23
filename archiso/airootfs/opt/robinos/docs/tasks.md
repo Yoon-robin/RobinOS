@@ -110,13 +110,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 한 것(⑤ 일부): 런처(묶음 이름표 11px, 줄 41, 고른 줄은 회색 면 + 파란 아이콘, 아이콘 칸은 컨트롤 면, "켜짐" 칩은 왼쪽 파란 막대, 키 안내가 있던 아래 줄과 esc 키 표시 빼기), 빠른 설정(전원 끄기는 빨간 테 + 빨간 글자, 업데이트 줄에 컨트롤 선)
 - 한 것(④·⑥·⑦ 이어서, 2026-11-24 새벽): 설치기·환영 마법사의 고른 카드는 두꺼운 흰 테 대신 회색 면 + 진한 선(테마 미리보기만 파란 선), 학습 센터의 다음 미션 칸과 끝낸 미션 원은 파랑 옅은 면 + 파란 아이콘(파란 채움은 "터미널에서 시작" 하나), 진행 막대 3px, 머리의 설명 문장 빼기(미션 화면이 `robinctl learn check`를 알려 줘요), 환영 마법사의 한글 켬 표시도 옅은 파랑. 잠금 화면의 흐림과 키 안내 빼기. 프롬프트 `>`를 파랑으로, foot 팔레트의 면을 키트 색으로(ANSI 초록·노랑은 프로그램 출력의 뜻이라 남겨요). 코드 글꼴을 키트의 Cascadia로(합자 없는 Cascadia Mono, `ttf-cascadia-code`), 기본 글꼴을 Pretendard로(dconf, qt6ct, fontconfig). 아이콘은 Lucide 그대로 둬요: 키트 아이콘(31개)과 같은 24 칸·둥근 끝 선 아이콘이고, 셸에는 그보다 많은 아이콘이 필요해요
 - 한 것(다른 PC 작업과 합친 뒤, 2026-11-24 새벽): 다른 PC가 만든 설정 페이지(전원, 키보드, 마우스, 앱, 날짜와 시간)의 선택 단추와 라디오 줄을 키트 모양으로(고른 것은 파란 채움 대신 회색 면 + 진한 선, 라디오 원은 파랑), 시간대 고르기와 설정의 `Font.*` 굵기를 토큰으로. Ptyxis 팔레트 `desktop/ptyxis/robinos.palette`(foot와 같은 면): dconf 기본 프로필이 `robinos` 팔레트를 쓰고, Ptyxis는 사용자 폴더의 팔레트만 읽어서 `robinos-terminal`이 `~/.local/share/org.gnome.Ptyxis/palettes/`에 복사해 둬요. 부팅 테스트 `terminal` 판정이 팔레트 이름과 복사본을 봐요
-- 남은 단계(한 단계가 1~3회차):
-  - ② 공용 부품: `ActionButton`(모서리 7, 파란 채움·빨간 테), `Switch`(34×19, 꺼지면 어두운 홈), `InputField`, `QsSlider`(3px 홈, 흰 손잡이 11), `ToggleTile`, `FocusRing`(파란 링), 굵기를 `Theme.weight*`로
-  - ③ 표시기: 토스트·알림(왼쪽 짧은 막대, `data-tone` 같은 tone 속성), 독(짙은 면), 상태 칩
-  - ④ 창들: 설정·학습 센터·설치기·환영 마법사를 옆 기둥(`side`) + 판 + 카드(`rk-label`은 카드 밖) 구조로, 줄 높이 41, 설명 문장 정리
-  - ⑤ 바·런처·빠른 설정·달력·알림 센터·연결·소리 패널의 줄·타일·이름표
-  - ⑥ 시스템 화면: SDDM(`themes/sddm/robinos`), hyprlock, GRUB, syslinux, qt6ct 팔레트, Ptyxis·foot 팔레트, `robinos-screenshot` 선택 색, 배경화면 SVG, 로고(`build-logo.py` 색과 한 줄 소개 빼기), fastfetch 울새
-  - ⑦ 아이콘을 키트의 선 아이콘으로 맞추기(`icons.js`), 코드 글꼴(Cascadia) 정하기, README 스크린샷·소개 영상 다시 찍기와 키트 출처 적기
+- 한 것(2026-11-24 새벽 2~3시): README 스크린샷 네 장을 새 화면으로(부팅 테스트 13·23·68·79번 장면). VM 없이 셸을 띄워 페이지마다 찍고(`shell-load.sh`) 어긋난 자리와 빈 상태를 고쳤어요(품질 점검 기록 "코드 검토")
+- 남은 것: ① 소개 영상(`promo/intro/`)을 새 화면으로 다시 찍기 ② 랜딩 페이지(`site/`)의 화면 사진과 `publish-site.sh`는 v0.4 릴리스 때(지금 받는 v0.3이 옛 화면) ③ 터미널의 한글 간격은 T-183. ②~⑥ 단계(공용 부품, 표시기, 창들, 패널, 시스템 화면)와 ⑦의 아이콘·글꼴·README는 끝났어요
 - 검증: 단계마다 `wsl-build.ps1 check`(qmllint), 부팅 테스트 스크린샷을 다크·라이트로 직접 보기. 키트에서 벗어난 것을 세는 검사(`check-desktop.sh`에 셸 QML의 `#`색 리터럴, 초록·노랑, `Theme.` 밖의 모서리 값)도 넣어요
 - 완료 기준: 부팅 테스트의 모든 장면이 키트 문법(면 셋, 파랑 하나, 컨트롤 모서리 7, 유리 없음)을 따르고, 시스템 화면(로그인, 잠금, 부팅 메뉴)도 같은 색
 
@@ -125,6 +120,13 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 출처: 다른 PC 코드를 합친 뒤의 코드 검토(품질 점검 기록 "코드 검토")
 - 할 것: ① `robin-install`의 `dual_boot`: 디스크에 NTFS나 Basic data 형식 파티션이 하나라도 있으면 윈도우로 봐서, 윈도우 없이 exFAT 공유 파티션만 있는 디스크에도 `hwclock --localtime`과 os-prober가 켜져요. 이미 계산한 `windows_inside`(또는 BitLocker)로 정하고, partition 모드에서는 고른 파티션을 빼요. `Installer.qml`의 `dualBoot`도 같은 필드로 ② ~~설정 "기본 앱": 앞의 실행이 끝나기 전에 다시 고르면 두 번째가 버려져요~~ (2026-11-24 고침: 대기열 `pendingApps`, `onExited`에서 다음 것)
 - 완료 기준: `test-robin-install.py`에 exFAT만 있는 디스크 경우, 부팅 테스트 `default-apps` 판정
+
+### T-183 터미널의 한글 글자 사이가 벌어져요
+- 상태: 할 일
+- 출처: 2026-11-24 묶음 검증의 부팅 테스트 `31-terminal-learn.png`. 미션 안내가 "미 션 1 · 폴 더"처럼 한 글자씩 떨어져 보여요
+- 까닭: 코드 글꼴 Cascadia Mono에는 한글이 없어서 fontconfig가 Noto Sans Mono CJK KR로 대신 그려요. 한글은 두 칸을 쓰는데, Cascadia의 한 칸(0.6em)이 Noto 한글의 절반(0.5em)보다 넓어서 두 칸에 남는 자리가 생겨요. foot는 대신 그리는 글꼴의 크기를 따로 줘서(`size=12.5`) 맞추지만 Ptyxis(VTE)는 그럴 수 없어요
+- 할 것: 후보를 VM 없이 비교해요. WSL에 `ptyxis`를 깔고 `shell-load.sh`와 같은 화면 없는 sway에서 `grim`으로 찍어요. 후보: ① Cascadia 다음에 한글 폭이 칸에 맞는 글꼴(`ttf-d2coding-nerd`, `ttf-sarasa-gothic`)을 두기 ② 한글이 들어 있는 고정폭 글꼴을 터미널 글꼴로(키트의 Cascadia와 라틴 모양이 달라지니 brand.md와 맞춰 보기) ③ fontconfig `matrix`로 대신 그리는 한글만 넓히기
+- 완료 기준: 부팅 테스트 터미널 장면에서 한글이 붙어 보이고, 영어 코드는 Cascadia 그대로
 
 ### T-176 반쪽 작업 끝내기 (진행 중 21개)
 - 상태: 할 일 (2026-10-15)
