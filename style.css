@@ -1,28 +1,16 @@
 /* RobinOS landing page.
    Design read (2026-10-13, the user: "simple like Apple, just show it"): the name,
-   the real screens, a few plain titles, almost no copy. Centered, black or
-   near-white, one red accent from docs/brand.md. Motion does the talking instead
+   the real screens, a few plain titles, almost no copy. Since 2026-11-24 it wears
+   the robin-ui V5 kit like the OS (docs/brand.md): the kit's faces and words, one
+   blue, no glass or blur, Pretendard. Motion does the talking instead
    of sentences: the name rises letter by letter, the desktop stands up as you
    scroll, screens grow in, the terminal rows cross out the Windows command and
    bring in the Linux one, and the quick settings sweep from dark to light.
    Nothing loops. prefers-reduced-motion leaves everything in place, and without
    CSS scroll timelines the page simply shows the end state.
-   Fonts are self-hosted: Geist (Latin), Pretendard cut down to the page's
-   characters (scripts/build-site.py), Geist Mono for commands. */
-
-@font-face {
-  font-family: "Geist";
-  src: url("assets/fonts/Geist-Variable.woff2") format("woff2");
-  font-weight: 100 900;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Geist Mono";
-  src: url("assets/fonts/GeistMono-Variable.woff2") format("woff2");
-  font-weight: 100 900;
-  font-display: swap;
-}
+   Fonts are self-hosted: Pretendard cut down to the page's characters
+   (scripts/build-site.py); commands use the kit's Cascadia Mono where it is
+   installed (Windows 11 has it), else the system's monospace font. */
 
 @font-face {
   font-family: "Pretendard";
@@ -46,25 +34,27 @@
 }
 
 :root {
-  --bg: #000000;
-  --fg: #f5f5f7;
-  --muted: #a1a1aa;
-  --subtle: #8b8b94;
-  --line: rgba(255, 255, 255, 0.10);
-  --line-strong: rgba(255, 255, 255, 0.16);
-  --chip: rgba(255, 255, 255, 0.10);
-  --chip-hover: rgba(255, 255, 255, 0.16);
-  --nav: rgba(0, 0, 0, 0.72);
-  --link: #e5484d;
-  --btn: #d6343b;
-  --btn-hover: #c42f37;
-  --accent: #e5484d;
-  --glow: 0.75;
-  --shadow: 0 50px 120px -50px rgba(229, 72, 77, 0.35), 0 30px 60px -30px rgba(0, 0, 0, 0.9);
+  --bg: #0e1012;
+  --fg: #e6e7e9;
+  --head: #f0f0f0;
+  --muted: #8a8e94;
+  --subtle: #7d8187;
+  --line: #181a1d;
+  --line-strong: #26272d;
+  --chip: #14151c;
+  --chip-hover: #1b1d25;
+  --nav: #0a0e11;
+  --link: #4b7dfe;
+  --btn: #3d6af0;
+  --btn-hover: #4b7dfe;
+  --accent: #4b7dfe;
+  --glow: 0.55;
+  --glow-color: rgba(75, 125, 254, 0.55);
+  --shadow: 0 50px 120px -50px rgba(0, 0, 0, 0.8), 0 30px 60px -30px rgba(0, 0, 0, 0.9);
 
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
-  --font: "Geist", "Pretendard", system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
-  --mono: "Geist Mono", "Pretendard", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font: "Pretendard", system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+  --mono: "Cascadia Mono", "Cascadia Code", ui-monospace, SFMono-Regular, Menlo, Consolas, "Pretendard", monospace;
   --wrap: min(1080px, 100% - 32px);
   --gap: clamp(96px, 14vw, 180px);
   --radius: clamp(10px, 1.4vw, 18px);
@@ -72,18 +62,23 @@
 
 @media (prefers-color-scheme: light) {
   :root {
-    --bg: #fbfbfd;
-    --fg: #1d1d1f;
-    --muted: #6e6e73;
-    --subtle: #71717a;
-    --line: rgba(0, 0, 0, 0.08);
-    --line-strong: rgba(0, 0, 0, 0.12);
-    --chip: rgba(0, 0, 0, 0.06);
-    --chip-hover: rgba(0, 0, 0, 0.10);
-    --nav: rgba(251, 251, 253, 0.74);
-    --link: #c42f37;
-    --glow: 0.35;
-    --shadow: 0 40px 90px -40px rgba(120, 30, 34, 0.30), 0 20px 40px -24px rgba(0, 0, 0, 0.22);
+    --bg: #ffffff;
+    --fg: #1a1a1a;
+    --head: #000000;
+    --muted: #616161;
+    --subtle: #727272;
+    --line: #e3e6eb;
+    --line-strong: #dedee3;
+    --chip: #f1f1f2;
+    --chip-hover: #e9ecf0;
+    --nav: #f4f5f7;
+    --link: #3566e8;
+    --btn: #3566e8;
+    --btn-hover: #2f5cd6;
+    --accent: #3566e8;
+    --glow: 0.3;
+    --glow-color: rgba(53, 102, 232, 0.45);
+    --shadow: 0 40px 90px -40px rgba(20, 24, 33, 0.28), 0 20px 40px -24px rgba(0, 0, 0, 0.2);
   }
 }
 
@@ -152,14 +147,12 @@ a {
   white-space: nowrap;
 }
 
-/* ---- Nav: a thin glass strip, like the RobinOS bar ---- */
+/* ---- Nav: a thin solid strip, like the RobinOS bar ---- */
 .nav {
   position: sticky;
   top: 0;
   z-index: 10;
   background: var(--nav);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--line);
 }
 
@@ -382,11 +375,7 @@ a {
   position: absolute;
   inset: 6% 4% -4%;
   z-index: -1;
-  background:
-    radial-gradient(55% 60% at 30% 45%, rgba(229, 72, 77, 0.65), transparent 70%),
-    radial-gradient(45% 55% at 78% 60%, rgba(247, 107, 21, 0.40), transparent 70%),
-    radial-gradient(40% 50% at 55% 85%, rgba(139, 92, 246, 0.35), transparent 70%);
-  filter: blur(80px);
+  background: radial-gradient(60% 65% at 50% 50%, var(--glow-color), transparent 72%);
   opacity: var(--glow);
 }
 
@@ -411,7 +400,6 @@ a {
   from {
     opacity: 0;
     transform: translateY(0.32em);
-    filter: blur(14px);
   }
 }
 
@@ -581,7 +569,6 @@ kbd {
 .js .cmd-rows .lin {
   opacity: 0;
   transform: translateX(-18px);
-  filter: blur(8px);
   transition-delay: calc(var(--i) * 450ms + 640ms);
 }
 
@@ -637,8 +624,7 @@ kbd {
   left: 50%;
   width: 2px;
   margin-left: -1px;
-  background: #e5484d;
-  box-shadow: 0 0 14px 2px rgba(229, 72, 77, 0.6);
+  background: var(--accent);
 }
 
 /* ---- End ---- */
