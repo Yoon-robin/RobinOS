@@ -2,8 +2,8 @@
 set -uo pipefail
 
 # The quick checks that need no VM, one after another (wsl-build.ps1 check runs this
-# in WSL): desktop config, the robin-ui kit, qmllint, the ISO sync, robinctl's and the
-# installer's tests.
+# in WSL): desktop config, the robin-ui kit, qmllint, the shell really loading (in a
+# headless sway), the ISO sync, robinctl's and the installer's tests.
 #
 # Every check runs even after one fails, so one run shows all the problems. Each gets
 # a time limit (CHECK_LIMIT seconds, default 600) and no input: on a PC where a check
@@ -65,6 +65,7 @@ run_check() {
 run_check "Desktop files (check-desktop.sh)" bash scripts/check-desktop.sh
 run_check "robin-ui kit (check-kit.py)" python3 scripts/check-kit.py
 run_check "Shell QML (qmllint.sh)" bash scripts/qmllint.sh
+run_check "Shell loads (shell-load.sh)" bash scripts/shell-load.sh
 run_check "ISO sync (check-sync.sh)" bash scripts/check-sync.sh
 run_check "robinctl (test-robinctl.sh)" bash scripts/test-robinctl.sh
 run_check "Installer (test-robin-install.py)" python3 scripts/test-robin-install.py

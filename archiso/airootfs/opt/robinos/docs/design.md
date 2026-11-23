@@ -130,6 +130,7 @@
 | 설치기 백엔드 | Python (그대로) | 테스트(`test-robin-install.py`)가 있고, 화면은 셸 QML이에요 |
 | 시스템 도구 | bash (`robinctl`) (그대로) | 학습 미션이 쓰는 명령을 그대로 보여 줘요 |
 | 빌드·검증 | 윈도우 PowerShell + WSL Arch + WHPX QEMU (그대로) | 어느 PC에서나 `scripts/wsl-build.ps1 setup` 한 번이면 같은 환경이에요 ([build-environment.md](build-environment.md)) |
+| 셸을 빨리 띄워 보기 | WSL의 화면 없는 sway + `grim` (새로) | ISO 빌드와 VM 없이 몇 초 만에 셸이 뜨는지 보고 찍어요(`scripts/shell-load.sh`). qmllint가 못 잡는 실행 시 오류를 `check`가 잡아요 |
 
 **검토하고 고르지 않은 것**
 

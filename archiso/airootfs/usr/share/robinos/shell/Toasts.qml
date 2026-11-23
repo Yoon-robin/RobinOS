@@ -156,7 +156,7 @@ PanelWindow {
                                 text: toast.n.summary
                                 color: Theme.head
                                 font.family: Theme.font
-                                font.pixelSize: 13.5
+                                font.pixelSize: 14
                                 font.weight: Theme.weightStrong
                                 elide: Text.ElideRight
                             }

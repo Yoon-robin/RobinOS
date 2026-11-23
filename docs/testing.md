@@ -48,9 +48,11 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 check
 
 Arch Linux에서는 `scripts/check-desktop.sh`와 `scripts/qmllint.sh`를 직접 실행해요.
 
-`check`는 `scripts/check.sh`로 빠른 검사 여섯 개를 차례로 돌려요. 하나가 실패해도 나머지를 다 돌리고, 시험마다 입력 없이(`</dev/null`) 10분 제한을 둬요(넘으면 그때 돌던 프로세스를 보여 주고 끝내요). 1분이 넘는 시험은 1분마다 진행 줄을 찍어요. PowerShell 창에서 부른 WSL은 표준 입력이 터미널이라, 묻는 코드가 있으면 시험이 보이지 않는 질문 앞에서 몇 시간 멈췄어요(2026-10-15). ISO 빌드가 WSL에서 하는 오버레이 동기화(`scripts/sync-archiso-files.sh`)를 작업 트리의 임시 복사본에서 미리 돌려 보고(`scripts/check-sync.sh`, 2초쯤), VM 없이 도는 빠른 테스트 두 개도 함께 돌려요. `scripts/test-robinctl.sh`는 미션 채점, 입문 CTF(9번 서버가 시간이 되면 스스로 꺼지는 것까지), 보안 프로필, 랩, 윈도우 명령 힌트, 보안 점검(`audit`), 앱 제거, NVIDIA 진단, 업데이트, RobinOS 저장소(`repo`)를 보고, `scripts/test-robin-install.py`는 설치기가 그래픽 카드에 맞는 드라이버를 고르는지(가짜 `/sys/bus/pci/devices`로), initramfs 훅, fstab 정리를 봐요. 실제 NVIDIA 카드에서 드라이버가 뜨는지는 실기기에서만 확인할 수 있어요.
+`check`는 `scripts/check.sh`로 빠른 검사 일곱 개를 차례로 돌려요. 하나가 실패해도 나머지를 다 돌리고, 시험마다 입력 없이(`</dev/null`) 10분 제한을 둬요(넘으면 그때 돌던 프로세스를 보여 주고 끝내요). 1분이 넘는 시험은 1분마다 진행 줄을 찍어요. PowerShell 창에서 부른 WSL은 표준 입력이 터미널이라, 묻는 코드가 있으면 시험이 보이지 않는 질문 앞에서 몇 시간 멈췄어요(2026-10-15). ISO 빌드가 WSL에서 하는 오버레이 동기화(`scripts/sync-archiso-files.sh`)를 작업 트리의 임시 복사본에서 미리 돌려 보고(`scripts/check-sync.sh`, 2초쯤), VM 없이 도는 빠른 테스트 두 개도 함께 돌려요. `scripts/test-robinctl.sh`는 미션 채점, 입문 CTF(9번 서버가 시간이 되면 스스로 꺼지는 것까지), 보안 프로필, 랩, 윈도우 명령 힌트, 보안 점검(`audit`), 앱 제거, NVIDIA 진단, 업데이트, RobinOS 저장소(`repo`)를 보고, `scripts/test-robin-install.py`는 설치기가 그래픽 카드에 맞는 드라이버를 고르는지(가짜 `/sys/bus/pci/devices`로), initramfs 훅, fstab 정리를 봐요. 실제 NVIDIA 카드에서 드라이버가 뜨는지는 실기기에서만 확인할 수 있어요.
 
 `check`는 화면이 robin-ui V5 키트를 벗어나지 않았는지도 봐요(`scripts/check-kit.py`, 2026-11-24). `Theme.qml`과 시스템 화면(hyprlock, SDDM, GRUB, syslinux)의 색이 모두 `assets/brand/robin-ui/tokens.json`의 값인지, 셸 QML이 테마 밖에서 키트에 없는 색·`Font.*` 굵기·튀는 스프링(`Easing.OutBack`)을 쓰지 않는지, 초록·노랑이 없는지, `Theme.qml`의 모서리가 키트 값(6, 7, 10, 12, 14)인지, Hyprland가 셸 화면에 블러를 걸지 않는지예요. 윈도우에서도 `python scripts/check-kit.py`로 바로 돌릴 수 있어요.
+
+`check`는 셸을 진짜로 띄워 보기도 해요(`scripts/shell-load.sh`, 2026-11-24). WSL 안에서 화면 없는 sway(wlroots의 headless 백엔드, Quickshell의 `PanelWindow`가 쓰는 layer-shell이 있어요)를 켜고 그 위에서 `qs -p desktop/shell`이 "Configuration Loaded"까지 가는지 봐요. 5초쯤 걸려요. qmllint는 이름과 형식만 봐서, 정수 속성에 소수를 넣은 `font.pixelSize: 13.5`("Invalid property assignment: int expected")가 모든 빠른 검사를 통과하고 부팅 테스트에서야 셸이 로그인하자마자 다섯 번 죽는 것으로 드러났어요. `bash scripts/shell-load.sh -s 파일.png`는 띄운 셸을 `grim`으로 찍어서, VM 없이 몇 초 만에 바와 독을 볼 수 있어요(WSL에 한글 글꼴이 없으면 한글은 네모로 나와요). sway와 grim은 `wsl-build.ps1 setup`이 깔아요. 없으면 이 검사는 건너뛰어요.
 
 ## 패키지 검사
 
