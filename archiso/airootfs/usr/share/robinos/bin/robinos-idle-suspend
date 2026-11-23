@@ -5,35 +5,55 @@
 # and so does a PC without a battery (nothing to save, and a desktop that sleeps in
 # the middle of a download is a nuisance).
 #
+# hypridle runs this once per idle stretch, so a laptop that was on the charger
+# when the time came keeps watching: when the charger comes out while nobody is
+# there, it goes to sleep then (before, it stayed awake until the battery ran out).
+# The listener's on-resume ends the watch when someone comes back.
+#
 # ROBINOS_POWER_SUPPLY points the check at another directory, for the tests.
 
 set -u
 
 supplies="${ROBINOS_POWER_SUPPLY:-/sys/class/power_supply}"
 
-has_battery="false"
-plugged="false"
-for supply in "${supplies}"/*; do
-  [[ -r "${supply}/type" ]] || continue
-  # A wireless mouse or a headset has a battery too, with scope "Device"
-  [[ "$(cat "${supply}/scope" 2>/dev/null)" == "Device" ]] && continue
-  case "$(cat "${supply}/type")" in
-    Battery)
-      # An empty battery slot (some desktops report one) is no battery
-      [[ "$(cat "${supply}/present" 2>/dev/null)" == "0" ]] && continue
-      has_battery="true"
-      # Some laptops show the charger only here, without a Mains supply
-      case "$(cat "${supply}/status" 2>/dev/null)" in
-        Charging | Full | "Not charging") plugged="true" ;;
-      esac
-      ;;
-    Mains | USB | USB_C | USB_PD | USB_DCP | USB_CDP | USB_ACA | Wireless)
-      [[ "$(cat "${supply}/online" 2>/dev/null)" == "1" ]] && plugged="true"
-      ;;
-  esac
-done
+# Prints "battery" (a laptop on battery), "charger" (a laptop on the charger) or
+# "none" (no laptop battery)
+power_state() {
+  local supply has_battery="false" plugged="false"
+  for supply in "${supplies}"/*; do
+    [[ -r "${supply}/type" ]] || continue
+    # A wireless mouse or a headset has a battery too, with scope "Device"
+    [[ "$(cat "${supply}/scope" 2>/dev/null)" == "Device" ]] && continue
+    case "$(cat "${supply}/type")" in
+      Battery)
+        # An empty battery slot (some desktops report one) is no battery
+        [[ "$(cat "${supply}/present" 2>/dev/null)" == "0" ]] && continue
+        has_battery="true"
+        # Some laptops show the charger only here, without a Mains supply
+        case "$(cat "${supply}/status" 2>/dev/null)" in
+          Charging | Full | "Not charging") plugged="true" ;;
+        esac
+        ;;
+      Mains | USB | USB_C | USB_PD | USB_DCP | USB_CDP | USB_ACA | Wireless)
+        [[ "$(cat "${supply}/online" 2>/dev/null)" == "1" ]] && plugged="true"
+        ;;
+    esac
+  done
+  if [[ "${has_battery}" == "false" ]]; then
+    printf 'none'
+  elif [[ "${plugged}" == "true" ]]; then
+    printf 'charger'
+  else
+    printf 'battery'
+  fi
+}
 
-if [[ "${has_battery}" == "true" && "${plugged}" == "false" ]]; then
+state="$(power_state)"
+while [[ "${state}" == "charger" ]]; do
+  sleep 60 || exit 0
+  state="$(power_state)"
+done
+if [[ "${state}" == "battery" ]]; then
   exec systemctl suspend
 fi
 exit 0

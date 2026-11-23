@@ -102,6 +102,8 @@ Claude Code의 기억 파일(`%USERPROFILE%\.claude\projects\...\memory`)은 PC�
 
 로고를 다시 만들 때는 글꼴이 필요해요. WSL에서 `bash scripts/fetch-fonts.sh /tmp/robinfonts` 뒤에 `python3 assets/brand/build-logo.py /tmp/robinfonts assets/brand`를 돌려요([brand.md](brand.md)).
 
+**두 PC에서 번갈아 할 때**(2026-11-24): 회차를 시작하기 전에 `git fetch`로 원격이 앞서 있는지 보고, 앞서 있으면 먼저 합쳐요. 2026-11-24 새벽에 집 PC와 다른 PC가 서로 모르는 채로 60개와 16개 커밋을 쌓아서, 합칠 때 문서 열두 개가 부딪치고 작업 번호 T-166~T-169가 겹쳤어요. 새 작업 번호는 합친 뒤의 tasks.md에서 가장 큰 번호 다음을 쓰고, 회차가 끝나면 검증한 커밋을 바로 올려서 다른 PC가 받을 수 있게 해요. 합칠 때는 `git merge origin/main`(푸시한 히스토리는 다시 쓰지 않아요), 부딪친 사본(`archiso/airootfs/...`)은 손대지 말고 원본을 고친 뒤 `scripts/sync-archiso-files.ps1`로 다시 만들어요.
+
 이미 준비된 PC로 돌아왔을 때는 `git pull`을 하고, `wsl-build.ps1 setup`도 한 번 다시 돌려요. WSL의 Quickshell과 Qt가 ISO에 들어가는 최신판과 같아야 `check`의 qmllint가 실제 제품과 같은 기준으로 봐요. 2026-10-12 robin PC는 Quickshell 0.3.1에 머물러 있었고, `setup` 뒤에 0.3.2 기준 오탐 6개가 처음 드러났어요(`scripts/qmllint.sh`에서 걸러요).
 
 ## 다른 방법

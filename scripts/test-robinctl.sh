@@ -798,6 +798,15 @@ IDLE_BIN="${WORK}/idle-bin"
 mkdir -p "${IDLE_BIN}"
 printf '#!/bin/sh\necho "systemctl $*" >>"%s/idle-calls"\n' "${WORK}" >"${IDLE_BIN}/systemctl"
 chmod 755 "${IDLE_BIN}/systemctl"
+# The watch on the charger sleeps a minute between looks: here a look comes at once.
+# With IDLE_UNPLUG the charger comes out during the first wait; without it the wait
+# ends the watch, the way on-resume does when someone comes back
+cat >"${IDLE_BIN}/sleep" <<'SLEEP'
+#!/bin/sh
+[ -n "${IDLE_UNPLUG:-}" ] || exit 1
+echo 0 >"${IDLE_UNPLUG}"
+SLEEP
+chmod 755 "${IDLE_BIN}/sleep"
 # supply <dir> <name> <type> [online] [scope]
 supply() {
   mkdir -p "$1/$2"
@@ -844,6 +853,9 @@ supply "${WORK}/p10" AC Mains 0
 printf '1\n' >"${WORK}/p10/BAT0/present"
 printf 'Discharging\n' >"${WORK}/p10/BAT0/status"
 idle_case "a laptop that says it is discharging sleeps" yes "${WORK}/p10"
+supply "${WORK}/p11" BAT0 Battery
+supply "${WORK}/p11" AC Mains 1
+IDLE_UNPLUG="${WORK}/p11/AC/online" idle_case "a laptop whose charger comes out while it sits idle sleeps then" yes "${WORK}/p11"
 
 printf '%s\n' "UPower's battery action (packaging/robinos/robinos.install)"
 upower_case() {

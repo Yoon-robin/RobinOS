@@ -85,6 +85,7 @@ EOF
 listener {
     timeout = $((suspend * 60))
     on-timeout = ${bin_dir}/robinos-idle-suspend
+    on-resume = pkill -f 'robinos-idle-suspend$'
 }
 EOF
     fi
@@ -102,8 +103,18 @@ case "${1:-}" in
     exec hypridle -c "${fallback}"
     ;;
   apply)
+    # Two choices made quickly one after the other run two of these: one at a time,
+    # and the old hypridle gone before the new one starts, or two would run (and
+    # both save and restore the backlight)
+    mkdir -p "${state_dir}" || exit 1
+    exec 9>"${state_dir}/idle-config.lock"
+    flock 9
     render || exit 1
     pkill -x hypridle
+    for _ in $(seq 20); do
+      pgrep -x hypridle >/dev/null || break
+      sleep 0.1
+    done
     setsid -f hypridle -c "${policy}" >/dev/null 2>&1
     ;;
   *)

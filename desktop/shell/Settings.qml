@@ -210,6 +210,9 @@ FloatingWindow {
                 } catch (error) {
                     root.updateInfo = { state: "unknown" };
                 }
+                // The bar's update dot counts again too: after an update in the
+                // terminal it would otherwise stay until its next three-hour look
+                ShellState.checkUpdates(true);
             }
         }
     }

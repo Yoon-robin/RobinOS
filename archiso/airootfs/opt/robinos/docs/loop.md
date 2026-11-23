@@ -26,11 +26,13 @@ Claude Code에서 간격 없이 실행해요. 그러면 Claude가 작업에 맞�
 ```powershell
 git status --short
 git log --oneline -5
+git fetch origin
 git log --oneline origin/main..HEAD
+git log --oneline HEAD..origin/main
 powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 status
 ```
 
-그다음 [tasks.md](tasks.md)를 읽어요. 백그라운드 작업, 정기 점검, 푸시 대기 커밋, 사용자 확인 필요, 진행 중인 작업 순서로 봐요. 작업 트리에 이전 회차가 남긴 변경이 있으면 그것부터 정리해요.
+`HEAD..origin/main`에 커밋이 있으면 다른 PC가 올린 거예요. 무엇보다 먼저 합쳐요([build-environment.md](build-environment.md) "두 PC에서 번갈아 할 때"). 그다음 [tasks.md](tasks.md)를 읽어요. 백그라운드 작업, 정기 점검, 푸시 대기 커밋, 사용자 확인 필요, 진행 중인 작업 순서로 봐요. 작업 트리에 이전 회차가 남긴 변경이 있으면 그것부터 정리해요.
 
 ### 2. 끝난 결과 거두기
 

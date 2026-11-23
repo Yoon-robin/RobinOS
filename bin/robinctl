@@ -569,18 +569,25 @@ report() {
   printf '열어서 개인 정보가 없는지 읽어 본 뒤, 문제를 알릴 때 붙여 넣어요.\n'
 }
 
-# What an update would bring, looked up in a throwaway copy of the package
+# What an update would bring, looked up in a separate copy of the package
 # databases (checkupdates), so stopping here leaves the system's own databases as
 # they were. Sets UPD_RC (0 updates, 2 none, 1 it could not look: no network, a
 # mirror down), UPD_LIST, UPD_COUNT and UPD_BYTES (what would be downloaded).
+# The copy is kept in the user's cache: pacman then only downloads a list that
+# changed, not all of them (extra alone is about 8 MB) every time the settings
+# page looks, which matters on a phone's hotspot.
 update_facts() {
-  local db rc=0
+  local db rc=0 throwaway="false"
   UPD_RC=2
   UPD_LIST=""
   UPD_COUNT=0
   UPD_BYTES=0
   have_cmd checkupdates || return 0
-  db="$(mktemp -d)"
+  db="${XDG_CACHE_HOME:-${HOME:-/nonexistent}/.cache}/robinos/checkup-db"
+  if ! mkdir -p "${db}" 2>/dev/null || [[ ! -w "${db}" ]]; then
+    db="$(mktemp -d)"
+    throwaway="true"
+  fi
   UPD_LIST="$(CHECKUPDATES_DB="${db}" checkupdates 2>/dev/null)" || rc=$?
   UPD_RC="${rc}"
   if [[ "${rc}" -eq 0 && -z "${UPD_LIST}" ]]; then
@@ -590,7 +597,9 @@ update_facts() {
     UPD_BYTES="$(pacman -Sup --dbpath "${db}" --logfile /dev/null --print-format '%s' 2>/dev/null \
       | awk '/^[0-9]+$/ { sum += $1 } END { print sum + 0 }')" || UPD_BYTES=0
   fi
-  rm -rf "${db}"
+  if [[ "${throwaway}" == "true" ]]; then
+    rm -rf "${db}"
+  fi
 }
 
 update_has_kernel() {
