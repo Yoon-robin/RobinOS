@@ -115,6 +115,9 @@ FloatingWindow {
             timeProc.running = true;
     }
 
+    // The list came back at least once (empty means the helper failed, not "still reading")
+    property bool appsRead: false
+
     function readApps() {
         if (!appsProc.running)
             appsProc.running = true;
@@ -188,6 +191,10 @@ FloatingWindow {
         id: appsProc
 
         command: ["/usr/share/robinos/bin/robinos-default-apps", "list"]
+        onRunningChanged: {
+            if (!running)
+                root.appsRead = true;
+        }
         stdout: StdioCollector {
             id: appsOut
 
@@ -217,6 +224,13 @@ FloatingWindow {
         id: updateProc
 
         command: ["robinctl", "update", "--status"]
+        // robinctl missing or killed: no stream comes, so don't stay on 확인하는 중
+        onRunningChanged: {
+            if (!running && root.updateChecking && root.updateInfo === null) {
+                root.updateChecking = false;
+                root.updateInfo = { state: "unknown" };
+            }
+        }
         stdout: StdioCollector {
             id: updateOut
 
@@ -1001,12 +1015,13 @@ FloatingWindow {
                 }
             }
 
+            // A desktop only sleeps when told to: nothing to choose, so no empty label
             Group {
+                visible: ShellState.hasBattery
                 title: "잠자기"
-                hint: ShellState.hasBattery ? "충전기를 꽂아 두면 잠들지 않아요. 덮개를 닫으면 언제나 잠들어요" : ""
+                hint: "충전기를 꽂아 두면 잠들지 않아요. 덮개를 닫으면 언제나 잠들어요"
 
                 ChoiceRow {
-                    visible: ShellState.hasBattery
                     title: "배터리로 쓸 때 잠자기"
                     desc: ""
                     options: [{ value: 5, label: "5분" }, { value: 10, label: "10분" }, { value: 15, label: "15분" },
@@ -1037,7 +1052,8 @@ FloatingWindow {
 
                 Text {
                     visible: root.defaultApps.length === 0
-                    text: "읽는 중이에요…"
+                    Layout.leftMargin: 6
+                    text: root.appsRead ? "앱 목록을 읽지 못했어요" : "읽는 중이에요…"
                     color: Theme.muted
                     font.family: Theme.font
                     font.pixelSize: 13
@@ -1354,6 +1370,7 @@ FloatingWindow {
 
                 Text {
                     Layout.fillWidth: true
+                    Layout.leftMargin: 6
                     text: "스냅샷에는 시스템만 들어가요. 사진과 문서 같은 개인 파일은 백업 앱으로 따로 남겨요."
                     color: Theme.muted
                     font.family: Theme.font
@@ -1404,7 +1421,10 @@ FloatingWindow {
                             Layout.fillWidth: true
                             spacing: 2
 
+                            // fillWidth on a child, or the column can't grow past its
+                            // own width and the button sits mid-row
                             Text {
+                                Layout.fillWidth: true
                                 text: root.time.Timezone ? zonePicker.nameOf(root.time.Timezone) : "읽는 중이에요…"
                                 color: Theme.fg
                                 font.family: Theme.font

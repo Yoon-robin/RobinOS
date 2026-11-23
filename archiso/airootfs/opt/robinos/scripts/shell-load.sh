@@ -13,7 +13,9 @@ set -uo pipefail
 #                FILE-PANEL.png per PANEL: a function of the shell's IPC handler
 #                (shell.qml, target "shell") that opens it, e.g. launcher,
 #                quickSettings, settings, learnCenter, notifications. Each is called
-#                again afterwards, which closes the panels that toggle.
+#                again afterwards, which closes the panels that toggle. A function
+#                that takes one argument is FUNCTION:VALUE, e.g. settingsSection:power
+#                or connect:wifi (the file is then FILE-settingsSection-power.png).
 # Needs: sway (wlroots' headless backend gives the layer shell PanelWindow uses),
 # quickshell. Without sway it says so and passes, so a PC without it still runs
 # the other checks (wsl-build.ps1 setup installs it).
@@ -101,13 +103,16 @@ if [[ -n "${shot}" ]]; then
   if command -v grim >/dev/null 2>&1; then
     grim "${shot}" && printf 'shell-load: screenshot %s\n' "${shot}"
     for panel in "${panels[@]}"; do
-      if ! qs ipc -p "${work}/shell" call shell "${panel}" >/dev/null 2>&1; then
+      call=("${panel%%:*}")
+      [[ "${panel}" == *:* ]] && call+=("${panel#*:}")
+      if ! qs ipc -p "${work}/shell" call shell "${call[@]}" >/dev/null 2>&1; then
         printf 'shell-load: no IPC function "%s"\n' "${panel}"
         continue
       fi
       sleep 1.5
-      grim "${shot%.png}-${panel}.png" && printf 'shell-load: screenshot %s\n' "${shot%.png}-${panel}.png"
-      qs ipc -p "${work}/shell" call shell "${panel}" >/dev/null 2>&1
+      out="${shot%.png}-${panel//:/-}.png"
+      grim "${out}" && printf 'shell-load: screenshot %s\n' "${out}"
+      qs ipc -p "${work}/shell" call shell "${call[@]}" >/dev/null 2>&1
       # Windows (settings, the learning center) don't toggle: close them, the bar
       # and the panels are layer surfaces that this doesn't touch
       swaymsg -q '[title=".*"] kill' >/dev/null 2>&1

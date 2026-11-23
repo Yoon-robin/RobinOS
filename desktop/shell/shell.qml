@@ -244,6 +244,12 @@ ShellRoot {
             ShellState.openSettings("");
         }
 
+        // The settings at one page: appearance, update, datetime, pointer, keyboard,
+        // apps, power, about (scripts/shell-load.sh screenshots)
+        function settingsSection(section: string): void {
+            ShellState.openSettings(section);
+        }
+
         // The settings' 기본 앱 page with one kind's list of apps open, as the 바꾸기
         // button shows it (VM test screenshot)
         function settingsAppsOpen(kind: string): void {
