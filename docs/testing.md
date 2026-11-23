@@ -54,6 +54,8 @@ Arch Linux에서는 `scripts/check-desktop.sh`와 `scripts/qmllint.sh`를 직접
 
 `check`는 셸을 진짜로 띄워 보기도 해요(`scripts/shell-load.sh`, 2026-11-24). WSL 안에서 화면 없는 sway(wlroots의 headless 백엔드, Quickshell의 `PanelWindow`가 쓰는 layer-shell이 있어요)를 켜고 그 위에서 `qs -p desktop/shell`이 "Configuration Loaded"까지 가는지 봐요. 5초쯤 걸려요. qmllint는 이름과 형식만 봐서, 정수 속성에 소수를 넣은 `font.pixelSize: 13.5`("Invalid property assignment: int expected")가 모든 빠른 검사를 통과하고 부팅 테스트에서야 셸이 로그인하자마자 다섯 번 죽는 것으로 드러났어요. `bash scripts/shell-load.sh -s 파일.png`는 띄운 셸을 `grim`으로 찍어서, VM 없이 몇 초 만에 바와 독을 볼 수 있어요(WSL에 한글 글꼴이 없으면 한글은 네모로 나와요). sway와 grim은 `wsl-build.ps1 setup`이 깔아요. 없으면 이 검사는 건너뛰어요.
 
+`-s 파일.png` 뒤에 셸의 IPC 함수(`shell.qml`의 `IpcHandler`) 이름을 적으면 그 화면을 하나씩 열어 `파일-이름.png`로 찍어요. 인자가 하나 있는 함수는 `함수:값`으로 적어요. 예를 들어 `bash scripts/shell-load.sh -s /tmp/s.png setDark:false quickSettings settingsSection:power connect:wifi learnCenter`는 라이트 모드로 바꾼 뒤 빠른 설정, 설정의 전원 페이지, Wi-Fi 목록, 학습 센터를 차례로 찍어요. 창(설정, 학습 센터, 설치기)은 장면마다 닫아요. WSL에는 robinctl이나 NetworkManager가 없어서, 그 값을 읽는 화면은 "못 읽었어요"나 "장치 없음"으로 나와요. 이런 빈 상태가 제대로 보이는지 확인하기에도 좋아요.
+
 ## 패키지 검사
 
 `pacman -Si`로 Arch 저장소에 패키지 이름이 실제로 있는지 확인해요. `scripts/build-iso.sh`가 빌드 전에 자동으로 실행해요. 따로 돌리려면 Arch Linux에서 이렇게 해요.
