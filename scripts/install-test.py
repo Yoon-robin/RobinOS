@@ -635,6 +635,10 @@ def check_update(con):
         con.run("(robinctl update --yes > /root/update.out 2>&1; rc=$?; tail -n 25 /root/update.out; exit $rc)", timeout=1800)
         con.run("grep -q '0.3.0.r99999-1' /root/update.out && grep -q '^# update-test$' /usr/share/robinos/bin/robinos-session"
                 " && [ \"$(pacman -Q robinos | cut -d' ' -f2)\" = 0.3.0.r99999-1 ]")
+        # The preview before pacman (T-162): how many and how much, and the snapshot
+        # it takes with the command that goes back to it
+        con.run("grep -E '^업데이트 [0-9]+개(, 받을 크기 [0-9.]+[MG]B)?$' /root/update.out"
+                " && grep -E '^  업데이트 직전에 스냅샷 [0-9]+번을 찍어요\\. 문제가 생기면: sudo robinctl snapshot rollback [0-9]+$' /root/update.out")
         # snap-pac took a pair around it, and the version name shows in /etc/os-release
         _, listing = con.capture("snapper --no-dbus --csvout -c root list --columns number,type,description")
         print(listing, flush=True)
