@@ -217,6 +217,8 @@
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-11-24 (새벽 1시) | `ddcb219` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 4.4분, 테스트 17.7분), 이어서 `install-test -Installer encrypted` | 통과. 장면 판정 열다섯 개 모두 PASS, 키트 토큰의 다크·라이트 스크린샷(바탕 화면, 빠른 설정, 잠금 화면, 학습 센터) 확인. 설치 테스트 다섯 단계. 암호화 설치도 다섯 단계 모두 통과: 단계마다 GRUB이 비밀번호를 묻고(`*-grub-password.png`) 풀린 뒤 설치본·스냅샷 부팅·되돌리기까지 |
+| 2026-10-13 (새벽 3시) | `b2a3624` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 3.4분, 테스트 17.7분) | 통과. 장면 판정 열다섯 개 모두 PASS, 새 `zoomed`(zoom_factor 2)·`unzoomed`(1), 확대 스크린샷 확인. 설치 테스트 다섯 단계 |
 | 2026-10-13 (새벽 2시) | `6e4cc12` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 3.9분, 테스트 16.8분) | 통과. 장면 판정 열두 개 모두 PASS(학습 센터에서 연 미션 터미널 포함), 설치본에 `sane-airscan` 등 스캔 패키지, 설치 테스트 다섯 단계. 업데이트 미리 보기(T-162)는 VM에서 돌리지 않았고 `test-robinctl.sh`의 가짜 도구 테스트만 |
 | 2026-10-13 (새벽 1시 반) | `a2c513a` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 3.3분, 테스트 16.5분) | 통과. 부팅 테스트가 처음으로 상태로 판정: `e2e-check.sh` 열 장면 모두 PASS(T-155), 화면 녹화 4초 mp4와 바의 "녹화 중"(T-160), 설치 테스트 다섯 단계 |
 | 2026-10-13 (새벽 1시) | `57b40e4` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 3.4분, 테스트 15.0분) | 통과. 설치본에 `ufw` 켜짐(`Status: active`, mDNS 5353 규칙), `deja-dup`과 데스크톱 파일, 설치 테스트 다섯 단계, 부팅 테스트 82장. 라이브의 보안 점검이 "라이브 세션이라 방화벽은 꺼져 있어요"(스크린샷 확인). BitLocker 확인은 정적 검사(`test-robin-install.py`)뿐이고 설치 테스트 robinos의 지우기 확인 상자(같은 `ConfirmBox`)는 그대로 통과 |
