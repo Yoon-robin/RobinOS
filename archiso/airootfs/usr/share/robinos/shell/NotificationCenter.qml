@@ -192,8 +192,8 @@ PanelWindow {
 
                     Layout.fillWidth: true
                     implicitHeight: row.implicitHeight + 20
-                    radius: Theme.radiusMd
-                    color: openable && (area.containsMouse || item.activeFocus) ? Theme.secondary : Theme.raised
+                    radius: Theme.radiusToast
+                    color: openable && (area.containsMouse || item.activeFocus) ? Theme.hover : Theme.surface
                     border.width: 1
                     border.color: Theme.border
                     activeFocusOnTab: openable
@@ -232,6 +232,16 @@ PanelWindow {
 
                     FocusRing {}
 
+                    // The toast's short bar on the left: plain, or red for a critical one
+                    Rectangle {
+                        x: 5
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 2
+                        height: Math.min(22, parent.height * 0.44)
+                        radius: 1
+                        color: item.modelData.critical ? Theme.destructiveSolid : Theme.plain
+                    }
+
                     RowLayout {
                         id: row
 
@@ -239,6 +249,7 @@ PanelWindow {
                         anchors.right: parent.right
                         anchors.top: parent.top
                         anchors.margins: 10
+                        anchors.leftMargin: 14
                         spacing: 10
 
                         Item {

@@ -107,6 +107,7 @@ Singleton {
                 appName: notification.appName,
                 icon: root.iconSource(notification),
                 time: new Date(),
+                critical: notification.urgency === NotificationUrgency.Critical,
                 notification: notification,
                 open: open.startsWith("/") ? open : "",
                 desktopEntry: notification.desktopEntry ?? ""

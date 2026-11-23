@@ -78,7 +78,8 @@ def subset_fonts(source, text):
     from fontTools import subset
 
     out = SITE / "assets" / "fonts"
-    # Hangul and the punctuation around it; Latin comes from Geist
+    # Hangul and the punctuation around it, and printable ASCII: Pretendard is
+    # the page's only typeface (robin-ui V5)
     chars = sorted({c for c in text if ord(c) > 0x7F}) + [chr(c) for c in range(0x20, 0x7F)]
     for weight in WEIGHTS:
         src = pathlib.Path(source) / f"Pretendard-{weight}.subset.woff2"
