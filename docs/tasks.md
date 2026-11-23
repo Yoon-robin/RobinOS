@@ -18,8 +18,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-11-24 (새벽 1시) | `ddcb219` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 4.4분, 테스트 17.7분), 이어서 `install-test -Installer encrypted` | 통과. 장면 판정 열다섯 개 모두 PASS, 키트 토큰의 다크·라이트 스크린샷(바탕 화면, 빠른 설정, 잠금 화면, 학습 센터) 확인. 설치 테스트 다섯 단계. 암호화 설치도 다섯 단계 모두 통과: 단계마다 GRUB이 비밀번호를 묻고(`*-grub-password.png`) 풀린 뒤 설치본·스냅샷 부팅·되돌리기까지 |
 | 2026-10-13 (새벽 3시) | `b2a3624` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 3.4분, 테스트 17.7분) | 통과. 장면 판정 열다섯 개 모두 PASS, 새 `zoomed`(zoom_factor 2)·`unzoomed`(1), 확대 스크린샷 확인. 설치 테스트 다섯 단계 |
-| 2026-10-13 (새벽 2시 반) | `0292d22` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 3.3분, 테스트 17.3분) | 통과. 장면 판정 열세 개 모두 PASS, 새 `windows-app`: 가짜 `KakaoTalk_Setup.exe`를 열면 "윈도우 프로그램" 창(기본 앱 `robinos-windows-app.desktop`), 스크린샷에서 카카오톡 안내와 Bottles 단추 확인. 설치 테스트 다섯 단계 |
 
 ## 품질 점검 기록
 
@@ -41,11 +41,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 커밋 | 내용 | 필요한 검증 |
 |---|---|---|
-| `a7a1cb9` | T-162 빠른 설정 "끝나면 다시 시작", T-163 조사 | 묶음 검증(`verify -Installer robinos`) |
-| `1102f02` | T-166·T-167 디스크 암호화 | 위 묶음 검증 + `install-test -Installer encrypted` |
-| (이번 커밋) | T-168 ① 정체성과 robin-ui V5 토큰 | `check`(qmllint), 부팅 테스트 다크·라이트 스크린샷 |
+| (없음) | | |
 
-`b2a3624`까지 2026-10-13 묶음 검증(`verify -Installer robinos`, 집 PC)을 마치고 푸시했어요.
+`ddcb219`까지 2026-11-24 묶음 검증(`verify -Installer robinos`)과 `install-test -Installer encrypted`(집 PC)를 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -165,9 +163,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ### T-162 업데이트 화면
 - 상태: 진행 중
 - 한 것(2026-10-13 집 PC): `robinctl update`가 pacman을 부르기 전에 "업데이트 N개, 받을 크기 X MB", 커널이 바뀌면 "끝나면 다시 시작", "업데이트 직전에 스냅샷 N번을 찍어요(되돌리기 명령)"를 보여 줘요. 데이터 요금 연결(NetworkManager `Metered` 1·3)이면 알리고 받을지 물어요. 목록은 `checkupdates`의 임시 데이터베이스로 봐서, 여기서 멈춰도 시스템의 패키지 데이터베이스는 그대로예요(부분 업데이트 없음). `robinctl update --preview`(root 없이 미리 보기)와 가짜 checkupdates·pacman·busctl 테스트 여덟 개
-- 2026-10-13 묶음 검증 통과(빠른 테스트만, VM에서 실제 업데이트는 아직)
+- 2026-10-13 묶음 검증 통과(빠른 테스트만, VM에서 실제 업데이트는 아직). 2026-11-24 묶음 검증도 통과(`a7a1cb9`, 빠른 설정의 "끝나면 다시 시작")
 - 한 것(2026-10-13 두 번째): 빠른 설정의 "업데이트 N개가 있어요"에 커널이 들어 있으면 " · 끝나면 다시 시작". 셸은 업데이트를 알림으로 띄우지 않고 바의 점만 보여 줘서 데이터 요금 연결에서 따로 막을 것은 없어요(`checkupdates`는 목록만 받아요)
-- 남은 것: 묶음 검증
+- 남은 것: 설치 테스트에서 업데이트가 있을 때 미리 보기 세 줄 확인(완료 기준)
 - 출처: 다른 OS와 비교(2026-10-12). Mint는 보안·커널 업데이트를 먼저 보여 주고, elementary는 받을 크기를 보여 주고 데이터 요금 연결에서는 받지 않아요. RobinOS는 업데이트 전에 스냅샷을 자동으로 찍어서(snap-pac) Omarchy와 같은 장점이 있는데 화면에서는 보이지 않아요
 - 할 것: 업데이트 창에 받을 크기, 커널이 바뀌는지(다시 시작 필요), "업데이트 전에 스냅샷 N번을 찍어요". 데이터 요금 연결(NetworkManager metered)에서는 알림만
 - 완료 기준: 부팅 테스트나 설치 테스트에서 업데이트 창의 세 줄이 맞게 나와요
@@ -179,17 +177,16 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: 방식 하나를 정해 [design.md](design.md)에 쓰고 구현 작업으로 나누기
 
 ### T-166 설치기에 디스크 암호화 선택
-- 상태: 진행 중
+- 상태: 완료 (2026-11-24 집 PC: `install-test -Installer encrypted` 다섯 단계 통과)
 - 한 것(2026-10-13 집 PC): 백엔드 `"encrypt": true` → `cryptsetup luksFormat`(LUKS2, argon2id, 메모리 256MiB, 사용자 비밀번호), Btrfs는 `/dev/mapper/cryptroot` 위에. initramfs 키 파일(`/etc/cryptsetup-keys.d/cryptroot.key`, 빠른 PBKDF), `encrypt` 훅, `GRUB_ENABLE_CRYPTODISK=y`와 `cryptdevice=`·`cryptkey=`. 복구 키(6자리 숫자 여덟 묶음)를 세 번째 키 슬롯에 넣고 `@@ recovery-key` 줄로 화면에만(로그 파일에는 안 남겨요). 설치기 화면: 사용자 단계에 "디스크 암호화" 스위치(설명: 잊으면 되살릴 수 없음), 확인 단계 요약, 끝 화면에 복구 키 상자. GRUB의 `luks2` 모듈이 `argon2`에 의존해서 같이 들어가요(moddep.lst 확인). 같이 고친 것: 화면이 계획에 `bitlocker_key_saved`를 안 보내던 것(T-147 때 패치 하나가 조용히 빠짐) → `test-robin-install.py`가 백엔드가 읽는 계획 항목을 화면이 모두 보내는지 확인
-- 남은 것: T-167 설치 테스트
 - 출처: T-163 조사([design.md](design.md) "디스크 암호화")
 - 할 것: 설치기 확인 단계 앞에 "디스크 암호화" 선택(기본 꺼짐, 비밀번호를 잊으면 되살릴 수 없다는 설명), 백엔드가 LUKS2(argon2id, GRUB이 견딜 메모리 비용)로 Btrfs 파티션을 잠그고 `GRUB_ENABLE_CRYPTODISK=y`, initramfs에 키 파일과 `encrypt` 훅, `systemd-cryptenroll --recovery-key`로 복구 키를 만들어 마지막 화면에 보여 주기. `robinctl audit`의 "디스크 암호화" 줄은 그대로 동작
 - 완료 기준: T-167의 설치 테스트 통과
 
 ### T-167 설치 테스트에 암호화 설치
-- 상태: 진행 중
+- 상태: 완료 (2026-11-24 집 PC: 다섯 단계 통과. GRUB이 비밀번호 뒤 4~7초 만에 디스크를 열었어요(argon2id 256MiB, WHPX). 스냅샷 단계는 비밀번호 대신 복구 키로 열었어요)
 - 한 것(2026-10-13): `install-test -Installer encrypted`(`wsl-build.ps1`, `install-test.sh`), GRUB 비밀번호는 QMP로(`wait_menu`), 두 번째 부팅은 복구 키로, 잠금 해제 시간 로그
-- 남은 것: 실제로 돌려 보기
+- 나중에 볼 것: 비밀번호를 묻는 화면이 펌웨어 글자 위의 GRUB 영어 한 줄("Enter passphrase for hd0,gpt2 (UUID):")이에요. GRUB이 정한 문구라 바꿀 수 없어요. 한글 화면으로 물으려면 `/boot`를 암호화 밖에 두고 initramfs(Plymouth, T-150)에서 물어야 하는데, 그러면 스냅샷 부팅(grub-btrfs)이 커널을 스냅샷 안에서 못 읽어요. 키트 화면에 맞출지는 T-150과 같이 정해요
 - 출처: T-163
 - 할 것: `install-test.py`에 암호화 계획(`"encrypt": true`)으로 설치하고, GRUB 비밀번호 화면에 QMP로 비밀번호를 입력해 부팅, 스냅샷으로 부팅·되돌리기까지 지금처럼 확인. 복구 키로도 한 번 열기. GRUB의 argon2 잠금 해제 시간 재기
 - 완료 기준: 다섯 단계 통과, 잠금 해제 시간 기록
