@@ -39,7 +39,9 @@ PanelWindow {
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "robinos-welcome"
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+    // Let go of the keyboard as it fades out, like the panels: the 학습 센터 window
+    // that "기초부터" opens at once would come up without it
+    WlrLayershell.keyboardFocus: root.open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     onOpenChanged: {
         if (open) {

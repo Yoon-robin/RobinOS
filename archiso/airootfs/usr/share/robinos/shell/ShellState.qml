@@ -555,9 +555,13 @@ Singleton {
 
     // The shell's own windows all carry Quickshell's app id; their titles tell them
     // apart, so the dock shows the installer and the learning center as two apps
+    // Every FloatingWindow the shell opens, by its title: without an entry the dock
+    // showed it as "org.quickshell" (설정, 윈도우 프로그램)
     readonly property var shellWindowIds: ({
             "RobinOS 설치": "robinos-installer",
-            "학습 센터": "robinos-learn"
+            "학습 센터": "robinos-learn",
+            "설정": "robinos-settings",
+            "윈도우 프로그램": "robinos-windows-app"
         })
 
     function appIdOf(win) {

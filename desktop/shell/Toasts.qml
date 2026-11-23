@@ -48,11 +48,15 @@ PanelWindow {
                 id: toast
 
                 required property var modelData
+                required property int index
                 readonly property var n: modelData
                 readonly property string iconSource: Notifs.iconSource(n)
                 readonly property bool critical: n.urgency === NotificationUrgency.Critical
 
                 Layout.fillWidth: true
+                // The newest four: a burst of notifications doesn't climb past the
+                // top of the screen (the rest wait their turn, and stay in the center)
+                visible: index >= Notifs.count - 4
                 implicitHeight: body.implicitHeight + 28
                 radius: Theme.radiusPanel
                 color: Theme.panel
@@ -70,10 +74,12 @@ PanelWindow {
                 Accessible.role: Accessible.AlertMessage
                 Accessible.name: n.summary
 
-                // Expire after the requested time (milliseconds; -1 = default 5s, 0 = never)
+                // Expire after the requested time (milliseconds; -1 = default 5s, 0 = never).
+                // Under 방해 금지 they expire unseen too: the notification center keeps
+                // them, and turning it off doesn't bring a pile of old toasts at once
                 Timer {
                     interval: toast.n.expireTimeout > 0 ? toast.n.expireTimeout : 5000
-                    running: !toast.critical && toast.n.expireTimeout !== 0 && !hover.containsMouse && !ShellState.dnd
+                    running: !toast.critical && toast.n.expireTimeout !== 0 && !hover.containsMouse
                     onTriggered: toast.n.expire()
                 }
 

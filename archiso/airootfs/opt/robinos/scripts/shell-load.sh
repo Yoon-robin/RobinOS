@@ -37,6 +37,8 @@ work="$(mktemp -d)"
 sway_pid=""
 qs_pid=""
 cleanup() {
+  # SHELL_LOAD_LOG=file keeps Quickshell's whole log
+  [[ -n "${SHELL_LOAD_LOG:-}" && -f "${work}/qs.log" ]] && cp "${work}/qs.log" "${SHELL_LOAD_LOG}"
   [[ -n "${qs_pid}" ]] && kill "${qs_pid}" 2>/dev/null
   [[ -n "${sway_pid}" ]] && kill "${sway_pid}" 2>/dev/null
   wait 2>/dev/null
@@ -126,5 +128,12 @@ if [[ -n "${shot}" ]]; then
   else
     printf 'shell-load: no screenshot (pacman -S grim)\n'
   fi
+fi
+# Script errors while it ran (a null in a binding, a wrong type) don't stop the
+# load but are bugs all the same: show them, with where they come from
+warnings="$(grep -E 'TypeError|ReferenceError|Unable to assign|is not a function|Cannot read property' "${work}/qs.log" \
+  | sed 's/\x1b\[[0-9;]*m//g; s#'"${work}"'/shell/##g' | sort | uniq -c | sort -rn | head -n 15)"
+if [[ -n "${warnings}" ]]; then
+  printf 'shell-load: script errors while it ran (see qs.log lines below):\n%s\n' "${warnings}"
 fi
 printf 'shell-load: ok, the shell loads\n'

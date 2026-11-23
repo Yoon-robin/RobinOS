@@ -34,7 +34,9 @@ PanelWindow {
 
     // Windows the shell itself opens, by the ids ShellState.appIdOf gives them
     readonly property var shellApps: ({
-            "robinos-learn": { icon: "graduation-cap", label: "학습 센터" }
+            "robinos-learn": { icon: "graduation-cap", label: "학습 센터" },
+            "robinos-settings": { icon: "sliders", label: "설정" },
+            "robinos-windows-app": { icon: "app", label: "윈도우 프로그램" }
         })
 
     // In the live session the installer comes first; it opens through the shell.
@@ -141,10 +143,15 @@ PanelWindow {
         tipText = text;
     }
 
-    // Where the launcher button starts on screen, for the Win+X menu above it
+    // Where the launcher button starts on screen, for the Win+X menu above it. Each
+    // screen has a dock: only the one on the menu's screen says where (with two
+    // monitors of different widths the menu sat off its button)
     Binding {
         target: ShellState
         property: "quickLinksX"
+        when: dock.screen === (ShellState.overlayScreen ?? Quickshell.screens[0])
+        // The other docks letting go must not put back an old value over this one
+        restoreMode: Binding.RestoreNone
         value: (dock.screen.width - body.width) / 2 + 8
     }
 

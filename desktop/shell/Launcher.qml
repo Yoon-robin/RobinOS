@@ -106,27 +106,46 @@ PanelWindow {
     Timer {
         id: fileDelay
         interval: 250
-        onTriggered: {
+        onTriggered: root.startFind()
+    }
+
+    // A find still walking the folders is stopped first and the new one starts when
+    // it has exited: stopping and starting a Process in one go drops the start, and
+    // the stopped run's half output would be taken for the new query's
+    function startFind() {
+        if (fileFind.running) {
+            fileFind.stopped = true;
             fileFind.running = false;
-            const q = root.pendingFileQuery;
-            const pattern = "*" + q.replace(/[\\*?\[\]]/g, "\\$&") + "*";
-            fileFind.query = q;
-            fileFind.command = ["find", root.home, "-mindepth", "1", "-maxdepth", "5",
-                                "-name", ".*", "-prune", "-o", "-iname", pattern, "-printf", "%y\t%p\n"];
-            fileFind.running = true;
+            return;
         }
+        const q = pendingFileQuery;
+        if (q.length < 2)
+            return;
+        const pattern = "*" + q.replace(/[\\*?\[\]]/g, "\\$&") + "*";
+        fileFind.query = q;
+        fileFind.stopped = false;
+        fileFind.command = ["find", home, "-mindepth", "1", "-maxdepth", "5",
+                            "-name", ".*", "-prune", "-o", "-iname", pattern, "-printf", "%y\t%p\n"];
+        fileFind.running = true;
     }
 
     Process {
         id: fileFind
 
         property string query: ""
+        // Stopped for a newer query: its output is cut short and not this query's
+        property bool stopped: false
+
+        onExited: (exitCode, exitStatus) => {
+            if (stopped)
+                Qt.callLater(root.startFind);
+        }
 
         stdout: StdioCollector {
             id: fileOut
 
             onStreamFinished: {
-                if (fileFind.query !== root.pendingFileQuery)
+                if (fileFind.stopped || fileFind.query !== root.pendingFileQuery)
                     return;
                 const hits = [];
                 for (const line of fileOut.text.split("\n")) {
@@ -421,7 +440,9 @@ PanelWindow {
     }
 
     function refresh() {
-        const q = search.text.trim().toLowerCase();
+        // With the syllable still being put together (fcitx5 Hangul's preedit): "계산기"
+        // looks for 계산기, not 계산, and a one-syllable "줌" finds something at once
+        const q = (search.text + search.preeditText).trim().toLowerCase();
         const out = [];
         searchFiles(clipboardMode || emojiMode ? "" : q);
 
@@ -560,7 +581,7 @@ PanelWindow {
             // Last, like the Start menu's web results. Nothing leaves the PC until
             // Enter, and then only to the browser's own search engine.
             if (q.length >= 2 && value === null) {
-                const text = search.text.trim();
+                const text = (search.text + search.preeditText).trim();
                 out.push({ kind: "header", title: "웹" });
                 out.push({ kind: "web", icon: "globe", title: "웹에서 \"" + text + "\" 찾기", subtitle: "브라우저의 기본 검색 엔진", query: text });
             }
@@ -862,6 +883,7 @@ PanelWindow {
                     Accessible.name: "검색"
 
                     onTextChanged: root.refresh()
+                    onPreeditTextChanged: root.refresh()
 
                     Keys.onPressed: event => {
                         if (event.key === Qt.Key_Down || (event.key === Qt.Key_N && (event.modifiers & Qt.ControlModifier))) {
