@@ -12,7 +12,7 @@ Arch Linux 위에 셸, 설치기, 업데이트 저장소, 스냅샷 복구를 Ro
 
 ## 화면
 
-부팅 테스트(VM, 1600×900)가 찍은 화면이에요. 다크·라이트 모드를 고를 수 있어요.
+부팅 테스트(VM, 1600×900)가 찍은 화면이에요. 다크·라이트 모드를 고를 수 있어요. 아래 스크린샷은 robin-ui V5로 바꾸기 전 모습이라 새로 찍을 거예요(T-168).
 
 | 런처 (`Win+Space`) | 빠른 설정 (`Win+S`) |
 |---|---|
@@ -169,3 +169,5 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test
 ## 라이선스
 
 RobinOS가 직접 만든 코드와 문서는 [GPL-3.0](LICENSE)으로 공개해요(2026-10-11). 고쳐서 배포하면 그 결과물도 같은 조건으로 공개해야 해요. RobinOS가 쓰는 Arch Linux, Hyprland, Quickshell 같은 다른 소프트웨어는 각자의 라이선스를 따라요.
+
+화면 디자인은 robin-ui V5 키트(`assets/brand/robin-ui/`)를 따라요. 키트의 모양과 값은 Figma Community의 "Recurrence Design"(Jellyx Design, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/))에서 잰 것이에요.

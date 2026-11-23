@@ -5,13 +5,13 @@ RobinOS는 예쁜 UI를 가진 OS예요([design.md](design.md)의 "정체성 다
 ## 로고 파일
 
 - `assets/brand/robinos-mark.svg`: 정사각형 앱·아이콘 마크
-- `assets/brand/robinos-logo.svg`: 전체 로고 락업 (마크, 이름, 한 줄 소개)
+- `assets/brand/robinos-logo.svg`: 전체 로고 락업 (마크와 이름)
 - `assets/brand/robinos-logo-horizontal.svg`: 헤더에 쓰기 좋은 가로형 로고 (README 맨 위)
-- `assets/brand/robinos-glyph.svg`: 아주 작은 곳(셸의 바, 런처, 설치기, 로그인 화면)에 쓰는 하얀 울새 실루엣. 강조색 네모 위에 올려요
+- `assets/brand/robinos-glyph.svg`: 아주 작은 곳(셸의 바, 런처, 설치기, 로그인 화면)에 쓰는 하얀 울새 실루엣. 키트의 마크처럼 거의 검은 네모(`#060a14`) 위에 올리고, 셸에서는 파란 번짐을 둘러요(`Mark.qml`)
 - `assets/brand/build-logo.py`: 위 네 파일을 만드는 스크립트. 이름과 한 줄 소개는 글꼴을 윤곽선으로 바꿔 넣어서 글꼴이 없는 곳에서도 똑같이 보여요
 - `desktop/fastfetch/robinos-logo.ansi`: 터미널을 열면 fastfetch 옆에 나오는 울새 그림(31×15칸). 마크를 고치면 `python3 assets/brand/build-terminal-logo.py desktop/fastfetch/robinos-logo.ansi`로 다시 만들고, 알려 주는 크기를 `desktop/fastfetch/config.jsonc`에 적어요(`check-desktop.sh`가 맞는지 봐요)
 
-로고 SVG는 아직 예전 팔레트(zinc, 빨간 `>`)와 예전 한 줄 소개("처음 쓰는 리눅스")예요. `build-logo.py`의 색을 키트 값으로 바꾸고 한 줄 소개를 빼서 다시 만들어요(T-168).
+로고는 키트 색(기둥 `#0a0e11`, 울새 `#f0f0f0`, 날개 `#e6e7e9`, 부리·꼬리·다리 `#8a8e94`, 프롬프트 `>`만 파랑 `#4b7dfe`)이고, 이름은 Pretendard 650이에요. 한 줄 소개는 없어요(2026-11-24). 다시 만들 때는 `scripts/fetch-fonts.sh /tmp/robinfonts` 뒤에 `python3 assets/brand/build-logo.py /tmp/robinfonts assets/brand`, 라이브 BIOS 메뉴 배경은 `rsvg-convert -w 640 -h 480 assets/brand/robinos-boot-splash.svg -o themes/syslinux/splash.png`예요.
 
 ## 콘셉트
 
@@ -93,7 +93,7 @@ RobinOS는 예쁜 UI를 가진 OS예요([design.md](design.md)의 "정체성 다
 
 지금 쓰는 곳:
 
-- 글리프(`robinos-glyph.svg`, 강조색 네모 위의 하얀 울새): 셸의 바·런처·학습 센터·설치기(`desktop/shell/Mark.qml`), SDDM 로그인 화면
+- 글리프(`robinos-glyph.svg`, 거의 검은 네모 위의 하얀 울새): 셸의 바·런처·학습 센터·설치기(`desktop/shell/Mark.qml`), SDDM 로그인 화면
 - 정사각형 마크(`robinos-mark.svg`): 앱 아이콘(`/usr/share/icons/hicolor/scalable/apps/robinos.svg`), `/usr/share/pixmaps`, SDDM 테마의 `logo.svg`
 - 가로형 로고: README 맨 위
 - 터미널 울새 그림: fastfetch

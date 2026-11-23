@@ -134,7 +134,7 @@ Rectangle {
                 color: root.fg
                 font.family: root.font
                 font.pixelSize: 96
-                font.weight: Font.Medium
+                font.weight: 550
                 font.letterSpacing: -4
             }
 
@@ -144,7 +144,7 @@ Rectangle {
                 color: root.muted
                 font.family: root.font
                 font.pixelSize: 16
-                font.weight: Font.Medium
+                font.weight: 550
             }
 
             Timer {
@@ -201,7 +201,7 @@ Rectangle {
                             color: root.fg
                             font.family: root.font
                             font.pixelSize: 22
-                            font.weight: Font.DemiBold
+                            font.weight: 650
                         }
                     }
 
@@ -212,7 +212,7 @@ Rectangle {
                         color: root.fg
                         font.family: root.font
                         font.pixelSize: 18
-                        font.weight: Font.DemiBold
+                        font.weight: 650
                     }
                 }
 
@@ -227,7 +227,7 @@ Rectangle {
                         color: root.fg
                         font.family: root.font
                         font.pixelSize: 13
-                        font.weight: Font.Medium
+                        font.weight: 550
                     }
 
                     Rectangle {
@@ -265,7 +265,7 @@ Rectangle {
                         color: root.fg
                         font.family: root.font
                         font.pixelSize: 13
-                        font.weight: Font.Medium
+                        font.weight: 550
                     }
 
                     Rectangle {
@@ -351,7 +351,7 @@ Rectangle {
                             color: "#0f1115"
                             font.family: root.font
                             font.pixelSize: 14
-                            font.weight: Font.Medium
+                            font.weight: 550
                         }
 
                         Glyph {
@@ -458,7 +458,8 @@ Rectangle {
             width: 24
             height: 24
             radius: 7
-            color: root.accent
+            // The robin-ui mark: the near-black tile under the white robin
+            color: "#060a14"
 
             // The white robin glyph (assets/brand/robinos-glyph.svg)
             Image {
@@ -477,7 +478,7 @@ Rectangle {
             color: root.fg
             font.family: root.font
             font.pixelSize: 14
-            font.weight: Font.DemiBold
+            font.weight: 650
         }
     }
 

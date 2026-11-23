@@ -16,6 +16,8 @@ Singleton {
 
     // The one colour: on, chosen, link, progress, the window border
     readonly property color accent: dark ? "#4b7dfe" : "#3566e8"
+    // The mark's tile (rk-mark): the same near-black in both themes
+    readonly property color markBg: "#060a14"
     readonly property color accentSoft: dark ? Qt.rgba(75 / 255, 125 / 255, 254 / 255, 0.14) : Qt.rgba(53 / 255, 102 / 255, 232 / 255, 0.12)
 
     // Faces (menu grammar): side < page < card, split by 1px lines
