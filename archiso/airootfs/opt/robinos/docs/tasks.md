@@ -4,6 +4,15 @@
 
 상태: `할 일` → `진행 중` → `검증 대기` → `완료`. 사용자가 해야 하는 일을 기다리거나 같은 실패가 세 번 반복되면 `막힘`으로 두고 다른 작업을 해요. `보류`는 지금 하지 않기로 한 작업이에요(이유를 적어 둬요). `막힘`, `보류`, `검증 대기`는 작업을 고를 때 건너뛰어요. `할 일`이 비면 [loop.md](loop.md)의 "백로그 채우기"로 채워요.
 
+## 이어 하기 메모 (2026-11-24 새벽, 집 PC)
+
+다른 PC에서 이어 할 때 먼저 읽어요. 새 PC 준비는 [build-environment.md](build-environment.md) "다른 PC에서 이어서 하기"예요.
+
+- **합쳤어요**: 집 PC(robin-ui V5 정체성, 디스크 암호화, 코드 검토)와 다른 PC(설정 앱 페이지, 파티션 설치, `check.sh`, 랜딩 페이지, 실기기 목록)의 작업을 `main`에 합쳤어요. 겹친 번호는 집 PC 쪽을 바꿨어요: 암호화 T-166→**T-178**, 암호화 설치 테스트 T-167→**T-179**, robin-ui V5 T-168→**T-180**, 코드 검토 T-169→**T-181**. 그 전 커밋 메시지에는 옛 번호가 남아 있어요
+- **다음 할 일**: T-180(robin-ui V5)의 남은 단계, T-182(코드 검토에서 남은 것), 그다음 아래 "할 일" 순서. README 스크린샷(`docs/screenshots/`)은 묶음 검증의 부팅 테스트 장면(`13-launcher`, `23-quick-settings`, Alt+Tab, `80-learn-center-mission` 근처)으로 다시 바꿔요. 랜딩 페이지(`site/`)의 화면 사진과 `publish-site.sh`는 다음 릴리스(v0.4) 때 해요. 지금 내려받는 v0.3이 옛 화면이라서요
+- **새 도구**: `bash scripts/shell-load.sh -s 파일.png quickSettings settings launcher`로 VM 없이 몇 초 만에 셸 화면을 찍어요(WSL, sway와 grim은 `setup`이 깔아요. 한글 글꼴은 `bash scripts/fetch-fonts.sh /usr/local/share/fonts/robinos` 뒤 `fc-cache -f`). 화면을 고친 뒤 바로 보기에 좋아요
+- **두 PC 규칙**: 회차를 시작할 때 `git fetch` 뒤 `git log HEAD..origin/main`을 보고, 있으면 먼저 합쳐요([loop.md](loop.md) "1. 상황 파악")
+
 ## 백그라운드 작업
 
 WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려요(`scripts/wsl-build.ps1 status`로 확인).
