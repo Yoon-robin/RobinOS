@@ -8,6 +8,30 @@ post_install() {
   dconf update 2>/dev/null || true
   /usr/share/robinos/bin/robinos-os-release 2>/dev/null || true
   robinos_upower_conf /etc/UPower/UPower.conf
+  robinos_release_key /opt/robinos/keys/robinos-release.asc
+}
+
+# The release key this package carries, into pacman's keyring. A key whose expiry was
+# pushed back (gpg --quick-set-expire) or a new key (docs/release.md "열쇠 바꾸기")
+# reaches installed systems only this way: post-install.sh added the key once, and
+# without this an installed system keeps that copy, so updates stop when it expires.
+# Only on a system whose keyring already has one of the keys in the file: pacman
+# checked this package with that key, so the keys it carries are trusted the way
+# archlinux-keyring's are (scripts/test-robinctl.sh)
+robinos_release_key() {
+  [ -f "$1" ] || return 0
+  command -v pacman-key >/dev/null 2>&1 || return 0
+  fprs="$(gpg --batch --show-keys --with-colons "$1" 2>/dev/null |
+    awk -F: '$1 == "pub" { want = 1 } $1 == "fpr" && want { print $10; want = 0 }')"
+  known=""
+  for fpr in ${fprs}; do
+    pacman-key --list-keys "${fpr}" >/dev/null 2>&1 && known="yes"
+  done
+  [ -n "${known}" ] || return 0
+  pacman-key --add "$1" >/dev/null 2>&1 || return 0
+  for fpr in ${fprs}; do
+    pacman-key --lsign-key "${fpr}" >/dev/null 2>&1 || true
+  done
 }
 
 # Nearly empty battery: power off. UPower's default (Auto in 1.91, HybridSleep before)

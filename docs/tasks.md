@@ -135,10 +135,11 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: `진행 중` 10개 이하, tasks.md 250줄 이하
 
 ### T-177 업데이트 길의 약한 곳
-- 상태: 할 일 (①은 2026-10-16 main에 합침, ②③ 남음. 진행 중 한도 때문에 진행 중으로 올리지 않아요)
+- 상태: 할 일 (①은 2026-10-16 main에 합침, ③은 2026-11-24 새벽, ② 남음. 진행 중 한도 때문에 진행 중으로 올리지 않아요)
 - 출처: 업데이트 시스템 점검(2026-10-15, [unfinished.md](unfinished.md) 7번 표)
 - 할 것: ① 깃허브가 안 될 때도 Arch 업데이트는 되게: `robinctl update`가 `[robinos]` 목록을 못 받으면 그 저장소를 뺀 설정으로 `pacman -Syu`를 하고 "RobinOS 파일은 다음에 받아요"라고 알려요(Arch 컨테이너에서 받을 수 없는 서버로 시험) ② git으로 받은 파일로 설치한 시스템을 패키지로 옮기기: 저장소에서 받은 `robinos` 패키지의 파일 목록에만 `--overwrite`(설치 후 설정과 `robinctl update`, design.md "RobinOS 파일 업데이트" 5번) ③ 서명 열쇠: 백업 확인, 열쇠를 바꾸는 절차(새 열쇠를 옛 열쇠로 서명해 `robinos` 패키지로 보내기), 만료 전 연장을 release.md에
 - 한 것(2026-10-15 클라우드 세션): ① `robinctl update`가 `pacman -Sy`에 실패하면 `[robinos]` 블록을 뺀 임시 설정으로 다시 받고 `-Su`를 해요(pacman.conf는 그대로). 시험 7개(`test-robinctl.sh`: 깃허브만 안 될 때, 인터넷이 아예 없을 때), Arch 컨테이너의 실제 pacman으로 닿지 않는 `[robinos]`에서 그냥 `pacman -Syu`는 멈추고 `robinctl update`는 끝까지 가는 것을 확인. 남은 것: 설정 앱의 업데이트 상태(`checkupdates`도 같은 이유로 실패해 "알 수 없음"), ②, ③
+- 한 것(③, 2026-11-24 새벽): 설치본은 처음 설치 때 넣은 공개 열쇠를 계속 들고 있어서, 만료를 늘리거나 열쇠를 바꿔도 닿지 않고 2029-10-09에 업데이트가 멈출 뻔했어요. `robinos.install`이 패키지가 바뀔 때마다 패키지에 든 열쇠를 pacman 열쇠 꾸러미에 다시 넣고 서명해요(이미 그 열쇠를 가진 시스템만, 시험 3개). [release.md](release.md) "서명"에 백업 확인, 만료 늘리기, 열쇠 바꾸기 절차
 - 완료 기준: ①② 시험(`test-robinctl.sh`와 Arch 컨테이너의 실제 pacman), 설치 테스트 archinstall 경로에서 `pacman -Qo`가 `robinos`, ③ release.md 절차
 
 

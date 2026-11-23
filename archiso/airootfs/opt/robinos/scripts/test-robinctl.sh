@@ -869,6 +869,33 @@ upower_case "a person's Hibernate stays" Hibernate Hibernate
 upower_case "PowerOff stays PowerOff" PowerOff PowerOff
 (. "${ROOT_DIR}/packaging/robinos/robinos.install" && robinos_upower_conf "${WORK}/no-such-UPower.conf") && ok "no UPower.conf: nothing to do" || bad "a missing UPower.conf is an error"
 
+printf '%s\n' "The release key the package carries goes into pacman's keyring (robinos.install)"
+KEY_BIN="${WORK}/key-bin"
+mkdir -p "${KEY_BIN}"
+# A pacman-key that logs its calls; --list-keys finds a key only when KEY_KNOWN is set
+cat >"${KEY_BIN}/pacman-key" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >>"${KEY_LOG}"
+[[ "$1" != "--list-keys" || -n "${KEY_KNOWN:-}" ]]
+EOF
+chmod +x "${KEY_BIN}/pacman-key"
+key_case() {
+  local name="$1" known="$2" file="$3" want="$4"
+  : >"${WORK}/key.log"
+  (PATH="${KEY_BIN}:${PATH}" KEY_LOG="${WORK}/key.log" KEY_KNOWN="${known}" \
+    && export KEY_LOG KEY_KNOWN \
+    && . "${ROOT_DIR}/packaging/robinos/robinos.install" && robinos_release_key "${file}") ||
+    { bad "${name}: exit $?"; return; }
+  local got
+  got="$(grep -v -- '--list-keys' "${WORK}/key.log" | tr '\n' ' ')"
+  if [[ "${got}" == "${want}" ]]; then ok "${name}"; else bad "${name}: ${got:-nothing}"; fi
+}
+release_fpr=D8EB0C495CBF5B2BBB57EACCFD9B53B8B79E9AAD
+key_case "a system that trusts the key takes the new copy and signs it" yes "${ROOT_DIR}/keys/robinos-release.asc" \
+  "--add ${ROOT_DIR}/keys/robinos-release.asc --lsign-key ${release_fpr} "
+key_case "a keyring without the key is left alone" "" "${ROOT_DIR}/keys/robinos-release.asc" ""
+key_case "no key file: nothing to do" yes "${WORK}/no-such-key.asc" ""
+
 printf '%s\n' "Screen recording (robinos-screenshot record): the bar's red dot follows the recorder"
 REC_BIN="${WORK}/rec-bin"
 REC_RUN="${WORK}/rec-run"

@@ -40,6 +40,29 @@ build/logs/mkarchiso-*.log
 - 폐기 인증서: 같은 폴더의 `openpgp-revocs.d/D8EB0C495CBF5B2BBB57EACCFD9B53B8B79E9AAD.rev`. 열쇠가 새면 이걸로 폐기를 알려요
 - 백업: PC가 망가지면 열쇠도 사라져요. 오프라인 USB 같은 곳에 따로 보관해 두는 걸 권해요: `wsl -d archlinux -u root -e env GNUPGHOME=/root/.robinos-signing gpg --armor --export-secret-keys D8EB0C495CBF5B2BBB57EACCFD9B53B8B79E9AAD > robinos-release-secret.asc` (이 파일은 USB에만 두고 PC에서는 지워요)
 - 같은 열쇠로 RobinOS 파일 업데이트(pacman 저장소)에도 서명해요(아래 "RobinOS 패키지 저장소")
+- 설치본은 공개 열쇠를 `robinos` 패키지로 받아요. 설치할 때 `post-install.sh`가 한 번 넣고, 그 뒤로는 패키지가 바뀔 때마다 `robinos.install`이 패키지에 든 `keys/robinos-release.asc`를 pacman 열쇠 꾸러미에 다시 넣어요(이미 이 열쇠를 가진 시스템만). 그래서 아래 두 절차는 새 공개 열쇠를 커밋하고 `publish-repo`로 패키지를 올리면 설치본에 닿아요
+
+### 백업 확인 (1년에 한 번)
+
+1. USB의 `robinos-release-secret.asc`로 빈 폴더에 가져와 봐요: `GNUPGHOME=$(mktemp -d) gpg --import robinos-release-secret.asc`
+2. `gpg --list-secret-keys`에 지문 `D8EB…9AAD`가 `sec`로 나오면 백업이 살아 있어요. 그 폴더는 지워요
+3. 날짜를 이 문서에 적어요(마지막 확인: 아직 없음)
+
+### 만료 늘리기 (2029-10-09 전, 늦어도 반년 전에)
+
+설치본이 업데이트를 반년 넘게 안 받았어도 새 만료일이 닿도록 일찍 해요.
+
+1. 빌드 PC의 WSL에서: `GNUPGHOME=/root/.robinos-signing gpg --quick-set-expire D8EB0C495CBF5B2BBB57EACCFD9B53B8B79E9AAD 3y`
+2. 새 공개 열쇠를 저장소에: `GNUPGHOME=/root/.robinos-signing gpg --armor --export D8EB0C495CBF5B2BBB57EACCFD9B53B8B79E9AAD > keys/robinos-release.asc`. 이 문서의 만료일도 고쳐요
+3. 커밋하고 `publish-repo`로 패키지를 올려요. 설치본은 다음 `robinctl update`에서 새 만료일을 받아요(설치본에서 `pacman-key --list-keys D8EB0C495CBF5B2BBB57EACCFD9B53B8B79E9AAD`의 `expires`로 확인)
+4. 백업(USB)도 새로 내보내요
+
+### 열쇠 바꾸기 (열쇠가 샜거나 약해졌을 때)
+
+1. 새 열쇠를 같은 방식(RSA 4096 이상, 서명 전용, 암호 없음)으로 `/root/.robinos-signing`에 만들고, 옛 열쇠로 새 열쇠에 서명해요(`gpg --default-key <옛 지문> --sign-key <새 지문>`)
+2. `keys/robinos-release.asc`에 옛 열쇠와 새 열쇠를 함께 내보내요. 옛 열쇠로 서명한 패키지를 올리면, 그걸 받은 설치본의 `robinos.install`이 새 열쇠도 믿게 돼요
+3. 모든 설치본이 넘어올 시간(반년쯤)이 지나면 새 열쇠로 서명하기 시작하고, `keys/robinos-release.asc`에는 새 열쇠만 남겨요. 지문이 적힌 곳(`scripts/install-test.py`, `scripts/test-robinctl.sh`, 이 문서)도 바꿔요
+4. 샜다면 1단계 전에 폐기 인증서로 옛 열쇠를 폐기하고, 기다리지 말고 바로 새 열쇠로 서명해요. 그때 설치본은 새 패키지를 확인할 수 없으니 릴리스 노트에 손으로 하는 방법을 적어요: 새 공개 열쇠를 받아 `sudo pacman-key --add 파일`, `sudo pacman-key --lsign-key <새 지문>`
 
 ## RobinOS 패키지 저장소
 
