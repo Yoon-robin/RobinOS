@@ -374,8 +374,13 @@ def list_disks():
             continue
         parts = dev.get("children") or []
         esp = next((p["path"] for p in parts if (p.get("parttype") or "").lower() == ESP_TYPE), None)
+        # Windows' file systems, or its own reserved and recovery partitions. Not
+        # the "Basic data" type alone: a FAT or exFAT share on a disk without
+        # Windows has it too, and would turn on the dual boot (local-time clock,
+        # os-prober) for no Windows (T-182)
         windows = any(p.get("fstype") in ("ntfs", "BitLocker")
-                      or (p.get("parttype") or "").lower() in WINDOWS_TYPES for p in parts)
+                      or (p.get("parttype") or "").lower() in (WINDOWS_RESERVED_TYPE, WINDOWS_RECOVERY_TYPE)
+                      for p in parts)
         # blkid names an encrypted Windows volume "BitLocker"
         bitlocker = any(p.get("fstype") == "BitLocker" for p in parts)
         robinos = next(({"path": p["path"], "size": int(p.get("size") or 0)} for p in parts if is_robinos(p)), None)

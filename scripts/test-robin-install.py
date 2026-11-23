@@ -117,6 +117,11 @@ for fstype, want in (("ntfs", False), ("BitLocker", True)):
     check(f"Windows partition {fstype}: bitlocker", disk["bitlocker"], want)
     check(f"Windows partition {fstype}: can install alongside", disk["can_alongside"], True)
 
+# A FAT or exFAT share has the "Basic data" type too, but no Windows (T-182)
+for fstype in ("exfat", "vfat"):
+    robin.output = fake_output(lsblk_disk(fstype))
+    check(f"a {fstype} share with an ESP isn't Windows", robin.list_disks()[0]["windows"], False)
+
 robin.output = fake_output(lsblk_disk("BitLocker"))
 disk = robin.list_disks()[0]
 ran = []
