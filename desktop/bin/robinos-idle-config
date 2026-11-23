@@ -115,7 +115,10 @@ case "${1:-}" in
       pgrep -x hypridle >/dev/null || break
       sleep 0.1
     done
-    setsid -f hypridle -c "${policy}" >/dev/null 2>&1
+    # 9>&-: hypridle must not inherit the lock, or it holds it as long as it runs
+    # and the next apply waits forever (the boot test's second and third choices
+    # never reached hypridle, 2026-11-24)
+    setsid -f hypridle -c "${policy}" >/dev/null 2>&1 9>&-
     ;;
   *)
     printf 'usage: robinos-idle-config start|apply|render\n' >&2

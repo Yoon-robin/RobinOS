@@ -947,6 +947,28 @@ if grep -q 'lock_cmd = pidof hyprlock || hyprlock -c /usr/share/robinos/hypr/hyp
   && grep -q "robinos-idle-suspend" <<<"${default_policy}"; then ok "the lock command and the sleep script are in it"; else bad "the policy lacks the lock command or the sleep script"; fi
 # The shipped hypridle.conf is the same policy as the defaults
 if [[ "$(idle_timeouts <<<"${default_policy}")" == "$(idle_timeouts <"${ROOT_DIR}/desktop/hypr/hypridle.conf")" ]]; then ok "the defaults match desktop/hypr/hypridle.conf"; else bad "the defaults differ from desktop/hypr/hypridle.conf"; fi
+# apply, as the 전원 page does on every choice: the second one doesn't wait forever on
+# the lock the first one's hypridle inherited (boot test, 2026-11-24), and one runs
+APPLY_BIN="${WORK}/apply-bin"
+mkdir -p "${APPLY_BIN}"
+printf '#!/bin/sh\nwhile :; do sleep 1; done\n' >"${APPLY_BIN}/hypridle"
+chmod 755 "${APPLY_BIN}/hypridle"
+rm -rf "${IDLE_STATE}"
+apply_rc=""
+for prefs in $'lock 1\n' $'lock 1\nscreen_off 2\n'; do
+  mkdir -p "${IDLE_STATE}/robinos"
+  printf '%s' "${prefs}" >"${IDLE_STATE}/robinos/power"
+  timeout 10 env PATH="${APPLY_BIN}:${PATH}" XDG_STATE_HOME="${IDLE_STATE}" bash "${ROOT_DIR}/desktop/bin/robinos-idle-config" apply </dev/null >/dev/null 2>&1
+  apply_rc+="$? "
+done
+sleep 0.5
+if [[ "${apply_rc}" == "0 0 " ]]; then ok "a second apply right after the first finishes"; else bad "apply exit codes: ${apply_rc}(124 is stuck on the lock)"; fi
+if [[ "$(pgrep -fc "${APPLY_BIN}/hypridle")" == 1 ]] && [[ "$(idle_timeouts <"${IDLE_STATE}/robinos/hypridle.conf")" == "60 120 900" ]]; then
+  ok "one hypridle runs, with the second choice"
+else
+  bad "hypridle processes: $(pgrep -fc "${APPLY_BIN}/hypridle"), timeouts: $(idle_timeouts <"${IDLE_STATE}/robinos/hypridle.conf")"
+fi
+pkill -f "${APPLY_BIN}/hypridle" 2>/dev/null || true
 
 printf '%s\n' "Problem report (robinctl report): facts in one file, names and addresses masked"
 REPORT_BIN="${WORK}/report-bin"
