@@ -241,7 +241,7 @@ FloatingWindow {
                         color: Theme.muted
                         font.family: Theme.font
                         font.pixelSize: 12
-                        font.weight: Font.Medium
+                        font.weight: Theme.weightStrong
                     }
 
                     Text {
@@ -250,7 +250,7 @@ FloatingWindow {
                         color: Theme.fg
                         font.family: Theme.font
                         font.pixelSize: 22
-                        font.weight: Font.DemiBold
+                        font.weight: Theme.weightHead
                         elide: Text.ElideRight
                     }
                 }
@@ -324,7 +324,7 @@ FloatingWindow {
                                     color: check.modelData.ok ? Theme.fg : Theme.destructive
                                     font.family: Theme.font
                                     font.pixelSize: 14
-                                    font.weight: Font.Medium
+                                    font.weight: Theme.weightStrong
                                 }
 
                                 Text {
@@ -420,7 +420,7 @@ FloatingWindow {
                                         color: Theme.fg
                                         font.family: Theme.font
                                         font.pixelSize: 14
-                                        font.weight: Font.Medium
+                                        font.weight: Theme.weightStrong
                                     }
 
                                     Text {
@@ -541,7 +541,7 @@ FloatingWindow {
                                         color: Theme.fg
                                         font.family: Theme.font
                                         font.pixelSize: 14
-                                        font.weight: Font.Medium
+                                        font.weight: Theme.weightStrong
                                     }
 
                                     Text {
@@ -587,8 +587,8 @@ FloatingWindow {
                         wrapMode: Text.WordWrap
                     }
 
-                    Text { text: "사용자 이름"; color: Theme.fg; font.family: Theme.font; font.pixelSize: 13; font.weight: Font.Medium }
-                    Text { text: "컴퓨터 이름"; color: Theme.fg; font.family: Theme.font; font.pixelSize: 13; font.weight: Font.Medium }
+                    Text { text: "사용자 이름"; color: Theme.fg; font.family: Theme.font; font.pixelSize: 13; font.weight: Theme.weightStrong }
+                    Text { text: "컴퓨터 이름"; color: Theme.fg; font.family: Theme.font; font.pixelSize: 13; font.weight: Theme.weightStrong }
 
                     InputField {
                         id: userField
@@ -623,8 +623,8 @@ FloatingWindow {
                         font.pixelSize: 12
                     }
 
-                    Text { Layout.topMargin: 10; text: "비밀번호"; color: Theme.fg; font.family: Theme.font; font.pixelSize: 13; font.weight: Font.Medium }
-                    Text { Layout.topMargin: 10; text: "비밀번호 확인"; color: Theme.fg; font.family: Theme.font; font.pixelSize: 13; font.weight: Font.Medium }
+                    Text { Layout.topMargin: 10; text: "비밀번호"; color: Theme.fg; font.family: Theme.font; font.pixelSize: 13; font.weight: Theme.weightStrong }
+                    Text { Layout.topMargin: 10; text: "비밀번호 확인"; color: Theme.fg; font.family: Theme.font; font.pixelSize: 13; font.weight: Theme.weightStrong }
 
                     InputField {
                         id: passwordField
@@ -668,7 +668,7 @@ FloatingWindow {
                                 color: Theme.fg
                                 font.family: Theme.font
                                 font.pixelSize: 13
-                                font.weight: Font.Medium
+                                font.weight: Theme.weightStrong
                             }
 
                             Text {
@@ -770,7 +770,7 @@ FloatingWindow {
                             color: Theme.fg
                             font.family: Theme.font
                             font.pixelSize: 14
-                            font.weight: Font.Medium
+                            font.weight: Theme.weightStrong
                             elide: Text.ElideRight
                         }
 
@@ -880,7 +880,7 @@ FloatingWindow {
                                 color: Theme.fg
                                 font.family: Theme.font
                                 font.pixelSize: 14
-                                font.weight: Font.DemiBold
+                                font.weight: Theme.weightHead
                             }
 
                             Text {
@@ -1051,7 +1051,7 @@ FloatingWindow {
                 color: Theme.destructive
                 font.family: Theme.font
                 font.pixelSize: 13
-                font.weight: Font.Medium
+                font.weight: Theme.weightStrong
                 wrapMode: Text.WordWrap
             }
         }

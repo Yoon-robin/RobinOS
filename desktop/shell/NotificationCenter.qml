@@ -149,7 +149,7 @@ PanelWindow {
                     color: Theme.fg
                     font.family: Theme.font
                     font.pixelSize: 15
-                    font.weight: Font.DemiBold
+                    font.weight: Theme.weightHead
                 }
 
                 ActionButton {
@@ -281,7 +281,7 @@ PanelWindow {
                                     color: Theme.fg
                                     font.family: Theme.font
                                     font.pixelSize: 13
-                                    font.weight: Font.Medium
+                                    font.weight: Theme.weightStrong
                                     elide: Text.ElideRight
                                 }
 

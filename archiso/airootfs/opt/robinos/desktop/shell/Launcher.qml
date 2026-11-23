@@ -923,7 +923,7 @@ PanelWindow {
                         color: Theme.muted
                         font.family: Theme.font
                         font.pixelSize: 12
-                        font.weight: Font.Medium
+                        font.weight: Theme.weightStrong
                     }
 
                     Rectangle {
@@ -979,7 +979,7 @@ PanelWindow {
                                 color: Theme.fg
                                 font.family: Theme.font
                                 font.pixelSize: 14
-                                font.weight: Font.Medium
+                                font.weight: Theme.weightStrong
                                 elide: Text.ElideRight
                                 maximumLineCount: 1
                             }
@@ -1019,7 +1019,7 @@ PanelWindow {
                                         color: Theme.fgSoft
                                         font.family: Theme.font
                                         font.pixelSize: 11
-                                        font.weight: Font.Medium
+                                        font.weight: Theme.weightStrong
                                     }
                                 }
                             }

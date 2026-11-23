@@ -164,7 +164,7 @@ PanelWindow {
                 color: Theme.fg
                 font.family: Theme.font
                 font.pixelSize: 15
-                font.weight: Font.DemiBold
+                font.weight: Theme.weightHead
             }
 
             RowLayout {
@@ -177,7 +177,7 @@ PanelWindow {
                     color: Theme.muted
                     font.family: Theme.font
                     font.pixelSize: 13
-                    font.weight: Font.Medium
+                    font.weight: Theme.weightStrong
                 }
 
                 IconButton {
@@ -248,7 +248,7 @@ PanelWindow {
                                  : day.modelData.getDay() === 0 || day.holiday !== "" ? Theme.destructive : Theme.fg
                             font.family: Theme.font
                             font.pixelSize: 13
-                            font.weight: day.today ? Font.DemiBold : Font.Normal
+                            font.weight: day.today ? Theme.weightHead : Theme.weight
                         }
                     }
                 }

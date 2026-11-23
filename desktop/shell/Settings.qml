@@ -134,7 +134,7 @@ FloatingWindow {
                             color: Theme.fg
                             font.family: Theme.font
                             font.pixelSize: 16
-                            font.weight: Font.DemiBold
+                            font.weight: Theme.weightHead
                         }
                     }
 
@@ -185,7 +185,7 @@ FloatingWindow {
                                     color: Theme.fg
                                     font.family: Theme.font
                                     font.pixelSize: 13
-                                    font.weight: row.selected ? Font.DemiBold : Font.Normal
+                                    font.weight: row.selected ? Theme.weightHead : Theme.weight
                                 }
 
                                 // Opens its panel instead of a page here
@@ -237,7 +237,7 @@ FloatingWindow {
                         color: Theme.fg
                         font.family: Theme.font
                         font.pixelSize: 22
-                        font.weight: Font.DemiBold
+                        font.weight: Theme.weightHead
                     }
 
                     Loader {
@@ -271,7 +271,7 @@ FloatingWindow {
                 color: Theme.fg
                 font.family: Theme.font
                 font.pixelSize: 14
-                font.weight: Font.DemiBold
+                font.weight: Theme.weightHead
             }
 
             Text {
@@ -325,7 +325,7 @@ FloatingWindow {
                     color: Theme.fg
                     font.family: Theme.font
                     font.pixelSize: 13
-                    font.weight: Font.Medium
+                    font.weight: Theme.weightStrong
                 }
 
                 Text {
@@ -400,7 +400,7 @@ FloatingWindow {
                                     width: parent.width - 16
                                     height: 8
                                     radius: 3
-                                    color: mode.modelData.dark ? "#18181b" : "#f4f4f5"
+                                    color: mode.modelData.dark ? "#0f1115" : "#f8f8f9"
                                 }
 
                                 Rectangle {
@@ -408,9 +408,9 @@ FloatingWindow {
                                     width: 96
                                     height: 58
                                     radius: 6
-                                    color: mode.modelData.dark ? "#18181b" : "#f4f4f5"
+                                    color: mode.modelData.dark ? "#0f1115" : "#f8f8f9"
                                     border.width: 1
-                                    border.color: mode.modelData.dark ? "#27272a" : "#e4e4e7"
+                                    border.color: mode.modelData.dark ? "#26272d" : "#dedee3"
 
                                     Rectangle {
                                         x: 10; y: 12
@@ -425,7 +425,7 @@ FloatingWindow {
                                         width: 70
                                         height: 5
                                         radius: 2.5
-                                        color: mode.modelData.dark ? "#3f3f46" : "#d4d4d8"
+                                        color: mode.modelData.dark ? "#32343b" : "#c6cad2"
                                     }
                                 }
 
@@ -435,7 +435,7 @@ FloatingWindow {
                                     width: 54
                                     height: 9
                                     radius: 4
-                                    color: mode.modelData.dark ? "#27272a" : "#e4e4e7"
+                                    color: mode.modelData.dark ? "#26272d" : "#dedee3"
                                 }
 
                                 MouseArea {
@@ -450,7 +450,7 @@ FloatingWindow {
                                 color: mode.selected ? Theme.fg : Theme.muted
                                 font.family: Theme.font
                                 font.pixelSize: 13
-                                font.weight: mode.selected ? Font.DemiBold : Font.Normal
+                                font.weight: mode.selected ? Theme.weightHead : Theme.weight
                             }
                         }
                     }
@@ -523,7 +523,7 @@ FloatingWindow {
                         color: Theme.fg
                         font.family: Theme.font
                         font.pixelSize: 20
-                        font.weight: Font.Bold
+                        font.weight: Theme.weightHead
                     }
 
                     Text {

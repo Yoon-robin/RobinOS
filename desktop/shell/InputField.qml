@@ -1,7 +1,8 @@
 import QtQuick
 
-// shadcn input: one line of text with a placeholder, a focus ring and an
-// optional error state. Set password: true for hidden text.
+// robin-ui input (rk-input): the control face in its 1px line, 7px corners; the line
+// turns blue with focus and red when invalid. The placeholder says what to type.
+// Set password: true for hidden text.
 Rectangle {
     id: root
 
@@ -15,11 +16,11 @@ Rectangle {
     signal accepted()
 
     implicitWidth: 240
-    implicitHeight: 38
+    implicitHeight: 36
     radius: Theme.radiusMd
-    color: "transparent"
+    color: Theme.secondary
     border.width: 1
-    border.color: invalid ? Theme.destructive : textInput.activeFocus ? Theme.ring : Theme.input
+    border.color: invalid ? Theme.destructiveSolid : textInput.activeFocus ? Theme.ring : Theme.input
 
     Behavior on border.color {
         ColorAnimation { duration: Theme.durFast }
@@ -33,9 +34,9 @@ Rectangle {
         anchors.leftMargin: 12
         anchors.rightMargin: 12
         anchors.verticalCenter: parent.verticalCenter
-        color: Theme.fg
-        selectionColor: Theme.secondaryHover
-        selectedTextColor: Theme.fg
+        color: Theme.head
+        selectionColor: Theme.accentSoft
+        selectedTextColor: Theme.head
         font.family: Theme.font
         font.pixelSize: 14
         echoMode: root.password ? TextInput.Password : TextInput.Normal
@@ -53,7 +54,7 @@ Rectangle {
             verticalAlignment: Text.AlignVCenter
             visible: textInput.text === "" && textInput.preeditText === ""
             text: root.placeholder
-            color: Theme.muted
+            color: Theme.subtle
             font.family: Theme.font
             font.pixelSize: 14
         }

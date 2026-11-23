@@ -174,7 +174,7 @@ PanelWindow {
                     color: Theme.muted
                     font.family: Theme.font
                     font.pixelSize: 12
-                    font.weight: Font.Medium
+                    font.weight: Theme.weightStrong
                 }
 
                 Text {
@@ -183,7 +183,7 @@ PanelWindow {
                     color: Theme.fg
                     font.family: Theme.font
                     font.pixelSize: 22
-                    font.weight: Font.DemiBold
+                    font.weight: Theme.weightHead
                     wrapMode: Text.WordWrap
                 }
 
@@ -251,7 +251,7 @@ PanelWindow {
                                     color: Theme.fg
                                     font.family: Theme.font
                                     font.pixelSize: 14
-                                    font.weight: Font.Medium
+                                    font.weight: Theme.weightStrong
                                 }
 
                                 Text {
@@ -324,7 +324,7 @@ PanelWindow {
                                         width: parent.width - 20
                                         height: 8
                                         radius: 3
-                                        color: themeChoice.modelData.dark ? "#18181b" : "#f4f4f5"
+                                        color: themeChoice.modelData.dark ? "#0f1115" : "#f8f8f9"
 
                                         Rectangle {
                                             x: 4
@@ -342,7 +342,7 @@ PanelWindow {
                                         width: parent.width * 0.56
                                         height: 52
                                         radius: 4
-                                        color: themeChoice.modelData.dark ? "#121214" : "#ffffff"
+                                        color: themeChoice.modelData.dark ? "#08090b" : "#ffffff"
                                         border.width: 1
                                         border.color: themeChoice.modelData.dark ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(0, 0, 0, 0.12)
                                     }
@@ -354,7 +354,7 @@ PanelWindow {
                                         width: 64
                                         height: 12
                                         radius: 4
-                                        color: themeChoice.modelData.dark ? "#18181b" : "#f4f4f5"
+                                        color: themeChoice.modelData.dark ? "#0f1115" : "#f8f8f9"
                                     }
 
                                     MouseArea {
@@ -370,7 +370,7 @@ PanelWindow {
                                     color: themeChoice.selected ? Theme.fg : Theme.muted
                                     font.family: Theme.font
                                     font.pixelSize: 13
-                                    font.weight: Font.Medium
+                                    font.weight: Theme.weightStrong
                                 }
                             }
                         }
@@ -447,7 +447,7 @@ PanelWindow {
                                     color: Theme.fg
                                     font.family: Theme.font
                                     font.pixelSize: 14
-                                    font.weight: Font.Medium
+                                    font.weight: Theme.weightStrong
                                 }
 
                                 Text {
@@ -529,7 +529,7 @@ PanelWindow {
                                 color: ShellState.hangul ? Theme.primaryFg : Theme.fg
                                 font.family: Theme.font
                                 font.pixelSize: 12
-                                font.weight: Font.DemiBold
+                                font.weight: Theme.weightHead
                             }
                         }
                     }
@@ -606,7 +606,7 @@ PanelWindow {
                                         color: Theme.fg
                                         font.family: Theme.font
                                         font.pixelSize: 14
-                                        font.weight: Font.Medium
+                                        font.weight: Theme.weightStrong
                                     }
 
                                     Text {

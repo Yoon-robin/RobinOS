@@ -100,7 +100,7 @@ PanelWindow {
         color: Theme.muted
         font.family: Theme.font
         font.pixelSize: 12
-        font.weight: Font.Medium
+        font.weight: Theme.weightStrong
     }
 
     component Hint: Text {
@@ -163,7 +163,7 @@ PanelWindow {
                 color: Theme.fg
                 font.family: Theme.font
                 font.pixelSize: 13
-                font.weight: row.chosen ? Font.DemiBold : Font.Normal
+                font.weight: row.chosen ? Theme.weightHead : Theme.weight
                 elide: Text.ElideRight
             }
 
@@ -258,7 +258,7 @@ PanelWindow {
                 color: Theme.fg
                 font.family: Theme.font
                 font.pixelSize: 15
-                font.weight: Font.DemiBold
+                font.weight: Theme.weightHead
             }
 
             // ---- Output ----

@@ -166,7 +166,7 @@ FloatingWindow {
                         color: Theme.fg
                         font.family: Theme.font
                         font.pixelSize: 22
-                        font.weight: Font.DemiBold
+                        font.weight: Theme.weightHead
                     }
 
                     Text {
@@ -186,7 +186,7 @@ FloatingWindow {
                     color: Theme.fgSoft
                     font.family: Theme.font
                     font.pixelSize: 13
-                    font.weight: Font.Medium
+                    font.weight: Theme.weightStrong
                 }
             }
 
@@ -268,7 +268,7 @@ FloatingWindow {
                             color: Theme.muted
                             font.family: Theme.font
                             font.pixelSize: 12
-                            font.weight: Font.Medium
+                            font.weight: Theme.weightStrong
                         }
 
                         Text {
@@ -277,7 +277,7 @@ FloatingWindow {
                             color: Theme.fg
                             font.family: Theme.font
                             font.pixelSize: 16
-                            font.weight: Font.DemiBold
+                            font.weight: Theme.weightHead
                             elide: Text.ElideRight
                         }
 
@@ -339,7 +339,7 @@ FloatingWindow {
                                     color: Theme.fg
                                     font.family: Theme.font
                                     font.pixelSize: 14
-                                    font.weight: Font.DemiBold
+                                    font.weight: Theme.weightHead
                                 }
 
                                 Text {
@@ -427,7 +427,7 @@ FloatingWindow {
                                             color: row.modelData.done ? Theme.muted : Theme.fg
                                             font.family: Theme.font
                                             font.pixelSize: 14
-                                            font.weight: row.isNext ? Font.Medium : Font.Normal
+                                            font.weight: row.isNext ? Theme.weightStrong : Theme.weight
                                             elide: Text.ElideRight
                                         }
 
@@ -488,7 +488,7 @@ FloatingWindow {
                     color: Theme.fg
                     font.family: Theme.font
                     font.pixelSize: 14
-                    font.weight: Font.Medium
+                    font.weight: Theme.weightStrong
                 }
 
                 Text {

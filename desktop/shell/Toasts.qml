@@ -54,10 +54,10 @@ PanelWindow {
 
                 Layout.fillWidth: true
                 implicitHeight: body.implicitHeight + 28
-                radius: 12
+                radius: Theme.radiusPanel
                 color: Theme.panel
                 border.width: 1
-                border.color: critical ? Theme.destructive : Theme.panelBorder
+                border.color: Theme.panelBorder
 
                 layer.enabled: !Theme.lowPower
                 layer.effect: MultiEffect {
@@ -95,6 +95,17 @@ PanelWindow {
                     }
                 }
 
+                // robin-ui indicator: a short bar on the left says the tone
+                // (plain, or red for a critical one); the words say the rest
+                Rectangle {
+                    x: 7
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 2
+                    height: Math.min(26, parent.height * 0.44)
+                    radius: 1
+                    color: toast.critical ? Theme.destructiveSolid : Theme.plain
+                }
+
                 RowLayout {
                     id: body
 
@@ -102,7 +113,7 @@ PanelWindow {
                     anchors.right: parent.right
                     anchors.top: parent.top
                     anchors.margins: 14
-                    anchors.leftMargin: 16
+                    anchors.leftMargin: 20
                     spacing: 12
 
                     Item {
@@ -119,13 +130,15 @@ PanelWindow {
                         Rectangle {
                             visible: toast.iconSource === ""
                             anchors.fill: parent
-                            radius: 8
+                            radius: Theme.radiusMd
                             color: Theme.secondary
+                            border.width: 1
+                            border.color: Theme.borderStrong
 
                             Icon {
                                 anchors.centerIn: parent
                                 name: toast.critical ? "bell" : "circle-check"
-                                color: toast.critical ? Theme.destructive : Theme.success
+                                color: toast.critical ? Theme.destructive : Theme.plain
                             }
                         }
                     }
@@ -141,10 +154,10 @@ PanelWindow {
                             Text {
                                 Layout.fillWidth: true
                                 text: toast.n.summary
-                                color: Theme.fg
+                                color: Theme.head
                                 font.family: Theme.font
-                                font.pixelSize: 13
-                                font.weight: Font.Medium
+                                font.pixelSize: 13.5
+                                font.weight: Theme.weightStrong
                                 elide: Text.ElideRight
                             }
 
@@ -207,8 +220,10 @@ PanelWindow {
                                     implicitWidth: actionText.implicitWidth + 20
                                     implicitHeight: 26
                                     radius: Theme.radiusSm
-                                    color: index === 0 ? Theme.primary
+                                    color: index === 0 ? (actionMouse.containsMouse ? Theme.primaryHover : Theme.primary)
                                                        : actionMouse.containsMouse ? Theme.secondaryHover : Theme.secondary
+                                    border.width: index === 0 ? 0 : 1
+                                    border.color: actionMouse.containsMouse ? Theme.controlLineHover : Theme.borderStrong
 
                                     Accessible.role: Accessible.Button
                                     Accessible.name: modelData.text
@@ -220,7 +235,7 @@ PanelWindow {
                                         color: actionButton.index === 0 ? Theme.primaryFg : Theme.fg
                                         font.family: Theme.font
                                         font.pixelSize: 12
-                                        font.weight: Font.Medium
+                                        font.weight: Theme.weightStrong
                                     }
 
                                     MouseArea {

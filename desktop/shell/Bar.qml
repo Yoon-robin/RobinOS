@@ -114,7 +114,7 @@ PanelWindow {
                 color: Theme.fg
                 font.family: Theme.font
                 font.pixelSize: 13
-                font.weight: Font.DemiBold
+                font.weight: Theme.weightHead
             }
         }
 
@@ -170,7 +170,7 @@ PanelWindow {
             color: Theme.muted
             font.family: Theme.font
             font.pixelSize: 13
-            font.weight: Font.Medium
+            font.weight: Theme.weightStrong
             elide: Text.ElideRight
         }
     }
@@ -187,7 +187,7 @@ PanelWindow {
             color: Theme.fg
             font.family: Theme.font
             font.pixelSize: 13
-            font.weight: Font.Medium
+            font.weight: Theme.weightStrong
         }
     }
 
@@ -215,7 +215,7 @@ PanelWindow {
                 color: Theme.fg
                 font.family: Theme.font
                 font.pixelSize: 12
-                font.weight: Font.Medium
+                font.weight: Theme.weightStrong
             }
         }
 
@@ -238,7 +238,7 @@ PanelWindow {
                 color: Theme.fg
                 font.family: Theme.font
                 font.pixelSize: 12
-                font.weight: Font.Medium
+                font.weight: Theme.weightStrong
             }
         }
 
@@ -315,7 +315,7 @@ PanelWindow {
                     color: Theme.fgSoft
                     font.family: Theme.font
                     font.pixelSize: 11
-                    font.weight: Font.DemiBold
+                    font.weight: Theme.weightHead
                 }
             }
 

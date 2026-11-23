@@ -26,7 +26,12 @@ Singleton {
     readonly property color raised: dark ? "#14151c" : "#f1f1f2"
     readonly property color secondary: dark ? "#14151c" : "#f1f1f2"
     readonly property color secondaryHover: dark ? "#1b1d25" : "#e9ecf0"
+    readonly property color controlLineHover: dark ? "#32343b" : "#c6cad2"
+    readonly property color controlPress: dark ? "#20222b" : "#dfe3e9"
     readonly property color chosen: dark ? "#222629" : "#dfe3e9"
+    // The switch: a dark groove with a 1px line when off, blue with a white knob when on
+    readonly property color switchOff: dark ? "#030913" : "#dedee3"
+    readonly property color switchKnob: dark ? "#798895" : "#ffffff"
     readonly property color hover: dark ? "#15181b" : "#e9ecf0"
     readonly property color track: dark ? "#1c1e24" : "#e3e6eb"
 
