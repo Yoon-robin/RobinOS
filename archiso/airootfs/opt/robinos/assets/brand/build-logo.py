@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Builds the RobinOS logo SVGs (docs/brand.md): a white robin sitting on a terminal
-prompt's cursor. The name and tagline are Geist and Pretendard turned into paths,
-so the logo looks the same without the fonts installed.
+prompt's cursor. The name is Pretendard turned into paths, so the logo looks the
+same without the fonts installed. Colours are the robin-ui V5 kit's
+(assets/brand/robin-ui/tokens.json); screens and logos carry the name only, no
+tagline (docs/brand.md, 2026-11-24).
 
     scripts/fetch-fonts.sh /tmp/robinfonts
     python3 assets/brand/build-logo.py /tmp/robinfonts assets/brand    (needs python-fonttools)
@@ -47,8 +49,9 @@ def text_path(path, wght, text, size, x, y, tracking=0.0):
 
 
 
-BG, WHITE, WING, GREY, RED = "#09090B", "#FAFAFA", "#E4E4E7", "#A1A1AA", "#E5484D"
-TAGLINE = "처음 쓰는 리눅스"
+# side, head, text, soft and the one blue; CARD is the kit's card face
+BG, WHITE, WING, GREY, ACCENT = "#0A0E11", "#F0F0F0", "#E6E7E9", "#8A8E94", "#4B7DFE"
+CARD = "#0F1115"
 
 
 def robin(cid):
@@ -67,7 +70,7 @@ def robin(cid):
   <path d="M193 84 L218 93 L193 102 Z" fill="{GREY}"/>
   <circle cx="174" cy="85" r="6.5" fill="{BG}"/>
   <path d="M114 184 V203 M134 184 V203" stroke="{GREY}" stroke-width="6" stroke-linecap="round"/>
-  <path d="M48 193 L65 205 L48 217" fill="none" stroke="{RED}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M48 193 L65 205 L48 217" fill="none" stroke="{ACCENT}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
   <rect x="84" y="200" width="96" height="10" rx="5" fill="{WHITE}"/>"""
 
 
@@ -104,38 +107,34 @@ def glyph():
 
 
 def horizontal():
-    word, ww = text_path(GEIST, 700, "RobinOS", 66, 196, 104, tracking=-0.02)
-    tag, tw = text_path(PRETENDARD, 500, TAGLINE, 22, 199, 142)
-    width = int(max(196 + ww, 199 + tw) + 44)
+    word, ww = text_path(PRETENDARD, 650, "RobinOS", 68, 196, 114, tracking=-0.02)
+    width = int(196 + ww + 48)
     return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} 180" role="img" aria-labelledby="title desc">
   <title id="title">RobinOS</title>
-  <desc id="desc">RobinOS 가로형 로고: 프롬프트 커서 위의 울새와 "{TAGLINE}"</desc>
-  <rect width="{width}" height="180" rx="28" fill="{BG}"/>
+  <desc id="desc">RobinOS 가로형 로고: 프롬프트 커서 위의 울새와 이름</desc>
+  <rect width="{width}" height="180" rx="14" fill="{BG}"/>
   <g transform="translate(4 -16) scale(0.78)">
   {robin("robinos-horizontal-bird")}
   </g>
   <path d="{word}" fill="{WHITE}"/>
-  <path d="{tag}" fill="{GREY}"/>
 </svg>
 """
 
 
 def lockup():
-    word, ww = text_path(GEIST, 700, "RobinOS", 72, 0, 0, tracking=-0.02)
-    tag, tw = text_path(PRETENDARD, 500, TAGLINE, 24, 0, 0)
+    word, ww = text_path(PRETENDARD, 650, "RobinOS", 74, 0, 0, tracking=-0.02)
     width = 560
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} 460" role="img" aria-labelledby="title desc">
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} 400" role="img" aria-labelledby="title desc">
   <title id="title">RobinOS</title>
-  <desc id="desc">RobinOS 로고: 울새 마크, 이름, "{TAGLINE}"</desc>
-  <rect width="{width}" height="460" rx="36" fill="{BG}"/>
+  <desc id="desc">RobinOS 로고: 울새 마크와 이름</desc>
+  <rect width="{width}" height="400" rx="14" fill="{BG}"/>
   <g transform="translate({width / 2 - 108} 30) scale(0.84)">
-    <rect width="256" height="256" rx="56" fill="#18181B"/>
+    <rect width="256" height="256" rx="56" fill="{CARD}"/>
     <g transform="translate(-3 -7)">
     {robin("robinos-logo-bird")}
     </g>
   </g>
-  <g transform="translate({(width - ww) / 2:.1f} 340)"><path d="{word}" fill="{WHITE}"/></g>
-  <g transform="translate({(width - tw) / 2:.1f} 392)"><path d="{tag}" fill="{GREY}"/></g>
+  <g transform="translate({(width - ww) / 2:.1f} 346)"><path d="{word}" fill="{WHITE}"/></g>
 </svg>
 """
 
@@ -146,7 +145,7 @@ def boot_splash():
     (y 160) down; the bottom rows hold syslinux's help text, so they stay empty.
     Screens carry the name only, no tagline (docs/brand.md).
     PNG: rsvg-convert -w 640 -h 480 robinos-boot-splash.svg -o themes/syslinux/splash.png"""
-    word, ww = text_path(GEIST, 700, "RobinOS", 38, 0, 0, tracking=-0.02)
+    word, ww = text_path(PRETENDARD, 650, "RobinOS", 38, 0, 0, tracking=-0.02)
     mark_size, gap = 64, 14
     width = mark_size + gap + ww
     x0 = (640 - width) / 2
@@ -154,14 +153,14 @@ def boot_splash():
     return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" width="640" height="480">
   <defs>
     <radialGradient id="robinos-splash-glow" cx="320" cy="60" r="300" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="{RED}" stop-opacity="0.16"/>
-      <stop offset="1" stop-color="{RED}" stop-opacity="0"/>
+      <stop offset="0" stop-color="{ACCENT}" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="{ACCENT}" stop-opacity="0"/>
     </radialGradient>
   </defs>
   <rect width="640" height="480" fill="{BG}"/>
   <rect width="640" height="480" fill="url(#robinos-splash-glow)"/>
   <g transform="translate({x0:.1f} 40) scale({mark_size / 256})">
-    <rect width="256" height="256" rx="56" fill="#18181B"/>
+    <rect width="256" height="256" rx="56" fill="{CARD}"/>
     <g transform="translate(-3 -7)">
     {robin("robinos-splash-bird")}
     </g>
@@ -173,7 +172,6 @@ def boot_splash():
 
 if __name__ == "__main__":
     fonts, out = sys.argv[1], sys.argv[2]
-    GEIST = f"{fonts}/Geist[wght].ttf"
     PRETENDARD = f"{fonts}/PretendardVariable.ttf"
     for name, svg in (("robinos-mark.svg", mark()), ("robinos-logo-horizontal.svg", horizontal()),
                       ("robinos-logo.svg", lockup()), ("robinos-glyph.svg", glyph()),

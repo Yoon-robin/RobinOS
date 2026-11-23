@@ -772,15 +772,15 @@ PanelWindow {
         border.color: Theme.panelBorder
         clip: true
         opacity: root.revealed ? 1 : 0
-        scale: root.revealed ? 1 : 0.96
+        scale: root.revealed ? 1 : 0.985
 
         Behavior on opacity {
             NumberAnimation { duration: Theme.dur; easing.type: Easing.OutCubic }
         }
 
-        // Opens with a small settle past full size, like a spring (T-152)
+        // Opens short and without overshoot (robin-ui V5)
         Behavior on scale {
-            NumberAnimation { duration: Theme.durSpring; easing.type: Easing.OutBack; easing.overshoot: 0.9 }
+            NumberAnimation { duration: Theme.durSpring; easing.type: Easing.OutQuint }
         }
 
         layer.enabled: !Theme.lowPower
@@ -822,12 +822,12 @@ PanelWindow {
 
                     anchors.left: searchIcon.right
                     anchors.leftMargin: 12
-                    anchors.right: escKey.left
-                    anchors.rightMargin: 12
+                    anchors.right: parent.right
+                    anchors.rightMargin: 18
                     anchors.verticalCenter: parent.verticalCenter
-                    color: Theme.fg
-                    selectionColor: Theme.secondaryHover
-                    selectedTextColor: Theme.fg
+                    color: Theme.head
+                    selectionColor: Theme.accentSoft
+                    selectedTextColor: Theme.head
                     font.family: Theme.font
                     font.pixelSize: 18
                     clip: true
@@ -866,17 +866,9 @@ PanelWindow {
                         verticalAlignment: Text.AlignVCenter
                         visible: search.text === "" && search.preeditText === ""
                         text: root.clipboardMode ? "클립보드 기록 검색…" : root.emojiMode ? "이모지 검색… (하트, 웃음, ok)" : "앱, 명령, 파일 검색…"
-                        color: Theme.muted
+                        color: Theme.subtle
                         font: search.font
                     }
-                }
-
-                Kbd {
-                    id: escKey
-                    anchors.right: parent.right
-                    anchors.rightMargin: 16
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "esc"
                 }
 
                 Rectangle {
@@ -884,7 +876,7 @@ PanelWindow {
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
                     height: 1
-                    color: Theme.border
+                    color: Theme.panelBorder
                 }
             }
 
@@ -911,8 +903,9 @@ PanelWindow {
                     readonly property bool selected: index === root.current
 
                     width: list.width - 12
-                    height: isHeader ? 32 : 44
+                    height: isHeader ? 30 : 41
 
+                    // A group's label: small and faint (rk-label)
                     Text {
                         visible: row.isHeader
                         anchors.left: parent.left
@@ -920,17 +913,19 @@ PanelWindow {
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: 6
                         text: row.modelData.title
-                        color: Theme.muted
+                        color: Theme.subtle
                         font.family: Theme.font
-                        font.pixelSize: 12
-                        font.weight: Font.Medium
+                        font.pixelSize: 11
+                        font.weight: Theme.weightStrong
+                        font.letterSpacing: 0.2
                     }
 
+                    // The chosen row: the grey face, words in white (rk-tabs)
                     Rectangle {
                         visible: !row.isHeader
                         anchors.fill: parent
                         radius: Theme.radiusMd
-                        color: row.selected ? Theme.secondary : "transparent"
+                        color: row.selected ? Theme.chosen : "transparent"
 
                         Accessible.role: Accessible.Button
                         Accessible.name: row.modelData.title
@@ -944,17 +939,17 @@ PanelWindow {
                             Rectangle {
                                 implicitWidth: 28
                                 implicitHeight: 28
-                                radius: 7
-                                color: row.selected ? Theme.bg : Theme.raised
+                                radius: Theme.radiusMd
+                                color: Theme.secondary
                                 border.width: 1
-                                border.color: Theme.border
+                                border.color: Theme.borderStrong
 
                                 Icon {
                                     visible: ["cmd", "clip", "file", "calc", "web"].indexOf(row.modelData.kind) !== -1
                                     anchors.centerIn: parent
                                     name: row.modelData.icon ?? ""
                                     size: 15
-                                    color: Theme.fgSoft
+                                    color: row.selected ? Theme.accent : Theme.muted
                                 }
 
                                 IconImage {
@@ -976,10 +971,10 @@ PanelWindow {
                                 // A copied paragraph is one long line; keep it inside the row
                                 Layout.maximumWidth: row.width - 70
                                 text: row.modelData.title ?? ""
-                                color: Theme.fg
+                                color: row.selected ? Theme.head : Theme.fg
                                 font.family: Theme.font
                                 font.pixelSize: 14
-                                font.weight: Font.Medium
+                                font.weight: Theme.weightStrong
                                 elide: Text.ElideRight
                                 maximumLineCount: 1
                             }
@@ -993,34 +988,35 @@ PanelWindow {
                                 elide: Text.ElideRight
                             }
 
+                            // A state chip (rk-chip, tone "on"): a pill with a short blue
+                            // bar on the left; the word says the state
                             Rectangle {
                                 visible: (row.modelData.badge ?? "") !== ""
-                                implicitWidth: badgeRow.implicitWidth + 16
+                                implicitWidth: badgeText.implicitWidth + 23
                                 implicitHeight: 22
                                 radius: 11
-                                color: "transparent"
+                                color: Theme.panel
                                 border.width: 1
-                                border.color: Theme.borderStrong
+                                border.color: Theme.panelBorder
 
-                                RowLayout {
-                                    id: badgeRow
-                                    anchors.centerIn: parent
-                                    spacing: 6
+                                Rectangle {
+                                    x: 6
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 2
+                                    height: 10
+                                    radius: 1
+                                    color: Theme.accent
+                                }
 
-                                    Rectangle {
-                                        implicitWidth: 6
-                                        implicitHeight: 6
-                                        radius: 3
-                                        color: Theme.success
-                                    }
-
-                                    Text {
-                                        text: row.modelData.badge ?? ""
-                                        color: Theme.fgSoft
-                                        font.family: Theme.font
-                                        font.pixelSize: 11
-                                        font.weight: Font.Medium
-                                    }
+                                Text {
+                                    id: badgeText
+                                    x: 14
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: row.modelData.badge ?? ""
+                                    color: Theme.head
+                                    font.family: Theme.font
+                                    font.pixelSize: 11
+                                    font.weight: Theme.weightStrong
                                 }
                             }
                         }
@@ -1066,56 +1062,9 @@ PanelWindow {
                 font.pixelSize: 13
             }
 
-            // Footer
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 42
-                color: Theme.raised
-
-                Rectangle {
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    height: 1
-                    color: Theme.border
-                }
-
-                RowLayout {
-                    anchors.left: parent.left
-                    anchors.leftMargin: 14
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 8
-
-                    Mark {
-                        size: 16
-                    }
-
-                    Text {
-                        text: "RobinOS 런처"
-                        color: Theme.muted
-                        font.family: Theme.font
-                        font.pixelSize: 12
-                    }
-                }
-
-                RowLayout {
-                    anchors.right: parent.right
-                    anchors.rightMargin: 14
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 14
-
-                    RowLayout {
-                        spacing: 6
-                        Kbd { text: "↑↓" }
-                        Text { text: "이동"; color: Theme.muted; font.family: Theme.font; font.pixelSize: 12 }
-                    }
-
-                    RowLayout {
-                        spacing: 6
-                        Kbd { text: "↵" }
-                        Text { text: "열기"; color: Theme.muted; font.family: Theme.font; font.pixelSize: 12 }
-                    }
-                }
+            // No footer with key hints: the kit leaves out how-to-press text
+            Item {
+                Layout.preferredHeight: 6
             }
         }
     }

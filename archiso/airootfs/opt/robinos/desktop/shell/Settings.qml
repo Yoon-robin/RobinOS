@@ -4,8 +4,8 @@ import Quickshell
 import Quickshell.Io
 import "keys.js" as Keyboard
 
-// RobinOS settings (T-149), laid out like macOS System Settings: the sections on
-// the left, the chosen one on the right. Opened with Win+I, the launcher's "설정"
+// RobinOS settings (T-149), the robin-ui window: a side column fixed to the window
+// (rk-side) with the sections, the page on the right with cards under small labels. Opened with Win+I, the launcher's "설정"
 // (Windows name: 제어판) or `qs ipc ... call shell settings`. Sections that
 // already have their own panel (sound, Wi-Fi, Bluetooth) open that panel.
 FloatingWindow {
@@ -104,8 +104,8 @@ FloatingWindow {
             // ---- Sidebar ----
             Rectangle {
                 Layout.fillHeight: true
-                Layout.preferredWidth: 220
-                color: Theme.raised
+                Layout.preferredWidth: 178
+                color: Theme.side
 
                 Rectangle {
                     anchors.right: parent.right
@@ -117,24 +117,24 @@ FloatingWindow {
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: 12
-                    spacing: 2
+                    spacing: 6
 
                     RowLayout {
-                        Layout.leftMargin: 6
-                        Layout.topMargin: 8
-                        Layout.bottomMargin: 14
+                        Layout.leftMargin: 4
+                        Layout.topMargin: 6
+                        Layout.bottomMargin: 12
                         spacing: 10
 
                         Mark {
-                            size: 24
+                            size: 30
                         }
 
                         Text {
                             text: "설정"
-                            color: Theme.fg
+                            color: Theme.head
                             font.family: Theme.font
                             font.pixelSize: 16
-                            font.weight: Font.DemiBold
+                            font.weight: Theme.weightHead
                         }
                     }
 
@@ -148,9 +148,9 @@ FloatingWindow {
                             readonly property bool selected: root.section === modelData.key
 
                             Layout.fillWidth: true
-                            implicitHeight: 34
+                            implicitHeight: 33
                             radius: Theme.radiusMd
-                            color: selected ? Theme.secondary : rowMouse.containsMouse ? Theme.hover : "transparent"
+                            color: selected ? Theme.chosen : rowMouse.containsMouse ? Theme.hover : "transparent"
 
                             Accessible.role: Accessible.PageTab
                             Accessible.name: modelData.title
@@ -169,23 +169,23 @@ FloatingWindow {
 
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.leftMargin: 10
+                                anchors.leftMargin: 12
                                 anchors.rightMargin: 10
-                                spacing: 10
+                                spacing: 11
 
                                 Icon {
                                     name: row.modelData.icon
-                                    size: 16
-                                    color: row.selected ? Theme.fg : Theme.fgSoft
+                                    size: 15
+                                    color: row.selected ? Theme.accent : Theme.muted
                                 }
 
                                 Text {
                                     Layout.fillWidth: true
                                     text: row.modelData.title
-                                    color: Theme.fg
+                                    color: row.selected || rowMouse.containsMouse ? Theme.head : Theme.muted
                                     font.family: Theme.font
-                                    font.pixelSize: 13
-                                    font.weight: row.selected ? Font.DemiBold : Font.Normal
+                                    font.pixelSize: 14
+                                    font.weight: Theme.weight
                                 }
 
                                 // Opens its panel instead of a page here
@@ -234,15 +234,15 @@ FloatingWindow {
 
                     Text {
                         text: root.current.title
-                        color: Theme.fg
+                        color: Theme.head
                         font.family: Theme.font
-                        font.pixelSize: 22
-                        font.weight: Font.DemiBold
+                        font.pixelSize: 20
+                        font.weight: Theme.weightHead
                     }
 
                     Loader {
                         Layout.fillWidth: true
-                        Layout.topMargin: 18
+                        Layout.topMargin: 14
                         sourceComponent: root.section === "about" ? aboutPage : appearancePage
                     }
                 }
@@ -250,7 +250,8 @@ FloatingWindow {
         }
     }
 
-    // A labelled group of settings
+    // A labelled group of settings: the label small and faint above, outside the
+    // card (rk-label); a hint, when there is one, stays under the cards
     component Group: ColumnLayout {
         id: group
 
@@ -259,36 +260,34 @@ FloatingWindow {
         default property alias content: body.data
 
         Layout.fillWidth: true
-        Layout.bottomMargin: 26
-        spacing: 10
+        Layout.bottomMargin: 20
+        spacing: 9
 
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: 2
-
-            Text {
-                text: group.title
-                color: Theme.fg
-                font.family: Theme.font
-                font.pixelSize: 14
-                font.weight: Font.DemiBold
-            }
-
-            Text {
-                visible: text !== ""
-                Layout.fillWidth: true
-                text: group.hint
-                color: Theme.muted
-                font.family: Theme.font
-                font.pixelSize: 12
-                wrapMode: Text.WordWrap
-            }
+        Text {
+            Layout.leftMargin: 6
+            text: group.title
+            color: Theme.subtle
+            font.family: Theme.font
+            font.pixelSize: 11
+            font.weight: Theme.weightStrong
+            font.letterSpacing: 0.2
         }
 
         ColumnLayout {
             id: body
             Layout.fillWidth: true
             spacing: 10
+        }
+
+        Text {
+            visible: text !== ""
+            Layout.fillWidth: true
+            Layout.leftMargin: 6
+            text: group.hint
+            color: Theme.muted
+            font.family: Theme.font
+            font.pixelSize: 12
+            wrapMode: Text.WordWrap
         }
     }
 
@@ -302,9 +301,9 @@ FloatingWindow {
         signal toggled
 
         Layout.fillWidth: true
-        implicitHeight: Math.max(64, rowText.implicitHeight + 24)
+        implicitHeight: Math.max(desc !== "" ? 56 : 41, rowText.implicitHeight + 20)
         radius: Theme.radius
-        color: "transparent"
+        color: Theme.surface
         border.width: 1
         border.color: Theme.border
 
@@ -325,7 +324,7 @@ FloatingWindow {
                     color: Theme.fg
                     font.family: Theme.font
                     font.pixelSize: 13
-                    font.weight: Font.Medium
+                    font.weight: Theme.weightStrong
                 }
 
                 Text {
@@ -400,7 +399,7 @@ FloatingWindow {
                                     width: parent.width - 16
                                     height: 8
                                     radius: 3
-                                    color: mode.modelData.dark ? "#18181b" : "#f4f4f5"
+                                    color: mode.modelData.dark ? "#0f1115" : "#f8f8f9"
                                 }
 
                                 Rectangle {
@@ -408,9 +407,9 @@ FloatingWindow {
                                     width: 96
                                     height: 58
                                     radius: 6
-                                    color: mode.modelData.dark ? "#18181b" : "#f4f4f5"
+                                    color: mode.modelData.dark ? "#0f1115" : "#f8f8f9"
                                     border.width: 1
-                                    border.color: mode.modelData.dark ? "#27272a" : "#e4e4e7"
+                                    border.color: mode.modelData.dark ? "#26272d" : "#dedee3"
 
                                     Rectangle {
                                         x: 10; y: 12
@@ -425,7 +424,7 @@ FloatingWindow {
                                         width: 70
                                         height: 5
                                         radius: 2.5
-                                        color: mode.modelData.dark ? "#3f3f46" : "#d4d4d8"
+                                        color: mode.modelData.dark ? "#32343b" : "#c6cad2"
                                     }
                                 }
 
@@ -435,7 +434,7 @@ FloatingWindow {
                                     width: 54
                                     height: 9
                                     radius: 4
-                                    color: mode.modelData.dark ? "#27272a" : "#e4e4e7"
+                                    color: mode.modelData.dark ? "#26272d" : "#dedee3"
                                 }
 
                                 MouseArea {
@@ -450,7 +449,7 @@ FloatingWindow {
                                 color: mode.selected ? Theme.fg : Theme.muted
                                 font.family: Theme.font
                                 font.pixelSize: 13
-                                font.weight: mode.selected ? Font.DemiBold : Font.Normal
+                                font.weight: mode.selected ? Theme.weightHead : Theme.weight
                             }
                         }
                     }
@@ -523,7 +522,7 @@ FloatingWindow {
                         color: Theme.fg
                         font.family: Theme.font
                         font.pixelSize: 20
-                        font.weight: Font.Bold
+                        font.weight: Theme.weightHead
                     }
 
                     Text {
@@ -539,7 +538,7 @@ FloatingWindow {
                 Layout.fillWidth: true
                 implicitHeight: facts.implicitHeight
                 radius: Theme.radius
-                color: "transparent"
+                color: Theme.surface
                 border.width: 1
                 border.color: Theme.border
 
@@ -559,12 +558,14 @@ FloatingWindow {
                             required property int index
 
                             Layout.fillWidth: true
-                            implicitHeight: 40
+                            implicitHeight: 41
                             color: "transparent"
 
+                            // Lines between rows start 9 in from the card's edge (rk-row)
                             Rectangle {
                                 visible: fact.index > 0
-                                width: parent.width
+                                x: 9
+                                width: parent.width - 18
                                 height: 1
                                 color: Theme.border
                             }

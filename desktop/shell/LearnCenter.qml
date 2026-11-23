@@ -161,21 +161,14 @@ FloatingWindow {
                     Layout.fillWidth: true
                     spacing: 2
 
+                    // The kit leaves out how-to sentences; each mission's own
+                    // page says how to check it (robinctl learn check)
                     Text {
                         text: "학습 센터"
-                        color: Theme.fg
+                        color: Theme.head
                         font.family: Theme.font
                         font.pixelSize: 22
-                        font.weight: Font.DemiBold
-                    }
-
-                    Text {
-                        Layout.fillWidth: true
-                        text: "미션은 터미널에서 직접 풀어요. 다 했으면 robinctl learn check로 확인해요."
-                        color: Theme.muted
-                        font.family: Theme.font
-                        font.pixelSize: 13
-                        elide: Text.ElideRight
+                        font.weight: Theme.weightHead
                     }
                 }
 
@@ -186,7 +179,7 @@ FloatingWindow {
                     color: Theme.fgSoft
                     font.family: Theme.font
                     font.pixelSize: 13
-                    font.weight: Font.Medium
+                    font.weight: Theme.weightStrong
                 }
             }
 
@@ -196,9 +189,9 @@ FloatingWindow {
                 Layout.leftMargin: 32
                 Layout.rightMargin: 32
                 Layout.topMargin: 16
-                implicitHeight: 6
-                radius: 3
-                color: Theme.secondary
+                implicitHeight: 3
+                radius: 1.5
+                color: Theme.track
 
                 Rectangle {
                     width: root.missions.length > 0 ? parent.width * root.doneCount / root.missions.length : 0
@@ -249,13 +242,15 @@ FloatingWindow {
                         implicitWidth: 40
                         implicitHeight: 40
                         radius: Theme.radiusMd
-                        color: Theme.accent
+                        color: Theme.secondary
+                        border.width: 1
+                        border.color: Theme.borderStrong
 
                         Icon {
                             anchors.centerIn: parent
                             name: root.nextMission ? "graduation-cap" : "flag"
                             size: 20
-                            color: "#ffffff"
+                            color: Theme.accent
                         }
                     }
 
@@ -268,7 +263,7 @@ FloatingWindow {
                             color: Theme.muted
                             font.family: Theme.font
                             font.pixelSize: 12
-                            font.weight: Font.Medium
+                            font.weight: Theme.weightStrong
                         }
 
                         Text {
@@ -277,7 +272,7 @@ FloatingWindow {
                             color: Theme.fg
                             font.family: Theme.font
                             font.pixelSize: 16
-                            font.weight: Font.DemiBold
+                            font.weight: Theme.weightHead
                             elide: Text.ElideRight
                         }
 
@@ -339,7 +334,7 @@ FloatingWindow {
                                     color: Theme.fg
                                     font.family: Theme.font
                                     font.pixelSize: 14
-                                    font.weight: Font.DemiBold
+                                    font.weight: Theme.weightHead
                                 }
 
                                 Text {
@@ -399,7 +394,7 @@ FloatingWindow {
                                             implicitWidth: 20
                                             implicitHeight: 20
                                             radius: 10
-                                            color: row.modelData.done ? Theme.success : "transparent"
+                                            color: row.modelData.done ? Theme.accentSoft : "transparent"
                                             border.width: row.modelData.done ? 0 : row.isNext ? 2 : 1
                                             border.color: row.isNext ? Theme.accent : Theme.borderStrong
 
@@ -409,7 +404,7 @@ FloatingWindow {
                                                 name: "check"
                                                 size: 13
                                                 stroke: 2.5
-                                                color: Theme.bg
+                                                color: Theme.accent
                                             }
                                         }
 
@@ -427,7 +422,7 @@ FloatingWindow {
                                             color: row.modelData.done ? Theme.muted : Theme.fg
                                             font.family: Theme.font
                                             font.pixelSize: 14
-                                            font.weight: row.isNext ? Font.Medium : Font.Normal
+                                            font.weight: row.isNext ? Theme.weightStrong : Theme.weight
                                             elide: Text.ElideRight
                                         }
 
@@ -488,7 +483,7 @@ FloatingWindow {
                     color: Theme.fg
                     font.family: Theme.font
                     font.pixelSize: 14
-                    font.weight: Font.Medium
+                    font.weight: Theme.weightStrong
                 }
 
                 Text {

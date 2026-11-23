@@ -117,7 +117,7 @@ audit_section() {
 }
 
 audit() {
-  local listeners outside mode key keys=0 bad_keys=() fw="" crypt unit
+  local listeners outside mode key keys=0 bad_keys=() fw="" crypt unit root_src
   AUDIT_WARNINGS=0
   printf '%sRobinOS 보안 점검%s  %s바꾸는 것 없이 살펴보기만 해요%s\n' "${C_BOLD}" "${C_RESET}" "${C_DIM}" "${C_RESET}"
 
@@ -156,12 +156,13 @@ audit() {
   for key in "${HOME}"/.ssh/id_*; do
     [[ -f "${key}" && "${key}" != *.pub ]] || continue
     keys=$((keys + 1))
-    [[ "$(stat -c %a "${key}")" == "600" ]] || bad_keys+=("${key##*/}")
+    # 600 or 400: only the owner may read it (group and other bits empty)
+    (( (8#$(stat -c %a "${key}")) & 8#077 )) && bad_keys+=("${key##*/}")
   done
   if ((keys == 0)); then
     audit_ok "SSH 개인 열쇠가 없어요" "만들려면: ssh-keygen -t ed25519 (미션 38)"
   elif ((${#bad_keys[@]} == 0)); then
-    audit_ok "SSH 개인 열쇠 ${keys}개는 나만 읽을 수 있어요 (600)"
+    audit_ok "SSH 개인 열쇠 ${keys}개는 나만 읽을 수 있어요"
   else
     audit_warn "SSH 개인 열쇠를 다른 사람도 읽을 수 있어요: ${bad_keys[*]}" "chmod 600 ~/.ssh/${bad_keys[0]}"
   fi
@@ -179,18 +180,32 @@ audit() {
   audit_section "방화벽과 디스크"
   for unit in nftables firewalld ufw; do
     if systemctl is-active --quiet "${unit}.service" 2>/dev/null; then
+      # ufw.service is a oneshot that stays "active" after `ufw disable`;
+      # ufw.conf says whether it filters
+      if [[ "${unit}" == ufw ]] && ! grep -qx 'ENABLED=yes' /etc/ufw/ufw.conf 2>/dev/null; then
+        continue
+      fi
       fw="${unit}"
       break
     fi
   done
   if [[ -n "${fw}" ]]; then
-    audit_ok "방화벽(${fw})이 켜져 있어요" "들어오는 연결은 막고 나가는 연결은 그대로예요. 규칙 보기: sudo ufw status verbose"
+    if [[ "${fw}" == ufw ]]; then
+      audit_ok "방화벽(${fw})이 켜져 있어요" "들어오는 연결은 막고 나가는 연결은 그대로예요. 규칙 보기: sudo ufw status verbose"
+    else
+      audit_ok "방화벽(${fw})이 켜져 있어요"
+    fi
   elif [[ -d /run/archiso ]]; then
     audit_ok "라이브 세션이라 방화벽은 꺼져 있어요" "설치하면 처음부터 켜져 있어요"
   else
     audit_warn "방화벽이 꺼져 있어요. 공용 Wi-Fi에서는 같은 네트워크의 누구나 열린 포트에 닿을 수 있어요" "sudo ufw enable"
   fi
-  crypt="$(lsblk -nr -o TYPE 2>/dev/null | grep -c '^crypt$' || true)"
+  # Only the disk under / counts, not an unlocked USB stick
+  root_src="$(findmnt -no SOURCE / 2>/dev/null | sed 's/\[.*//' || true)"
+  crypt=0
+  if [[ "${root_src}" == /dev/* ]]; then
+    crypt="$(lsblk -nso TYPE "${root_src}" 2>/dev/null | grep -c '^crypt$' || true)"
+  fi
   if [[ "${crypt:-0}" -gt 0 ]]; then
     audit_ok "디스크가 암호화돼 있어요 (LUKS)"
   else
@@ -410,7 +425,7 @@ doctor() {
 # throwaway copy of the package databases (checkupdates), so stopping here leaves
 # the system's own databases as they were. Returns 1 when the person stops.
 update_preview() {
-  local mode="$1" db list count bytes metered next
+  local mode="$1" db list count bytes metered next snaps
   have_cmd checkupdates || return 0
   db="$(mktemp -d)"
   list="$(CHECKUPDATES_DB="${db}" checkupdates 2>/dev/null || true)"
@@ -421,7 +436,7 @@ update_preview() {
   fi
   count="$(printf '%s\n' "${list}" | wc -l)"
   bytes="$(pacman -Sup --dbpath "${db}" --logfile /dev/null --print-format '%s' 2>/dev/null \
-    | awk '/^[0-9]+$/ { sum += $1 } END { print sum + 0 }')"
+    | awk '/^[0-9]+$/ { sum += $1 } END { print sum + 0 }')" || bytes=0
   rm -rf "${db}"
 
   printf '%s업데이트 %s개%s' "${C_BOLD}" "${count}" "${C_RESET}"
@@ -433,13 +448,18 @@ update_preview() {
     printf '  커널이 바뀌어요. 업데이트가 끝나면 컴퓨터를 다시 시작해요.\n'
   fi
   if [[ "${mode}" != none ]]; then
-    next="$(snapper --no-dbus -c root list --columns number 2>/dev/null | awk '$1 ~ /^[0-9]+$/ { n = $1 } END { print n + 1 }')"
-    printf '  업데이트 직전에 스냅샷 %s번을 찍어요. 문제가 생기면: sudo robinctl snapshot rollback %s\n' "${next}" "${next}"
+    # Without root snapper may not read the list; then the number is unknown
+    if snaps="$(snapper --no-dbus -c root list --columns number 2>/dev/null)"; then
+      next="$(printf '%s\n' "${snaps}" | awk '$1 ~ /^[0-9]+$/ { n = $1 } END { print n + 1 }')"
+      printf '  업데이트 직전에 스냅샷 %s번을 찍어요. 문제가 생기면: sudo robinctl snapshot rollback %s\n' "${next}" "${next}"
+    else
+      printf '  업데이트 직전에 스냅샷을 찍어요. 문제가 생기면: robinctl snapshot list로 번호를 보고 되돌려요\n'
+    fi
   fi
 
   # NetworkManager's Metered: 1 yes, 3 guessed yes (a phone hotspot)
   metered="$(busctl get-property org.freedesktop.NetworkManager /org/freedesktop/NetworkManager \
-    org.freedesktop.NetworkManager Metered 2>/dev/null | awk '{ print $2 }')"
+    org.freedesktop.NetworkManager Metered 2>/dev/null | awk '{ print $2 }')" || metered=""
   if [[ "${metered}" == 1 || "${metered}" == 3 ]]; then
     printf '%s알림:%s 데이터 요금이 드는 연결(휴대폰 핫스팟 등)이에요.\n' "${C_YELLOW}" "${C_RESET}"
     if [[ -t 0 ]] && [[ "${ASSUME_YES}" != true ]]; then
@@ -1557,7 +1577,8 @@ LEARN_PHOTO_B64="/9j/4AAQSkZJRgABAQEASABIAAD/4QCWRXhpZgAATU0AKgAAAAgABgEOAAIAAAA
 LEARN_HIDDEN_B64="iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEUlEQVR42mMwWJKDFTEMLQkAM5lQAa0bO7kAAAAASUVORK5CYIJQSwMEFAAAAAAA9KJIXeBPjw8PAAAADwAAAAoAAABzZWNyZXQudHh0Uk9CSU4tRk9VTkQtSVQKUEsBAhQDFAAAAAAA9KJIXeBPjw8PAAAADwAAAAoAAAAAAAAAAAAAAIABAAAAAHNlY3JldC50eHRQSwUGAAAAAAEAAQA4AAAANwAAAAAA"
 
 learn_prepare_forensics() {
-  if [[ -f "${LEARN_STATE}/prepared-forensics" ]]; then
+  # The marker alone is not enough: the files may have been deleted since
+  if [[ -f "${LEARN_STATE}/prepared-forensics" && -f "${LEARN_FOR}/report.txt" && -f "${LEARN_FOR}/auth.log" ]]; then
     return
   fi
   mkdir -p "${LEARN_FOR}/hash" "${LEARN_STATE}"
@@ -2276,7 +2297,7 @@ EOF
 # file is picked at random and remembered in the state dir.
 learn_prepare_39() {
   local dir="${LEARN_SEC}/downloads" names=(app-1.2.tar.gz driver-3.0.zip robinos-test.iso) pick name
-  if [[ -f "${LEARN_STATE}/tampered-39" ]]; then
+  if [[ -f "${LEARN_STATE}/tampered-39" && -f "${dir}/SHA256SUMS" ]]; then
     return
   fi
   mkdir -p "${dir}" "${LEARN_STATE}"
@@ -2315,7 +2336,7 @@ LEARN_REV_COUNT_B64="H4sIAAAAAAACA+1ZfUwcxxWf3ePjCIa7FKgPY8Ipcdw4Muc7bCh2QsK3lwh
 
 learn_prepare_reversing() {
   local name
-  if [[ -f "${LEARN_STATE}/prepared-reversing" ]]; then
+  if [[ -f "${LEARN_STATE}/prepared-reversing" && -x "${LEARN_REV}/hello" && -x "${LEARN_REV}/count" ]]; then
     return
   fi
   mkdir -p "${LEARN_REV}" "${LEARN_STATE}"
@@ -2908,8 +2929,11 @@ learn_check_30() {
 # The PID written for mission 31, or nothing
 learn_sleep_pid() {
   local pid
-  pid="$(head -n 1 "${LEARN_SYSTEM}/sleep.pid" 2>/dev/null | tr -d '\r[:space:]')"
-  [[ "${pid}" =~ ^[0-9]+$ ]] && printf '%s' "${pid}"
+  # No file or no number: print nothing and still succeed (callers run under set -e)
+  pid="$(head -n 1 "${LEARN_SYSTEM}/sleep.pid" 2>/dev/null | tr -d '\r[:space:]')" || pid=""
+  if [[ "${pid}" =~ ^[0-9]+$ ]]; then
+    printf '%s' "${pid}"
+  fi
 }
 
 learn_check_31() {

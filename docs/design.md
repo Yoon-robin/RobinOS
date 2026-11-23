@@ -117,6 +117,31 @@
 - **hyprlock / hypridle**: 잠금 화면과 대기 정책
 - **Ptyxis**: 터미널(2026-10-12부터, T-154. foot은 대체용으로 남겨요). **Nautilus**: 파일. **Firefox**: 브라우저.
 
+### 개발 스택 다시 보기 (2026-11-24)
+
+정체성을 "예쁜 UI를 가진 OS"로 바꾸면서 사용자가 개발 스택도 다시 정하라고 했어요("개발스택 다시정하고", 정하는 건 맡김). 화면을 키트대로 그리기에 가장 알맞은지를 기준으로 다시 봤어요.
+
+**정한 것: 바탕은 그대로 두고, 키트를 값의 원본으로 삼아요.**
+
+| 층 | 고른 것 | 이유 |
+|---|---|---|
+| 기반 | Arch Linux (그대로) | Hyprland·Quickshell 최신판, archiso, 스냅샷 복구가 이미 갖춰져 있어요 |
+| 창 관리 | Hyprland 0.56 + Lua 설정 (그대로) | 키트의 창 모서리 14, 1px 테두리, 흐림 없음을 설정만으로 맞춰요 |
+| 셸 | Quickshell (QML) (그대로) | 키트의 부품은 면·1px 선·모서리·짧은 움직임이라 QML `Rectangle`·`Behavior`로 값 그대로 그려져요. GPU 없는 VM에서도 소프트웨어 렌더링으로 같은 모습이에요. 셸 QML 41개 파일, IPC, 부팅 테스트 장면이 모두 여기에 걸려 있어요 |
+| 디자인 값 | `assets/brand/robin-ui/tokens.json` → `desktop/shell/Theme.qml` | 키트가 원본이에요. `scripts/check-kit.py`가 `Theme.qml`의 색이 키트 값인지, 셸 QML이 테마 밖에서 색·굵기·튀는 움직임을 짓지 않는지 확인해요(`wsl-build.ps1 check`) |
+| 웹 (소개 페이지, 문서 사이트를 만든다면) | `robin-ui.css` 그대로 | 키트가 CSS라 옮길 게 없어요 |
+| 설치기 백엔드 | Python (그대로) | 테스트(`test-robin-install.py`)가 있고, 화면은 셸 QML이에요 |
+| 시스템 도구 | bash (`robinctl`) (그대로) | 학습 미션이 쓰는 명령을 그대로 보여 줘요 |
+| 빌드·검증 | 윈도우 PowerShell + WSL Arch + WHPX QEMU (그대로) | 어느 PC에서나 `scripts/wsl-build.ps1 setup` 한 번이면 같은 환경이에요 ([build-environment.md](build-environment.md)) |
+
+**검토하고 고르지 않은 것**
+
+- **AGS/Astal (GTK4 + CSS)**: GTK CSS로 키트 일부를 옮길 수 있지만 웹 CSS와 달라(격자, `inset` 그림자, 변수 지원 차이) 결국 값을 다시 옮겨야 해요. 셸 전체를 다시 써야 하고, 얻는 것이 그보다 작아요.
+- **웹 기술 셸 (Tauri·WebKit을 layer-shell로)**: 키트 CSS를 그대로 쓸 수 있는 게 가장 큰 장점이에요. 하지만 바·독·패널마다 웹 엔진이 떠서 메모리를 많이 쓰고, GPU 없는 VM에서 느려요. layer-shell 지원도 아직 덜 익었어요.
+- **KDE Plasma나 GNOME에 테마 입히기**: 색은 맞출 수 있어도 키트의 두 문법(메뉴와 표시기), 왼쪽 막대, 옆 기둥 구조를 따라 하기 어렵고, 지금까지 직접 만든 화면(설치기, 학습 센터, 설정)을 버려야 해요.
+
+다시 볼 때: Quickshell이 개발을 멈추거나, 웹 셸이 VM 소프트웨어 렌더링에서도 가벼워지면요.
+
 ### 윈도우 사용자 배려
 
 | 윈도우 | RobinOS |

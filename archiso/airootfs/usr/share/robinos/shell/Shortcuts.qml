@@ -173,7 +173,7 @@ PanelWindow {
                     color: Theme.fg
                     font.family: Theme.font
                     font.pixelSize: 20
-                    font.weight: Font.DemiBold
+                    font.weight: Theme.weightHead
                 }
 
                 Text {
@@ -213,7 +213,7 @@ PanelWindow {
                             color: Theme.fg
                             font.family: Theme.font
                             font.pixelSize: 14
-                            font.weight: Font.DemiBold
+                            font.weight: Theme.weightHead
                         }
 
                         Repeater {

@@ -1,25 +1,25 @@
 import QtQuick
 
-// RobinOS login screen (SDDM, Qt 6). Matches the shell: zinc colors, Geist,
+// RobinOS login screen (SDDM, Qt 6). Matches the shell: robin-ui V5 colors, Pretendard,
 // dot-grid wallpaper, a centered card. Colors follow desktop/shell/Theme.qml.
 Rectangle {
     id: root
 
     width: 1920
     height: 1080
-    color: "#09090b"
+    color: "#0a0e11"
 
-    readonly property color fg: "#fafafa"
-    readonly property color fgSoft: "#d4d4d8"
-    readonly property color muted: "#a1a1aa"
-    readonly property color subtle: "#71717a"
+    readonly property color fg: "#f0f0f0"
+    readonly property color fgSoft: "#e6e7e9"
+    readonly property color muted: "#8a8e94"
+    readonly property color subtle: "#7d8187"
     readonly property color surface: Qt.rgba(18 / 255, 18 / 255, 20 / 255, 0.88)
-    readonly property color secondary: "#27272a"
+    readonly property color secondary: "#222629"
     readonly property color border: Qt.rgba(1, 1, 1, 0.10)
     readonly property color input: Qt.rgba(1, 1, 1, 0.15)
-    readonly property color accent: config.accent || "#e5484d"
-    readonly property color destructive: "#f87171"
-    readonly property string font: config.typeface || "Geist"
+    readonly property color accent: config.accent || "#4b7dfe"
+    readonly property color destructive: "#e5475a"
+    readonly property string font: config.typeface || "Pretendard Variable"
 
     property var sessionNames: []
     property var userNames: []
@@ -134,7 +134,7 @@ Rectangle {
                 color: root.fg
                 font.family: root.font
                 font.pixelSize: 96
-                font.weight: Font.Medium
+                font.weight: 550
                 font.letterSpacing: -4
             }
 
@@ -144,7 +144,7 @@ Rectangle {
                 color: root.muted
                 font.family: root.font
                 font.pixelSize: 16
-                font.weight: Font.Medium
+                font.weight: 550
             }
 
             Timer {
@@ -201,7 +201,7 @@ Rectangle {
                             color: root.fg
                             font.family: root.font
                             font.pixelSize: 22
-                            font.weight: Font.DemiBold
+                            font.weight: 650
                         }
                     }
 
@@ -212,7 +212,7 @@ Rectangle {
                         color: root.fg
                         font.family: root.font
                         font.pixelSize: 18
-                        font.weight: Font.DemiBold
+                        font.weight: 650
                     }
                 }
 
@@ -227,7 +227,7 @@ Rectangle {
                         color: root.fg
                         font.family: root.font
                         font.pixelSize: 13
-                        font.weight: Font.Medium
+                        font.weight: 550
                     }
 
                     Rectangle {
@@ -265,7 +265,7 @@ Rectangle {
                         color: root.fg
                         font.family: root.font
                         font.pixelSize: 13
-                        font.weight: Font.Medium
+                        font.weight: 550
                     }
 
                     Rectangle {
@@ -339,7 +339,7 @@ Rectangle {
                     width: parent.width
                     height: 40
                     radius: 8
-                    color: loginMouse.pressed ? "#d4d4d8" : loginMouse.containsMouse ? "#e4e4e7" : root.fg
+                    color: loginMouse.pressed ? "#e6e7e9" : loginMouse.containsMouse ? "#e6e7e9" : root.fg
 
                     Row {
                         anchors.centerIn: parent
@@ -348,16 +348,16 @@ Rectangle {
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             text: "로그인"
-                            color: "#18181b"
+                            color: "#0f1115"
                             font.family: root.font
                             font.pixelSize: 14
-                            font.weight: Font.Medium
+                            font.weight: 550
                         }
 
                         Glyph {
                             anchors.verticalCenter: parent.verticalCenter
                             name: "arrow-right"
-                            color: "#18181b"
+                            color: "#0f1115"
                         }
                     }
 
@@ -458,7 +458,8 @@ Rectangle {
             width: 24
             height: 24
             radius: 7
-            color: root.accent
+            // The robin-ui mark: the near-black tile under the white robin
+            color: "#060a14"
 
             // The white robin glyph (assets/brand/robinos-glyph.svg)
             Image {
@@ -477,7 +478,7 @@ Rectangle {
             color: root.fg
             font.family: root.font
             font.pixelSize: 14
-            font.weight: Font.DemiBold
+            font.weight: 650
         }
     }
 

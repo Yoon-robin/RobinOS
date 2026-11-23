@@ -24,12 +24,13 @@ compositor_alive() {
   [[ -S "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hypr/${HYPRLAND_INSTANCE_SIGNATURE:-}/.socket.sock" ]]
 }
 
-# "1280x800@1" for a monitor in `hyprctl monitors`
+# "1280x800@1" for a monitor in `hyprctl monitors`. hyprctl writes the scale as
+# "1.00"; adding 0 makes it the same number fit() builds ("1", "1.25")
 current_mode() {
   hyprctl monitors | awk -v name="$1" '
     $1 == "Monitor" { on = ($2 == name) }
     on && /^\t[0-9]+x[0-9]+@/ { split($1, size, "@"); mode = size[1] }
-    on && /^\tscale:/ { print mode "@" $2; exit }'
+    on && /^\tscale:/ { print mode "@" ($2 + 0); exit }'
 }
 
 # The scale picked in quick settings ("화면 배율", ShellState.setScale), if any
@@ -49,7 +50,7 @@ fit() {
     (( BASH_REMATCH[1] >= 3200 )) && scale=2
     saved="$(saved_scale "${name}")"
     [[ -n "${saved}" ]] && scale="${saved}"
-    [[ "$(current_mode "${name}")" == "${mode}@${scale}" ]] && continue
+    [[ "$(current_mode "${name}")" == "${mode}@$(awk -v s="${scale}" 'BEGIN { print s + 0 }')" ]] && continue
     hyprctl eval "hl.monitor({ output = \"${name}\", mode = \"${mode}\", position = \"auto\", scale = ${scale} })" >/dev/null
   done < <(screens)
 }

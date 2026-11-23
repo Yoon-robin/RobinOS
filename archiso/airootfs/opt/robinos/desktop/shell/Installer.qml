@@ -33,7 +33,10 @@ FloatingWindow {
 
     readonly property bool userValid: /^[a-z_][a-z0-9_-]{0,31}$/.test(userField.text) && userField.text !== "root"
     readonly property bool hostValid: /^[a-zA-Z0-9][a-zA-Z0-9-]{0,62}$/.test(hostField.text)
-    readonly property bool passwordValid: passwordField.text.length > 0 && passwordField.text === password2Field.text
+    // GRUB asks for the disk password before any input method: with encryption
+    // only what a US keyboard types (printable ASCII) can unlock the disk
+    readonly property bool passwordTypeable: !encrypt || /^[\x20-\x7e]*$/.test(passwordField.text)
+    readonly property bool passwordValid: passwordField.text.length > 0 && passwordField.text === password2Field.text && passwordTypeable
 
     readonly property bool canNext: {
         switch (step) {
@@ -241,7 +244,7 @@ FloatingWindow {
                         color: Theme.muted
                         font.family: Theme.font
                         font.pixelSize: 12
-                        font.weight: Font.Medium
+                        font.weight: Theme.weightStrong
                     }
 
                     Text {
@@ -250,7 +253,7 @@ FloatingWindow {
                         color: Theme.fg
                         font.family: Theme.font
                         font.pixelSize: 22
-                        font.weight: Font.DemiBold
+                        font.weight: Theme.weightHead
                         elide: Text.ElideRight
                     }
                 }
@@ -324,7 +327,7 @@ FloatingWindow {
                                     color: check.modelData.ok ? Theme.fg : Theme.destructive
                                     font.family: Theme.font
                                     font.pixelSize: 14
-                                    font.weight: Font.Medium
+                                    font.weight: Theme.weightStrong
                                 }
 
                                 Text {
@@ -378,9 +381,9 @@ FloatingWindow {
                             Layout.fillWidth: true
                             implicitHeight: 60
                             radius: Theme.radius
-                            color: diskMouse.containsMouse ? Theme.hover : "transparent"
-                            border.width: selected ? 2 : 1
-                            border.color: selected ? Theme.fg : Theme.border
+                            color: selected ? Theme.chosen : diskMouse.containsMouse ? Theme.hover : "transparent"
+                            border.width: 1
+                            border.color: selected ? Theme.borderStrong : Theme.border
 
                             Accessible.role: Accessible.RadioButton
                             Accessible.name: root.diskLabel(modelData)
@@ -420,7 +423,7 @@ FloatingWindow {
                                         color: Theme.fg
                                         font.family: Theme.font
                                         font.pixelSize: 14
-                                        font.weight: Font.Medium
+                                        font.weight: Theme.weightStrong
                                     }
 
                                     Text {
@@ -476,9 +479,9 @@ FloatingWindow {
                             Layout.fillWidth: true
                             implicitHeight: modeColumn.implicitHeight + 24
                             radius: Theme.radius
-                            color: modeMouse.containsMouse && modelData.enabled ? Theme.hover : "transparent"
+                            color: selected ? Theme.chosen : modeMouse.containsMouse && modelData.enabled ? Theme.hover : "transparent"
                             border.width: 1
-                            border.color: selected ? Theme.fg : Theme.border
+                            border.color: selected ? Theme.borderStrong : Theme.border
                             opacity: modelData.enabled ? 1 : 0.55
 
                             Accessible.role: Accessible.RadioButton
@@ -541,7 +544,7 @@ FloatingWindow {
                                         color: Theme.fg
                                         font.family: Theme.font
                                         font.pixelSize: 14
-                                        font.weight: Font.Medium
+                                        font.weight: Theme.weightStrong
                                     }
 
                                     Text {
@@ -587,8 +590,8 @@ FloatingWindow {
                         wrapMode: Text.WordWrap
                     }
 
-                    Text { text: "사용자 이름"; color: Theme.fg; font.family: Theme.font; font.pixelSize: 13; font.weight: Font.Medium }
-                    Text { text: "컴퓨터 이름"; color: Theme.fg; font.family: Theme.font; font.pixelSize: 13; font.weight: Font.Medium }
+                    Text { text: "사용자 이름"; color: Theme.fg; font.family: Theme.font; font.pixelSize: 13; font.weight: Theme.weightStrong }
+                    Text { text: "컴퓨터 이름"; color: Theme.fg; font.family: Theme.font; font.pixelSize: 13; font.weight: Theme.weightStrong }
 
                     InputField {
                         id: userField
@@ -623,8 +626,8 @@ FloatingWindow {
                         font.pixelSize: 12
                     }
 
-                    Text { Layout.topMargin: 10; text: "비밀번호"; color: Theme.fg; font.family: Theme.font; font.pixelSize: 13; font.weight: Font.Medium }
-                    Text { Layout.topMargin: 10; text: "비밀번호 확인"; color: Theme.fg; font.family: Theme.font; font.pixelSize: 13; font.weight: Font.Medium }
+                    Text { Layout.topMargin: 10; text: "비밀번호"; color: Theme.fg; font.family: Theme.font; font.pixelSize: 13; font.weight: Theme.weightStrong }
+                    Text { Layout.topMargin: 10; text: "비밀번호 확인"; color: Theme.fg; font.family: Theme.font; font.pixelSize: 13; font.weight: Theme.weightStrong }
 
                     InputField {
                         id: passwordField
@@ -646,7 +649,7 @@ FloatingWindow {
                     Text {
                         Layout.columnSpan: 2
                         Layout.fillWidth: true
-                        text: password2Field.text !== "" && password2Field.text !== passwordField.text ? "두 비밀번호가 달라요" : ""
+                        text: !root.passwordTypeable ? "암호화할 때는 영어, 숫자, 기호만 써요" : password2Field.text !== "" && password2Field.text !== passwordField.text ? "두 비밀번호가 달라요" : ""
                         color: Theme.destructive
                         font.family: Theme.font
                         font.pixelSize: 12
@@ -668,7 +671,7 @@ FloatingWindow {
                                 color: Theme.fg
                                 font.family: Theme.font
                                 font.pixelSize: 13
-                                font.weight: Font.Medium
+                                font.weight: Theme.weightStrong
                             }
 
                             Text {
@@ -770,7 +773,7 @@ FloatingWindow {
                             color: Theme.fg
                             font.family: Theme.font
                             font.pixelSize: 14
-                            font.weight: Font.Medium
+                            font.weight: Theme.weightStrong
                             elide: Text.ElideRight
                         }
 
@@ -880,7 +883,7 @@ FloatingWindow {
                                 color: Theme.fg
                                 font.family: Theme.font
                                 font.pixelSize: 14
-                                font.weight: Font.DemiBold
+                                font.weight: Theme.weightHead
                             }
 
                             Text {
@@ -1051,7 +1054,7 @@ FloatingWindow {
                 color: Theme.destructive
                 font.family: Theme.font
                 font.pixelSize: 13
-                font.weight: Font.Medium
+                font.weight: Theme.weightStrong
                 wrapMode: Text.WordWrap
             }
         }

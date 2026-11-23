@@ -74,7 +74,7 @@ FloatingWindow {
                         color: Theme.fg
                         font.family: Theme.font
                         font.pixelSize: 17
-                        font.weight: Font.DemiBold
+                        font.weight: Theme.weightHead
                     }
 
                     Text {
@@ -104,7 +104,7 @@ FloatingWindow {
                 color: Theme.muted
                 font.family: Theme.font
                 font.pixelSize: 12
-                font.weight: Font.Medium
+                font.weight: Theme.weightStrong
             }
 
             Repeater {
@@ -154,7 +154,7 @@ FloatingWindow {
                                 color: Theme.fg
                                 font.family: Theme.font
                                 font.pixelSize: 14
-                                font.weight: Font.Medium
+                                font.weight: Theme.weightStrong
                             }
 
                             Text {

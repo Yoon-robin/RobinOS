@@ -71,7 +71,7 @@ Rectangle {
                 color: Theme.fg
                 font.family: Theme.font
                 font.pixelSize: 12
-                font.weight: root.chosen ? Font.DemiBold : Font.Normal
+                font.weight: root.chosen ? Theme.weightHead : Theme.weight
                 elide: Text.ElideRight
             }
         }

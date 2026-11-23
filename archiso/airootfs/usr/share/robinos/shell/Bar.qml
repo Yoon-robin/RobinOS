@@ -114,7 +114,7 @@ PanelWindow {
                 color: Theme.fg
                 font.family: Theme.font
                 font.pixelSize: 13
-                font.weight: Font.DemiBold
+                font.weight: Theme.weightHead
             }
         }
 
@@ -170,7 +170,7 @@ PanelWindow {
             color: Theme.muted
             font.family: Theme.font
             font.pixelSize: 13
-            font.weight: Font.Medium
+            font.weight: Theme.weightStrong
             elide: Text.ElideRight
         }
     }
@@ -187,7 +187,7 @@ PanelWindow {
             color: Theme.fg
             font.family: Theme.font
             font.pixelSize: 13
-            font.weight: Font.Medium
+            font.weight: Theme.weightStrong
         }
     }
 
@@ -201,21 +201,21 @@ PanelWindow {
         BarButton {
             visible: ShellState.bootedSnapshot !== ""
             label: "스냅샷 " + ShellState.bootedSnapshot + "번으로 켠 임시 상태, 눌러서 되돌리기"
-            color: Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.16)
+            tone: "note"
             onClicked: ShellState.showSnapshotNotice()
 
             Icon {
                 name: "history"
-                size: 14
-                color: Theme.fg
+                size: 13
+                color: Theme.note
             }
 
             Text {
                 text: "스냅샷 " + ShellState.bootedSnapshot + " · 임시"
-                color: Theme.fg
+                color: Theme.note
                 font.family: Theme.font
-                font.pixelSize: 12
-                font.weight: Font.Medium
+                font.pixelSize: 11
+                font.weight: Theme.weightStrong
             }
         }
 
@@ -223,22 +223,15 @@ PanelWindow {
         BarButton {
             visible: ShellState.recording
             label: "화면 녹화 중, 눌러서 멈추기"
-            color: Qt.rgba(Theme.destructive.r, Theme.destructive.g, Theme.destructive.b, 0.16)
+            tone: "alarm"
             onClicked: ShellState.toggleRecording()
-
-            Rectangle {
-                implicitWidth: 8
-                implicitHeight: 8
-                radius: 4
-                color: Theme.destructive
-            }
 
             Text {
                 text: "녹화 중"
-                color: Theme.fg
+                color: Theme.destructive
                 font.family: Theme.font
-                font.pixelSize: 12
-                font.weight: Font.Medium
+                font.pixelSize: 11
+                font.weight: Theme.weightStrong
             }
         }
 
@@ -315,7 +308,7 @@ PanelWindow {
                     color: Theme.fgSoft
                     font.family: Theme.font
                     font.pixelSize: 11
-                    font.weight: Font.DemiBold
+                    font.weight: Theme.weightHead
                 }
             }
 

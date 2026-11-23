@@ -9,7 +9,7 @@ Rectangle {
     implicitWidth: Math.max(label.implicitWidth + 12, 20)
     implicitHeight: 20
     radius: 5
-    color: Theme.raised
+    color: "transparent"
     border.width: 1
     border.color: Theme.borderStrong
 

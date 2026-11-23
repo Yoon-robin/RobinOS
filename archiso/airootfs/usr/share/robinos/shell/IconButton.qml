@@ -1,7 +1,7 @@
 import QtQuick
 import "keys.js" as Keyboard
 
-// shadcn "ghost" / "outline" icon button. Tab reaches it; Enter or Space presses it.
+// robin-ui icon button: bare (rk-btn--bare) or outline (the control face in its line). Tab reaches it; Enter or Space presses it.
 Rectangle {
     id: root
 
@@ -17,9 +17,10 @@ Rectangle {
     implicitWidth: 28
     implicitHeight: 28
     radius: Theme.radiusSm
-    color: active ? Theme.secondary : mouse.containsMouse ? Theme.hover : "transparent"
+    color: active ? Theme.chosen : outline ? (mouse.containsMouse ? Theme.secondaryHover : Theme.secondary)
+                                  : mouse.containsMouse ? Theme.hover : "transparent"
     border.width: outline ? 1 : 0
-    border.color: Theme.border
+    border.color: mouse.containsMouse ? Theme.controlLineHover : Theme.borderStrong
 
     Accessible.role: Accessible.Button
     Accessible.name: label

@@ -297,16 +297,18 @@ PanelWindow {
         width: tip.implicitWidth + 16
         height: 24
         radius: Theme.radiusSm
-        color: Theme.primary
+        color: Theme.panel
+        border.width: 1
+        border.color: Theme.panelBorder
 
         Text {
             id: tip
             anchors.centerIn: parent
             text: dock.tipText
-            color: Theme.primaryFg
+            color: Theme.head
             font.family: Theme.font
             font.pixelSize: 12
-            font.weight: Font.Medium
+            font.weight: Theme.weightStrong
         }
     }
 

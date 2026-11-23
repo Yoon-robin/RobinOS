@@ -2,7 +2,7 @@
 """Draws the RobinOS robin (assets/brand/robinos-mark.svg without its square) as
 terminal art for fastfetch (desktop/fastfetch/robinos-logo.ansi): half-block
 characters, two pixels per cell. White parts use the terminal's own foreground
-color, so the robin stays visible in light mode; grey and Robin red are fixed.
+color, so the robin stays visible in light mode; grey and the kit blue are fixed.
 
     python3 assets/brand/build-terminal-logo.py desktop/fastfetch/robinos-logo.ansi   (needs rsvg-convert)
 """
@@ -18,10 +18,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 WIDTH = 32  # pixels = terminal columns
 SCALE = 8  # rendered this many times larger; each pixel takes its block's most common color
 PALETTE = {  # name -> RGB of the mark's colors
-    "fg": (250, 250, 250), "wing": (228, 228, 231), "grey": (161, 161, 170),
-    "red": (229, 72, 77), "eye": (9, 9, 11),
+    "fg": (240, 240, 240), "wing": (230, 231, 233), "grey": (138, 142, 148),
+    "red": (75, 125, 254), "eye": (10, 14, 17),
 }
-FIXED = {"grey": (161, 161, 170), "red": (229, 72, 77)}
+# "red" is the prompt's colour; since robin-ui V5 (2026-11-24) it is the kit blue
+FIXED = {"grey": (138, 142, 148), "red": (75, 125, 254)}
 
 
 def robin_svg():

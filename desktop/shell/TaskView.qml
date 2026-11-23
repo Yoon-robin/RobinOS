@@ -136,7 +136,7 @@ PanelWindow {
                     color: "white"
                     font.family: Theme.font
                     font.pixelSize: 20
-                    font.weight: Font.DemiBold
+                    font.weight: Theme.weightHead
                 }
 
                 ActionButton {
@@ -171,7 +171,7 @@ PanelWindow {
                         opacity: 0.85
                         font.family: Theme.font
                         font.pixelSize: 13
-                        font.weight: Font.Medium
+                        font.weight: Theme.weightStrong
                     }
 
                     Rectangle {

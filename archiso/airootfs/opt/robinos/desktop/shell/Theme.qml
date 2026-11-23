@@ -16,6 +16,8 @@ Singleton {
 
     // The one colour: on, chosen, link, progress, the window border
     readonly property color accent: dark ? "#4b7dfe" : "#3566e8"
+    // The mark's tile (rk-mark): the same near-black in both themes
+    readonly property color markBg: "#060a14"
     readonly property color accentSoft: dark ? Qt.rgba(75 / 255, 125 / 255, 254 / 255, 0.14) : Qt.rgba(53 / 255, 102 / 255, 232 / 255, 0.12)
 
     // Faces (menu grammar): side < page < card, split by 1px lines
@@ -26,7 +28,12 @@ Singleton {
     readonly property color raised: dark ? "#14151c" : "#f1f1f2"
     readonly property color secondary: dark ? "#14151c" : "#f1f1f2"
     readonly property color secondaryHover: dark ? "#1b1d25" : "#e9ecf0"
+    readonly property color controlLineHover: dark ? "#32343b" : "#c6cad2"
+    readonly property color controlPress: dark ? "#20222b" : "#dfe3e9"
     readonly property color chosen: dark ? "#222629" : "#dfe3e9"
+    // The switch: a dark groove with a 1px line when off, blue with a white knob when on
+    readonly property color switchOff: dark ? "#030913" : "#dedee3"
+    readonly property color switchKnob: dark ? "#798895" : "#ffffff"
     readonly property color hover: dark ? "#15181b" : "#e9ecf0"
     readonly property color track: dark ? "#1c1e24" : "#e3e6eb"
 
@@ -83,7 +90,9 @@ Singleton {
 
     readonly property int barHeight: 36
     readonly property string font: "Pretendard Variable"
-    readonly property string mono: "Geist Mono"
+    // The kit's code font; Cascadia Mono is Cascadia Code without ligatures,
+    // so ">>" and "->" in mission commands look the way they are typed
+    readonly property string mono: "Cascadia Mono"
     // Pretendard at 450 / 550 / 650; never thinner
     readonly property int weight: 450
     readonly property int weightStrong: 550

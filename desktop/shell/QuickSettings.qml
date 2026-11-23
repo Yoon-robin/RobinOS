@@ -85,12 +85,12 @@ PanelWindow {
         border.color: Theme.panelBorder
         opacity: root.revealed ? 1 : 0
         focus: true
-        // Grows out of its corner under the bar and settles, like a spring (T-152)
+        // Comes in by 4px under the bar and fades, short and without overshoot (robin-ui V5)
         transformOrigin: Item.TopRight
-        scale: root.revealed ? 1 : 0.96
+        scale: root.revealed ? 1 : 0.985
 
         transform: Translate {
-            y: root.revealed ? 0 : -6
+            y: root.revealed ? 0 : -4
 
             Behavior on y {
                 NumberAnimation { duration: Theme.dur; easing.type: Easing.OutCubic }
@@ -102,7 +102,7 @@ PanelWindow {
         }
 
         Behavior on scale {
-            NumberAnimation { duration: Theme.durSpring; easing.type: Easing.OutBack; easing.overshoot: 0.9 }
+            NumberAnimation { duration: Theme.durSpring; easing.type: Easing.OutQuint }
         }
 
         layer.enabled: !Theme.lowPower
@@ -147,7 +147,7 @@ PanelWindow {
                         color: Theme.fg
                         font.family: Theme.font
                         font.pixelSize: 13
-                        font.weight: Font.DemiBold
+                        font.weight: Theme.weightHead
                     }
                 }
 
@@ -160,7 +160,7 @@ PanelWindow {
                         color: Theme.fg
                         font.family: Theme.font
                         font.pixelSize: 14
-                        font.weight: Font.DemiBold
+                        font.weight: Theme.weightHead
                     }
 
                     Text {
@@ -216,8 +216,12 @@ PanelWindow {
                         Layout.fillWidth: true
                         implicitHeight: 34
                         radius: Theme.radiusMd
-                        color: danger ? (powerMouse.containsMouse ? "#b91c1c" : Theme.destructiveSolid)
+                        // Power off cannot be undone: a red line and red words (rk-btn--danger)
+                        color: danger ? (powerMouse.containsMouse ? Theme.destructiveSoft : "transparent")
                                       : (powerMouse.containsMouse ? Theme.tileHover : Theme.tile)
+                        border.width: 1
+                        border.color: danger ? Theme.destructiveSolid
+                                             : powerMouse.containsMouse ? Theme.controlLineHover : Theme.borderStrong
 
                         Accessible.role: Accessible.Button
                         Accessible.name: modelData.title
@@ -251,15 +255,15 @@ PanelWindow {
                             Icon {
                                 name: powerButton.modelData.icon
                                 size: 14
-                                color: powerButton.danger ? "#ffffff" : Theme.fg
+                                color: powerButton.danger ? Theme.destructive : Theme.fg
                             }
 
                             Text {
                                 text: powerButton.modelData.title
-                                color: powerButton.danger ? "#ffffff" : Theme.fg
+                                color: powerButton.danger ? Theme.destructive : Theme.fg
                                 font.family: Theme.font
                                 font.pixelSize: 12
-                                font.weight: Font.Medium
+                                font.weight: Theme.weightStrong
                             }
                         }
 
@@ -283,6 +287,8 @@ PanelWindow {
                 implicitHeight: 40
                 radius: Theme.radiusMd
                 color: updateMouse.containsMouse ? Theme.tileHover : Theme.tile
+                border.width: 1
+                border.color: updateMouse.containsMouse ? Theme.controlLineHover : Theme.borderStrong
 
                 Accessible.role: Accessible.Button
                 Accessible.name: "업데이트 " + ShellState.updateCount + "개 설치하기"
@@ -321,7 +327,7 @@ PanelWindow {
                         color: Theme.fg
                         font.family: Theme.font
                         font.pixelSize: 13
-                        font.weight: Font.Medium
+                        font.weight: Theme.weightStrong
                     }
 
                     Text {
@@ -450,7 +456,7 @@ PanelWindow {
                     color: Theme.muted
                     font.family: Theme.font
                     font.pixelSize: 12
-                    font.weight: Font.Medium
+                    font.weight: Theme.weightStrong
                 }
 
                 Repeater {
@@ -470,7 +476,7 @@ PanelWindow {
                         Layout.fillWidth: true
                         implicitHeight: 30
                         radius: Theme.radiusMd
-                        color: selected ? Theme.primary : (modeMouse.containsMouse ? Theme.tileHover : Theme.tile)
+                        color: selected ? Theme.chosen : (modeMouse.containsMouse ? Theme.tileHover : Theme.tile)
 
                         Accessible.role: Accessible.RadioButton
                         Accessible.name: "전원 모드 " + modelData.title
@@ -495,10 +501,10 @@ PanelWindow {
                         Text {
                             anchors.centerIn: parent
                             text: modeButton.modelData.title
-                            color: modeButton.selected ? Theme.primaryFg : Theme.fg
+                            color: modeButton.selected ? Theme.head : Theme.muted
                             font.family: Theme.font
                             font.pixelSize: 12
-                            font.weight: Font.Medium
+                            font.weight: Theme.weightStrong
                         }
 
                         MouseArea {
@@ -524,7 +530,7 @@ PanelWindow {
                     color: Theme.muted
                     font.family: Theme.font
                     font.pixelSize: 12
-                    font.weight: Font.Medium
+                    font.weight: Theme.weightStrong
                 }
 
                 Repeater {
@@ -540,7 +546,7 @@ PanelWindow {
                         Layout.fillWidth: true
                         implicitHeight: 30
                         radius: Theme.radiusMd
-                        color: selected ? Theme.primary : (scaleMouse.containsMouse ? Theme.tileHover : Theme.tile)
+                        color: selected ? Theme.chosen : (scaleMouse.containsMouse ? Theme.tileHover : Theme.tile)
 
                         Accessible.role: Accessible.RadioButton
                         Accessible.name: "화면 배율 " + Math.round(modelData * 100) + "%"
@@ -561,10 +567,10 @@ PanelWindow {
                         Text {
                             anchors.centerIn: parent
                             text: Math.round(scaleButton.modelData * 100) + "%"
-                            color: scaleButton.selected ? Theme.primaryFg : Theme.fg
+                            color: scaleButton.selected ? Theme.head : Theme.muted
                             font.family: Theme.font
                             font.pixelSize: 12
-                            font.weight: Font.Medium
+                            font.weight: Theme.weightStrong
                         }
 
                         MouseArea {
@@ -677,7 +683,7 @@ PanelWindow {
                             color: Theme.fgSoft
                             font.family: Theme.font
                             font.pixelSize: 12
-                            font.weight: Font.Medium
+                            font.weight: Theme.weightStrong
                         }
                     }
                 }

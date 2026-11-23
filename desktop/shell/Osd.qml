@@ -100,7 +100,7 @@ PanelWindow {
                 color: Theme.muted
                 font.family: Theme.font
                 font.pixelSize: 12
-                font.weight: Font.Medium
+                font.weight: Theme.weightStrong
             }
         }
     }

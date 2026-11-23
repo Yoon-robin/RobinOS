@@ -1,6 +1,7 @@
 import QtQuick
 
-// shadcn-style slider: thin track, primary range, hollow round thumb. value is 0..1.
+// robin-ui slider (rk-slider): a 3px groove, the blue up to the knob, a white 11px
+// knob. value is 0..1.
 // Tab reaches it; arrow keys move it by 5%, Home and End to the ends.
 Item {
     id: root
@@ -13,7 +14,7 @@ Item {
 
     signal moved(real value)
 
-    implicitHeight: 20
+    implicitHeight: 15
 
     Accessible.role: Accessible.Slider
     Accessible.name: label
@@ -41,15 +42,15 @@ Item {
         id: track
         anchors.verticalCenter: parent.verticalCenter
         width: parent.width
-        height: 6
-        radius: 3
-        color: Theme.secondary
+        height: 3
+        radius: 1.5
+        color: Theme.track
 
         Rectangle {
             width: thumb.x + thumb.width / 2
             height: parent.height
-            radius: 3
-            color: Theme.primary
+            radius: 1.5
+            color: Theme.accent
         }
     }
 
@@ -57,12 +58,12 @@ Item {
         id: thumb
         anchors.verticalCenter: parent.verticalCenter
         x: root.shown * (root.width - width)
-        width: 16
-        height: 16
-        radius: 8
-        color: Theme.bg
-        border.width: 1.5
-        border.color: Theme.primary
+        width: 11
+        height: 11
+        radius: 5.5
+        color: "#ffffff"
+        border.width: 1
+        border.color: Qt.rgba(0, 0, 0, 0.10)
 
         // The thumb shows the slider's keyboard focus
         Rectangle {

@@ -2,7 +2,8 @@ import QtQuick
 import QtQuick.Layouts
 import "keys.js" as Keyboard
 
-// Quick settings tile: primary (white) when on, secondary when off.
+// Quick settings tile: the control face in its line; on is the blue's soft face with
+// a blue icon (the blue fill is kept for a screen's one main action).
 // With hasDetail, a chevron on the right opens more settings.
 // Tab reaches the tile and its chevron; Enter or Space presses them.
 Rectangle {
@@ -19,7 +20,10 @@ Rectangle {
 
     implicitHeight: 58
     radius: Theme.radiusTile
-    color: checked ? Theme.primary : mouse.containsMouse ? Theme.tileHover : Theme.tile
+    color: checked ? Theme.accentSoft : mouse.containsMouse ? Theme.tileHover : Theme.tile
+    border.width: 1
+    border.color: checked ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.45)
+                          : mouse.containsMouse ? Theme.controlLineHover : Theme.borderStrong
     opacity: enabled ? 1 : 0.5
 
     Accessible.role: Accessible.CheckBox
@@ -58,7 +62,7 @@ Rectangle {
 
         Icon {
             name: root.icon
-            color: root.checked ? Theme.primaryFg : Theme.fg
+            color: root.checked ? Theme.accent : Theme.muted
         }
 
         ColumnLayout {
@@ -68,17 +72,17 @@ Rectangle {
             Text {
                 Layout.fillWidth: true
                 text: root.title
-                color: root.checked ? Theme.primaryFg : Theme.fg
+                color: Theme.head
                 font.family: Theme.font
                 font.pixelSize: 13
-                font.weight: Font.Medium
+                font.weight: Theme.weightStrong
                 elide: Text.ElideRight
             }
 
             Text {
                 Layout.fillWidth: true
                 text: root.subtitle
-                color: root.checked ? Theme.primaryMuted : Theme.muted
+                color: Theme.muted
                 font.family: Theme.font
                 font.pixelSize: 12
                 elide: Text.ElideRight
@@ -92,7 +96,7 @@ Rectangle {
             Layout.preferredWidth: 26
             Layout.preferredHeight: 44
             radius: Theme.radiusSm
-            color: detailMouse.containsMouse ? (root.checked ? Qt.rgba(0, 0, 0, 0.08) : Theme.hover) : "transparent"
+            color: detailMouse.containsMouse ? Theme.hover : "transparent"
 
             Accessible.role: Accessible.Button
             Accessible.name: root.title + " 설정"
@@ -114,7 +118,7 @@ Rectangle {
                 anchors.centerIn: parent
                 name: "chevron-right"
                 size: 14
-                color: root.checked ? Theme.primaryFg : Theme.muted
+                color: Theme.muted
             }
 
             MouseArea {
