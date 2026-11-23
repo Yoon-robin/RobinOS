@@ -126,10 +126,16 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 비교(VM 없이, WSL의 화면 없는 sway에서 VTE 창을 띄워 `grim`으로): 그대로는 벌어지고, 1.15배·1.2배는 붙어 보이고 잘리지 않아요. 1.15배를 골랐어요(라틴 글자처럼 옆 여백이 조금 남아요). foot는 원래 `size=12.5`로 키우고 있어서, 그대로 두면 두 번 커져 글자 위가 잘려요. Qt(셸)는 이 규칙을 안 따라서 셸 화면은 그대로예요
 - 완료 기준: 부팅 테스트 터미널 장면(`31-terminal-learn.png`)에서 한글이 붙어 보이고, 영어 코드는 Cascadia 그대로
 
-### T-176 반쪽 작업 끝내기 (진행 중 20개)
+### T-184 윈도우 프로그램 안내의 남은 것
+- 상태: 할 일 (2026-11-24, T-159에서 떼어 냄)
+- 할 것: ① 학습 미션 쪽 설명(실행 파일 형식이 왜 다른지, 안내 창에서 이어지게) ② 설치본에서 Flathub 단추가 앱 스토어의 그 앱을 여는지 설치 테스트로 확인
+- 완료 기준: 미션 하나가 안내 창에서 열리고, 설치 테스트에 Flathub 단추 장면
+
+### T-176 반쪽 작업 끝내기 (진행 중 18개)
 - 상태: 할 일 (2026-10-15)
 - 출처: 부족한 점 점검(2026-10-15, [unfinished.md](unfinished.md) 9번 표). `진행 중`이 21개라 새 일을 시작하는 속도가 끝내는 속도보다 빨라요
 - 할 것: 진행 중인 작업마다 "남은 것"을 ① 이번에 끝낼 것 ② 따로 떼어 낼 새 작업 ③ 버릴 것으로 나눠요. ①만 남은 작업은 끝내고 `완료`로, ②는 새 번호로 `할 일`에 넣어요. 끝난 단계의 긴 기록은 done.md로 옮겨 tasks.md를 가볍게 해요. 그동안 [loop.md](loop.md) "3. 작업 고르기"의 진행 중 한도(10개)를 지켜요
+- 한 것(2026-11-24 새벽): T-151·T-155·T-159를 완료로(T-159의 남은 것은 T-184로), T-154의 남은 것을 상태 줄에 모음. 21개 → 18개
 - 완료 기준: `진행 중` 10개 이하, tasks.md 250줄 이하
 
 ### T-177 업데이트 길의 약한 곳
@@ -221,7 +227,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: 부팅 테스트에서 "작업 관리자" 검색 결과에 명령과 미션이 보이고, `ipconfig` 힌트가 미션을 알려 줘요
 
 ### T-155 부팅 테스트에 성공 조건 넣기
-- 상태: 진행 중
+- 상태: 완료 (2026-11-24: 망가진 ISO에서 실패하는 것을 실제 회귀로 확인했어요. 묶음 검증에서 hypridle이 잠금을 물려받아 전원 선택이 안 먹던 ISO가 `power-changed`·`power-default` FAIL로 테스트 전체를 실패시켰고, 고친 뒤 통과)
 - 출처: ChatGPT 세 번째 검토(2026-10-12). 묶음 77이 "통과"로 나왔는데 라이브 ISO에서 터미널이 하나도 안 열렸어요. 스크린샷만 찍는 테스트는 화면이 틀려도 통과해요
 - 한 것(2026-10-12): 멈춘 시나리오는 실패(종료 코드 1, WHPX·TCG 실행기 둘 다), 터미널을 연 뒤 "활성 창이 Ptyxis"일 때만 남는 `logger` 표시를 시리얼 로그에서 확인(`expect_serial`), 안 열리면 tty3 진단, 키·포인터 QMP 명령이 오류로 답하면 실패(`Qmp.act`), `build-iso.sh`가 빌드한 airootfs의 `/usr/share/robinos/bin`과 `/usr/local/bin`이 모두 실행 가능한지 확인
 - 한 것(2026-10-13 집 PC): `scripts/e2e-check.sh`(ISO의 `/opt/robinos/scripts`)가 장면마다 VM 안에서 상태를 확인해 `robinos-e2e: scenario=<이름> status=PASS|FAIL <근거>`를 저널에 남기고, `boot-test-qmp.py`의 `check_scene`이 시리얼 로그에서 결과를 모아 하나라도 실패면 끝에 실패. 장면: 터미널(Ptyxis), 미션 1, 최대화(`fullscreen` 1, 바 아래·독 위, 화면 70% 넘게)와 되돌리기, 새 터미널이 창 하나만 늘리기, 셸 다시 띄우기(새 `qs`와 IPC 응답), 라이트·다크(저장된 값과 GTK `color-scheme`). 가짜 hyprctl로 판정 시험. [testing.md](testing.md) "상태로 판정하는 장면"
@@ -259,7 +265,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: 설치본에서 런처로 백업 앱이 열리고, USB 디스크에 백업하고 파일 하나를 되살리는 것을 확인
 
 ### T-159 윈도우 프로그램(.exe)을 열면 안내
-- 상태: 진행 중
+- 상태: 완료 (2026-11-24 T-176 정리: 완료 기준은 2026-10-13 묶음의 `windows-app` 장면, 그 뒤 묶음마다 PASS. 남은 것은 T-184로)
 - 확장(2026-10-14, 사용자 "알아서 해줘"; 참고: Zorin이 240개 넘게 알아봐요, [references.md](references.md)): 알아보는 프로그램을 17개에서 55개로. 브라우저(Firefox·Edge·Brave·Opera), 메일(Thunderbird), 채팅과 협업(Slack·Signal·WhatsApp·Teams·Notion·Obsidian), 클라우드(Dropbox·OneDrive·Google Drive), Adobe 계열(GIMP·Krita·Inkscape·Kdenlive로), PDF, 사진 보기(알씨), 화면 녹화(반디캠 등 → RobinOS의 Win+Alt+R와 OBS), 토렌트, 게임 런처(Epic·GOG → Heroic, Battle.net → Lutris, Minecraft → Prism), 개발·원격 도구, Rufus(→ 디스크 앱), 백신(알약·V3 → 방화벽은 기본으로 켜져 있다고), 은행·공공기관 보안 프로그램(nProtect·TouchEn·Veraport 등 → 윈도우 전용이라 안 된다고 솔직히). Flathub ID는 모두 Flathub API로 있는지 확인했어요(TeamViewer만 ID가 달라 홈페이지 링크로). `check-desktop.sh`가 파일 이름 맞추기를 시험해요(Steam이 Teams로 잘못 잡히지 않는지, `cooperate_setup.exe`가 Opera로 잡히지 않는지 같은 경우 포함)
 - 한 것(2026-10-13 집 PC): `.exe`·`.msi`·`.lnk`의 기본 앱을 `robinos-windows-app`(숨은 데스크톱 파일)으로, 이게 셸의 "윈도우 프로그램" 창(`WindowsApp.qml`)을 열어요. 파일 이름으로 알려진 프로그램 열일곱 가지(카카오톡, Chrome, 웨일, 한글, Office, 반디집·7-Zip, 곰플레이어·팟플레이어, Discord, Steam, VS Code, Zoom, Spotify, Telegram, OBS, Notepad++, Python, Git)를 알아보고 대신 쓸 것(RobinOS에 있는 앱, 앱 스토어의 Flathub 앱, 웹 버전)을 단추로. 모르는 파일은 "리눅스에서는 그대로 열리지 않아요"와 Bottles 설치 단추. 이름 표는 `windowsapps.js`, `check-desktop.sh`가 파일 이름 열여섯 개로 확인("DigitalClock.exe"가 Git으로 잡히지 않게 짧은 이름은 그대로만). 부팅 테스트 `windows-app` 장면과 상태 확인
 - 2026-10-13 묶음 검증 통과(`windows-app` 장면). 제목의 조사("카카오톡는")를 "카카오톡 윈도우용 설치 파일이에요"로
