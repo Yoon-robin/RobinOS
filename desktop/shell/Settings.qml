@@ -672,9 +672,9 @@ FloatingWindow {
                         width: choiceLabel.implicitWidth + 24
                         height: 32
                         radius: Theme.radiusMd
-                        color: selected ? Theme.primary : choiceMouse.containsMouse ? Theme.hover : "transparent"
-                        border.width: selected ? 0 : 1
-                        border.color: Theme.border
+                        color: selected ? Theme.chosen : choiceMouse.containsMouse ? Theme.hover : "transparent"
+                        border.width: 1
+                        border.color: selected ? Theme.borderStrong : Theme.border
 
                         Accessible.role: Accessible.RadioButton
                         Accessible.name: choiceRow.title + ": " + modelData.label
@@ -697,7 +697,7 @@ FloatingWindow {
 
                             anchors.centerIn: parent
                             text: choice.modelData.label
-                            color: choice.selected ? Theme.primaryFg : Theme.fg
+                            color: Theme.fg
                             font.family: Theme.font
                             font.pixelSize: 13
                             font.weight: choice.selected ? Theme.weightStrong : Theme.weight
@@ -729,9 +729,9 @@ FloatingWindow {
         Layout.fillWidth: true
         implicitHeight: 52
         radius: Theme.radius
-        color: radioMouse.containsMouse ? Theme.hover : "transparent"
+        color: selected ? Theme.chosen : radioMouse.containsMouse ? Theme.hover : "transparent"
         border.width: 1
-        border.color: selected ? Theme.fg : Theme.border
+        border.color: selected ? Theme.borderStrong : Theme.border
 
         Accessible.role: Accessible.RadioButton
         Accessible.name: title
@@ -761,7 +761,7 @@ FloatingWindow {
                 radius: 8
                 color: "transparent"
                 border.width: 1
-                border.color: radioRow.selected ? Theme.fg : Theme.borderStrong
+                border.color: radioRow.selected ? Theme.accent : Theme.borderStrong
 
                 Rectangle {
                     anchors.centerIn: parent
@@ -769,7 +769,7 @@ FloatingWindow {
                     width: 8
                     height: 8
                     radius: 4
-                    color: Theme.fg
+                    color: Theme.accent
                 }
             }
 

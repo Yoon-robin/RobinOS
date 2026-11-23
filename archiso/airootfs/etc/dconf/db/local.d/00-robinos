@@ -30,3 +30,12 @@ restore-session=false
 restore-window-size=false
 default-columns=uint32 100
 default-rows=uint32 28
+default-profile-uuid='7b3e0c5a9d214f6e8a1c2b4d6e8f0a13'
+profile-uuids=['7b3e0c5a9d214f6e8a1c2b4d6e8f0a13']
+
+# The one profile uses the robin-ui V5 palette (desktop/ptyxis/robinos.palette, the
+# same faces as foot.ini). Ptyxis reads palettes from the user's data directory only,
+# so robinos-terminal keeps a copy there; without it Ptyxis falls back to its own.
+[org/gnome/Ptyxis/Profiles/7b3e0c5a9d214f6e8a1c2b4d6e8f0a13]
+label='RobinOS'
+palette='robinos'

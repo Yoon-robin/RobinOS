@@ -18,6 +18,13 @@ foot_args=(foot)
 foot_args+=("$@")
 
 if command -v ptyxis >/dev/null 2>&1; then
+  # The kit's palette (the dconf profile asks for "robinos"): Ptyxis only reads
+  # palettes from the user's data directory, so keep a copy of the system's there
+  palette=/usr/share/robinos/ptyxis/robinos.palette
+  palettes="${XDG_DATA_HOME:-${HOME}/.local/share}/org.gnome.Ptyxis/palettes"
+  if [[ -r "${palette}" ]] && ! cmp -s "${palette}" "${palettes}/robinos.palette"; then
+    mkdir -p "${palettes}" && cp "${palette}" "${palettes}/robinos.palette" || true
+  fi
   # A command opens its own new window; --new-window with it would open a second,
   # empty one (the boot test's mission terminal, 2026-10-12)
   if (($#)); then

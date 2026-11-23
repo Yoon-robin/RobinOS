@@ -28,6 +28,7 @@ desktop/bash/robinos-bashrc.sh            /usr/share/robinos/bash/robinos-bashrc
 desktop/bash/bashrc                       /etc/skel/.bashrc                                644
 desktop/session/robinos.desktop           /usr/share/wayland-sessions/robinos.desktop      644
 desktop/foot/foot.ini                     /etc/xdg/foot/foot.ini                           644
+desktop/ptyxis/robinos.palette            /usr/share/robinos/ptyxis/robinos.palette        644
 desktop/qt6ct/RobinOS-Dark.conf           /usr/share/robinos/qt6ct/RobinOS-Dark.conf       644
 desktop/qt6ct/RobinOS-Light.conf          /usr/share/robinos/qt6ct/RobinOS-Light.conf      644
 desktop/qt6ct/qt6ct.conf                  /etc/skel/.config/qt6ct/qt6ct.conf               644

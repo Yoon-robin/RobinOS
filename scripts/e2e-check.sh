@@ -8,7 +8,7 @@
 # terminal right after the scene, so a scene is judged by the state it left behind,
 # not by a screenshot that also "passes" when the screen is wrong (T-155).
 #
-#   terminal        the focused window is Ptyxis
+#   terminal        the focused window is Ptyxis, with the robin-ui palette
 #   count-save      remember how many Ptyxis windows there are
 #   one-more        exactly one Ptyxis window more than at count-save
 #   maximized       the focused window is maximized between the bar and the dock
@@ -71,8 +71,14 @@ print(w["fullscreen"], w["at"][1] - m["y"], w["size"][1], height)' "${window}" "
 
 case "${name}" in
   terminal)
-    check "$(hyprctl activewindow -j | grep -o '"class": "[^"]*"')" \
-      bash -c 'hyprctl activewindow -j | grep -q "\"class\": \"org.gnome.Ptyxis\""'
+    # ... with the kit's palette: the copy robinos-terminal keeps, and the dconf
+    # profile asking for it (desktop/dconf/00-robinos)
+    profile="$(gsettings get org.gnome.Ptyxis default-profile-uuid | tr -d "'")"
+    palette="$(gsettings get "org.gnome.Ptyxis.Profile:/org/gnome/Ptyxis/Profiles/${profile}/" palette | tr -d "'")"
+    copy="${XDG_DATA_HOME:-${HOME}/.local/share}/org.gnome.Ptyxis/palettes/robinos.palette"
+    check "$(hyprctl activewindow -j | grep -o '"class": "[^"]*"') palette=${palette}" \
+      bash -c 'hyprctl activewindow -j | grep -q "\"class\": \"org.gnome.Ptyxis\"" &&
+        [[ "$1" == robinos ]] && cmp -s /usr/share/robinos/ptyxis/robinos.palette "$2"' _ "${palette}" "${copy}"
     ;;
   count-save)
     mkdir -p "${STATE}"
