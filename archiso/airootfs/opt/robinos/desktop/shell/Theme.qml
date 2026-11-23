@@ -90,7 +90,9 @@ Singleton {
 
     readonly property int barHeight: 36
     readonly property string font: "Pretendard Variable"
-    readonly property string mono: "Geist Mono"
+    // The kit's code font; Cascadia Mono is Cascadia Code without ligatures,
+    // so ">>" and "->" in mission commands look the way they are typed
+    readonly property string mono: "Cascadia Mono"
     // Pretendard at 450 / 550 / 650; never thinner
     readonly property int weight: 450
     readonly property int weightStrong: 550

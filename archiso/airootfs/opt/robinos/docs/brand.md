@@ -67,7 +67,7 @@ RobinOS는 예쁜 UI를 가진 OS예요([design.md](design.md)의 "정체성 다
 ### 글꼴과 모양
 
 - 인터페이스: Pretendard(`Pretendard Variable`), 굵기 450 / 550 / 650(`Theme.weight`, `weightStrong`, `weightHead`). 가늘게 바꾸지 않아요
-- 코드와 터미널: 지금은 Geist Mono 그대로예요. 키트의 코드 글꼴(Cascadia)로 바꿀지는 T-168에서 정해요
+- 코드와 터미널: 키트의 코드 글꼴인 Cascadia예요. 합자(`->`가 화살표 하나로 붙는 것)가 없는 Cascadia Mono를 써요(`ttf-cascadia-code`). 미션 명령의 `>>`, `->`가 친 그대로 보여야 해서예요. 한글은 Noto Sans Mono CJK KR로 이어 그려요
 - 모서리: 칩 6, 컨트롤 7, 토스트 10, 카드 12, 창·떠 있는 패널 14. 알약 모양은 표시기에만
 - 아이콘: 키트의 선 아이콘(`icons.svg`, 24 칸, 선 1.8, 둥근 끝, 채우지 않음). 셸은 아직 Lucide예요(모양이 거의 같아요). 이모지나 글자 기호로 대신하지 않아요
 

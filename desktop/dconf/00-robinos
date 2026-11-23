@@ -9,9 +9,9 @@ gtk-theme='adw-gtk3-dark'
 icon-theme='Papirus-Dark'
 cursor-theme='Adwaita'
 cursor-size=24
-font-name='Geist 11'
-document-font-name='Geist 11'
-monospace-font-name='Geist Mono 11'
+font-name='Pretendard Variable 11'
+document-font-name='Pretendard Variable 11'
+monospace-font-name='Cascadia Mono 11'
 accent-color='blue'
 enable-hot-corners=false
 
@@ -23,7 +23,7 @@ button-layout='appmenu:maximize,close'
 
 # Ptyxis, the terminal (T-154): follow the shell's light/dark choice, open each
 # window clean instead of restoring the last session, a little larger than 80x24,
-# and the interface's monospace font above (Geist Mono)
+# and the interface's monospace font above (Cascadia Mono)
 [org/gnome/Ptyxis]
 interface-style='system'
 restore-session=false

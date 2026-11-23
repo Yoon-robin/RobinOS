@@ -47,6 +47,7 @@ rtkit
 noto-fonts
 noto-fonts-cjk
 noto-fonts-emoji
+ttf-cascadia-code
 fcitx5
 fcitx5-hangul
 fcitx5-configtool

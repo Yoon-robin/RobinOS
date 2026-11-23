@@ -299,7 +299,7 @@ PanelWindow {
                                     radius: Theme.radius
                                     color: themeChoice.modelData.dark ? "#0e1012" : "#ffffff"
                                     border.width: themeChoice.selected ? 2 : 1
-                                    border.color: themeChoice.selected ? Theme.fg : Theme.border
+                                    border.color: themeChoice.selected ? Theme.accent : Theme.border
 
                                     Accessible.role: Accessible.RadioButton
                                     Accessible.name: themeChoice.modelData.title
@@ -521,12 +521,12 @@ PanelWindow {
                             implicitWidth: 26
                             implicitHeight: 24
                             radius: Theme.radiusSm
-                            color: ShellState.hangul ? Theme.primary : Theme.secondary
+                            color: ShellState.hangul ? Theme.accentSoft : Theme.secondary
 
                             Text {
                                 anchors.centerIn: parent
                                 text: ShellState.hangul ? "한" : "A"
-                                color: ShellState.hangul ? Theme.primaryFg : Theme.fg
+                                color: ShellState.hangul ? Theme.accent : Theme.fg
                                 font.family: Theme.font
                                 font.pixelSize: 12
                                 font.weight: Theme.weightHead
@@ -555,9 +555,9 @@ PanelWindow {
                             Layout.fillWidth: true
                             implicitHeight: 64
                             radius: Theme.radius
-                            color: goalMouse.containsMouse ? Theme.hover : "transparent"
-                            border.width: selected ? 2 : 1
-                            border.color: selected ? Theme.fg : Theme.border
+                            color: selected ? Theme.chosen : goalMouse.containsMouse ? Theme.hover : "transparent"
+                            border.width: 1
+                            border.color: selected ? Theme.borderStrong : Theme.border
 
                             Accessible.role: Accessible.RadioButton
                             Accessible.name: modelData.title

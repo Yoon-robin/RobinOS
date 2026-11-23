@@ -381,9 +381,9 @@ FloatingWindow {
                             Layout.fillWidth: true
                             implicitHeight: 60
                             radius: Theme.radius
-                            color: diskMouse.containsMouse ? Theme.hover : "transparent"
-                            border.width: selected ? 2 : 1
-                            border.color: selected ? Theme.fg : Theme.border
+                            color: selected ? Theme.chosen : diskMouse.containsMouse ? Theme.hover : "transparent"
+                            border.width: 1
+                            border.color: selected ? Theme.borderStrong : Theme.border
 
                             Accessible.role: Accessible.RadioButton
                             Accessible.name: root.diskLabel(modelData)
@@ -479,9 +479,9 @@ FloatingWindow {
                             Layout.fillWidth: true
                             implicitHeight: modeColumn.implicitHeight + 24
                             radius: Theme.radius
-                            color: modeMouse.containsMouse && modelData.enabled ? Theme.hover : "transparent"
+                            color: selected ? Theme.chosen : modeMouse.containsMouse && modelData.enabled ? Theme.hover : "transparent"
                             border.width: 1
-                            border.color: selected ? Theme.fg : Theme.border
+                            border.color: selected ? Theme.borderStrong : Theme.border
                             opacity: modelData.enabled ? 1 : 0.55
 
                             Accessible.role: Accessible.RadioButton
