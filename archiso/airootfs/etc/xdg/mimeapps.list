@@ -38,6 +38,10 @@ audio/aac=org.gnome.Decibels.desktop
 application/x-ms-dos-executable=robinos-windows-app.desktop
 application/x-msdownload=robinos-windows-app.desktop
 application/vnd.microsoft.portable-executable=robinos-windows-app.desktop
+# Installers too (the window speaks of .exe and .msi), or Files may hand an .msi
+# to the archive manager
+application/x-msi=robinos-windows-app.desktop
+application/x-ms-installer=robinos-windows-app.desktop
 application/x-msi=robinos-windows-app.desktop
 application/x-ms-installer=robinos-windows-app.desktop
 application/x-ms-shortcut=robinos-windows-app.desktop
