@@ -495,6 +495,7 @@ FloatingWindow {
                 spacing: 2
 
                 Text {
+                    Layout.fillWidth: true
                     text: switchRow.title
                     color: Theme.fg
                     font.family: Theme.font
