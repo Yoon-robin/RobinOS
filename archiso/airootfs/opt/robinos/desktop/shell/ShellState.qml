@@ -779,7 +779,10 @@ Singleton {
 
     // Windows' 비행기 모드: the Wi-Fi and Bluetooth radios off (a cable stays connected).
     // NetworkManager and BlueZ remember the radios, so it lasts across reboots.
-    readonly property bool airplane: !wifiEnabled && !btEnabled
+    // Only the radios this PC has count: a desktop with neither a Wi-Fi card nor a
+    // Bluetooth adapter has nothing to turn off, and showed 비행기 모드 as on
+    readonly property bool hasRadios: wifiDevice !== null || btAdapter !== null
+    readonly property bool airplane: hasRadios && (wifiDevice === null || !wifiEnabled) && (btAdapter === null || !btEnabled)
 
     function toggleAirplane() {
         const on = !airplane;

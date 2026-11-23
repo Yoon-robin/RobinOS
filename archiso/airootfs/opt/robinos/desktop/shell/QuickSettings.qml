@@ -432,7 +432,10 @@ PanelWindow {
                     icon: "sunset"
                     title: "야간 모드"
                     subtitle: ShellState.inVm ? "VM에서는 안 돼요" : ShellState.nightLight ? "켜짐 · 따뜻한 색" : "꺼짐"
-                    checked: ShellState.nightLight
+                    // A VM's virtual display ignores the color ramp, so the tile does
+                    // nothing there (the boot test still checks hyprsunset over IPC)
+                    checked: ShellState.nightLight && !ShellState.inVm
+                    enabled: !ShellState.inVm
                     onToggled: ShellState.toggleNightLight()
                 }
 
@@ -441,8 +444,9 @@ PanelWindow {
                     Layout.preferredWidth: 1
                     icon: "plane"
                     title: "비행기 모드"
-                    subtitle: ShellState.airplane ? "켜짐 · Wi-Fi, 블루투스 끔" : "꺼짐"
+                    subtitle: !ShellState.hasRadios ? "장치 없음" : ShellState.airplane ? "켜짐 · Wi-Fi, 블루투스 끔" : "꺼짐"
                     checked: ShellState.airplane
+                    enabled: ShellState.hasRadios
                     onToggled: ShellState.toggleAirplane()
                 }
             }
