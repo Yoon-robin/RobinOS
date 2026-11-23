@@ -94,7 +94,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 출처: 사용자(2026-11-24) "아이덴티티 다시 설정, 예쁜 UI를 가진 OS"와 robin-ui 브랜드 키트(V5). 키트는 `assets/brand/robin-ui/`, 규칙은 [brand.md](brand.md)
 - 한 것(①, 2026-11-24 집 PC): 정체성 문서(design.md, brand.md, CLAUDE.md, README, vision.md, loop.md, desktop.md). `Theme.qml` 토큰을 키트 값으로(푸른 검정 면, 파랑 하나, 살구색 `note`, 초록 없음, 모서리 6/7/10/12/14, Pretendard, 150/200/240ms, 굵기 토큰), 유리 토큰을 판 토큰으로 이름 바꾸기(`glass`→`panel`, `glassBorder`→`panelBorder`, `glassTile`→`tile`), 강조색 고르기(설정, 빠른 설정, 환영 마법사)와 "투명도 줄이기" 빼기, 배경화면 빛을 파랑 하나로, Hyprland 셸 블러 규칙 빼기·창 모서리 14·테두리와 바탕색, GNOME 강조색 파랑
 - 한 것(②, 2026-11-24 `work/batch-home8`): `ActionButton`(모서리 7, 보통 컨트롤은 컨트롤 면 + 1px 선, `danger`·`danger-fill` 더함, 누르면 0.98), `Switch`(34×19, 꺼지면 어두운 홈과 선), `InputField`(컨트롤 면, 초점에 파란 선), `QsSlider`(3px 홈, 흰 손잡이 11), `ToggleTile`(켜지면 파랑 옅은 면 + 파란 아이콘, 파란 채움은 주 동작에만), `IconButton`, `Kbd`, `FocusRing`(파란 링). 빠른 설정의 고른 칸(밝기 모드, 배율)은 회색 면 + 흰 글자, 독 이름 풍선은 표시기 면. 굵기 `Font.*`를 모두 `Theme.weight`·`weightStrong`·`weightHead`로. 테마 미리보기 그림의 zinc 색을 키트 색으로
-- 한 것(③ 일부): 토스트 알림을 알림 카드(모서리 14, 왼쪽 짧은 막대: 보통·빨강, 제목 굵기 550)로
+- 한 것(③ 일부): 토스트 알림을 알림 카드(모서리 14, 왼쪽 짧은 막대: 보통·빨강, 제목 굵기 550)로. 바의 "스냅샷 · 임시"와 "녹화 중"을 상태 칩(`BarButton`의 `tone`: 알약, 표시기 면, 왼쪽 막대, 살구색·빨강 글자)으로. 패널이 열릴 때 튀는 스프링(OutBack)을 빼고 4px만 들어오게(OutQuint)
 - 한 것(⑥ 일부): 잠금 화면(hyprlock), 로그인 화면(SDDM), GRUB 테마, 라이브 BIOS 메뉴(syslinux), qt6ct 다크·라이트 팔레트, 배경화면 SVG 두 장, 스크린샷 영역 선택 색을 키트 색으로(zinc → 푸른 검정, 빨강 → 파랑, 초록 → 파랑). 잠금·로그인 글꼴은 Pretendard. 남은 것: 로고 SVG(`build-logo.py`의 색과 한 줄 소개 빼기, 글꼴이 있는 WSL에서 다시 만들기), fastfetch 울새, Ptyxis·foot 팔레트
 - 남은 단계(한 단계가 1~3회차):
   - ② 공용 부품: `ActionButton`(모서리 7, 파란 채움·빨간 테), `Switch`(34×19, 꺼지면 어두운 홈), `InputField`, `QsSlider`(3px 홈, 흰 손잡이 11), `ToggleTile`, `FocusRing`(파란 링), 굵기를 `Theme.weight*`로
