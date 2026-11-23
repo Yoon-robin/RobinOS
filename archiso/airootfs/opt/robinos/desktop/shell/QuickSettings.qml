@@ -216,8 +216,12 @@ PanelWindow {
                         Layout.fillWidth: true
                         implicitHeight: 34
                         radius: Theme.radiusMd
-                        color: danger ? (powerMouse.containsMouse ? Theme.destructive : Theme.destructiveSolid)
+                        // Power off cannot be undone: a red line and red words (rk-btn--danger)
+                        color: danger ? (powerMouse.containsMouse ? Theme.destructiveSoft : "transparent")
                                       : (powerMouse.containsMouse ? Theme.tileHover : Theme.tile)
+                        border.width: 1
+                        border.color: danger ? Theme.destructiveSolid
+                                             : powerMouse.containsMouse ? Theme.controlLineHover : Theme.borderStrong
 
                         Accessible.role: Accessible.Button
                         Accessible.name: modelData.title
@@ -251,12 +255,12 @@ PanelWindow {
                             Icon {
                                 name: powerButton.modelData.icon
                                 size: 14
-                                color: powerButton.danger ? "#ffffff" : Theme.fg
+                                color: powerButton.danger ? Theme.destructive : Theme.fg
                             }
 
                             Text {
                                 text: powerButton.modelData.title
-                                color: powerButton.danger ? "#ffffff" : Theme.fg
+                                color: powerButton.danger ? Theme.destructive : Theme.fg
                                 font.family: Theme.font
                                 font.pixelSize: 12
                                 font.weight: Theme.weightStrong
@@ -283,6 +287,8 @@ PanelWindow {
                 implicitHeight: 40
                 radius: Theme.radiusMd
                 color: updateMouse.containsMouse ? Theme.tileHover : Theme.tile
+                border.width: 1
+                border.color: updateMouse.containsMouse ? Theme.controlLineHover : Theme.borderStrong
 
                 Accessible.role: Accessible.Button
                 Accessible.name: "업데이트 " + ShellState.updateCount + "개 설치하기"
