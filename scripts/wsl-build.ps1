@@ -241,7 +241,9 @@ set -e
 pacman-key --init >/dev/null 2>&1 || true
 pacman-key --populate archlinux >/dev/null 2>&1 || true
 # which: robinctl mission 27 in scripts/test-robinctl.sh (not in Arch's WSL image)
-pacman -Syu --noconfirm --needed archiso git grub sudo qemu-full edk2-ovmf libarchive python openssl rsync quickshell qt6-declarative lua hyprland fakeroot which sway grim
+pacman -Syu --noconfirm --needed archiso git grub sudo qemu-full edk2-ovmf libarchive python openssl rsync quickshell qt6-declarative lua hyprland fakeroot which sway grim ttf-cascadia-code
+# Pretendard for scripts/shell-load.sh screenshots (checksum-verified download)
+bash '$wslRoot/scripts/fetch-fonts.sh' /usr/local/share/fonts/robinos >/dev/null && fc-cache -f >/dev/null || echo 'Pretendard를 받지 못했어요(스크린샷의 한글이 네모로 나와요).'
 echo 'WSL 빌드 환경이 준비됐어요.'
 "@
     exit 0
