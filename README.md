@@ -14,11 +14,11 @@ Arch Linux 위에 셸, 설치기, 업데이트 저장소, 스냅샷 복구를 Ro
 
 ## 화면
 
-부팅 테스트(VM, 1600×900)가 찍은 화면이에요. 다크·라이트 모드를 고를 수 있어요. 아래 스크린샷은 robin-ui V5로 바꾸기 전 모습이라 새로 찍을 거예요(T-180).
+부팅 테스트(VM, 1600×900)가 찍은 화면이에요. 다크·라이트 모드를 고를 수 있어요.
 
 | 런처 (`Win+Space`) | 빠른 설정 (`Win+S`) |
 |---|---|
-| ![앱, 학습 미션, 보안 랩을 함께 찾는 런처](docs/screenshots/launcher.png) | ![Wi-Fi, 블루투스, 방해 금지, 화면 배율, 음량이 있는 빠른 설정](docs/screenshots/quick-settings.png) |
+| ![설치, 앱, 학습 미션, 보안 랩, 명령을 함께 찾는 런처](docs/screenshots/launcher.png) | ![네트워크, 블루투스, 방해 금지, 전원 모드, 화면 배율, 음량이 있는 빠른 설정](docs/screenshots/quick-settings.png) |
 | **창 전환 (`Alt+Tab`)** | **학습 센터 (라이트 모드)** |
 | ![창 미리보기와 함께 최근에 쓴 순서로 나오는 Alt+Tab](docs/screenshots/alt-tab.png) | ![미션 45개의 진행도와 다음 미션이 있는 학습 센터](docs/screenshots/learn-center.png) |
 
