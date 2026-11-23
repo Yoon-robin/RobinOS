@@ -3,7 +3,7 @@
 # Keep this first-pass theme image-free for broad GRUB compatibility.
 # Some GRUB builds do not reliably render SVG assets in themes.
 
-desktop-color: "#09090B"
+desktop-color: "#0A0E11"
 # No "GRUB Boot Menu" heading; the labels below say RobinOS
 title-text: ""
 terminal-font: "Unifont Regular 16"
@@ -20,7 +20,7 @@ terminal-border: "0"
   height = 46
   text = "RobinOS"
   font = "Unifont Regular 32"
-  color = "#FAFAFA"
+  color = "#F0F0F0"
 }
 
 + boot_menu {
@@ -29,8 +29,8 @@ terminal-border: "0"
   width = 80%
   height = 48%
   item_font = "Unifont Regular 18"
-  item_color = "#D4D4D8"
-  selected_item_color = "#E5484D"
+  item_color = "#E6E7E9"
+  selected_item_color = "#4B7DFE"
   icon_width = 32
   icon_height = 32
   item_height = 42
@@ -46,5 +46,5 @@ terminal-border: "0"
   align = "center"
   text = "Enter: boot   e: edit   c: command line"
   font = "Unifont Regular 14"
-  color = "#A1A1AA"
+  color = "#8A8E94"
 }
