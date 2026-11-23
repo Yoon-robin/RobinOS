@@ -7,8 +7,11 @@
 set -uo pipefail
 
 file="${1:-}"
-# File managers may hand over a file:// URI
-file="${file#file://}"
+# File managers may hand over a file:// URI, with a Korean name as %EC%84%A4...
+if [[ "${file}" == file://* ]]; then
+  file="${file#file://}"
+  file="$(printf '%b' "$(sed 's/%\([0-9A-Fa-f][0-9A-Fa-f]\)/\\x\1/g' <<<"${file}")")"
+fi
 
 if qs ipc -p /usr/share/robinos/shell call shell windowsApp "${file}" >/dev/null 2>&1; then
   exit 0
