@@ -229,9 +229,17 @@ def read_plan(path):
             plan = json.load(f)
         os.remove(path)  # it holds the password
 
+    if not isinstance(plan, dict):
+        raise InstallError("설치 계획이 올바르지 않아요")
     for key in ("disk", "mode", "user", "password", "hostname", "timezone"):
         if not plan.get(key):
             raise InstallError(f"설치 계획에 {key} 항목이 없어요")
+        if not isinstance(plan[key], str):
+            raise InstallError(f"설치 계획의 {key} 항목이 글자가 아니에요")
+    # GRUB asks for the disk password before any keyboard layout or input
+    # method is loaded: only what a US keyboard types can unlock it there
+    if plan.get("encrypt") and not re.fullmatch(r"[\x20-\x7e]+", plan["password"]):
+        raise InstallError("디스크를 암호화할 때는 비밀번호에 영어, 숫자, 기호만 쓸 수 있어요(부팅 화면에서는 한글을 칠 수 없어요)")
     if plan["mode"] not in ("whole", "alongside"):
         raise InstallError(f"알 수 없는 설치 방식이에요: {plan['mode']}")
     if not re.fullmatch(r"[a-z_][a-z0-9_-]{0,31}", plan["user"]) or plan["user"] == "root":
@@ -300,7 +308,10 @@ def finish_encryption(plan):
     cryptodisk support and the kernel's cryptdevice= line. Runs after pacstrap."""
     progress(74, "암호화 설정")
     part = output("cryptsetup", "status", CRYPT_NAME)
-    device = re.search(r"(?m)^\s*device:\s*(\S+)", part).group(1)
+    found = re.search(r"(?m)^\s*device:\s*(\S+)", part)
+    if not found:
+        raise InstallError("암호화한 파티션을 찾지 못했어요")
+    device = found.group(1)
     uuid = output("cryptsetup", "luksUUID", device).strip()
     password = plan["password"]
 
@@ -606,7 +617,9 @@ def main():
             log_file = open(LOG_FILE, "a") if os.geteuid() == 0 else None
             install(sys.argv[2])
             return 0
-        except (InstallError, subprocess.CalledProcessError, OSError, KeyError, ValueError) as error:
+        # Anything unexpected still ends with an @@ error line and a clean /mnt,
+        # so the installer window shows it and a second try can start
+        except Exception as error:  # noqa: BLE001
             say(f"@@ error {error}")
             stop_keyring_agent()
             subprocess.run(["umount", "-R", TARGET], capture_output=True)

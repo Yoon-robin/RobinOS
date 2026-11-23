@@ -137,6 +137,30 @@ key = robin.recovery_key()
 check("recovery key: eight groups of six digits", bool(re.fullmatch(r"\d{6}(-\d{6}){7}", key)), True)
 check("recovery keys differ", robin.recovery_key() != key, True)
 
+
+def plan_refused(plan_text):
+    """True when read_plan refuses the plan with an InstallError (not a crash)."""
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
+        f.write(plan_text)
+    try:
+        robin.read_plan(f.name)
+        return False
+    except robin.InstallError:
+        return True
+    finally:
+        if os.path.exists(f.name):
+            os.unlink(f.name)
+
+
+base = '"disk": "/dev/vda", "mode": "whole", "user": "robin", "hostname": "robinos", "timezone": "UTC"'
+check("encrypted with a Korean password: refused (GRUB can't type it)",
+      plan_refused('{' + base + ', "password": "비밀번호", "encrypt": true}'), True)
+if os.path.isfile("/usr/share/zoneinfo/UTC"):  # read_plan also checks the time zone
+    check("unencrypted with a Korean password: allowed",
+          plan_refused('{' + base + ', "password": "비밀번호"}'), False)
+check("a password that isn't text: refused, no crash", plan_refused('{' + base + ', "password": 1234}'), True)
+check("a plan that isn't an object: refused, no crash", plan_refused('["robin"]'), True)
+
 print("Plan keys the installer window sends")
 # Every key robin-install reads from the plan must come from Installer.qml, or the
 # window's choice never reaches the backend (bitlocker_key_saved was missing, 2026-10-13)

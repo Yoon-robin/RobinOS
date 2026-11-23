@@ -216,6 +216,11 @@ check "show 16 unpacks the practice programs" 0 learn show 16
 said "show 16 says where the programs are" "~/practice/reversing"
 in_home "cd ${REV} && test -x hello && test -x vault && test -x gate && test -x seeker && test -x count" \
   && ok "practice programs are there and executable" || bad "practice programs are missing"
+# Deleted programs come back on the next show (the marker file alone isn't enough)
+in_home "rm -rf ${REV}"
+check "show 16 again after the programs were deleted" 0 learn show 16
+in_home "test -x ${REV}/hello && test -x ${REV}/count" \
+  && ok "deleted practice programs are made again" || bad "deleted practice programs stay missing"
 in_home "${REV}/hello" | grep -q "연습용 프로그램" && ok "hello runs" || bad "hello doesn't run"
 in_home "readelf -d ${REV}/hello | grep NEEDED | grep -o 'libc[^]]*' > ${REV}/library.txt"
 check "16 passes with the NEEDED library" 0 learn check 16
@@ -342,6 +347,7 @@ said "list shows the system group" "시스템 기초"
 # System basics: a real background process, the disk, a service and the journal
 check "show 31 makes ~/practice/system" 0 learn show 31
 check "31 fails without a PID" fail learn check 31
+said "31 says the PID is missing instead of stopping" "PID(숫자)가 없어요"
 # Started inside the learner's shell the way the mission says, with its output
 # sent away so it doesn't hold this script's pipe open for 600 seconds
 # (braces: in_home runs "cd ~ && ...", and a bare & would send the cd along too)
@@ -585,7 +591,11 @@ else
 fi
 
 printf '%s\n' "audit: the security check reads without changing anything"
+# A key with mode 400 is as private as 600
+in_home "mkdir -p .ssh && printf 'key\\n' > .ssh/id_test && chmod 400 .ssh/id_test"
 check "audit runs as an ordinary user" 0 learner bash "${ROBINCTL}" audit
+# (mission 38's key from above may still be listed; only id_test matters here)
+grep -qF "id_test" "${WORK}/out" && bad "audit calls a 400 key readable by others" || ok "audit counts a 400 key as private"
 said "audit looks at services other computers can reach" "밖에서 닿는 서비스"
 said "audit looks at sshd" "SSH 서버(sshd)"
 said "audit ends with a count or an all-clear" "살펴볼"

@@ -33,7 +33,10 @@ FloatingWindow {
 
     readonly property bool userValid: /^[a-z_][a-z0-9_-]{0,31}$/.test(userField.text) && userField.text !== "root"
     readonly property bool hostValid: /^[a-zA-Z0-9][a-zA-Z0-9-]{0,62}$/.test(hostField.text)
-    readonly property bool passwordValid: passwordField.text.length > 0 && passwordField.text === password2Field.text
+    // GRUB asks for the disk password before any input method: with encryption
+    // only what a US keyboard types (printable ASCII) can unlock the disk
+    readonly property bool passwordTypeable: !encrypt || /^[\x20-\x7e]*$/.test(passwordField.text)
+    readonly property bool passwordValid: passwordField.text.length > 0 && passwordField.text === password2Field.text && passwordTypeable
 
     readonly property bool canNext: {
         switch (step) {
@@ -646,7 +649,7 @@ FloatingWindow {
                     Text {
                         Layout.columnSpan: 2
                         Layout.fillWidth: true
-                        text: password2Field.text !== "" && password2Field.text !== passwordField.text ? "두 비밀번호가 달라요" : ""
+                        text: !root.passwordTypeable ? "암호화할 때는 영어, 숫자, 기호만 써요" : password2Field.text !== "" && password2Field.text !== passwordField.text ? "두 비밀번호가 달라요" : ""
                         color: Theme.destructive
                         font.family: Theme.font
                         font.pixelSize: 12
