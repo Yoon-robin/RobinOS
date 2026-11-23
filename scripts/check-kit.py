@@ -106,6 +106,10 @@ def main():
 
     weights = []
     springs = []
+    # An int property given a fraction makes the whole shell fail to load
+    # ("Invalid property assignment: int expected"), and qmllint lets it pass: a
+    # font.pixelSize: 13.5 in Toasts.qml crashed the shell at every login (2026-11-24)
+    fractions = []
     for qml in sorted(SHELL.glob("*.qml")):
         if qml.name == "Theme.qml":
             continue
@@ -117,6 +121,9 @@ def main():
             weights.append(qml.name)
         if "Easing.OutBack" in text:
             springs.append(qml.name)
+        for m in re.finditer(r"\b(?:font\.pixelSize|pixelSize|font\.weight)\s*:\s*\d+\.\d+", text):
+            line = text.count("\n", 0, m.start()) + 1
+            fractions.append(f"{qml.name}:{line}")
     if weights:
         fail("Font.* weights instead of Theme.weight*: " + ", ".join(weights))
     else:
@@ -125,6 +132,10 @@ def main():
         fail("overshooting springs (Easing.OutBack): " + ", ".join(springs))
     else:
         ok("no overshooting springs")
+    if fractions:
+        fail("a fraction in an int property (the shell won't load): " + ", ".join(fractions))
+    else:
+        ok("whole numbers in int properties (font.pixelSize, font.weight)")
 
     lua = (ROOT / "desktop/hypr/robinos.lua").read_text(encoding="utf-8")
     blurred = [m.group(1) for m in re.finditer(
