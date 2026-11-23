@@ -58,17 +58,31 @@ def set_wallpaper(uri):
         return FAILED
     os.makedirs(DATA_DIR, exist_ok=True)
     name = "current" + os.path.splitext(path)[1].lower()
-    for old in os.listdir(DATA_DIR):
-        if old != name:
-            os.remove(os.path.join(DATA_DIR, old))
     copy = os.path.join(DATA_DIR, name)
     tmp = copy + ".tmp"
-    shutil.copyfile(path, tmp)
-    os.replace(tmp, copy)
-    os.makedirs(os.path.dirname(STATE_FILE), exist_ok=True)
-    with open(STATE_FILE + ".tmp", "w", encoding="utf-8") as f:
-        f.write(copy + "\n")
-    os.replace(STATE_FILE + ".tmp", STATE_FILE)
+    # The new copy and the state file first, the old picture last: a copy that
+    # fails (unreadable, disk full) keeps the wallpaper there was
+    try:
+        shutil.copyfile(path, tmp)
+        os.replace(tmp, copy)
+        os.makedirs(os.path.dirname(STATE_FILE), exist_ok=True)
+        with open(STATE_FILE + ".tmp", "w", encoding="utf-8") as f:
+            f.write(copy + "\n")
+        os.replace(STATE_FILE + ".tmp", STATE_FILE)
+    except OSError as error:
+        log(f"can't copy {path}: {error}")
+        for leftover in (tmp, STATE_FILE + ".tmp"):
+            try:
+                os.remove(leftover)
+            except OSError:
+                pass
+        return FAILED
+    for old in os.listdir(DATA_DIR):
+        if old != name:
+            try:
+                os.remove(os.path.join(DATA_DIR, old))
+            except OSError:
+                pass
     log(f"wallpaper: {path}")
     return SUCCESS
 

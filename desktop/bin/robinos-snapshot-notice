@@ -11,9 +11,18 @@ number="${line%%$'\t'*}"
 description=""
 [[ "${line}" == *$'\t'* ]] && description="${line#*$'\t'}"
 
-# At login the shell's notification server starts together with this script;
-# the bar's "스냅샷 N · 임시" button runs it again with --now
-[[ "${1:-}" == "--now" ]] || sleep 4
+# At login the shell's notification server starts together with this script; the
+# bar's "스냅샷 N · 임시" button runs it again with --now. The shell is the only
+# notification server: wait until it owns the name (a slow VM, or the shell started
+# again in software rendering, takes longer than a fixed few seconds), up to a minute.
+if [[ "${1:-}" != "--now" ]]; then
+  for _ in $(seq 60); do
+    busctl --user status org.freedesktop.Notifications >/dev/null 2>&1 && break
+    sleep 1
+  done
+  # Its toasts come up a moment after the name
+  sleep 1
+fi
 
 # What a rollback changes and what it leaves alone (second ChatGPT review): the
 # system and installed programs go back, personal files in /home do not

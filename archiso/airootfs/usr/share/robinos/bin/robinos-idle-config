@@ -55,8 +55,8 @@ EOF
 
 listener {
     timeout = $((lock * 60 - 60))
-    on-timeout = brightnessctl -s >/dev/null; [ "\$(brightnessctl -m | cut -d, -f4 | tr -d %)" -gt 30 ] && brightnessctl set 30%
-    on-resume = brightnessctl -r
+    on-timeout = brightnessctl -c backlight -s >/dev/null; [ "\$(brightnessctl -c backlight -m | cut -d, -f4 | tr -d %)" -gt 30 ] && brightnessctl -c backlight set 30%
+    on-resume = brightnessctl -c backlight -r
 }
 EOF
     fi

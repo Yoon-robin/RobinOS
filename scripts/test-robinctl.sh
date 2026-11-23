@@ -904,6 +904,18 @@ if grep -q 'setRecording true' "${WORK}/rec-calls" && [[ -s "${REC_RUN}/robinos-
 rec_pid="$(head -n 1 "${REC_RUN}/robinos-record.pid" 2>/dev/null)"
 record
 if [[ ! -e "${REC_RUN}/robinos-record.pid" ]] && ! kill -0 "${rec_pid:-999999}" 2>/dev/null; then ok "the next press stops it"; else bad "the recording didn't stop"; kill "${rec_pid}" 2>/dev/null; fi
+# Two quick presses (the second before the first wrote its pid file) start one
+# recorder, not a second one that nothing stops
+: >"${WORK}/rec-calls"
+record &
+record
+wait
+starts="$(grep -c 'setRecording true' "${WORK}/rec-calls")"
+rec_pid="$(head -n 1 "${REC_RUN}/robinos-record.pid" 2>/dev/null)"
+if [[ "${starts}" == 1 ]]; then ok "two quick presses start one recording"; else bad "two quick presses started ${starts} recordings"; fi
+record
+if [[ ! -e "${REC_RUN}/robinos-record.pid" ]] && ! kill -0 "${rec_pid:-999999}" 2>/dev/null; then ok "and the next press stops it"; else bad "the recording after two presses didn't stop"; kill "${rec_pid}" 2>/dev/null; fi
+pkill -f "${REC_BIN}/wf-recorder" 2>/dev/null || true
 
 printf '%s\n' "Idle policy (robinos-idle-config): the 전원 page's minutes become hypridle's listeners"
 IDLE_STATE="${WORK}/idle-state"

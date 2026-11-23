@@ -98,7 +98,9 @@ esac
 note "starting Hyprland (ROBINOS_RENDER=${ROBINOS_RENDER})"
 run_hyprland
 
-if [[ "${ROBINOS_RENDER}" == "hardware" && "${ran_for}" -lt 8 ]]; then
+# A clean exit (logging out right after logging in) is no GPU failure: it goes back
+# to the login screen instead of a second, software session
+if [[ "${ROBINOS_RENDER}" == "hardware" && "${status}" -ne 0 && "${ran_for}" -lt 8 ]]; then
   note "hardware rendering failed to start; retrying with software rendering"
   use_software
   run_hyprland

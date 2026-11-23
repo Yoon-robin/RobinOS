@@ -11,14 +11,27 @@ SHELL_IPC=(qs ipc -p /usr/share/robinos/shell call shell)
 
 if [[ "${mode}" == record ]]; then
   pidfile="${XDG_RUNTIME_DIR:-/tmp}/robinos-record.pid"
+  # A second press while the first still starts (the pid file comes half a second
+  # later) would start a second recorder that nothing can stop: one at a time. The
+  # recorder and the notice waiters below don't keep the lock (9>&-).
+  exec 9>"${XDG_RUNTIME_DIR:-/tmp}/robinos-record.lock"
+  flock -n 9 || exit 0
   if [[ -s "${pidfile}" ]] && kill -0 "$(head -n1 "${pidfile}")" 2>/dev/null; then
     { read -r pid; read -r file; } <"${pidfile}"
-    # wf-recorder finishes the file on SIGINT, like Ctrl+C
+    # wf-recorder finishes the file on SIGINT, like Ctrl+C. A long recording on a
+    # slow PC can take a while to write out.
     kill -INT "${pid}"
-    for _ in $(seq 50); do
+    for _ in $(seq 300); do
       kill -0 "${pid}" 2>/dev/null || break
       sleep 0.1
     done
+    if kill -0 "${pid}" 2>/dev/null; then
+      # Still writing: keep the pid file (the next press asks again) and don't call
+      # a half-written file saved
+      notify-send --app-name=RobinOS --icon=dialog-warning "화면 녹화를 아직 저장하고 있어요" \
+        "잠시 뒤에 Win+Alt+R을 한 번 더 눌러요" || true
+      exit 0
+    fi
     rm -f "${pidfile}"
     "${SHELL_IPC[@]}" setRecording false >/dev/null 2>&1 || true
     (
@@ -28,7 +41,7 @@ if [[ "${mode}" == record ]]; then
         default) xdg-open "${file}" ;;
         folder) xdg-open "${file%/*}" ;;
       esac
-    ) >/dev/null 2>&1 &
+    ) >/dev/null 2>&1 9>&- &
     exit 0
   fi
   # A recording that died on its own (disk full, the screen unplugged) left its file
@@ -47,6 +60,8 @@ if [[ "${mode}" == record ]]; then
   }
   dir="$(xdg-user-dir VIDEOS 2>/dev/null || printf '%s/Videos' "${HOME}")/Screencasts"
   file="${dir}/$(date +%Y%m%d-%H%M%S).mp4"
+  # Stopped and started again within the same second: don't write over that file
+  [[ -e "${file}" ]] && file="${file%.mp4}-$$.mp4"
   mkdir -p "${dir}"
   # The focused screen, without sound
   output="$(hyprctl monitors -j | python3 -c 'import json, sys
@@ -54,7 +69,7 @@ print(next((m["name"] for m in json.load(sys.stdin) if m.get("focused")), ""))' 
   args=(-f "${file}")
   [[ -n "${output}" ]] && args+=(-o "${output}")
   log="${XDG_RUNTIME_DIR:-/tmp}/robinos-record.log"
-  wf-recorder "${args[@]}" >"${log}" 2>&1 &
+  wf-recorder "${args[@]}" >"${log}" 2>&1 9>&- &
   pid="$!"
   # wf-recorder gives up at once when it can't capture the screen: don't show the
   # red dot for a recording that isn't there
