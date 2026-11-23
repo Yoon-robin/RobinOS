@@ -500,6 +500,7 @@ FloatingWindow {
                 }
 
                 Text {
+                    visible: text !== ""
                     Layout.fillWidth: true
                     text: switchRow.desc
                     color: Theme.muted
@@ -812,26 +813,24 @@ FloatingWindow {
 
             Group {
                 title: "터치패드"
-                hint: "노트북의 터치패드에만 적용돼요."
 
                 SwitchRow {
                     title: "탭해서 클릭"
-                    desc: "터치패드를 톡 치면 클릭이에요. 꺼도 터치패드를 눌러서 클릭할 수 있어요."
+                    desc: "끄면 눌러서 클릭해요"
                     checked: prefs.tap
                     onToggled: ShellState.setInput("tap", !prefs.tap)
                 }
 
                 SwitchRow {
                     title: "스크롤 방향: 손가락을 따라가기"
-                    desc: prefs.natural ? "손가락을 위로 밀면 화면이 위로 올라가요(휴대폰과 맥처럼). 끄면 윈도우처럼 손가락을 위로 밀 때 화면이 아래로 내려가요."
-                                        : "손가락을 위로 밀면 화면이 아래로 내려가요(윈도우처럼). 켜면 휴대폰처럼 손가락을 따라 올라가요."
+                    desc: prefs.natural ? "휴대폰처럼" : "윈도우처럼"
                     checked: prefs.natural
                     onToggled: ShellState.setInput("natural", !prefs.natural)
                 }
 
                 SwitchRow {
                     title: "글을 쓰는 동안 터치패드 끄기"
-                    desc: "타자를 치다 손바닥이 닿아서 커서가 튀는 일을 막아요."
+                    desc: "타자를 칠 때 터치패드를 잠시 꺼요"
                     checked: prefs.typing_off
                     onToggled: ShellState.setInput("typing_off", !prefs.typing_off)
                 }
@@ -839,12 +838,10 @@ FloatingWindow {
 
             Group {
                 title: "마우스"
-                hint: "바퀴가 달린 마우스에 적용돼요."
 
                 SwitchRow {
                     title: "휠 방향 뒤집기"
-                    desc: prefs.wheel_flip ? "휠을 위로 굴리면 화면이 아래로 내려가요(맥처럼)."
-                                           : "휠을 위로 굴리면 화면이 위로 올라가요(윈도우처럼)."
+                    desc: prefs.wheel_flip ? "맥처럼" : "윈도우처럼"
                     checked: prefs.wheel_flip
                     onToggled: ShellState.setInput("wheel_flip", !prefs.wheel_flip)
                 }
@@ -852,7 +849,6 @@ FloatingWindow {
 
             Group {
                 title: "포인터 속도"
-                hint: "마우스와 터치패드 모두 같아요."
 
                 SliderRow {
                     title: "커서가 움직이는 빠르기"
@@ -884,25 +880,25 @@ FloatingWindow {
 
             Group {
                 title: "한/영 전환"
-                hint: "한/영 키와 오른쪽 Alt는 언제나 돼요. 하나 더 고를 수 있어요."
+                hint: "한/영 키와 오른쪽 Alt는 언제나 돼요"
 
                 RadioRow {
                     title: "Ctrl + Space"
-                    desc: "기본값이에요"
+                    desc: "기본값"
                     selected: ShellState.imeShortcut === "ctrl"
                     onPicked: ShellState.setImeShortcut("ctrl")
                 }
 
                 RadioRow {
                     title: "Shift + Space"
-                    desc: "윈도우 한국어 입력기에서 쓰던 방식이에요"
+                    desc: "윈도우 한국어 입력기"
                     selected: ShellState.imeShortcut === "shift"
                     onPicked: ShellState.setImeShortcut("shift")
                 }
 
                 RadioRow {
                     title: "추가 단축키 없음"
-                    desc: "한/영 키와 오른쪽 Alt만 써요"
+                    desc: "한/영, 오른쪽 Alt"
                     selected: ShellState.imeShortcut === "none"
                     onPicked: ShellState.setImeShortcut("none")
                 }
@@ -910,7 +906,6 @@ FloatingWindow {
 
             Group {
                 title: "키를 꾹 누르면"
-                hint: "아래 칸에서 키를 꾹 눌러 보면서 맞춰 보세요."
 
                 InputField {
                     Layout.fillWidth: true
@@ -963,11 +958,11 @@ FloatingWindow {
 
             Group {
                 title: "화면"
-                hint: "마우스와 키보드를 쓰지 않을 때예요. 잠그기 1분 전에 화면이 어두워져요."
+                hint: "잠그기 1분 전에 화면이 어두워져요"
 
                 ChoiceRow {
                     title: "화면 잠그기"
-                    desc: "다시 쓰려면 비밀번호를 입력해요."
+                    desc: ""
                     options: [{ value: 1, label: "1분" }, { value: 3, label: "3분" }, { value: 5, label: "5분" },
                               { value: 10, label: "10분" }, { value: 15, label: "15분" }, { value: 30, label: "30분" }, powerBody.never]
                     current: powerBody.prefs.lock
@@ -976,7 +971,7 @@ FloatingWindow {
 
                 ChoiceRow {
                     title: "화면 끄기"
-                    desc: "화면이 꺼져도 컴퓨터는 켜져 있어요. 아무 키나 누르면 돌아와요."
+                    desc: "아무 키나 누르면 돌아와요"
                     options: [{ value: 2, label: "2분" }, { value: 5, label: "5분" }, { value: 10, label: "10분" },
                               { value: 15, label: "15분" }, { value: 30, label: "30분" }, powerBody.never]
                     current: powerBody.prefs.screen_off
@@ -986,8 +981,7 @@ FloatingWindow {
 
             Group {
                 title: "잠자기"
-                hint: ShellState.hasBattery ? "충전기를 꽂아 두면 잠들지 않아요(윈도우처럼). 덮개를 닫으면 언제나 잠들어요."
-                                            : "배터리가 없는 컴퓨터는 저절로 잠들지 않아요. 빠른 설정(Win+S)의 전원 메뉴에서 \"잠자기\"로 직접 재워요."
+                hint: ShellState.hasBattery ? "충전기를 꽂아 두면 잠들지 않아요. 덮개를 닫으면 언제나 잠들어요" : ""
 
                 ChoiceRow {
                     visible: ShellState.hasBattery
@@ -1018,7 +1012,6 @@ FloatingWindow {
 
             Group {
                 title: "파일을 열 때 쓰는 앱"
-                hint: "고른 앱은 ~/.config/mimeapps.list에 저장돼요. 터미널에서는 xdg-mime default 앱.desktop 형식으로 같은 일을 해요."
 
                 Text {
                     visible: root.defaultApps.length === 0
@@ -1114,7 +1107,6 @@ FloatingWindow {
 
             Group {
                 title: "모드"
-                hint: "빠른 설정(Win+S)의 다크 모드와 같아요."
 
                 Row {
                     spacing: 14
@@ -1220,18 +1212,18 @@ FloatingWindow {
             // T-161, like Windows' 접근성 and macOS' 손쉬운 사용
             Group {
                 title: "손쉬운 사용"
-                hint: "화면 확대: Win + 더하기(+)로 확대, Win + 빼기(-)로 축소, Win + Esc로 원래대로. 마우스 포인터 둘레를 크게 보여 줘요. 바와 창 전체를 크게 하려면 빠른 설정의 화면 배율을 써요."
+                hint: ""
 
                 SwitchRow {
                     title: "움직임 줄이기"
-                    desc: "창과 패널이 열리고 닫힐 때 움직이지 않고 바로 바뀌어요."
+                    desc: ""
                     checked: Theme.reduceMotion
                     onToggled: Theme.setReduceMotion(!Theme.reduceMotion)
                 }
 
                 SwitchRow {
                     title: "앱 글자 크게"
-                    desc: "파일, 텍스트 편집기, 설정 같은 앱의 글자를 125%로 키워요."
+                    desc: "앱 글자 125%"
                     checked: Theme.largeText
                     onToggled: Theme.setLargeText(!Theme.largeText)
                 }
@@ -1239,7 +1231,7 @@ FloatingWindow {
 
             Group {
                 title: "배경화면"
-                hint: ShellState.wallpaperPath !== "" ? "사진을 배경으로 쓰고 있어요." : "RobinOS 기본 배경화면이에요."
+                hint: ""
 
                 Row {
                     spacing: 8
@@ -1335,8 +1327,8 @@ FloatingWindow {
 
             Group {
                 title: "업데이트 전에 스냅샷을 찍어요"
-                hint: (root.upd.next_snapshot ?? 0) > 0 ? "이번에는 스냅샷 " + root.upd.next_snapshot + "번이에요. 문제가 생기면 컴퓨터를 켤 때 부팅 메뉴의 \"RobinOS snapshots\"에서 그 상태로 켜고 되돌려요."
-                                                         : "문제가 생기면 컴퓨터를 켤 때 부팅 메뉴의 \"RobinOS snapshots\"에서 업데이트 직전 상태로 켜고 되돌려요."
+                hint: (root.upd.next_snapshot ?? 0) > 0 ? "다음 스냅샷 " + root.upd.next_snapshot + "번 · 되돌리기는 부팅 메뉴의 \"RobinOS snapshots\""
+                                                         : "되돌리기는 부팅 메뉴의 \"RobinOS snapshots\""
 
                 Text {
                     Layout.fillWidth: true
@@ -1350,7 +1342,6 @@ FloatingWindow {
 
             Group {
                 title: "RobinOS 파일"
-                hint: "화면, robinctl, 학습 미션은 RobinOS 패키지로 올라가요. 올라가면 화면이 새 버전으로 다시 떠요."
                 visible: (root.upd.robinos ?? "") !== ""
 
                 Text {
@@ -1371,7 +1362,7 @@ FloatingWindow {
 
             Group {
                 title: "시간대"
-                hint: "시계가 맞춰지는 지역이에요. 바꾸면 터미널에서 sudo timedatectl set-timezone이 실행되고 관리자 비밀번호를 물어요."
+                hint: "바꾸면 관리자 비밀번호를 물어요"
 
                 Rectangle {
                     Layout.fillWidth: true
@@ -1419,7 +1410,7 @@ FloatingWindow {
 
             Group {
                 title: "시간 맞추기"
-                hint: "인터넷에서 시계를 맞춰요(systemd-timesyncd). 바꾸면 터미널에서 sudo timedatectl set-ntp가 실행돼요."
+                hint: "바꾸면 관리자 비밀번호를 물어요"
 
                 SwitchRow {
                     title: "시간 자동 맞추기"
@@ -1433,7 +1424,7 @@ FloatingWindow {
 
             Group {
                 title: "하드웨어 시계"
-                hint: "윈도우와 같이 쓰는 컴퓨터는 하드웨어 시계를 지역 시간으로 읽어서, 윈도우와 시간이 어긋나지 않아요."
+                hint: "지역 시간 (윈도우와 같이 써요)"
                 visible: root.time.LocalRTC === "yes"
             }
         }
