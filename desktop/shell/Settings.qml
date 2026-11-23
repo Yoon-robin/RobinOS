@@ -120,10 +120,23 @@ FloatingWindow {
             appsProc.running = true;
     }
 
+    // Choices made while the last one still runs wait their turn: setting a running
+    // Process's command and running again would drop the new one (T-182)
+    property var pendingApps: []
+
     function setDefaultApp(kind, id) {
-        setAppProc.command = ["/usr/share/robinos/bin/robinos-default-apps", "set", kind, id];
-        setAppProc.running = true;
+        pendingApps = pendingApps.concat([[kind, id]]);
         openKind = "";
+        setNextApp();
+    }
+
+    function setNextApp() {
+        if (setAppProc.running || pendingApps.length === 0)
+            return;
+        const next = pendingApps[0];
+        pendingApps = pendingApps.slice(1);
+        setAppProc.command = ["/usr/share/robinos/bin/robinos-default-apps", "set", next[0], next[1]];
+        setAppProc.running = true;
     }
 
     onSectionChanged: {
@@ -191,7 +204,12 @@ FloatingWindow {
     Process {
         id: setAppProc
 
-        onExited: (exitCode, exitStatus) => root.readApps()
+        onExited: (exitCode, exitStatus) => {
+            if (root.pendingApps.length > 0)
+                root.setNextApp();
+            else
+                root.readApps();
+        }
     }
 
     // What an update would bring; robinctl looks in its own copy of the package databases

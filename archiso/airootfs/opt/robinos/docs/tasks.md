@@ -123,7 +123,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 ### T-182 코드 검토에서 남은 것 (2026-11-24)
 - 상태: 할 일
 - 출처: 다른 PC 코드를 합친 뒤의 코드 검토(품질 점검 기록 "코드 검토")
-- 할 것: ① `robin-install`의 `dual_boot`: 디스크에 NTFS나 Basic data 형식 파티션이 하나라도 있으면 윈도우로 봐서, 윈도우 없이 exFAT 공유 파티션만 있는 디스크에도 `hwclock --localtime`과 os-prober가 켜져요. 이미 계산한 `windows_inside`(또는 BitLocker)로 정하고, partition 모드에서는 고른 파티션을 빼요. `Installer.qml`의 `dualBoot`도 같은 필드로 ② 설정 "기본 앱": 앞의 `xdg-mime` 실행이 끝나기 전에 다시 고르면 두 번째가 버려져요(대기열에 넣고 `onExited`에서 실행)
+- 할 것: ① `robin-install`의 `dual_boot`: 디스크에 NTFS나 Basic data 형식 파티션이 하나라도 있으면 윈도우로 봐서, 윈도우 없이 exFAT 공유 파티션만 있는 디스크에도 `hwclock --localtime`과 os-prober가 켜져요. 이미 계산한 `windows_inside`(또는 BitLocker)로 정하고, partition 모드에서는 고른 파티션을 빼요. `Installer.qml`의 `dualBoot`도 같은 필드로 ② ~~설정 "기본 앱": 앞의 실행이 끝나기 전에 다시 고르면 두 번째가 버려져요~~ (2026-11-24 고침: 대기열 `pendingApps`, `onExited`에서 다음 것)
 - 완료 기준: `test-robin-install.py`에 exFAT만 있는 디스크 경우, 부팅 테스트 `default-apps` 판정
 
 ### T-176 반쪽 작업 끝내기 (진행 중 21개)
