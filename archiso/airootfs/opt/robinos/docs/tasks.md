@@ -74,8 +74,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 지금까지(2026-10-08, robin PC): `426e32d` ISO를 VMware VM에 설치함. 설치기가 마지막 `umount`에서 멈췄고(gpg-agent, `933ca31`에서 고침) 손으로 분리한 뒤 고친 `robinos-shell`을 넣어 부팅. 설치본에서 `open-vm-tools` 설치, `vmtoolsd` 켜짐, SDDM 로그인 화면까지 확인. 로그인 뒤 데스크톱은 아직 못 봄(VMware에는 키 입력을 보낼 방법이 없어 사람이 로그인해야 해요)
 - 검증: `933ca31` ISO로 부팅 테스트(29장)와 설치 테스트 robinos(다섯 단계) 통과, `e038f2a`까지 main 푸시(정기 점검 표)
 - 2026-10-11: 사용자가 집 PC(Blitz)의 VMware 서비스(Authorization, DHCP, NAT)를 켜서 `Running` 확인. 이제 이 PC에서 VM을 만들어 최신 ISO로 설치해 볼 수 있어요
-- 2026-10-12 집 PC(Blitz): 묶음 72의 ISO(`bd8c495`, robinos 패키지 포함)를 `build\vmware\vmware-test.py install`로 VM에 설치하는 중. 끝나면 `installed`로 설치본 부팅·해상도·vmtoolsd 확인. 다른 PC로 옮기면 이 VM은 집 PC에만 있어요. `build\`는 git에 안 올라가서 `vmware-test.py`도 집 PC에만 있어요. 집에서 이어 할 때 `scripts/`로 옮겨 커밋하면 robin PC에서도 같은 스크립트를 써요
-- 남은 것 (VMware가 있는 PC: robin PC, 집 PC(Blitz, VMware Workstation 26.0)): 최종 ISO로 VMware VM에 다시 설치(`vmrun` 게스트 명령, 계획은 디스크 `/dev/nvme0n1` 전체), 로그인 뒤 셸·해상도 확인. 집 PC에는 VM이 아직 없어서 새로 만들어요(`build\vmware\guest-*.sh`는 robin PC에만 있어요). VMware가 없는 PC의 루프는 이 작업을 건너뛰어요
+- 2026-10-12 집 PC(Blitz): 묶음 72의 ISO(`bd8c495`, robinos 패키지 포함)를 `build\vmware\vmware-test.py install`로 VM에 설치하는 중. 끝나면 `installed`로 설치본 부팅·해상도·vmtoolsd 확인. 다른 PC로 옮기면 이 VM은 집 PC에만 있어요
+- 2026-11-24: 스크립트를 `scripts/vmware-test.py`로 옮겨 커밋했어요(어느 PC에서나 `python scripts/vmware-test.py create|install|installed|stop`, ISO는 `build\vmware\robinos.iso`). [build-environment.md](build-environment.md) "다른 PC에서 이어서 하기"
+- 남은 것 (VMware가 있는 PC: robin PC, 집 PC(Blitz, VMware Workstation 26.0)): 최종 ISO로 VMware VM에 다시 설치(`vmrun` 게스트 명령, 계획은 디스크 `/dev/nvme0n1` 전체), 로그인 뒤 셸·해상도 확인. VMware가 없는 PC의 루프는 이 작업을 건너뛰어요
 
 ### T-151 정체성 문구를 화면에
 - 상태: 진행 중 (화면 문구는 묶음 73에서 검증, 스크린샷 바꾸기 남음)
@@ -99,6 +100,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 한 것(④ 일부): 설정 창을 옆 기둥(폭 178, `side` 면, 줄 33, 고른 것은 회색 면 + 파란 아이콘) + 판 + 카드(이름표는 카드 밖 11px, 스위치 줄과 정보 줄은 카드 면, 줄 41, 줄 사이 선은 9 들여서)로
 - 한 것(⑥ 이어서, 2026-11-24 밤): 로고 SVG 다섯 개를 키트 색과 Pretendard 650으로 다시 만들고 한 줄 소개를 뺐어요(`build-logo.py`). 라이브 BIOS 메뉴 배경(`splash.png`), fastfetch 울새(프롬프트가 파랑), 셸 마크(`Mark.qml`: 거의 검은 네모 + 흰 울새 + 파란 번짐), 로그인 화면 마크. README에 키트 출처(CC BY 4.0)
 - 한 것(개발 스택, 2026-11-24 밤): [design.md](design.md) "개발 스택 다시 보기"(바탕은 그대로, 키트 `tokens.json`이 값의 원본). `scripts/check-kit.py`가 `check`에서 키트를 벗어난 색·굵기·스프링·모서리·셸 블러를 잡아요
+- 한 것(⑤ 일부): 런처(묶음 이름표 11px, 줄 41, 고른 줄은 회색 면 + 파란 아이콘, 아이콘 칸은 컨트롤 면, "켜짐" 칩은 왼쪽 파란 막대, 키 안내가 있던 아래 줄과 esc 키 표시 빼기), 빠른 설정(전원 끄기는 빨간 테 + 빨간 글자, 업데이트 줄에 컨트롤 선)
 - 남은 단계(한 단계가 1~3회차):
   - ② 공용 부품: `ActionButton`(모서리 7, 파란 채움·빨간 테), `Switch`(34×19, 꺼지면 어두운 홈), `InputField`, `QsSlider`(3px 홈, 흰 손잡이 11), `ToggleTile`, `FocusRing`(파란 링), 굵기를 `Theme.weight*`로
   - ③ 표시기: 토스트·알림(왼쪽 짧은 막대, `data-tone` 같은 tone 속성), 독(짙은 면), 상태 칩

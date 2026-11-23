@@ -77,7 +77,11 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 install-test
    지문 `D8EB 0C49 5CBF 5B2B BB57 EACC FD9B 53B8 B79E 9AAD`가 보이면 돼요.
 4. Claude Code에서 저장소 폴더를 열고 `/loop docs/loop.md 절차대로 RobinOS 작업을 한 회차 진행해`라고 보내요. tasks.md를 읽고 이어서 해요.
 
-VMware 시험(T-025)은 VMware Workstation과 VM이 있는 PC에서만 해요.
+VMware 시험(T-025)은 VMware Workstation이 있는 PC에서만 해요. 스크립트는 저장소의 `scripts/vmware-test.py`예요(2026-11-24에 집 PC의 `build\`에서 옮겼어요). `create`로 VM을 새로 만들고, WSL의 `/root/RobinOS/out/`에 있는 ISO를 `build\vmware\robinos.iso`로 복사한 뒤 `install`, `installed` 순서로 돌려요. VM 자체(`문서\Virtual Machines\RobinOS`)는 PC마다 따로 있어요.
+
+Claude Code의 기억 파일(`%USERPROFILE%\.claude\projects\...\memory`)은 PC마다 따로라 옮겨지지 않아요. 꼭 지킬 규칙(한국어로만 말하기, 알아서 진행, 이 PC에서 검증, 묶음 검증)은 모두 `CLAUDE.md`와 [loop.md](loop.md)에 있어서, 새 PC에서도 저장소만 받으면 같아요.
+
+로고를 다시 만들 때는 글꼴이 필요해요. WSL에서 `bash scripts/fetch-fonts.sh /tmp/robinfonts` 뒤에 `python3 assets/brand/build-logo.py /tmp/robinfonts assets/brand`를 돌려요([brand.md](brand.md)).
 
 이미 준비된 PC로 돌아왔을 때는 `git pull`을 하고, `wsl-build.ps1 setup`도 한 번 다시 돌려요. WSL의 Quickshell과 Qt가 ISO에 들어가는 최신판과 같아야 `check`의 qmllint가 실제 제품과 같은 기준으로 봐요. 2026-10-12 robin PC는 Quickshell 0.3.1에 머물러 있었고, `setup` 뒤에 0.3.2 기준 오탐 6개가 처음 드러났어요(`scripts/qmllint.sh`에서 걸러요).
 

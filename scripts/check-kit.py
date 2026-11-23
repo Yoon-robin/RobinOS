@@ -9,7 +9,8 @@ assets/brand/robin-ui/tokens.json is the source of the values. This checks:
     450/550/650 are Theme.weight*) and no overshooting spring (Easing.OutBack)
   - no green or yellow anywhere in those files
   - Theme.qml's corners are the kit's (6, 7, 10, 12, 14)
-  - Hyprland blurs no shell surface (the kit has no glass)
+  - Hyprland blurs no shell surface and the lock screen blurs nothing behind it
+    (the kit has no glass)
 
 Run from the repository root: python3 scripts/check-kit.py
 """
@@ -132,6 +133,12 @@ def main():
         fail("Hyprland blurs shell surfaces: " + ", ".join(blurred))
     else:
         ok("no blur on shell surfaces")
+
+    lock = (ROOT / "desktop/hypr/hyprlock.conf").read_text(encoding="utf-8")
+    if re.search(r"^\s*blur_passes\s*=\s*[1-9]", lock, re.M) or re.search(r"^\s*path\s*=\s*screenshot", lock, re.M):
+        fail("hyprlock.conf blurs the screen behind the lock (the kit has no glass)")
+    else:
+        ok("no blur on the lock screen")
 
     if failures:
         print(f"robin-ui kit check failed: {len(failures)} problem(s).")
