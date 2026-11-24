@@ -44,6 +44,7 @@ ROOT_PART = "/dev/vda4" if INSTALLER == "windows" else "/dev/vda2"
 ENCRYPTED = INSTALLER == "encrypted"
 ROOT_DEV = "/dev/mapper/cryptroot" if ENCRYPTED else ROOT_PART
 PASSWORD = "robin"  # root and the robin user, like the live ISO
+RESET_PASSWORD = "robin2"  # robin's password from before the system reset (phase reset)
 MIRROR = "https://geo.mirror.pkgbuild.com/$repo/os/$arch"
 
 
@@ -1188,6 +1189,50 @@ def phase_rollback(con, qmp):
         check_web_lab(con)
         check_net_lab(con)
 
+    # System reset (T-187): since the first snapshot robin's password changed, cowsay
+    # came and a file landed in /home. Back to that snapshot; the next boot checks
+    # what stayed
+    con.run("pacman -S --noconfirm cowsay > /dev/null && command -v cowsay", timeout=600)
+    con.run(f"echo robin:{RESET_PASSWORD} | chpasswd"
+            " && grep '^robin:' /etc/shadow | cut -d: -f2 > /home/robin/.reset-hash"
+            " && echo kept > /home/robin/reset-keep.txt")
+    log("system reset")
+    con.run("robinctl snapshot reset --yes")
+
+    con.send("poweroff\n")
+    con.wait_closed(180)
+
+
+def phase_reset(con, qmp):
+    """Sixth boot: after robinctl snapshot reset the system is the one the first
+    snapshot holds, with robin's new password, the files in /home and, next to
+    Windows, Windows in the boot menu (docs/recovery.md "시스템 재설정")."""
+    boot_from_grub(con, qmp, "grub-after-reset")
+    con.login("root", PASSWORD)
+    if con.run("command -v cowsay", check=False) == 0:
+        raise RuntimeError("cowsay is still installed after the reset")
+    con.run("test -f /home/robin/reset-keep.txt")
+    con.run("[ \"$(grep '^robin:' /etc/shadow | cut -d: -f2)\" = \"$(cat /home/robin/.reset-hash)\" ]")
+    con.run("id robin | grep -q wheel && test ! -e /var/lib/pacman/db.lck && pacman -Q pacman")
+    if INSTALLER == "windows":
+        con.run("grep -q 'Windows Boot Manager' /boot/grub/grub.cfg")
+    con.run("robinctl snapshot list", check=False)
+    log("reset ok: cowsay is gone, /home and robin's new password stayed")
+
+    # SDDM takes the new password
+    sleep(10)
+    shot(qmp, "sddm-after-reset")
+    qmp.type_text(RESET_PASSWORD + "\n")
+    sleep(40)
+    shot(qmp, "desktop-after-reset")
+    con.run("for i in $(seq 30); do loginctl list-users --no-legend | grep -q robin && break; sleep 2; done;"
+            " loginctl list-users --no-legend | grep robin")
+    # Where the reset starts from: 설정 > 업데이트 > 시스템 재설정 (shown once the
+    # update check has read the snapshot list)
+    con.run(f"{INSTALLER_IPC}settingsSection update", check=False)
+    sleep(20)
+    shot(qmp, "settings-update-reset")
+
     con.send("poweroff\n")
     con.wait_closed(180)
 
@@ -1257,6 +1302,8 @@ def main():
             phase_snapshot_boot(con, qmp)
         elif PHASE == "rollback":
             phase_rollback(con, qmp)
+        elif PHASE == "reset":
+            phase_reset(con, qmp)
         else:
             raise SystemExit(f"unknown phase: {PHASE}")
     except Exception as error:

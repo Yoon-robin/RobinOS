@@ -49,7 +49,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 `git log origin/main..HEAD`에 있는 커밋과, 푸시하기 전에 통과해야 하는 검증이에요. 검증이 끝나면 지우고 푸시해요.
 
-없어요. `97a1bb0`까지 2026-11-24 낮 robin PC의 `verify -Installer robinos`를 마치고 푸시했어요.
+- T-187 시스템 재설정: `verify -Installer robinos`(설치 테스트 `reset` 단계), `install-test -Installer windows`(재설정 뒤 GRUB의 윈도우)
+
+`97a1bb0`까지는 2026-11-24 낮 robin PC의 `verify -Installer robinos`를 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -92,9 +94,10 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: 부팅 테스트의 모든 장면이 키트 문법(면 셋, 파랑 하나, 컨트롤 모서리 7, 유리 없음)을 따르고, 시스템 화면(로그인, 잠금, 부팅 메뉴)도 같은 색
 
 ### T-187 시스템 재설정 명령과 화면
-- 상태: 할 일
+- 상태: 검증 대기 (2026-11-24 robin PC, 묶음 검증과 윈도우 설치 테스트에서 확인)
 - 출처: T-164 조사(2026-11-24, [recovery.md](recovery.md) "시스템 재설정")
 - 할 것: ① `robinctl snapshot reset`: 번호를 외우지 않게 "RobinOS snapshot setup" 스냅샷을 찾아 되돌리되, 지금 것을 새 `@`로 옮겨 가요. 옮길 것은 사람 계정(UID 1000 이상의 `passwd`·`shadow`·`group`·`gshadow` 줄과 wheel 같은 그룹 소속), 저장한 와이파이(`/etc/NetworkManager/system-connections`), 지금 `grub.cfg`(윈도우 항목)예요 ② 설정 앱 "정보"나 "업데이트"에 "시스템 재설정" 줄. 무엇이 남고 무엇이 돌아가는지 보여 주고 확인을 받은 뒤 다시 시작을 물어요 ③ 재설정 뒤 첫 로그인에 "업데이트가 있어요" 안내
+- 한 것(2026-11-24 낮 robin PC): `robinctl snapshot reset [--yes]`. 설명이 "RobinOS snapshot setup"인 가장 앞 스냅샷을 찾아 `rollback`하고, 그사이 옛 `@`(`@.broken-<시각>`)에서 옮겨 와요: root와 사람 계정(UID 1000~59999)의 `passwd`·`shadow` 줄(새 파일의 순서 그대로), 사람 그룹과 다른 그룹(wheel 등)의 사람 소속, 저장한 와이파이, `hostname`, `localtime`, `/boot/grub`가 `@` 안이면 `grub.cfg`와 `grub-btrfs.cfg`. 끝나면 다시 시작할지 물어요. 설정 "업데이트" 아래 "시스템 재설정" 줄의 "재설정…"(danger)이 터미널에서 실행해요(스냅샷 목록을 읽을 수 있을 때만 보여요). ③ 업데이트 안내는 바의 업데이트 점이 이미 해요. `test-robinctl.sh`에 옮기기 시험(비밀번호, root, 순서, wheel, docker 그룹 빠짐, gshadow, 와이파이, 시간대, 윈도우 메뉴). 설치 테스트에 `reset` 단계(여섯 번째 부팅): 비밀번호 바꾸고 cowsay 깔고 `/home`에 파일을 둔 뒤 재설정, 다시 켜서 확인하고 새 비밀번호로 SDDM 로그인, 설정 화면 `settings-update-reset`
 - 완료 기준: 설치 테스트에서 비밀번호를 바꾸고 패키지를 하나 깐 뒤 재설정하면, 새 비밀번호로 로그인되고 그 패키지는 없고 `/home`의 파일은 그대로예요. 윈도우 설치 테스트에서는 재설정 뒤에도 부팅 메뉴에 윈도우가 있어요
 
 ### T-166 라이브 USB로 설치본 고치기

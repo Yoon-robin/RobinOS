@@ -624,6 +624,53 @@ check "a normal start is no snapshot" fail booted normal
 check "a snapshot start gives its number" 0 booted snap
 said "with its description" "pacman -S cowsay"
 
+printf '%s\n' "snapshot reset: the first snapshot, and what it carries over from the system it replaces"
+mkdir -p "${SNAPS}/1" "${SNAPS}/12"
+printf '<snapshot><description>RobinOS snapshot setup</description></snapshot>\n' >"${SNAPS}/12/info.xml"
+printf '<snapshot><description>RobinOS snapshot setup</description></snapshot>\n' >"${SNAPS}/1/info.xml"
+# robinctl's functions without its last line (main "$@")
+robinctl_fn() { (eval "$(sed '$d' "${ROBINCTL}")"; "$@"); }
+[[ "$(robinctl_fn snapshot_first "${SNAPS}")" == "1" ]] && ok "the first setup snapshot is 1" || bad "snapshot_first: $(robinctl_fn snapshot_first "${SNAPS}")"
+[[ -z "$(robinctl_fn snapshot_first "${WORK}/no-snaps")" ]] && ok "no setup snapshot, no number" || bad "snapshot_first found one in an empty folder"
+OLD="${WORK}/reset-old"
+NEW="${WORK}/reset-new"
+mkdir -p "${OLD}/etc/NetworkManager/system-connections" "${NEW}/etc" "${OLD}/boot/grub" "${NEW}/boot/grub"
+# Installed with robin and root locked; since then: a new password, a root password,
+# a second person (mina) in wheel,
+# docker installed (its group), Wi-Fi saved, another time zone, Windows in the menu
+printf 'root:x:0:0::/root:/bin/bash\nrobin:x:1000:1000::/home/robin:/bin/bash\nmina:x:1001:1001::/home/mina:/bin/bash\nnobody:x:65534:65534::/:/usr/bin/nologin\n' >"${OLD}/etc/passwd"
+printf 'root:ROOTHASH:2::::::\nrobin:NEWHASH:2::::::\nmina:MINAHASH:2::::::\nnobody:!*:1::::::\n' >"${OLD}/etc/shadow"
+printf 'root:x:0:root\nwheel:x:998:robin,mina\ndocker:x:970:robin\nrobin:x:1000:\nmina:x:1001:\nnobody:x:65534:\n' >"${OLD}/etc/group"
+printf 'root:::root\nwheel:!*::robin,mina\ndocker:!*::robin\nrobin:!*::\nmina:!*::\nnobody:!*::\n' >"${OLD}/etc/gshadow"
+printf 'root:x:0:0::/root:/bin/bash\nrobin:x:1000:1000::/home/robin:/bin/bash\nnobody:x:65534:65534::/:/usr/bin/nologin\n' >"${NEW}/etc/passwd"
+printf 'root:!*:1::::::\nrobin:OLDHASH:1::::::\nnobody:!*:1::::::\n' >"${NEW}/etc/shadow"
+printf 'root:x:0:root\nwheel:x:998:robin\nrobin:x:1000:\nnobody:x:65534:\n' >"${NEW}/etc/group"
+printf 'root:::root\nwheel:!*::robin\nrobin:!*::\nnobody:!*::\n' >"${NEW}/etc/gshadow"
+chmod 600 "${NEW}/etc/shadow"
+printf '[wifi]\nssid=home\n' >"${OLD}/etc/NetworkManager/system-connections/home.nmconnection"
+printf 'old-host\n' >"${OLD}/etc/hostname"
+ln -s /usr/share/zoneinfo/Europe/Paris "${OLD}/etc/localtime"
+ln -s /usr/share/zoneinfo/Asia/Seoul "${NEW}/etc/localtime"
+printf 'menuentry "Windows Boot Manager"\n' >"${OLD}/boot/grub/grub.cfg"
+printf 'menuentry "RobinOS"\n' >"${NEW}/boot/grub/grub.cfg"
+check "reset carries over" 0 robinctl_fn reset_carry_over "${OLD}" "${NEW}"
+said "it names the accounts" "robin, mina"
+grep -qx 'robin:NEWHASH:2::::::' "${NEW}/etc/shadow" && grep -qx 'mina:MINAHASH:2::::::' "${NEW}/etc/shadow" \
+  && ! grep -q OLDHASH "${NEW}/etc/shadow" && ok "the current passwords" || bad "shadow: $(cat "${NEW}/etc/shadow")"
+[[ "$(stat -c %a "${NEW}/etc/shadow")" == 600 ]] && ok "shadow stays 600" || bad "shadow mode changed"
+[[ "$(head -n 1 "${NEW}/etc/shadow")" == 'root:ROOTHASH:2::::::' && "$(head -n 1 "${NEW}/etc/passwd")" == root:* ]] \
+  && ok "root's password too, root stays the first line" || bad "root: $(head -n 1 "${NEW}/etc/shadow")"
+grep -qx 'mina:x:1001:1001::/home/mina:/bin/bash' "${NEW}/etc/passwd" && [[ "$(grep -c '^robin:' "${NEW}/etc/passwd")" == 1 ]] \
+  && grep -qx 'nobody:x:65534:65534::/:/usr/bin/nologin' "${NEW}/etc/passwd" && ok "people in passwd, once each" || bad "passwd: $(cat "${NEW}/etc/passwd")"
+grep -qx 'wheel:x:998:robin,mina' "${NEW}/etc/group" && grep -qx 'mina:x:1001:' "${NEW}/etc/group" \
+  && ! grep -q '^docker:' "${NEW}/etc/group" && ok "wheel keeps both, docker (not installed then) stays out" || bad "group: $(cat "${NEW}/etc/group")"
+grep -qx 'wheel:!\*::robin,mina' "${NEW}/etc/gshadow" && grep -qx 'mina:!\*::' "${NEW}/etc/gshadow" \
+  && ok "gshadow the same" || bad "gshadow: $(cat "${NEW}/etc/gshadow")"
+[[ -f "${NEW}/etc/NetworkManager/system-connections/home.nmconnection" ]] && ok "saved Wi-Fi" || bad "Wi-Fi not carried over"
+[[ "$(cat "${NEW}/etc/hostname")" == old-host && "$(readlink "${NEW}/etc/localtime")" == */Europe/Paris ]] \
+  && ok "computer name and time zone" || bad "hostname or localtime not carried over"
+grep -q Windows "${NEW}/boot/grub/grub.cfg" && ok "the boot menu with Windows" || bad "grub.cfg not carried over"
+
 printf '%s\n' "app remove: RobinOS's own apps stay, others go through pacman"
 APPS="${WORK}/apps"
 mkdir -p "${APPS}"

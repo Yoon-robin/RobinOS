@@ -10,7 +10,9 @@ set -euo pipefail
 #      pacman install
 #   4. Boot the snapshot from before that install from the GRUB menu and run
 #      robinctl snapshot rollback inside it
-#   5. The rolled-back system without the package, then the desktop login
+#   5. The rolled-back system without the package, then the desktop login, then
+#      robinctl snapshot reset (back to the first snapshot)
+#   6. After the reset: /home, robin's new password and the boot menu stayed
 #
 # The repository checkout is shared with the VM as a read-only FAT disk, so the
 # installed system gets this checkout's bin/, scripts/, desktop/, ... (not the
@@ -140,8 +142,10 @@ printf '\n== Phase 3: GRUB snapshot menu, snap-pac snapshots\n'
 run_qemu snapshots
 printf '\n== Phase 4: boot a snapshot from the GRUB menu, roll back from there\n'
 run_qemu snapshot-boot
-printf '\n== Phase 5: the rolled-back system and the desktop\n'
+printf '\n== Phase 5: the rolled-back system and the desktop, then a system reset\n'
 run_qemu rollback
+printf '\n== Phase 6: after the system reset: /home and the new password stayed\n'
+run_qemu reset
 
 printf '\nScreenshots:\n'
 ls -1 "${OUT_DIR}"/*.png 2>/dev/null || printf '  (none)\n'

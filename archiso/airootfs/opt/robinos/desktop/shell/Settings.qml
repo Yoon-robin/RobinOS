@@ -1398,6 +1398,35 @@ FloatingWindow {
                     font.pixelSize: 13
                 }
             }
+
+            // Windows' "이 PC 초기화 (내 파일 유지)": back to the first snapshot (T-187).
+            // The terminal shows what stays and asks before and after
+            Group {
+                title: "시스템 재설정"
+                visible: !ShellState.isLive && (root.upd.next_snapshot ?? 0) > 0
+                hint: "개인 파일, 사용자 계정, 저장한 와이파이는 그대로예요"
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: 6
+                    spacing: 12
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: "설치한 프로그램과 시스템 설정을 설치했을 때로 되돌려요"
+                        color: Theme.fg
+                        font.family: Theme.font
+                        font.pixelSize: 13
+                        wrapMode: Text.WordWrap
+                    }
+
+                    ActionButton {
+                        variant: "danger"
+                        text: "재설정…"
+                        onClicked: ShellState.runInTerminal("sudo robinctl snapshot reset")
+                    }
+                }
+            }
         }
     }
 

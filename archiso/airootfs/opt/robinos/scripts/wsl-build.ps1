@@ -197,9 +197,10 @@ function Invoke-WhpxInstallTest {
         @{ name = "installed"; extra = @() },
         @{ name = "snapshots"; extra = @() },
         @{ name = "snapshot-boot"; extra = @() },
-        @{ name = "rollback"; extra = @() }
+        @{ name = "rollback"; extra = @() },
+        @{ name = "reset"; extra = @() }
     )
-    if ($reuse) { $phases = $phases[1..4] }
+    if ($reuse) { $phases = $phases[1..5] }
 
     $failed = $false
     try {
