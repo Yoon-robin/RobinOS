@@ -8,7 +8,7 @@
 
 다른 PC에서 이어 할 때 먼저 읽어요. 새 PC 준비는 [build-environment.md](build-environment.md) "다른 PC에서 이어서 하기"예요. robin PC는 `3b92fa1`까지 검증하고 푸시했어요(`work/batch79`와 작업 트리 `../RobinOS-wt2`는 정리함. 빈 폴더 `../RobinOS-wt`는 다른 프로그램이 잡고 있어 못 지웠어요, 다음에 지워요).
 
-- **오전~낮에 한 것(robin PC)**: archinstall로 깐 시스템에서 post-install 직후 방화벽이 꺼져 있던 것(바로 켜요), 설치 테스트 archinstall·windows 통과, T-147·T-177 완료, 고대비(T-185, 키트의 고대비 토큰 두 벌과 설정 스위치), 설치본 런처의 휴대폰 연결 장면(T-186), 소개 영상을 robin-ui V5로(T-180 ①), `shell-load.sh`를 소프트웨어 GL로(WSL D3D12가 테마 전환 때 죽어요). 묶음 검증 `3b92fa1` 통과. 그 뒤 윈도우 프로그램 안내 창에서 미션 16으로(T-184, 연습용 `hello.exe`), 묶음 검증 `0932584` 통과
+- **오전~낮에 한 것(robin PC)**: archinstall로 깐 시스템에서 post-install 직후 방화벽이 꺼져 있던 것(바로 켜요), 설치 테스트 archinstall·windows 통과, T-147·T-177 완료, 고대비(T-185, 키트의 고대비 토큰 두 벌과 설정 스위치), 설치본 런처의 휴대폰 연결 장면(T-186), 소개 영상을 robin-ui V5로(T-180 ①), `shell-load.sh`를 소프트웨어 GL로(WSL D3D12가 테마 전환 때 죽어요). 묶음 검증 `3b92fa1` 통과. 그 뒤 윈도우 프로그램 안내 창에서 미션 16으로(T-184, 연습용 `hello.exe`), 묶음 검증 `97a1bb0` 통과
 - **다음 할 일**: T-180 ②(랜딩 페이지 사진, v0.4 때), T-164부터 아래 "할 일" 순서
 - **새벽에 한 것(00:55~04:00, 집 PC)**: 개발 스택 다시 보기([design.md](design.md) "개발 스택 다시 보기", 바탕은 그대로), 셸을 VM 없이 띄워 찍는 `shell-load.sh`, 그걸로 찾은 셸·desktop/bin 버그 열몇 개(품질 점검 기록 "코드 검토"), README 스크린샷을 새 화면으로, 전원 설정이 두 번째 선택부터 hypridle에 안 들어가던 회귀(잠금 fd 상속), 터미널 한글 간격(T-183), 밝기 키가 키보드 LED를 건드리던 것, `.msi` 기본 앱, 설치본이 릴리스 열쇠를 다시 받게(T-177 ③), 설치 테스트가 업데이트 미리 보기 줄을 확인(T-162), 진행 중 작업 21개를 17개로(T-176). 묶음 검증 두 번과 설치 테스트 한 번 통과(정기 점검 표, 푸시 대기 커밋)
 - **새 도구**: `bash scripts/shell-load.sh -s 파일.png quickSettings settings launcher`로 VM 없이 몇 초 만에 셸 화면을 찍어요(WSL, sway와 grim은 `setup`이 깔아요. 한글 글꼴은 `bash scripts/fetch-fonts.sh /usr/local/share/fonts/robinos` 뒤 `fc-cache -f`). 화면을 고친 뒤 바로 보기에 좋아요. 터미널 글꼴은 같은 화면 없는 sway에서 Python GTK로 VTE 창 하나를 띄워 `grim`으로 찍으면 Ptyxis와 똑같이 그려져요(Ptyxis는 그 환경에서 사용자 세션 버스가 없어 안 떠요)
@@ -28,7 +28,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
-| 2026-11-24 (낮 12시 반) | `0932584` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.6분, 테스트 24.5분) | 통과. 판정 22개 모두 PASS(새 장면 `windows-app-learn`, T-184). 설치 테스트 다섯 단계 |
+| 2026-11-24 (낮 12시 반) | `97a1bb0` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.6분, 테스트 24.5분) | 통과. 판정 22개 모두 PASS(새 장면 `windows-app-learn`, T-184). 설치 테스트 다섯 단계 |
 | 2026-11-24 (낮 12시) | `3b92fa1` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 24.2분) | 통과. 판정 21개 모두 PASS. 새 장면 `95-high-contrast-light`·`96-high-contrast-launcher`·`97-accessibility-settings`(T-185), 설치 테스트 `rollback-10-launcher-phone`(T-186). 설치 테스트 다섯 단계 |
 
 ## 품질 점검 기록
@@ -49,7 +49,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 `git log origin/main..HEAD`에 있는 커밋과, 푸시하기 전에 통과해야 하는 검증이에요. 검증이 끝나면 지우고 푸시해요.
 
-없어요. `0932584`까지 2026-11-24 낮 robin PC의 `verify -Installer robinos`를 마치고 푸시했어요.
+없어요. `97a1bb0`까지 2026-11-24 낮 robin PC의 `verify -Installer robinos`를 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
