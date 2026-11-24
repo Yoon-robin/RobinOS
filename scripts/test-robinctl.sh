@@ -632,6 +632,12 @@ printf '<snapshot><description>RobinOS snapshot setup</description></snapshot>\n
 robinctl_fn() { (eval "$(sed '$d' "${ROBINCTL}")"; "$@"); }
 [[ "$(robinctl_fn snapshot_first "${SNAPS}")" == "1" ]] && ok "the first setup snapshot is 1" || bad "snapshot_first: $(robinctl_fn snapshot_first "${SNAPS}")"
 [[ -z "$(robinctl_fn snapshot_first "${WORK}/no-snaps")" ]] && ok "no setup snapshot, no number" || bad "snapshot_first found one in an empty folder"
+# The way snapshot_reset calls it, under robinctl's set -e: the last folder looked at
+# (7, cowsay) is no match, and that must not end robinctl. A command of its own: in
+# a [[ ]] && list bash would not apply set -e at all
+(eval "$(sed '$d' "${ROBINCTL}")"; n="$(snapshot_first "${SNAPS}")"; printf 'got %s\n' "${n}") >"${WORK}/first.out" 2>&1
+grep -qx "got 1" "${WORK}/first.out" && ok "snapshot_first in an assignment under set -e" \
+  || bad "snapshot_first ends robinctl under set -e"
 OLD="${WORK}/reset-old"
 NEW="${WORK}/reset-new"
 mkdir -p "${OLD}/etc/NetworkManager/system-connections" "${NEW}/etc" "${OLD}/boot/grub" "${NEW}/boot/grub"
@@ -653,7 +659,9 @@ ln -s /usr/share/zoneinfo/Europe/Paris "${OLD}/etc/localtime"
 ln -s /usr/share/zoneinfo/Asia/Seoul "${NEW}/etc/localtime"
 printf 'menuentry "Windows Boot Manager"\n' >"${OLD}/boot/grub/grub.cfg"
 printf 'menuentry "RobinOS"\n' >"${NEW}/boot/grub/grub.cfg"
-check "reset carries over" 0 robinctl_fn reset_carry_over "${OLD}" "${NEW}"
+# On its own, under set -e (check would run it inside ||, where bash ignores it)
+(eval "$(sed '$d' "${ROBINCTL}")"; reset_carry_over "${OLD}" "${NEW}"; printf 'carried\n') >"${WORK}/out" 2>&1
+said "reset carries over (to the end, under set -e)" "carried"
 said "it names the accounts" "robin, mina"
 grep -qx 'robin:NEWHASH:2::::::' "${NEW}/etc/shadow" && grep -qx 'mina:MINAHASH:2::::::' "${NEW}/etc/shadow" \
   && ! grep -q OLDHASH "${NEW}/etc/shadow" && ok "the current passwords" || bad "shadow: $(cat "${NEW}/etc/shadow")"

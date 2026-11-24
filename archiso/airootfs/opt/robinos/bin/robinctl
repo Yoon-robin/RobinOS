@@ -1226,9 +1226,13 @@ snapshot_booted() {
 # number, nothing without one. $1: the folder that holds the snapshots.
 snapshot_first() {
   local info
+  # An if, not &&: a last snapshot that doesn't match would fail the pipeline, and
+  # under set -e the caller's number="$(...)" ends robinctl without a word (install
+  # test, 2026-11-24)
   for info in "${1:-/.snapshots}"/*/info.xml; do
-    [[ -f "${info}" ]] && grep -q '<description>RobinOS snapshot setup</description>' "${info}" \
-      && basename "$(dirname "${info}")"
+    if [[ -f "${info}" ]] && grep -q '<description>RobinOS snapshot setup</description>' "${info}"; then
+      basename "$(dirname "${info}")"
+    fi
   done | sort -n | head -n 1
 }
 
@@ -1276,7 +1280,7 @@ reset_merge_accounts() {
 # system, $2 the new one (both subvolumes, mounted).
 reset_carry_over() {
   local old="$1" new="$2" file humans newhumans oldhg newhg merged
-  humans="$(awk -F: '$3 >= 1000 && $3 < 60000 { print $1 }' "${old}/etc/passwd" 2>/dev/null | paste -sd, -)"
+  humans="$(awk -F: '$3 >= 1000 && $3 < 60000 { print $1 }' "${old}/etc/passwd" 2>/dev/null | paste -sd, -)" || humans=""
   if [[ -n "${humans}" && -f "${old}/etc/shadow" && -f "${old}/etc/group" && -f "${old}/etc/gshadow" ]]; then
     newhumans="$(awk -F: '$3 >= 1000 && $3 < 60000 { print $1 }' "${new}/etc/passwd" | paste -sd, -)"
     oldhg="$(awk -F: '$3 >= 1000 && $3 < 60000 { print $1 }' "${old}/etc/group" | paste -sd, -)"
@@ -1328,7 +1332,8 @@ snapshot_reset() {
   printf '%s시스템 재설정%s: 개인 파일은 두고 시스템을 설치했을 때로 되돌려요.\n' "${C_BOLD}" "${C_RESET}"
   printf '  그대로: 홈 폴더(문서, 사진, 내 설정), 사용자 계정과 지금 비밀번호, 저장한 와이파이, 컴퓨터 이름, 시간대\n'
   printf '  설치 때로: 설치한 프로그램과 업데이트, 앱 스토어 앱, 그 밖의 시스템 설정(프린터, 방화벽 규칙)\n\n'
-  SNAPSHOT_RESET="true" snapshot_rollback "${number}" || return
+  # Not under || or &&: those turn set -e off inside, and a failed mv would go on
+  SNAPSHOT_RESET="true" snapshot_rollback "${number}"
   [[ "${SNAPSHOT_RESET_DONE:-}" == "true" ]] || return 0
 
   printf '\n다시 시작한 뒤 업데이트해요: sudo robinctl update\n'
