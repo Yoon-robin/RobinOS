@@ -371,16 +371,25 @@ def wait_network(con):
 # with a marker file. The rest of the 64 GB disk is free, as after shrinking
 # C: in Disk Management. robin-install then installs next to it.
 
-WINDOWS_PARTITIONS = (1, 2, 3)
+WINDOWS_PARTITIONS = (1, 2, 3, 9)
 
 
 def make_windows_disk(con):
     con.run("sgdisk --zap-all /dev/vda > /dev/null"
             " && sgdisk -n 1:0:+100M -t 1:ef00 -c '1:EFI system partition'"
             " -n 2:0:+16M -t 2:0c01 -c '2:Microsoft reserved partition'"
-            " -n 3:0:+20G -t 3:0700 -c '3:Basic data partition' /dev/vda"
+            " -n 3:0:+20G -t 3:0700 -c '3:Basic data partition'"
+            # A BitLocker data drive (D:), numbered 9 so the partitions made later are 4
+            " -n 9:0:+64M -t 9:0700 -c '9:Basic data partition' /dev/vda"
             " && partprobe /dev/vda && udevadm settle")
     con.run("mkfs.fat -F 32 -n SYSTEM /dev/vda1 > /dev/null && mkfs.ntfs -Q -L Windows /dev/vda3 > /dev/null")
+    # What blkid takes for BitLocker (Windows 7 and later): its boot sector signature
+    # and, at the offset written at byte 176, the FVE metadata's (T-147)
+    con.run(r"printf '\xeb\x58\x90-FVE-FS-' | dd of=/dev/vda9 conv=notrunc status=none"
+            r" && printf '\x00\x00\x10\x00\x00\x00\x00\x00' | dd of=/dev/vda9 bs=1 seek=176 conv=notrunc status=none"
+            r" && printf -- '-FVE-FS-' | dd of=/dev/vda9 bs=1 seek=1048576 conv=notrunc status=none"
+            r" && sync && udevadm trigger --settle /dev/vda9 && blkid -p /dev/vda9"
+            r' && [ "$(lsblk -no FSTYPE /dev/vda9)" = BitLocker ]')
     con.run("mkdir -p /tmp/esp /tmp/win"
             " && mount /dev/vda1 /tmp/esp && mkdir -p /tmp/esp/EFI/Microsoft/Boot"
             " && echo 'stand-in for the Windows boot manager' > /tmp/esp/EFI/Microsoft/Boot/bootmgfw.efi"
@@ -395,7 +404,7 @@ def windows_state(con):
     """What must not change: the Windows partitions' table entries and the start of C:."""
     parts = " ; ".join(f"sgdisk -i {n} /dev/vda" for n in WINDOWS_PARTITIONS)
     _, table = con.capture(parts)
-    _, head = con.capture("head -c 64M /dev/vda3 | sha256sum")
+    _, head = con.capture("head -c 64M /dev/vda3 | sha256sum; head -c 2M /dev/vda9 | sha256sum")
     return table.strip() + "\n" + head.strip()
 
 
@@ -437,7 +446,16 @@ disk = next(d for d in ri.list_disks() if d["path"] == "/dev/vda")
 free = disk["free"] // ri.GIB
 print("free space:", free, "GB")
 assert disk["can_alongside"] and not disk["can_partition"], (disk["can_alongside"], disk["can_partition"])
-esp, root = ri.prepare_disk({"mode": "alongside", "size_gb": 41}, disk)
+# The BitLocker drive: nothing happens to the disk before the recovery key is confirmed
+assert disk["windows"] and disk["bitlocker"], disk
+table = subprocess.check_output(["sgdisk", "-p", "/dev/vda"])
+try:
+    ri.prepare_disk({"mode": "alongside", "size_gb": 41}, disk)
+    raise AssertionError("prepare_disk went on without bitlocker_key_saved")
+except ri.InstallError as e:
+    print("refused:", e)
+assert subprocess.check_output(["sgdisk", "-p", "/dev/vda"]) == table
+esp, root = ri.prepare_disk({"mode": "alongside", "size_gb": 41, "bitlocker_key_saved": True}, disk)
 size = int(subprocess.check_output(["lsblk", "-bno", "SIZE", root]).split()[0])
 print(root, size)
 assert abs(size - 41 * ri.GIB) <= 1048576, size
@@ -459,8 +477,9 @@ by = {p["path"]: p for p in disk["partitions"]}
 print({path: (p["kind"], p["fstype"], p["label"], p["usable"], p["reason"]) for path, p in by.items()})
 assert disk["can_partition"] and not disk["can_alongside"]
 assert by["/dev/vda4"]["usable"] and by["/dev/vda4"]["fstype"] == "ntfs" and by["/dev/vda4"]["label"] == "Data"
-for path in ("/dev/vda1", "/dev/vda2", "/dev/vda3"):
+for path in ("/dev/vda1", "/dev/vda2", "/dev/vda3", "/dev/vda9"):
     assert not by[path]["usable"] and by[path]["reason"], path
+assert by["/dev/vda9"]["fstype"] == "BitLocker" and disk["bitlocker"]
 assert ri.windows_inside("/dev/vda3") is True
 assert ri.windows_inside("/dev/vda4") is False
 """
@@ -552,11 +571,20 @@ def drive_installer(con, qmp, install=False):
     state = wait_installer(con, "step 4, the confirmation", lambda st: st["step"] == 3)
     if state["canNext"] or state["eraseConfirmed"]:
         raise RuntimeError(f"the installer lets 설치 시작 through before the files that go are confirmed: {state}")
+    if not state["bitlockerAtRisk"] or state["recoveryConfirmed"]:
+        raise RuntimeError(f"the installer doesn't ask about the BitLocker recovery key: {state}")
     shot(qmp, "installer-confirm")
     # The first thing Tab reaches is the check box "the files of this partition are erased"
     qmp.keys("tab")
     qmp.keys("spc")
     state = wait_installer(con, "the erase is confirmed", lambda st: st["eraseConfirmed"])
+    # Then the BitLocker drive's: the recovery key is written down (T-147)
+    if state["canNext"]:
+        raise RuntimeError(f"the installer lets 설치 시작 through before the recovery key is confirmed: {state}")
+    shot(qmp, "installer-bitlocker")
+    qmp.keys("tab")
+    qmp.keys("spc")
+    state = wait_installer(con, "the recovery key is confirmed", lambda st: st["recoveryConfirmed"])
     if not state["canNext"] or state["partition"] != "/dev/vda4" or state["mode"] != "partition":
         raise RuntimeError(f"the confirmed installer is not ready for the Data partition: {state}")
     shot(qmp, "installer-confirmed")

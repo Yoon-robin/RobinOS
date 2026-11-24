@@ -141,17 +141,17 @@ WHPX가 필요해요. TCG에서는 `build`, `boot-test`, `install-test`를 차�
 - `archinstall` (기본): [install.md](install.md)의 방법 A예요. archinstall로 Arch를 설치하고(기본 Btrfs 구성, GRUB, EFI는 `/boot`) `scripts/post-install.sh --yes`를 실행해요. git 체크아웃에는 패키지가 없어서 설치 후 설정이 RobinOS 저장소에서 `robinos`를 받아 옮겨요(T-177 ②). 깃허브의 저장소 대신 ISO의 같은 커밋 패키지로 만든 로컬 저장소를 쓰고, 예전 방식으로 복사해 둔 `robinctl`과 설정 파일을 덮어쓰는지 본 뒤 진짜 저장소로 되돌려요.
 - `robinos`: RobinOS 설치기 백엔드(`installer/robin-install`)로 디스크 전체에 설치해요(EFI는 `/efi`).
 - `encrypted`: `robinos`와 같지만 디스크 암호화를 켜요(LUKS2, T-178·T-179). 설치 뒤 복구 키가 화면 줄(`@@ recovery-key`)에만 있고 로그 파일에는 없는지 봐요. 설치본을 켤 때마다 GRUB이 화면에서 비밀번호를 물어서, 시리얼에 메뉴가 안 보이면 QMP로 비밀번호를 쳐요(`grub-password` 스크린샷, 잠금 해제에 걸린 시간을 기록). 두 번째 부팅(snapshots)은 비밀번호 대신 복구 키로 열어요.
-- `windows`: 윈도우가 깔린 것처럼 꾸민 64GB 디스크(100MB EFI 파티션과 그 안의 윈도우 부팅 관리자 자리, MSR, 20GB NTFS "C:", 나머지 빈 공간)에 RobinOS 설치기로 설치해요. 순서는 이래요.
+- `windows`: 윈도우가 깔린 것처럼 꾸민 64GB 디스크(100MB EFI 파티션과 그 안의 윈도우 부팅 관리자 자리, MSR, 20GB NTFS "C:", BitLocker로 잠긴 64MB "D:", 나머지 빈 공간)에 RobinOS 설치기로 설치해요. 순서는 이래요.
   1. 빈 공간(약 44GB)이 있는 때의 설치 화면을 찍어요(`installer-free-space`): "윈도우 옆에 설치"가 고르는 중이고 크기가 빈 공간 전부인지.
-  2. 크기를 정해 보기: 진짜 `sgdisk`로 41GB 파티션이 만들어지는지, 남은 빈 공간이 2GB인지, 그 파티션이 "이전 RobinOS"로 알아봐지는지. 그다음 지워요.
+  2. 크기를 정해 보기: BitLocker 드라이브가 있어서 복구 키 확인(`bitlocker_key_saved`) 없이는 디스크를 건드리기 전에 멈추는지 보고, 확인을 넣어 진짜 `sgdisk`로 41GB 파티션이 만들어지는지, 남은 빈 공간이 2GB인지, 그 파티션이 "이전 RobinOS"로 알아봐지는지. 그다음 지워요.
   3. 윈도우 디스크 관리가 남기는 것처럼 41GB NTFS "Data" 파티션을 만들고, 설치기가 그 파티션은 내놓고 윈도우가 든 C:(`windows_inside`가 읽기 전용 마운트로 확인)는 내놓지 않는지 봐요.
-  4. 설치 화면을 키보드로 확인 단계까지 몰아요(`qs ipc call shell installerState`로 상태를 읽어요): Data 파티션이 미리 골라져 있는지, 지울 파티션을 체크하기 전에는 "설치 시작"이 안 열리고 체크하면 열리는지. 그다음 "설치 시작"을 눌러(`installerNext`) 설치 화면이 직접 설치하게 해요(2026-10-14부터): 화면이 `sudo robin-install run -`에 계획을 넘기고, 진행 막대가 패키지를 설치하는 동안 움직이고(43~69% 구간을 지나는지), 끝나면 "설치가 끝났어요" 쪽으로 가는지(`installerState`의 `succeeded`) 봐요. 화면 스크린샷 `installer-installing`, `installer-finished`.
-  5. 그 설치가 그 파티션에 들어갔는지 확인해요(`mode: partition`, 계획의 `disk_id`·`partition_uuid`도 화면이 보내요). 파티션 이름이 RobinOS, 형식이 리눅스로 바뀌었는지, 윈도우 파티션 세 개의 위치와 C:의 앞부분이 그대로인지, 윈도우 부팅 파일이 남아 있고 `EFI/RobinOS`만 더해졌는지, 하드웨어 시계가 지역 시간인지, GRUB 메뉴에 윈도우가 나오는지 확인해요.
+  4. 설치 화면을 키보드로 확인 단계까지 몰아요(`qs ipc call shell installerState`로 상태를 읽어요): Data 파티션이 미리 골라져 있는지, 지울 파티션과 BitLocker 복구 키(T-147)를 둘 다 체크하기 전에는 "설치 시작"이 안 열리고 체크하면 열리는지(`installer-bitlocker` 스크린샷). 그다음 "설치 시작"을 눌러(`installerNext`) 설치 화면이 직접 설치하게 해요(2026-10-14부터): 화면이 `sudo robin-install run -`에 계획을 넘기고, 진행 막대가 패키지를 설치하는 동안 움직이고(43~69% 구간을 지나는지), 끝나면 "설치가 끝났어요" 쪽으로 가는지(`installerState`의 `succeeded`) 봐요. 화면 스크린샷 `installer-installing`, `installer-finished`.
+  5. 그 설치가 그 파티션에 들어갔는지 확인해요(`mode: partition`, 계획의 `disk_id`·`partition_uuid`도 화면이 보내요). 파티션 이름이 RobinOS, 형식이 리눅스로 바뀌었는지, 윈도우 파티션 네 개의 위치와 C:·D:의 앞부분이 그대로인지, 윈도우 부팅 파일이 남아 있고 `EFI/RobinOS`만 더해졌는지, 하드웨어 시계가 지역 시간인지, GRUB 메뉴에 윈도우가 나오는지 확인해요.
   화면 스크린샷(`live-0N-installer-*`)은 다음 시험이 폴더를 비우기 전에 챙겨 둬요.
 
 설치한 뒤 확인하는 것:
 
-1. `robinctl doctor`, 스냅샷 설정, `/etc/fstab`의 `@snapshots`, grub-btrfs 항목, 부팅 메뉴 이름, 보안 프로필 목록, 설치본 전용 앱(`packages/apps.txt`: 인쇄 서비스가 응답하는지, LibreOffice 한국어판, 앱 스토어와 Flathub 저장소, 동영상·음악 재생 앱과 `gio`로 본 기본 앱, 디스크 관리(`gnome-disks`)와 디스크 사용량(`baobab`)), 바의 업데이트 점이 쓰는 `checkupdates`, Firefox 원격 측정을 끄는 정책, 배경화면 포털 백엔드와 포털 설정, `filesystem`을 다시 설치한 뒤에도 RobinOS인 os-release, 사용자 `~/.bashrc`의 RobinOS 설정, `which`·`ssh-keygen`·`gpg`·`wtype`·`lspci`·`lsusb`·`diff`(학습 미션, 이모지, 런처의 장치 관리자에 필요), 소리 서버의 실시간 우선순위(`rtkit`), RobinOS 파일이 `robinos` 패키지 소유인지(설치기 방식만)와 `[robinos]` 저장소·열쇠·`pacman -Si robinos`, 다른 패키지가 가진 두 파일(`/etc/skel/.bashrc`, `/etc/xdg/foot/foot.ini`)이 RobinOS 내용인지, 열린 포트
+1. `robinctl doctor`, 스냅샷 설정, `/etc/fstab`의 `@snapshots`, grub-btrfs 항목, 부팅 메뉴 이름, 보안 프로필 목록, 설치본 전용 앱(`packages/apps.txt`: 인쇄 서비스가 응답하는지, LibreOffice 한국어판, 앱 스토어와 Flathub 저장소, 동영상·음악 재생 앱과 `gio`로 본 기본 앱, 디스크 관리(`gnome-disks`)와 디스크 사용량(`baobab`)), 바의 업데이트 점이 쓰는 `checkupdates`, Firefox 원격 측정을 끄는 정책, 배경화면 포털 백엔드와 포털 설정, `filesystem`을 다시 설치한 뒤에도 RobinOS인 os-release, 사용자 `~/.bashrc`의 RobinOS 설정, `which`·`ssh-keygen`·`gpg`·`wtype`·`lspci`·`lsusb`·`diff`(학습 미션, 이모지, 런처의 장치 관리자에 필요), 소리 서버의 실시간 우선순위(`rtkit`), RobinOS 파일이 `robinos` 패키지 소유인지(archinstall 방식은 설치 후 설정이 저장소에서 받아 옮긴 것)와 `[robinos]` 저장소·열쇠·`pacman -Si robinos`, 다른 패키지가 가진 두 파일(`/etc/skel/.bashrc`, `/etc/xdg/foot/foot.ini`)이 RobinOS 내용인지, 열린 포트
 2. 재부팅해서 GRUB 메뉴와 스냅샷 하위 메뉴 스크린샷
 3. `pacman -S cowsay`로 snap-pac의 전후 스냅샷이 생기는지
 4. 다시 켜서 GRUB의 스냅샷 하위 메뉴로 cowsay 설치 전 스냅샷을 골라 부팅하고([recovery.md](recovery.md)의 비상 경로), 그 안에서 `robinctl snapshot rollback`
