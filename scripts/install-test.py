@@ -1172,8 +1172,9 @@ def phase_rollback(con, qmp):
     shot(qmp, "desktop-after-wizard")
     # Windows names for apps only the installed system has (packages/apps.txt):
     # "word" finds LibreOffice Writer, "store" GNOME Software, "printer" the printer
-    # settings, "steam" offers Steam from the app store (Flathub), "video" the video player
-    for query in ("word", "store", "printer", "steam", "video"):
+    # settings, "steam" offers Steam from the app store (Flathub), "video" the video player,
+    # "phone" (휴대폰과 연결, T-186) offers LocalSend from the store and the firewall rule
+    for query in ("word", "store", "printer", "steam", "video", "phone"):
         qmp.keys("meta_l", "spc")
         sleep(3)
         qmp.type_text(query)

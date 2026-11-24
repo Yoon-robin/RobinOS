@@ -13,6 +13,8 @@ Singleton {
     id: root
 
     readonly property bool dark: saved.dark
+    // "고대비" (Settings.qml, T-185): the kit's high-contrast lines and soft words
+    readonly property bool highContrast: saved.highContrast
 
     // The one colour: on, chosen, link, progress, the window border
     readonly property color accent: dark ? "#4b7dfe" : "#3566e8"
@@ -28,7 +30,7 @@ Singleton {
     readonly property color raised: dark ? "#14151c" : "#f1f1f2"
     readonly property color secondary: dark ? "#14151c" : "#f1f1f2"
     readonly property color secondaryHover: dark ? "#1b1d25" : "#e9ecf0"
-    readonly property color controlLineHover: dark ? "#32343b" : "#c6cad2"
+    readonly property color controlLineHover: highContrast ? (dark ? "#8a8e94" : "#616161") : (dark ? "#32343b" : "#c6cad2")
     readonly property color controlPress: dark ? "#20222b" : "#dfe3e9"
     readonly property color chosen: dark ? "#222629" : "#dfe3e9"
     // The switch: a dark groove with a 1px line when off, blue with a white knob when on
@@ -41,12 +43,14 @@ Singleton {
     readonly property color head: dark ? "#f0f0f0" : "#000000"
     readonly property color fg: dark ? "#e6e7e9" : "#1a1a1a"
     readonly property color fgSoft: dark ? "#e6e7e9" : "#1a1a1a"
-    readonly property color muted: dark ? "#8a8e94" : "#616161"
-    readonly property color subtle: dark ? "#7d8187" : "#727272"
+    readonly property color muted: highContrast ? (dark ? "#c4c7cc" : "#3d3d3d") : (dark ? "#8a8e94" : "#616161")
+    readonly property color subtle: highContrast ? (dark ? "#b8bcc2" : "#4a4a4a") : (dark ? "#7d8187" : "#727272")
 
-    readonly property color border: dark ? "#181a1d" : "#e3e6eb"
-    readonly property color borderStrong: dark ? "#26272d" : "#dedee3"
-    readonly property color input: dark ? "#26272d" : "#dedee3"
+    // High contrast (rk data-contrast="high"): lines 3:1 against every face
+    readonly property color hcLine: dark ? "#6b7078" : "#7d828b"
+    readonly property color border: highContrast ? hcLine : (dark ? "#181a1d" : "#e3e6eb")
+    readonly property color borderStrong: highContrast ? hcLine : (dark ? "#26272d" : "#dedee3")
+    readonly property color input: highContrast ? hcLine : (dark ? "#26272d" : "#dedee3")
 
     // The filled button: blue with white words, one per screen
     readonly property color primary: dark ? "#3d6af0" : "#3566e8"
@@ -69,7 +73,7 @@ Singleton {
     readonly property color barBg: side
     readonly property color dockBg: panel
     readonly property color panel: dark ? "#08090b" : "#ffffff"
-    readonly property color panelBorder: dark ? "#1c1e22" : "#dedee3"
+    readonly property color panelBorder: highContrast ? hcLine : (dark ? "#1c1e22" : "#dedee3")
     // Tiles and buttons inside a panel (quick settings)
     readonly property color tile: secondary
     readonly property color tileHover: secondaryHover
@@ -123,6 +127,12 @@ Singleton {
         applySystem();
     }
 
+    function setHighContrast(value) {
+        saved.highContrast = value;
+        store.writeAdapter();
+        applySystem();
+    }
+
     function setLargeText(value) {
         saved.largeText = value;
         store.writeAdapter();
@@ -136,8 +146,8 @@ Singleton {
         const icons = dark ? "Papirus-Dark" : "Papirus";
         const palette = dark ? "RobinOS-Dark.conf" : "RobinOS-Light.conf";
         const footSignal = dark ? "USR1" : "USR2";
-        const active = dark ? "rgba(32343bff)" : "rgba(c6cad2ff)";
-        const inactive = dark ? "rgba(181a1dff)" : "rgba(e3e6ebff)";
+        const active = "rgba(" + String(controlLineHover).slice(1) + "ff)";
+        const inactive = "rgba(" + String(border).slice(1) + "ff)";
         const background = dark ? "0xff0a0e11" : "0xfff4f5f7";
 
         const script = [
@@ -146,6 +156,7 @@ Singleton {
             "gsettings set org.gnome.desktop.interface icon-theme '" + icons + "'",
             "gsettings set org.gnome.desktop.interface accent-color 'blue'",
             "gsettings set org.gnome.desktop.interface enable-animations " + (reduceMotion ? "false" : "true"),
+            "gsettings set org.gnome.desktop.a11y.interface high-contrast " + (highContrast ? "true" : "false"),
             "gsettings set org.gnome.desktop.interface text-scaling-factor " + (largeText ? "1.25" : "1.0"),
             "hyprctl eval 'hl.config({ animations = { enabled = " + (reduceMotion ? "false" : "true") + " } })'",
             "pkill -" + footSignal + " -x foot",
@@ -180,6 +191,7 @@ Singleton {
             property bool dark: true
             property bool reduceMotion: false
             property bool largeText: false
+            property bool highContrast: false
         }
     }
 }

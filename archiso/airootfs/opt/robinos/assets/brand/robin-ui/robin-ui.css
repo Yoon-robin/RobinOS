@@ -125,6 +125,33 @@
   --rk-scroll: #c6cad2;
 }
 
+/* High contrast (data-contrast="high", with either theme): the faces, the blue and the
+   indicator tones stay; lines reach 3:1 against every face and the soft and faint words
+   7:1, so edges and secondary text read without the low-contrast calm of the default. */
+[data-contrast="high"] {
+  --rk-line: #6b7078;
+  --rk-line-side: #6b7078;
+  --rk-control-line: #6b7078;
+  --rk-control-line-hover: #8a8e94;
+  --rk-hud-line: #6b7078;
+  --rk-chip-line: #6b7078;
+  --rk-soft: #c4c7cc;
+  --rk-faint: #b8bcc2;
+  --rk-scroll: #74787f;
+}
+
+[data-theme="light"][data-contrast="high"] {
+  --rk-line: #7d828b;
+  --rk-line-side: #7d828b;
+  --rk-control-line: #7d828b;
+  --rk-control-line-hover: #616161;
+  --rk-hud-line: #7d828b;
+  --rk-chip-line: #7d828b;
+  --rk-soft: #3d3d3d;
+  --rk-faint: #4a4a4a;
+  --rk-scroll: #7d828b;
+}
+
 /* ---------- base (opt in: put class="rk" on <body> or a wrapper) ---------- */
 .rk {
   margin: 0;

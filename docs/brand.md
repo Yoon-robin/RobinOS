@@ -39,7 +39,7 @@ RobinOS는 예쁜 UI를 가진 OS예요([design.md](design.md)의 "정체성 다
 
 ### 팔레트
 
-원본은 `assets/brand/robin-ui/robin-ui.css`(그리고 같은 값의 `tokens.json`)이고, 셸은 `desktop/shell/Theme.qml`이 같은 값을 들고 있어요.
+원본은 `assets/brand/robin-ui/robin-ui.css`(그리고 같은 값의 `tokens.json`)이고, 셸은 `desktop/shell/Theme.qml`이 같은 값을 들고 있어요. 고대비(`data-contrast="high"`, 셸은 `Theme.highContrast`)는 면·파란색·알림 색을 그대로 두고 선과 흐린 글자만 진하게 바꾼 토큰 한 벌이에요(선은 모든 면에 3:1, 흐린 글자는 7:1 넘게).
 
 | 키트 토큰 | Theme.qml | 다크 (기본) | 라이트 |
 |---|---|---|---|

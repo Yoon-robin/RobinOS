@@ -90,9 +90,12 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: 부팅 테스트의 모든 장면이 키트 문법(면 셋, 파랑 하나, 컨트롤 모서리 7, 유리 없음)을 따르고, 시스템 화면(로그인, 잠금, 부팅 메뉴)도 같은 색
 
 ### T-185 접근성: 고대비와 셸 글자 크기
-- 상태: 할 일 (2026-11-24, T-161에서 떼어 냄)
+- 상태: 검증 대기 (2026-11-24 robin PC, work/batch79)
 - 할 것: 설정 "손쉬운 사용"에 고대비(robin-ui 키트의 면·글자 대비를 높인 토큰 한 벌), 셸 자체의 글자 크기(지금은 화면 배율로만), 움직임 줄이기·앱 글자 크게를 켠 부팅 테스트 장면
 - 완료 기준: 두 가지가 설정에서 켜지고 다시 켜도 유지되고, 부팅 테스트에 켠 장면이 있어요
+- 한 것(2026-11-24 robin PC): 키트에 고대비 토큰 두 벌(`robin-ui.css`의 `[data-contrast="high"]`, 라이트는 `[data-theme="light"][data-contrast="high"]`, `tokens.json`의 `dark-high`·`light-high`). 면·파란색·알림 색은 그대로 두고 선(모든 면에 3:1 넘게)과 흐린 글자(7:1 넘게)만 진하게. 셸은 `Theme.highContrast`(appearance.json에 저장)가 `border`·`borderStrong`·`input`·`panelBorder`·`controlLineHover`·`muted`·`subtle`을 바꾸고 GTK의 `org.gnome.desktop.a11y.interface high-contrast`와 Hyprland 창 테두리도 따라가요. 설정 "손쉬운 사용"에 "고대비" 스위치, IPC `setHighContrast`·`setReduceMotion`·`setLargeText`, 부팅 테스트에서 셋을 모두 켜고 GTK가 받은 값(true, false, 1.25)을 보여 주는 `high-contrast-light`, `high-contrast-launcher`, 설정 화면 `accessibility-settings` 장면. shell-load.sh로 두 테마 모두 찍어 봤어요
+- 셸 글자 크기는 따로 두지 않기로(2026-11-24): 셸 QML에 글자 크기 숫자가 189곳, 행 높이 41 같은 고정값이 있어서 글자만 키우면 잘리고, 빠른 설정의 화면 배율(125%~200%)이 셸 전체를 같은 비율로 키워요. 윈도우도 "텍스트 크기"와 "배율"이 따로지만 RobinOS는 배율 하나로 해요
+- 남은 것: 묶음 검증에서 세 장면 확인
 
 ### T-186 휴대폰 연결 (LocalSend)
 - 상태: 검증 대기 (ufw 프로필과 dry-run 규칙은 2026-11-24 `verify` 설치 테스트 통과. 설치본 런처에서 "phone"으로 찾는 장면은 work/batch79)

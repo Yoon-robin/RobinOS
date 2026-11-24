@@ -80,7 +80,10 @@ if [[ -n "${shot}" ]]; then
   printf '{"done": true, "goal": "explore", "imeShortcut": "ctrl"}\n' \
     >"${work}/state/quickshell/by-shell/${shell_id}/welcome.json"
 fi
+# Software GL (llvmpipe): WSL's D3D12 driver loses the GL context when the whole
+# shell repaints at once (setDark, setHighContrast) and Quickshell crashes (2026-11-24)
 QT_QPA_PLATFORM=wayland HOME="${work}/home" XDG_STATE_HOME="${work}/state" \
+  LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe \
   qs -p "${work}/shell" >"${work}/qs.log" 2>&1 </dev/null &
 qs_pid=$!
 

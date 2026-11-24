@@ -24,7 +24,7 @@
   <section class="scene" id="s-hero">
     <div class="hero">
       <p class="eyebrow" data-words>RobinOS</p>
-      <h1><span class="line" data-words>처음 쓰는</span><span class="line grad" data-words>리눅스.</span></h1>
+      <h1><span class="line" data-words>예쁜 UI를 가진</span><span class="line grad" data-words>OS.</span></h1>
     </div>
   </section>
 
@@ -34,11 +34,10 @@
       <div class="display-inner">
         <div class="shot" id="sc-grub">
           <div class="crop" data-src="grub.png" data-crop="0,0,1600,900" data-fit="display"></div>
-          <i class="patch" data-patch="grub.png" data-rect="180,118,260,32"></i>
-          <i class="patch" data-patch="grub.png" data-rect="520,768,560,32"></i>
         </div>
         <div class="shot" id="sc-login">
-          <div class="crop" data-src="login.png" data-crop="53,0,1493,840" data-fit="display"></div>
+          <div class="crop" data-src="login.png" data-crop="0,0,1600,900" data-fit="display"></div>
+          <i class="patch" data-patch="login.png" data-rect="790,444,22,28"></i>
           <div class="pw" id="pw"></div>
         </div>
         <div class="shot" id="sc-desk"><div class="crop" data-src="desktop-real.png" data-crop="0,0,1600,900" data-fit="display"></div></div>
@@ -58,12 +57,12 @@
     </div>
     <div class="deck" id="deck">
       <div class="card" id="c-launcher">
-        <div class="crop" data-src="launcher-dark.png" data-crop="480,153,640,318" data-scale="1.42" data-fade></div>
-        <div class="crop over" id="c-launcher-result" data-src="launcher-notepad.png" data-crop="480,153,640,272" data-scale="1.42"></div>
+        <div class="crop" data-src="launcher-dark.png" data-crop="460,153,680,190" data-scale="1.336" data-fade></div>
+        <div class="crop over" id="c-launcher-result" data-src="launcher-notepad.png" data-crop="460,153,680,190" data-scale="1.336" data-fade></div>
         <div class="search-type" id="search-type"><span data-type="search"></span><i class="caret thin"></i></div>
       </div>
       <div class="card" id="c-alttab"><div class="crop" data-src="alt-tab.png" data-crop="566,348,468,204" data-scale="1.95"></div></div>
-      <div class="card" id="c-emoji"><div class="crop" data-src="emoji.png" data-crop="476,149,648,330" data-scale="1.42"></div></div>
+      <div class="card" id="c-emoji"><div class="crop" data-src="emoji.png" data-crop="460,153,680,347" data-scale="1.353"></div></div>
     </div>
   </section>
 
@@ -86,10 +85,10 @@
 
   <!-- 48–52: the breakdown: dark, then light spreads from the middle -->
   <section class="scene" id="s-theme">
-    <div class="theme-card"><div class="crop" data-src="launcher-dark.png" data-crop="480,153,640,318" data-scale="1.25" data-fade></div></div>
+    <div class="theme-card"><div class="crop" data-src="launcher-dark.png" data-crop="460,153,680,190" data-scale="1.176" data-fade></div></div>
   </section>
   <section class="scene light" id="s-theme-light">
-    <div class="theme-card"><div class="crop" data-src="launcher-light.png" data-crop="480,153,640,318" data-scale="1.25" data-fade></div></div>
+    <div class="theme-card"><div class="crop" data-src="launcher-light.png" data-crop="460,153,680,190" data-scale="1.176" data-fade></div></div>
     <p class="theme-caption" id="day-word" data-words>라이트 모드도 있어요.</p>
   </section>
 
@@ -105,7 +104,7 @@
       <svg class="rewind" id="rewind" viewBox="0 0 400 120"><path d="M370 90 C 300 10, 120 10, 40 86"/><path d="M40 86 l 6 -26 M40 86 l 26 -6"/></svg>
     </div>
     <div class="bootcard" id="bootcard">
-      <div class="crop" data-src="grub-pick.png" data-crop="180,272,760,200" data-scale="1.55"></div>
+      <div class="crop" data-src="grub-pick.png" data-crop="190,276,730,192" data-scale="1.614"></div>
     </div>
     <p class="caption dark-text" id="rb-caption" data-words>부팅 메뉴에서 바로 고를 수 있어요.</p>
   </section>
@@ -114,12 +113,12 @@
   <section class="scene persp" id="s-bento">
     <h2 class="top" id="bento-head"><span data-words>매일 쓰는 것도</span> <span class="grad" data-words>다 있어요.</span></h2>
     <div class="bento" id="bento">
-      <div class="tile" data-rect="120,250,390,760"><b>빠른 설정</b><div class="crop" data-src="quick-settings.png" data-crop="1246,40,348,552" data-fit="tile"></div></div>
-      <div class="tile" data-rect="530,250,640,470"><b>학습 센터</b><div class="crop" data-src="mission.png" data-crop="336,122,640,480" data-fit="tile"></div></div>
-      <div class="tile" data-rect="1190,250,295,470"><b>달력</b><div class="crop" data-src="calendar.png" data-crop="646,40,307,390" data-fit="tile"></div></div>
-      <div class="tile" data-rect="1505,250,295,470"><b>소리</b><div class="crop" data-src="sound.png" data-crop="1250,40,344,310" data-fit="tile"></div></div>
-      <div class="tile" data-rect="530,740,640,270"><b>클립보드 기록</b><div class="crop" data-src="clipboard.png" data-crop="476,149,648,248" data-fit="tile"></div></div>
-      <div class="tile light-tile" data-rect="1190,740,610,270"><b>라이트 모드</b><div class="crop" data-src="launcher-light.png" data-crop="480,153,640,318" data-fit="tile" data-fade></div></div>
+      <div class="tile" data-rect="120,250,390,760"><b>빠른 설정</b><div class="crop" data-src="quick-settings.png" data-crop="1246,40,348,504" data-fit="tile"></div></div>
+      <div class="tile light-tile" data-rect="530,250,640,470"><b>학습 센터</b><div class="crop" data-src="mission.png" data-crop="420,130,760,480" data-fit="tile"></div></div>
+      <div class="tile" data-rect="1190,250,295,470"><b>달력</b><div class="crop" data-src="calendar.png" data-crop="647,41,306,316" data-fit="tile"></div></div>
+      <div class="tile" data-rect="1505,250,295,470"><b>소리</b><div class="crop" data-src="sound.png" data-crop="1252,42,340,300" data-fit="tile"></div></div>
+      <div class="tile" data-rect="530,740,640,270"><b>클립보드 기록</b><div class="crop" data-src="clipboard.png" data-crop="460,153,680,205" data-fit="tile"></div></div>
+      <div class="tile light-tile" data-rect="1190,740,610,270"><b>라이트 모드</b><div class="crop" data-src="launcher-light.png" data-crop="460,153,680,338" data-fit="tile" data-fade></div></div>
     </div>
   </section>
 
@@ -130,7 +129,7 @@
       <div class="mark-slot" data-mark></div>
       <div class="wordmark"><span class="wm-text">RobinOS</span><span class="wm-sweep" aria-hidden="true">RobinOS</span></div>
     </div>
-    <p class="tagline" data-words>처음 쓰는 리눅스.</p>
+    <p class="tagline" data-words>예쁜 UI를 가진 OS.</p>
     <p class="url" id="url">github.com/Yoon-robin/RobinOS</p>
   </section>
 

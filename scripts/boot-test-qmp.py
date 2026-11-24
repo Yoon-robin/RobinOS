@@ -893,6 +893,26 @@ def main():
     type_text(qmp, "clear; for a in 'tap true' 'natural true' 'speed 0' 'repeat_rate 25'; do " + ipc + "setInput $a; done; sleep 2\n")
     wait(4)
     check_scene(qmp, "input-default")
+    # 손쉬운 사용 all on (T-185): 고대비 (the kit's high-contrast lines and words),
+    # 움직임 줄이기 and 앱 글자 크게; the terminal shows what GTK got: true, false, 1.25
+    type_text(qmp, "clear; for f in setHighContrast setReduceMotion setLargeText; do " + ipc + "$f true; done; sleep 2; "
+              "gsettings get org.gnome.desktop.a11y.interface high-contrast; "
+              "gsettings get org.gnome.desktop.interface enable-animations; "
+              "gsettings get org.gnome.desktop.interface text-scaling-factor\n")
+    wait(5)
+    shot(qmp, "high-contrast-light")
+    keys(qmp, "meta_l", "spc")
+    wait(3)
+    shot(qmp, "high-contrast-launcher")
+    keys(qmp, "esc")
+    wait(2)
+    type_text(qmp, "clear; " + ipc + "settingsSection appearance\n")
+    wait(4)
+    shot(qmp, "accessibility-settings")
+    keys(qmp, "esc")
+    wait(2)
+    type_text(qmp, "clear; for f in setHighContrast setReduceMotion setLargeText; do " + ipc + "$f false; done\n")
+    wait(4)
     # 전원's idle times: the shell function behind the buttons writes hypridle's policy
     # and restarts hypridle with it; a one minute lock has no dimming before it
     type_text(qmp, "clear; for a in 'lock 1' 'screen_off 2' 'suspend 5'; do " + ipc + "setPower $a; sleep 1; done; sleep 2\n")
