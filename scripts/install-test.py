@@ -506,10 +506,12 @@ def check_wine(con, qmp):
             timeout=300)
     sleep(3)
     shot(qmp, "wine-notepad")
-    # The Korean font names and no file types taken over (desktop/wine/robinos.reg)
+    # The Korean font names and no file types taken over (desktop/wine/robinos.reg).
+    # wineserver writes the registry files when it exits, so close Wine first
+    con.run("runuser -u robin -- env WINEPREFIX=/home/robin/.wine wineserver -k;"
+            " runuser -u robin -- env WINEPREFIX=/home/robin/.wine wineserver -w", check=False, timeout=60)
     con.run("grep -q 'Malgun Gothic' /home/robin/.wine/user.reg"
             " && grep -A2 FileOpenAssociations /home/robin/.wine/user.reg | grep -q '\"Enable\"=\"N\"'")
-    con.run("runuser -u robin -- env WINEPREFIX=/home/robin/.wine wineserver -k", check=False)
     sleep(2)
 
 

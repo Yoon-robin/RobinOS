@@ -52,6 +52,9 @@ if [[ ! -f "${WINEPREFIX}/system.reg" ]]; then
     wine regedit /S "${reg}" >>"${log}" 2>&1
   fi
   rm -f "${reg}"
+  # wineserver keeps the registry in memory and writes ~/.wine/*.reg when it
+  # exits: let it, so the setup is on disk even if the program below crashes
+  wineserver -w >>"${log}" 2>&1
 fi
 
 cd "$(dirname "${file}")" || true
