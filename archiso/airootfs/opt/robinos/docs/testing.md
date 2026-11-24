@@ -107,6 +107,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 boot-test
 | `recorded` | `Super+Alt+R` 두 번(시작과 멈춤) 뒤 `~/비디오/Screencasts`에 1초 넘는 mp4가 있고(`ffprobe`), 녹화가 멈춰 있어요 |
 | `zoomed`, `unzoomed` | `Super+=` 두 번 뒤 `cursor:zoom_factor`가 2, `Super+Esc` 뒤 1이에요 |
 | `windows-app` | 가짜 `KakaoTalk_Setup.exe`를 `gio open`으로 열면 "윈도우 프로그램" 창이 떠요(기본 앱 연결과 셸 IPC) |
+| `windows-app-learn` | 그 창의 "왜 안 열리는지 알아보기"가 창을 닫고 미션 16을 새 터미널에 열어요. 미션이 만든 연습 파일 `hello.exe`를 `file`이 MS Windows용으로 알아봐요 |
 | `shell-restarted` | 셸을 끈 뒤 새 `qs`가 돌고 IPC에 답해요 |
 | `light`, `dark` | 셸이 저장한 값(`appearance.json`)과 GTK 설정(`color-scheme`)이 둘 다 바뀌어요 |
 | `input-changed`, `input-default` | 설정 앱의 마우스와 터치패드·키보드가 부르는 `setInput`으로 탭 클릭·스크롤 방향·포인터 속도·키 반복을 바꾸면 `hyprctl getoption`이 그 값을 주고(불리언 옵션의 JSON에는 `int`가 아닌 키가 와서 첫 값을 읽어요), `~/.local/state/robinos/input`에 저장돼요. 기본값으로 되돌려도 같아요 |

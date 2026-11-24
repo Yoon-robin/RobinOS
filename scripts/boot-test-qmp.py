@@ -577,7 +577,17 @@ def main():
     wait(6)
     shot(qmp, "windows-app")
     wait_verdict("windows-app", start=start)
-    keys(qmp, "esc")
+    # Its 왜 안 열리는지 알아보기 (bottom left) closes it and opens mission 16 in a
+    # new terminal, which makes the practice hello.exe to compare with ELF (T-184).
+    # The check runs in that terminal; exit closes it and the pointer, still over
+    # the first terminal, gives that one the focus back.
+    click(qmp, 600, 590)
+    wait(5)
+    shot(qmp, "windows-app-learn")
+    start = serial_size()
+    type_text(qmp, "bash /opt/robinos/scripts/e2e-check.sh windows-app-learn\n")
+    wait_verdict("windows-app-learn", start=start)
+    type_text(qmp, "exit\n")
     wait(2)
     # Windows' Magnifier keys (T-161): Win+Plus twice is 2x around the pointer,
     # Win+Esc goes back

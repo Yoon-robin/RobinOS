@@ -284,7 +284,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 ## 윈도우 프로그램(.exe)을 열면
 
-`.exe`, `.msi`, `.lnk`를 열면 셸의 "윈도우 프로그램" 창이 떠요(`desktop/bin/robinos-windows-app`, `WindowsApp.qml`). 윈도우 프로그램은 리눅스에서 그대로 실행되지 않는다고 알려 주고, 파일 이름이 알려진 프로그램(`desktop/shell/windowsapps.js`: 카카오톡, Chrome, 한글, Office, 반디집, 곰플레이어, Discord, Steam 등)이면 대신 쓸 것을 단추로 보여 줘요. RobinOS에 있는 앱은 바로 열고, Flathub 앱은 앱 스토어의 그 앱 쪽을, 웹 버전은 브라우저를 열어요. 모르는 파일이면 Bottles(윈도우 프로그램 실행기) 설치 단추를 보여 줘요.
+`.exe`, `.msi`, `.lnk`를 열면 셸의 "윈도우 프로그램" 창이 떠요(`desktop/bin/robinos-windows-app`, `WindowsApp.qml`). 윈도우 프로그램은 리눅스에서 그대로 실행되지 않는다고 알려 주고, 파일 이름이 알려진 프로그램(`desktop/shell/windowsapps.js`: 카카오톡, Chrome, 한글, Office, 반디집, 곰플레이어, Discord, Steam 등)이면 대신 쓸 것을 단추로 보여 줘요. RobinOS에 있는 앱은 바로 열고, Flathub 앱은 앱 스토어의 그 앱 쪽을, 웹 버전은 브라우저를 열어요. 모르는 파일이면 Bottles(윈도우 프로그램 실행기) 설치 단추를 보여 줘요. 아래의 "왜 안 열리는지 알아보기"는 학습 미션 16(실행 파일 살펴보기)을 터미널에 열어요. 그 미션은 리눅스 프로그램(ELF)과 머리 부분만 있는 연습용 `hello.exe`(MZ)를 나란히 보여 줘요.
 
 ## 화면 배율
 

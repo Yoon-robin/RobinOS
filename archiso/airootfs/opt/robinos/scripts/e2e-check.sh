@@ -18,6 +18,7 @@
 #   dark            dark mode, the same way
 #   recorded        a screen recording (Win+Alt+R twice) left a playable video
 #   windows-app     opening an .exe shows the "윈도우 프로그램" window
+#   windows-app-learn  its 왜 안 열리는지 알아보기 opened mission 16 and its practice .exe
 #   zoomed          Win+Plus twice: the screen is zoomed to 2x around the pointer
 #   unzoomed        Win+Esc: back to 1x
 #   shell-restarted a new shell (qs) runs and answers over IPC
@@ -135,6 +136,13 @@ case "${name}" in
     # Opening an .exe brought up the shell's WindowsApp window (T-159)
     title="$(hyprctl clients -j | grep -o '"title": "윈도우 프로그램"' | head -n1)"
     check "window=${title:-none} default=$(xdg-mime query default application/x-ms-dos-executable)" test -n "${title}"
+    ;;
+  windows-app-learn)
+    # Its 왜 안 열리는지 알아보기 closed it and opened mission 16, which made the
+    # practice Windows program next to the ELF ones (T-184)
+    open="$(hyprctl clients -j | grep -c '"title": "윈도우 프로그램"')"
+    kind="$(file -b "${HOME}/practice/reversing/hello.exe" 2>/dev/null)"
+    check "window=${open} exe=${kind:-none}" bash -c "[ '${open}' = 0 ] && [[ '${kind}' == *'MS Windows'* ]]"
     ;;
   shell-restarted)
     pids="$(pgrep -x qs | tr '\n' ' ')"

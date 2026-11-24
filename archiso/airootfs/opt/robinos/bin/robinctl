@@ -2018,6 +2018,17 @@ EOF
 
   ldd도 라이브러리를 보여 주지만 프로그램을 실제로 띄울 수도 있어서, 낯선 프로그램에는 readelf를 써요.
 EOF
+  learn_section "윈도우 프로그램과 비교"
+  cat <<'EOF'
+  실행 파일은 맨 앞 몇 바이트로 형식을 알려요. 리눅스 프로그램은 ELF로, 윈도우 프로그램은 MZ로
+  시작해요. 리눅스는 MZ 파일을 실행하는 방법을 몰라서 .exe가 그대로 열리지 않아요.
+  hello.exe는 윈도우 실행 파일의 머리 부분만 있는 연습 파일이에요(코드는 없어요).
+
+  file hello.exe                    MS Windows용 PE32+ 실행 파일
+  xxd -l 4 hello                    7f 45 4c 46 (.ELF)
+  xxd -l 2 hello.exe                4d 5a (MZ)
+  xdg-open hello.exe                바탕 화면에서 열면 나오는 안내 창
+EOF
 }
 
 learn_show_17() {
@@ -2718,9 +2729,32 @@ LEARN_REV_GATE_B64="H4sIAAAAAAACA+1YXWwbxxHeO1IUKYs/tiWL1k/FFJIrpxFNybaq2lWtv8Sn
 LEARN_REV_SEEKER_B64="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"
 LEARN_REV_COUNT_B64="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"
 
+# Mission 16's Windows program to compare with ELF (T-184): only the headers of a
+# 64-bit console .exe (MZ, then the PE header with no sections), so `file` names it
+# and there is no code in it at all. Opening it on the desktop brings up the shell's
+# "윈도우 프로그램" window, which links back to this mission.
+learn_write_exe() {
+  {
+    printf 'MZ'
+    head -c 58 /dev/zero
+    printf '\x40\x00\x00\x00'                  # e_lfanew: the PE header at 0x40
+    printf 'PE\x00\x00\x64\x86\x00\x00'        # signature, x86-64, no sections
+    head -c 12 /dev/zero                       # time stamp, symbol table
+    printf '\xf0\x00\x22\x00'                  # optional header size, executable
+    printf '\x0b\x02'                          # PE32+
+    head -c 38 /dev/zero
+    printf '\x06\x00\x00\x00\x00\x00\x00\x00'  # Windows 6.0 or later (Vista)
+    printf '\x06\x00\x00\x00'                  # subsystem version 6.0
+    head -c 16 /dev/zero
+    printf '\x03\x00'                          # subsystem: console
+    head -c 354 /dev/zero                      # up to 512 bytes
+  } >"$1"
+  chmod 644 "$1"
+}
+
 learn_prepare_reversing() {
   local name
-  if [[ -f "${LEARN_STATE}/prepared-reversing" && -x "${LEARN_REV}/hello" && -x "${LEARN_REV}/count" ]]; then
+  if [[ -f "${LEARN_STATE}/prepared-reversing" && -x "${LEARN_REV}/hello" && -x "${LEARN_REV}/count" && -f "${LEARN_REV}/hello.exe" ]]; then
     return
   fi
   mkdir -p "${LEARN_REV}" "${LEARN_STATE}"
@@ -2729,6 +2763,7 @@ learn_prepare_reversing() {
     printf '%s' "${!var}" | base64 -d | gzip -dc >"${LEARN_REV}/${name}"
     chmod 755 "${LEARN_REV}/${name}"
   done
+  learn_write_exe "${LEARN_REV}/hello.exe"
   : >"${LEARN_STATE}/prepared-reversing"
   printf '\n%s연습용 프로그램을 ~/practice/reversing에 만들어 뒀어요.%s\n' "${C_DIM}" "${C_RESET}"
 }

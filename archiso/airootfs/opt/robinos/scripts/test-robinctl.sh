@@ -217,10 +217,21 @@ said "show 16 says where the programs are" "~/practice/reversing"
 in_home "cd ${REV} && test -x hello && test -x vault && test -x gate && test -x seeker && test -x count" \
   && ok "practice programs are there and executable" || bad "practice programs are missing"
 # Deleted programs come back on the next show (the marker file alone isn't enough)
+said "show 16 compares with a Windows program" "hello.exe"
+# The practice .exe (T-184): only headers, not executable, and `file` names it
+in_home "test -f ${REV}/hello.exe && test ! -x ${REV}/hello.exe && head -c 2 ${REV}/hello.exe | grep -q MZ" \
+  && ok "practice hello.exe starts with MZ" || bad "practice hello.exe is missing or wrong"
+if command -v file >/dev/null 2>&1; then
+  in_home "file -b ${REV}/hello.exe" | grep -q "PE32+ executable for MS Windows.*x86-64" \
+    && ok "file names hello.exe a Windows program" || bad "file doesn't know hello.exe"
+fi
 in_home "rm -rf ${REV}"
 check "show 16 again after the programs were deleted" 0 learn show 16
-in_home "test -x ${REV}/hello && test -x ${REV}/count" \
+in_home "test -x ${REV}/hello && test -x ${REV}/count && test -f ${REV}/hello.exe" \
   && ok "deleted practice programs are made again" || bad "deleted practice programs stay missing"
+in_home "rm ${REV}/hello.exe"
+check "show 16 again after hello.exe was deleted" 0 learn show 16
+in_home "test -f ${REV}/hello.exe" && ok "deleted hello.exe is made again" || bad "deleted hello.exe stays missing"
 in_home "${REV}/hello" | grep -q "연습용 프로그램" && ok "hello runs" || bad "hello doesn't run"
 in_home "readelf -d ${REV}/hello | grep NEEDED | grep -o 'libc[^]]*' > ${REV}/library.txt"
 check "16 passes with the NEEDED library" 0 learn check 16

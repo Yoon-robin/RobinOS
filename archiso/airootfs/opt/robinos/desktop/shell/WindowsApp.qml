@@ -182,12 +182,21 @@ FloatingWindow {
             RowLayout {
                 Layout.topMargin: 6
 
-                Text {
+                // Mission 16 (리버싱 기초) compares a Linux program with a Windows
+                // one, byte by byte (T-184)
+                ActionButton {
+                    // The words line up with the text above
+                    Layout.leftMargin: -14
+                    variant: "ghost"
+                    text: "왜 안 열리는지 알아보기"
+                    onClicked: {
+                        ShellState.windowsAppOpen = false;
+                        ShellState.openTerminal("robinctl learn show 16");
+                    }
+                }
+
+                Item {
                     Layout.fillWidth: true
-                    text: "왜 그런지 궁금하면: 학습 센터의 리눅스 기초"
-                    color: Theme.muted
-                    font.family: Theme.font
-                    font.pixelSize: 12
                 }
 
                 ActionButton {
