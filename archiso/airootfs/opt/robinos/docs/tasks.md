@@ -4,12 +4,12 @@
 
 상태: `할 일` → `진행 중` → `검증 대기` → `완료`. 사용자가 해야 하는 일을 기다리거나 같은 실패가 세 번 반복되면 `막힘`으로 두고 다른 작업을 해요. `보류`는 지금 하지 않기로 한 작업이에요(이유를 적어 둬요). `막힘`, `보류`, `검증 대기`는 작업을 고를 때 건너뛰어요. `할 일`이 비면 [loop.md](loop.md)의 "백로그 채우기"로 채워요.
 
-## 이어 하기 메모 (2026-11-24 낮 12시, robin PC)
+## 이어 하기 메모 (2026-11-24 오후 2시, robin PC)
 
-다른 PC에서 이어 할 때 먼저 읽어요. 새 PC 준비는 [build-environment.md](build-environment.md) "다른 PC에서 이어서 하기"예요. robin PC는 `3b92fa1`까지 검증하고 푸시했어요(`work/batch79`와 작업 트리 `../RobinOS-wt2`는 정리함. 빈 폴더 `../RobinOS-wt`는 다른 프로그램이 잡고 있어 못 지웠어요, 다음에 지워요).
+다른 PC에서 이어 할 때 먼저 읽어요. 새 PC 준비는 [build-environment.md](build-environment.md) "다른 PC에서 이어서 하기"예요. robin PC는 `c3d3f65`까지 검증하고 푸시했어요. 로고를 키트 마크로 바꾼 커밋 둘은 `work/batch80`(작업 트리 `../RobinOS-wt3`)에 있고, 합쳐서 묶음 검증해요. 빈 폴더 `../RobinOS-wt`·`../RobinOS-wt2`는 다른 프로그램이 잡고 있어 못 지웠어요.
 
-- **오전~낮에 한 것(robin PC)**: archinstall로 깐 시스템에서 post-install 직후 방화벽이 꺼져 있던 것(바로 켜요), 설치 테스트 archinstall·windows 통과, T-147·T-177 완료, 고대비(T-185, 키트의 고대비 토큰 두 벌과 설정 스위치), 설치본 런처의 휴대폰 연결 장면(T-186), 소개 영상을 robin-ui V5로(T-180 ①), `shell-load.sh`를 소프트웨어 GL로(WSL D3D12가 테마 전환 때 죽어요). 묶음 검증 `3b92fa1` 통과. 그 뒤 윈도우 프로그램 안내 창에서 미션 16으로(T-184, 연습용 `hello.exe`), 묶음 검증 `97a1bb0` 통과
-- **다음 할 일**: T-180 ②(랜딩 페이지 사진, v0.4 때), T-187(시스템 재설정, T-164 조사 끝남)부터 아래 "할 일" 순서
+- **오전~낮에 한 것(robin PC)**: archinstall로 깐 시스템에서 post-install 직후 방화벽이 꺼져 있던 것(바로 켜요), 설치 테스트 archinstall·windows 통과, T-147·T-177 완료, 고대비(T-185, 키트의 고대비 토큰 두 벌과 설정 스위치), 설치본 런처의 휴대폰 연결 장면(T-186), 소개 영상을 robin-ui V5로(T-180 ①), `shell-load.sh`를 소프트웨어 GL로(WSL D3D12가 테마 전환 때 죽어요). 묶음 검증 `3b92fa1` 통과. 그 뒤 윈도우 프로그램 안내 창에서 미션 16으로(T-184, 연습용 `hello.exe`), 묶음 검증 `97a1bb0` 통과. 오후: 시스템 재설정(T-187, `robinctl snapshot reset`과 설정의 "재설정…"), 묶음 검증 `c3d3f65`과 윈도우 설치 테스트 통과. 사용자 요청으로 로고를 키트 마크(어두운 네모 + 하얀 울새 + 파란 번짐)로
+- **다음 할 일**: `work/batch80`(로고) 묶음 검증 뒤 합치기, T-180 ②(랜딩 페이지 사진, v0.4 때), 그다음 아래 "할 일" 순서
 - **새벽에 한 것(00:55~04:00, 집 PC)**: 개발 스택 다시 보기([design.md](design.md) "개발 스택 다시 보기", 바탕은 그대로), 셸을 VM 없이 띄워 찍는 `shell-load.sh`, 그걸로 찾은 셸·desktop/bin 버그 열몇 개(품질 점검 기록 "코드 검토"), README 스크린샷을 새 화면으로, 전원 설정이 두 번째 선택부터 hypridle에 안 들어가던 회귀(잠금 fd 상속), 터미널 한글 간격(T-183), 밝기 키가 키보드 LED를 건드리던 것, `.msi` 기본 앱, 설치본이 릴리스 열쇠를 다시 받게(T-177 ③), 설치 테스트가 업데이트 미리 보기 줄을 확인(T-162), 진행 중 작업 21개를 17개로(T-176). 묶음 검증 두 번과 설치 테스트 한 번 통과(정기 점검 표, 푸시 대기 커밋)
 - **새 도구**: `bash scripts/shell-load.sh -s 파일.png quickSettings settings launcher`로 VM 없이 몇 초 만에 셸 화면을 찍어요(WSL, sway와 grim은 `setup`이 깔아요. 한글 글꼴은 `bash scripts/fetch-fonts.sh /usr/local/share/fonts/robinos` 뒤 `fc-cache -f`). 화면을 고친 뒤 바로 보기에 좋아요. 터미널 글꼴은 같은 화면 없는 sway에서 Python GTK로 VTE 창 하나를 띄워 `grim`으로 찍으면 Ptyxis와 똑같이 그려져요(Ptyxis는 그 환경에서 사용자 세션 버스가 없어 안 떠요)
 - **두 PC 규칙**: 회차를 시작할 때 `git fetch` 뒤 `git log HEAD..origin/main`을 보고, 있으면 먼저 합쳐요([loop.md](loop.md) "1. 상황 파악")
@@ -28,8 +28,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-11-24 (오후 2시) | `c3d3f65` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 24.5분)와 `install-test -Installer windows` | 통과. 판정 22개 모두 PASS. 설치 테스트 여섯 단계(새 단계 `reset`, T-187: 재설정 뒤 새 비밀번호로 로그인, cowsay 없음, `/home` 그대로, 설정의 "시스템 재설정" 줄). 윈도우 옆 설치도 여섯 단계, 재설정 뒤 GRUB에 윈도우 |
 | 2026-11-24 (낮 12시 반) | `97a1bb0` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.6분, 테스트 24.5분) | 통과. 판정 22개 모두 PASS(새 장면 `windows-app-learn`, T-184). 설치 테스트 다섯 단계 |
-| 2026-11-24 (낮 12시) | `3b92fa1` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 24.2분) | 통과. 판정 21개 모두 PASS. 새 장면 `95-high-contrast-light`·`96-high-contrast-launcher`·`97-accessibility-settings`(T-185), 설치 테스트 `rollback-10-launcher-phone`(T-186). 설치 테스트 다섯 단계 |
 
 ## 품질 점검 기록
 
@@ -49,9 +49,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 `git log origin/main..HEAD`에 있는 커밋과, 푸시하기 전에 통과해야 하는 검증이에요. 검증이 끝나면 지우고 푸시해요.
 
-- T-187 시스템 재설정: `verify -Installer robinos`(설치 테스트 `reset` 단계), `install-test -Installer windows`(재설정 뒤 GRUB의 윈도우)
+- 없음
 
-`97a1bb0`까지는 2026-11-24 낮 robin PC의 `verify -Installer robinos`를 마치고 푸시했어요.
+`c3d3f65`까지는 2026-11-24 오후 robin PC의 `verify -Installer robinos`와 `install-test -Installer windows`를 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -92,13 +92,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 남은 것: ② 랜딩 페이지(`site/`)의 화면 사진과 `publish-site.sh`는 v0.4 릴리스 때(지금 받는 v0.3이 옛 화면) ③ 터미널의 한글 간격은 T-183. ②~⑥ 단계(공용 부품, 표시기, 창들, 패널, 시스템 화면)와 ⑦의 아이콘·글꼴·README는 끝났어요
 - 검증: 단계마다 `wsl-build.ps1 check`(qmllint), 부팅 테스트 스크린샷을 다크·라이트로 직접 보기. 키트에서 벗어난 것을 세는 검사(`check-desktop.sh`에 셸 QML의 `#`색 리터럴, 초록·노랑, `Theme.` 밖의 모서리 값)도 넣어요
 - 완료 기준: 부팅 테스트의 모든 장면이 키트 문법(면 셋, 파랑 하나, 컨트롤 모서리 7, 유리 없음)을 따르고, 시스템 화면(로그인, 잠금, 부팅 메뉴)도 같은 색
-
-### T-187 시스템 재설정 명령과 화면
-- 상태: 검증 대기 (2026-11-24 robin PC, 묶음 검증과 윈도우 설치 테스트에서 확인)
-- 출처: T-164 조사(2026-11-24, [recovery.md](recovery.md) "시스템 재설정")
-- 할 것: ① `robinctl snapshot reset`: 번호를 외우지 않게 "RobinOS snapshot setup" 스냅샷을 찾아 되돌리되, 지금 것을 새 `@`로 옮겨 가요. 옮길 것은 사람 계정(UID 1000 이상의 `passwd`·`shadow`·`group`·`gshadow` 줄과 wheel 같은 그룹 소속), 저장한 와이파이(`/etc/NetworkManager/system-connections`), 지금 `grub.cfg`(윈도우 항목)예요 ② 설정 앱 "정보"나 "업데이트"에 "시스템 재설정" 줄. 무엇이 남고 무엇이 돌아가는지 보여 주고 확인을 받은 뒤 다시 시작을 물어요 ③ 재설정 뒤 첫 로그인에 "업데이트가 있어요" 안내
-- 한 것(2026-11-24 낮 robin PC): `robinctl snapshot reset [--yes]`. 설명이 "RobinOS snapshot setup"인 가장 앞 스냅샷을 찾아 `rollback`하고, 그사이 옛 `@`(`@.broken-<시각>`)에서 옮겨 와요: root와 사람 계정(UID 1000~59999)의 `passwd`·`shadow` 줄(새 파일의 순서 그대로), 사람 그룹과 다른 그룹(wheel 등)의 사람 소속, 저장한 와이파이, `hostname`, `localtime`, `/boot/grub`가 `@` 안이면 `grub.cfg`와 `grub-btrfs.cfg`. 끝나면 다시 시작할지 물어요. 설정 "업데이트" 아래 "시스템 재설정" 줄의 "재설정…"(danger)이 터미널에서 실행해요(`update --status`의 `"reset":true`, 곧 사용자가 /.snapshots에서 첫 스냅샷을 찾을 때만 보여요. 처음엔 root만 읽는 `next_snapshot`으로 정해서 사용자 화면에 안 나왔어요). ③ 업데이트 안내는 바의 업데이트 점이 이미 해요. `test-robinctl.sh`에 옮기기 시험(비밀번호, root, 순서, wheel, docker 그룹 빠짐, gshadow, 와이파이, 시간대, 윈도우 메뉴). 설치 테스트에 `reset` 단계(여섯 번째 부팅): 비밀번호 바꾸고 cowsay 깔고 `/home`에 파일을 둔 뒤 재설정, 다시 켜서 확인하고 새 비밀번호로 SDDM 로그인, 설정 화면 `settings-update-reset`
-- 완료 기준: 설치 테스트에서 비밀번호를 바꾸고 패키지를 하나 깐 뒤 재설정하면, 새 비밀번호로 로그인되고 그 패키지는 없고 `/home`의 파일은 그대로예요. 윈도우 설치 테스트에서는 재설정 뒤에도 부팅 메뉴에 윈도우가 있어요
 
 ### T-166 라이브 USB로 설치본 고치기
 - 상태: 할 일

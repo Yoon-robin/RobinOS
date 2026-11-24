@@ -6,6 +6,13 @@
 
 tasks.md에서 옮긴 작업 카드예요(2026-11-24 T-176 정리부터). 최근에 옮긴 것이 위에 있어요.
 
+### T-187 시스템 재설정 명령과 화면
+- 상태: 완료 (2026-11-24 robin PC. 묶음 검증 `c3d3f65`의 설치 테스트 `reset` 단계와 `install-test -Installer windows`(재설정 뒤 GRUB에 윈도우)로 확인)
+- 출처: T-164 조사(2026-11-24, [recovery.md](recovery.md) "시스템 재설정")
+- 할 것: ① `robinctl snapshot reset`: 번호를 외우지 않게 "RobinOS snapshot setup" 스냅샷을 찾아 되돌리되, 지금 것을 새 `@`로 옮겨 가요. 옮길 것은 사람 계정(UID 1000 이상의 `passwd`·`shadow`·`group`·`gshadow` 줄과 wheel 같은 그룹 소속), 저장한 와이파이(`/etc/NetworkManager/system-connections`), 지금 `grub.cfg`(윈도우 항목)예요 ② 설정 앱 "정보"나 "업데이트"에 "시스템 재설정" 줄. 무엇이 남고 무엇이 돌아가는지 보여 주고 확인을 받은 뒤 다시 시작을 물어요 ③ 재설정 뒤 첫 로그인에 "업데이트가 있어요" 안내
+- 한 것(2026-11-24 낮 robin PC): `robinctl snapshot reset [--yes]`. 설명이 "RobinOS snapshot setup"인 가장 앞 스냅샷을 찾아 `rollback`하고, 그사이 옛 `@`(`@.broken-<시각>`)에서 옮겨 와요: root와 사람 계정(UID 1000~59999)의 `passwd`·`shadow` 줄(새 파일의 순서 그대로), 사람 그룹과 다른 그룹(wheel 등)의 사람 소속, 저장한 와이파이, `hostname`, `localtime`, `/boot/grub`가 `@` 안이면 `grub.cfg`와 `grub-btrfs.cfg`. 끝나면 다시 시작할지 물어요. 설정 "업데이트" 아래 "시스템 재설정" 줄의 "재설정…"(danger)이 터미널에서 실행해요(`update --status`의 `"reset":true`, 곧 사용자가 /.snapshots에서 첫 스냅샷을 찾을 때만 보여요. 처음엔 root만 읽는 `next_snapshot`으로 정해서 사용자 화면에 안 나왔어요). ③ 업데이트 안내는 바의 업데이트 점이 이미 해요. `test-robinctl.sh`에 옮기기 시험(비밀번호, root, 순서, wheel, docker 그룹 빠짐, gshadow, 와이파이, 시간대, 윈도우 메뉴). 설치 테스트에 `reset` 단계(여섯 번째 부팅): 비밀번호 바꾸고 cowsay 깔고 `/home`에 파일을 둔 뒤 재설정, 다시 켜서 확인하고 새 비밀번호로 SDDM 로그인, 설정 화면 `settings-update-reset`
+- 완료 기준: 설치 테스트에서 비밀번호를 바꾸고 패키지를 하나 깐 뒤 재설정하면, 새 비밀번호로 로그인되고 그 패키지는 없고 `/home`의 파일은 그대로예요. 윈도우 설치 테스트에서는 재설정 뒤에도 부팅 메뉴에 윈도우가 있어요
+
 ### T-164 처음 상태로 되돌리기 (조사)
 - 상태: 완료 (2026-11-24 robin PC, 조사. 만드는 일은 T-187)
 - 출처: 다른 OS와 비교(2026-10-12). 윈도우 "이 PC 초기화", ChromeOS Powerwash, Omarchy "Reset Computer", Pop!_OS의 파일을 남기는 다시 설치
@@ -518,6 +525,7 @@ tasks.md에서 옮긴 작업 카드예요(2026-11-24 T-176 정리부터). 최근
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-11-24 (낮 12시) | `3b92fa1` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 24.2분) | 통과. 판정 21개 모두 PASS. 새 장면 `95-high-contrast-light`·`96-high-contrast-launcher`·`97-accessibility-settings`(T-185), 설치 테스트 `rollback-10-launcher-phone`(T-186). 설치 테스트 다섯 단계 |
 | 2026-11-24 (오전 10시 반) | `c430a5f` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.6분, 테스트 22.6분) | 통과. 판정 모두 PASS. 새 장면 `17-launcher-localsend`: 라이브에는 GNOME 소프트웨어가 없어 "LocalSend 설치하기"는 숨고 "휴대폰에서 받기 허용"만 나와요(설계대로, 설치본 장면은 batch79에서 더함). 설치 테스트 다섯 단계 |
 | 2026-11-24 (새벽 3시 반) | `f2a6996` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 4.1분, 테스트 22.6분) | 통과. 판정 21개 모두 PASS. `31-terminal-learn.png`에서 터미널 한글이 붙어 보여요(T-183). 설치 테스트 다섯 단계 |
 | 2026-11-24 (새벽 3시) | `0451fd4` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 3.8분, 테스트 22.6분) | 통과. 판정 21개 모두 PASS. 앞의 묶음에서 실패한 `power-changed`(60 120 300)·`power-default`(240 300 600 900)가 잠금 fd 수정 뒤 통과, `default-apps`·`terminal`도 PASS. 설치 테스트 다섯 단계 |
