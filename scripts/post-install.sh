@@ -187,6 +187,12 @@ if [[ "${DRY_RUN}" == "true" ]]; then
 elif [[ -f /etc/ufw/ufw.conf ]]; then
   sed -i 's/^ENABLED=.*/ENABLED=yes/' /etc/ufw/ufw.conf
   run systemctl enable ufw.service
+  # Run on the installed system itself (Arch first, then this script) the firewall
+  # is on now, not only after a reboot; in robin-install's chroot it starts at the
+  # first boot (archinstall install test, 2026-11-24: ufw inactive until a reboot)
+  if [[ -d /run/systemd/system ]] && ! systemd-detect-virt --quiet --chroot; then
+    run systemctl start ufw.service
+  fi
 fi
 
 run systemctl set-default graphical.target

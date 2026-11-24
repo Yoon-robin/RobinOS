@@ -918,6 +918,10 @@ def phase_installed(con, qmp):
     # robin-install already ran post-install.sh in its chroot
     if INSTALLER == "archinstall":
         log("post-install")
+        # -ReuseDisk runs it again over the first run: keep that one's output, which
+        # has the move to the package (the second finds robinos installed already)
+        con.run("[ -e /root/post-install.out ] && cp -n /root/post-install.out /root/post-install.first.out; true",
+                check=False)
         status = con.run_long("cd /opt/robinos && SUDO_USER=robin scripts/post-install.sh --yes",
                               "post-install", timeout=5400)
         con.run("tail -n 30 /root/post-install.out", check=False)
@@ -925,7 +929,8 @@ def phase_installed(con, qmp):
             raise RuntimeError(f"post-install.sh failed with {status}")
         # It took robinos from the (local) repository over the copied files; then the
         # real RobinOS repository again, as post-install.sh would have written it
-        con.run("grep -q 'robinos 패키지로 옮겨요' /root/post-install.out && pacman -Q robinos"
+        con.run("cat /root/post-install.first.out /root/post-install.out 2>/dev/null | grep -q 'robinos 패키지로 옮겨요'"
+                " && pacman -Q robinos"
                 " && pacman -Qqo /usr/local/bin/robinctl /etc/robinos/config.toml | grep -cx robinos | grep -qx 2")
         con.put_file("/root/real-repo.py", POINT_AT_REAL_REPO)
         # (and its signed list: the local one has none, which a later `pacman -S` rejects)
@@ -968,7 +973,10 @@ def phase_installed(con, qmp):
             " && grep -q DisableTelemetry /etc/firefox/policies/policies.json")
     # Same firmware as the live ISO (laptop sound, Marvell Wi-Fi) and firmware updates (T-156)
     con.run("pacman -Q sof-firmware linux-firmware-marvell wireless-regdb fwupd")
-    # Firewall on from the first boot, mDNS (printers) still open (T-157)
+    # Firewall on from the first boot, mDNS (printers) still open (T-157). What the
+    # unit and its config say comes first, so a failure shows why
+    con.run("systemctl is-enabled ufw; grep ^ENABLED /etc/ufw/ufw.conf;"
+            " systemctl status ufw --no-pager -l | tail -n 12", check=False)
     con.run("systemctl is-active ufw && LC_ALL=C ufw status verbose | head -n 4"
             " && LC_ALL=C ufw status | grep -q '^Status: active'"
             " && iptables -S ufw-before-input | grep -q 'dport 5353'")
