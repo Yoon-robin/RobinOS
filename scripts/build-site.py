@@ -4,14 +4,15 @@
 1. The command pairs on the page (`data-win` → `data-linux` in site/index.html)
    must match the Windows command hints in desktop/bash/robinos-hints.sh, so the
    page shows exactly what the RobinOS terminal answers.
-2. site/assets/fonts/Pretendard-*.woff2: Pretendard cut down to the characters the
-   page uses (fontTools), so the page loads a few dozen KB instead of a megabyte.
-   The full subset fonts come from the checksum-verified font cache that
-   scripts/fetch-fonts.sh fills (Pretendard 1.3.9, SIL OFL 1.1).
+2. site/assets/fonts/Pretendard-Variable.woff2: the variable Pretendard cut down to
+   the characters the page uses (fontTools), so the weights 450/550/650 are
+   real and the page loads tens of KB instead of megabytes. The source is
+   PretendardVariable.ttf from the checksum-verified release zip that
+   scripts/fetch-fonts.sh caches (Pretendard 1.3.9, SIL OFL 1.1).
 
 Run after changing the page's text or the hints:
 
-    python scripts/build-site.py --fonts <folder with Pretendard-*.subset.woff2>
+    python scripts/build-site.py --fonts <folder with PretendardVariable.ttf>
 """
 
 import argparse
@@ -22,7 +23,6 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
 HINTS = ROOT / "desktop" / "bash" / "robinos-hints.sh"
-WEIGHTS = ["Regular", "SemiBold", "Bold"]
 
 
 def function_body(text, name):
@@ -81,20 +81,19 @@ def subset_fonts(source, text):
     # Hangul and the punctuation around it, and printable ASCII: Pretendard is
     # the page's only typeface (robin-ui V5)
     chars = sorted({c for c in text if ord(c) > 0x7F}) + [chr(c) for c in range(0x20, 0x7F)]
-    for weight in WEIGHTS:
-        src = pathlib.Path(source) / f"Pretendard-{weight}.subset.woff2"
-        if not src.is_file():
-            sys.exit(f"build-site: {src} is missing (see scripts/fetch-fonts.sh)")
-        options = subset.Options()
-        options.flavor = "woff2"
-        options.layout_features = ["*"]
-        font = subset.load_font(str(src), options)
-        sub = subset.Subsetter(options)
-        sub.populate(text="".join(chars))
-        sub.subset(font)
-        dest = out / f"Pretendard-{weight}.woff2"
-        subset.save_font(font, str(dest), options)
-        print(f"{dest.relative_to(ROOT)}: {dest.stat().st_size // 1024} KB")
+    src = pathlib.Path(source) / "PretendardVariable.ttf"
+    if not src.is_file():
+        sys.exit(f"build-site: {src} is missing (see scripts/fetch-fonts.sh)")
+    options = subset.Options()
+    options.flavor = "woff2"
+    options.layout_features = ["*"]
+    font = subset.load_font(str(src), options)
+    sub = subset.Subsetter(options)
+    sub.populate(text="".join(chars))
+    sub.subset(font)
+    dest = out / "Pretendard-Variable.woff2"
+    subset.save_font(font, str(dest), options)
+    print(f"{dest.relative_to(ROOT)}: {dest.stat().st_size // 1024} KB")
 
 
 def main():
