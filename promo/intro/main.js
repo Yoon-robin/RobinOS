@@ -36,14 +36,14 @@ function markSvg() {
   <defs><clipPath id="${id}"><circle cx="124" cy="130" r="54"/><circle cx="164" cy="92" r="32"/></clipPath></defs>
   <g transform="translate(-3 -7)">
     <g class="m-robin">
-      <path d="M82 150 L50 165 C45 167.5 46.5 174 52 173.5 L96 166 Z" fill="#A1A1AA"/>
-      <g clip-path="url(#${id})"><rect width="256" height="256" fill="#FAFAFA"/><path d="M66 110 C 92 100, 122 112, 132 140 C 106 148, 82 140, 66 124 Z" fill="#E4E4E7"/></g>
-      <path d="M193 84 L218 93 L193 102 Z" fill="#A1A1AA"/>
-      <circle cx="174" cy="85" r="6.5" fill="#09090B"/>
-      <path d="M114 184 V203 M134 184 V203" stroke="#A1A1AA" stroke-width="6" stroke-linecap="round"/>
+      <path d="M82 150 L50 165 C45 167.5 46.5 174 52 173.5 L96 166 Z" fill="#8A8E94"/>
+      <g clip-path="url(#${id})"><rect width="256" height="256" fill="#F0F0F0"/><path d="M66 110 C 92 100, 122 112, 132 140 C 106 148, 82 140, 66 124 Z" fill="#E6E7E9"/></g>
+      <path d="M193 84 L218 93 L193 102 Z" fill="#8A8E94"/>
+      <circle cx="174" cy="85" r="6.5" fill="#0A0E11"/>
+      <path d="M114 184 V203 M134 184 V203" stroke="#8A8E94" stroke-width="6" stroke-linecap="round"/>
     </g>
-    <path class="m-chev" d="M48 193 L65 205 L48 217" fill="none" stroke="#E5484D" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-    <rect class="m-cursor" x="84" y="200" width="96" height="10" rx="5" fill="#FAFAFA"/>
+    <path class="m-chev" d="M48 193 L65 205 L48 217" fill="none" stroke="#4B7DFE" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect class="m-cursor" x="84" y="200" width="96" height="10" rx="5" fill="#F0F0F0"/>
   </g>
 </svg>`;
 }
@@ -130,11 +130,12 @@ async function setupPatches() {
     width: `${320 * ls}px`, height: `${32 * ls}px`, paddingLeft: `${10 * ls}px`,
     background: await sample("login.png", 900, 564), borderRadius: "5px",
   });
-  // launcher-dark.png search field (520..1060, 165..195): covered while "notepad" is typed
+  // launcher-dark.png search field (508..1130, 170..198): covered while "notepad" is typed,
+  // in the launcher's own 18px type
   const card = q("#c-launcher"), cs = Number(q(".crop", card).dataset.scale), st = q("#search-type");
   Object.assign(st.style, {
-    left: `${(522 - 480) * cs}px`, top: `${(166 - 153) * cs}px`, width: `${(1060 - 522) * cs}px`, height: `${28 * cs}px`,
-    background: await sample("launcher-dark.png", 800, 168),
+    left: `${(508 - 460) * cs}px`, top: `${(170 - 153) * cs}px`, width: `${(1130 - 508) * cs}px`, height: `${28 * cs}px`,
+    fontSize: `${18 * cs}px`, background: await sample("launcher-dark.png", 800, 172),
   });
 }
 
@@ -283,8 +284,8 @@ function build() {
       tl.to(set, { autoAlpha: 0, y: -24, filter: "blur(8px)", duration: 0.3, ease: "lift" }, end);
       // The line that goes with it; the one before steps back
       reveal(items[i], at + 0.05, { stagger: 0.05, dur: 0.9, y: 30, blur: 12 });
-      gsap.set(items[i], { color: "#fafafa" });
-      if (i > 0) tl.to(items[i - 1], { color: "#52525b", duration: 0.5, ease: "power2.out" }, at);
+      gsap.set(items[i], { color: "#f0f0f0" });
+      if (i > 0) tl.to(items[i - 1], { color: "#7d8187", duration: 0.5, ease: "power2.out" }, at);
     });
 
     // The deck: each panel lands in front, the earlier ones step back and up
