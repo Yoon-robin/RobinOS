@@ -1259,6 +1259,14 @@ FloatingWindow {
                     onToggled: Theme.setReduceMotion(!Theme.reduceMotion)
                 }
 
+                // T-185: the kit's high-contrast lines and soft words, and GTK's own
+                SwitchRow {
+                    title: "고대비"
+                    desc: "선과 흐린 글자를 더 진하게"
+                    checked: Theme.highContrast
+                    onToggled: Theme.setHighContrast(!Theme.highContrast)
+                }
+
                 SwitchRow {
                     title: "앱 글자 크게"
                     desc: "앱 글자 125%"

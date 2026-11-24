@@ -2,9 +2,10 @@
 
     python brand-kit/tokens.py
 
-robin-ui.css is the one place a value is written. This reads its two token blocks (dark:
-`:root, [data-theme="dark"]`, light: `[data-theme="light"]`) and writes
-  - tokens.json   {"dark": {...}, "light": {...}} for anything that is not CSS
+robin-ui.css is the one place a value is written. This reads its token blocks (dark:
+`:root, [data-theme="dark"]`, light: `[data-theme="light"]`, and the two high-contrast
+overrides `[data-contrast="high"]`) and writes
+  - tokens.json   {"dark", "light", "dark-high", "light-high"} for anything that is not CSS
   - tailwind.css  a Tailwind v4 @theme that points utilities at the --rk- variables
 and puts icons.svg into index.html (between the two "icons" comments).
 """
@@ -25,8 +26,12 @@ def block(selector):
 
 dark = block(':root, [data-theme="dark"]')
 light = {**dark, **block('[data-theme="light"]')}
+# high contrast: a few lines and words over either theme (data-contrast="high")
+dark_high = {**dark, **block('\n[data-contrast="high"]')}
+light_high = {**light, **block('[data-theme="light"][data-contrast="high"]')}
 with open(os.path.join(HERE, 'tokens.json'), 'w', encoding='utf-8', newline='\n') as f:
-    json.dump({'dark': dark, 'light': light}, f, ensure_ascii=False, indent=2)
+    json.dump({'dark': dark, 'light': light, 'dark-high': dark_high, 'light-high': light_high},
+              f, ensure_ascii=False, indent=2)
     f.write('\n')
 
 colour = [k for k, v in dark.items() if v.startswith('#') or v.startswith('rgb(')]

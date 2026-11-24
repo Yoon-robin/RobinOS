@@ -218,6 +218,11 @@ ShellRoot {
             Theme.setDark(dark);
         }
 
+        // 고대비 (T-185), for the boot test's high-contrast scene
+        function setHighContrast(on: bool): void {
+            Theme.setHighContrast(on);
+        }
+
         function welcome(): void {
             ShellState.openWelcome();
         }

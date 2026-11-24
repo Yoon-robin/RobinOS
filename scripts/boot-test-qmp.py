@@ -893,6 +893,18 @@ def main():
     type_text(qmp, "clear; for a in 'tap true' 'natural true' 'speed 0' 'repeat_rate 25'; do " + ipc + "setInput $a; done; sleep 2\n")
     wait(4)
     check_scene(qmp, "input-default")
+    # 고대비 (T-185): the kit's high-contrast lines and words, and GTK's own switch
+    type_text(qmp, "clear; " + ipc + "setHighContrast true; sleep 2; "
+              "gsettings get org.gnome.desktop.a11y.interface high-contrast\n")
+    wait(4)
+    shot(qmp, "high-contrast-light")
+    keys(qmp, "meta_l", "spc")
+    wait(3)
+    shot(qmp, "high-contrast-launcher")
+    keys(qmp, "esc")
+    wait(2)
+    type_text(qmp, "clear; " + ipc + "setHighContrast false\n")
+    wait(3)
     # 전원's idle times: the shell function behind the buttons writes hypridle's policy
     # and restarts hypridle with it; a one minute lock has no dimming before it
     type_text(qmp, "clear; for a in 'lock 1' 'screen_off 2' 'suspend 5'; do " + ipc + "setPower $a; sleep 1; done; sleep 2\n")
