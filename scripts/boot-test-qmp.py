@@ -806,7 +806,12 @@ def main():
     type_text(qmp, "notes")
     wait(3)
     shot(qmp, "launcher-files")
-    keys(qmp, "esc")
+    # Enter opens the folder in Files: a libadwaita app in the kit's light faces
+    # (the user's gtk.css that Theme.qml writes, T-188); Alt+F4 back to the terminal
+    keys(qmp, "ret")
+    wait(8)
+    shot(qmp, "light-files")
+    keys(qmp, "alt", "f4")
     wait(2)
     # The learning center opened again after Alt+F4 closed it: mission 1 is ticked off
     check_scene(qmp, "count-save", "count-save-mission")
@@ -944,6 +949,18 @@ def main():
     type_text(qmp, "qs ipc -p /usr/share/robinos/shell call shell setDark true\n")
     wait(3)
     check_scene(qmp, "dark")
+    # Files and Text Editor in the dark faces (T-188): side column, page and header
+    # are the shell's, not GNOME's grey
+    type_text(qmp, "clear; nautilus --new-window ~/practice >/dev/null 2>&1 &\n")
+    wait(8)
+    shot(qmp, "dark-files")
+    keys(qmp, "alt", "f4")
+    wait(2)
+    type_text(qmp, "clear; gnome-text-editor ~/practice/hello.txt >/dev/null 2>&1 &\n")
+    wait(8)
+    shot(qmp, "dark-text-editor")
+    keys(qmp, "alt", "f4")
+    wait(2)
 
     keys(qmp, "meta_l", "l")
     wait(5)

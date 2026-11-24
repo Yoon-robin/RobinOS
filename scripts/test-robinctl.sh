@@ -401,7 +401,8 @@ check "37 passes with 600" 0 learn check 37
 check "38 fails without a key" fail learn check 38
 # The check only looks at the files, so made-up ones stand in when ssh-keygen is missing
 if learner bash -c 'command -v ssh-keygen' >/dev/null 2>&1; then
-  in_home "ssh-keygen -q -t ed25519 -N '' -f ~/.ssh/id_ed25519"
+  # With -f, ssh-keygen doesn't make ~/.ssh (its own prompt for the default path does)
+  in_home "mkdir -p -m 700 .ssh && ssh-keygen -q -t ed25519 -N '' -f ~/.ssh/id_ed25519"
 else
   in_home "mkdir -p -m 700 .ssh && printf '%s\n' '-----BEGIN OPENSSH PRIVATE KEY-----' > .ssh/id_ed25519 && echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExample learner@test' > .ssh/id_ed25519.pub && chmod 600 .ssh/id_ed25519"
 fi

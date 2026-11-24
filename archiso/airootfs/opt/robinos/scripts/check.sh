@@ -64,6 +64,7 @@ run_check() {
 
 run_check "Desktop files (check-desktop.sh)" bash scripts/check-desktop.sh
 run_check "robin-ui kit (check-kit.py)" python3 scripts/check-kit.py
+run_check "GTK colours (build-gtk-theme.py)" python3 scripts/build-gtk-theme.py --check
 run_check "Shell QML (qmllint.sh)" bash scripts/qmllint.sh
 run_check "Shell loads (shell-load.sh)" bash scripts/shell-load.sh
 run_check "ISO sync (check-sync.sh)" bash scripts/check-sync.sh

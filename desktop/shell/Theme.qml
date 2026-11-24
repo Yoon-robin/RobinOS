@@ -142,7 +142,8 @@ Singleton {
     // Push the choice to GTK/libadwaita, foot, qt6ct and Hyprland's window borders.
     function applySystem() {
         const scheme = dark ? "prefer-dark" : "default";
-        const gtkTheme = dark ? "adw-gtk3-dark" : "adw-gtk3";
+        // adw-gtk3 with the kit's colours (desktop/gtk, scripts/build-gtk-theme.py)
+        const gtkTheme = dark ? "RobinOS-dark" : "RobinOS";
         const icons = dark ? "Papirus-Dark" : "Papirus";
         const palette = dark ? "RobinOS-Dark.conf" : "RobinOS-Light.conf";
         const footSignal = dark ? "USR1" : "USR2";
@@ -166,6 +167,12 @@ Singleton {
             "if [ ! -e \"$f\" ] || grep -q '^# robinos-managed' \"$f\"; then mkdir -p \"${f%/*}\""
                 + " && printf '# robinos-managed\\n[main]\\ninclude=/etc/xdg/foot/foot.ini\\ninitial-color-theme=%s\\n' "
                 + (dark ? "dark" : "light") + " > \"$f\"; fi",
+            // libadwaita apps ignore gtk-theme and read only the user's gtk.css: keep
+            // one that imports the kit's colours (light and dark in one file, so open
+            // apps follow the switch), left alone once the user writes their own
+            "g=\"${XDG_CONFIG_HOME:-$HOME/.config}/gtk-4.0/gtk.css\"",
+            "if [ ! -e \"$g\" ] || grep -q '^/\\* robinos-managed' \"$g\"; then mkdir -p \"${g%/*}\""
+                + " && printf '/* robinos-managed: delete this line to keep your own */\\n@import url(\"file:///usr/share/robinos/gtk/libadwaita.css\");\\n' > \"$g\"; fi",
             "conf=\"${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/qt6ct.conf\"",
             "[ -f \"$conf\" ] && sed -i"
                 + " -e 's|^color_scheme_path=.*|color_scheme_path=/usr/share/robinos/qt6ct/" + palette + "|'"

@@ -41,6 +41,11 @@ desktop/dconf/00-robinos                  /etc/dconf/db/local.d/00-robinos      
 desktop/systemd/zram-generator.conf     /etc/systemd/zram-generator.conf                 644
 desktop/fastfetch/config.jsonc            /etc/xdg/fastfetch/config.jsonc                  644
 desktop/fastfetch/robinos-logo.ansi       /usr/share/robinos/fastfetch/robinos-logo.ansi   644
+desktop/gtk/libadwaita.css                /usr/share/robinos/gtk/libadwaita.css            644
+desktop/gtk/themes/RobinOS/               /usr/share/themes/RobinOS/                       dir
+desktop/gtk/themes/RobinOS-dark/          /usr/share/themes/RobinOS-dark/                  dir
+desktop/gtk/gtksourceview/robinos.xml     /usr/share/gtksourceview-5/styles/robinos.xml    644
+desktop/gtk/gtksourceview/robinos-dark.xml /usr/share/gtksourceview-5/styles/robinos-dark.xml 644
 desktop/firefox/policies.json             /etc/firefox/policies/policies.json              644
 desktop/mime/mimeapps.list                /etc/xdg/mimeapps.list                           644
 desktop/mime/robinos-windows-app.desktop  /usr/share/applications/robinos-windows-app.desktop 644

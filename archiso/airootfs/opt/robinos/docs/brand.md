@@ -99,6 +99,12 @@ RobinOS는 윈도우에서 넘어오는 사람을 위한 한국어 리눅스예�
 - 가로형 로고: README 맨 위
 - 터미널 울새 그림: fastfetch
 
+## GTK 앱 (파일, 텍스트 편집기, 계산기 등)
+
+GNOME 앱은 RobinOS가 그리지 않지만 같은 면 셋과 파랑 하나를 써요(T-188). `scripts/build-gtk-theme.py`가 `Theme.qml`의 값으로 libadwaita와 adw-gtk3의 이름 붙은 색(`window_bg_color`, `accent_bg_color` 등)을 만들어요. 창·보기 면은 `bg`, 머리줄과 옆 기둥은 `side`, 카드는 `surface`, 팝오버는 `panel`, 채운 파랑은 `primary`예요. 키트에 초록·노랑이 없어서 성공은 파랑, 경고는 살구색 `note`예요. 텍스트 편집기는 창 전체를 GtkSourceView 색 구성으로 칠해서 `robinos`·`robinos-dark` 구성을 따로 만들었어요. 코드의 문법 색은 터미널의 ANSI 색처럼 프로그램의 뜻이라 Adwaita 것을 물려받아요. 모서리, 단추 모양, 글자는 libadwaita 그대로이고(글꼴은 dconf의 Pretendard), Firefox는 GTK 색이 아니라 자기 테마를 써서 아직 키트 색이 아니에요.
+
+Theme.qml의 색을 바꿨으면 `python3 scripts/build-gtk-theme.py`를 다시 돌려요. `check`가 어긋나면 알려 줘요.
+
 쓸 곳:
 
 - 부팅 스플래시(T-150): 정사각형 마크

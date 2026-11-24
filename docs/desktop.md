@@ -24,12 +24,12 @@ RobinOS의 데스크톱은 Hyprland 위에 직접 만든 Quickshell 셸이에요
 | 파일, 브라우저 | Nautilus, Firefox (원격 측정과 실험 기능은 꺼 둬요: `/etc/firefox/policies/policies.json`) | `desktop/firefox/` |
 | 파일을 여는 기본 앱 | `/etc/xdg/mimeapps.list` | `desktop/mime/` |
 | fastfetch 요약과 울새 그림 | fastfetch | `desktop/fastfetch/` |
-| GTK, libadwaita 앱 | adw-gtk3, dconf 기본값 | `desktop/dconf/` |
+| GTK, libadwaita 앱 | 키트 색의 GTK 3 테마 `RobinOS`·`RobinOS-dark`(adw-gtk3 위), 사용자 `~/.config/gtk-4.0/gtk.css`가 불러오는 `/usr/share/robinos/gtk/libadwaita.css`, 텍스트 편집기 색 구성 `robinos`, dconf 기본값. 모두 `scripts/build-gtk-theme.py`가 `Theme.qml`에서 만들어요 | `desktop/gtk/`, `desktop/dconf/` |
 | Qt 앱 | qt6ct 팔레트 | `desktop/qt6ct/` |
 | 한글 입력 | fcitx5-hangul | `desktop/fcitx5/` |
 | 글꼴 | Geist, Geist Mono, Pretendard | `desktop/fontconfig/`, `scripts/fetch-fonts.sh` |
 
-디자인 토큰은 `desktop/shell/Theme.qml`에 있어요. foot, hyprlock, qt6ct 팔레트, SDDM 테마도 같은 값을 써요.
+디자인 토큰은 `desktop/shell/Theme.qml`에 있어요. foot, hyprlock, qt6ct 팔레트, SDDM 테마, GTK 색(`desktop/gtk/`)도 같은 값을 써요.
 
 ## 설치 위치
 

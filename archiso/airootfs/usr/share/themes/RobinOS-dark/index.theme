@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=X-GNOME-Metatheme
+Name=RobinOS-dark
+Comment=RobinOS colours on adw-gtk3-dark (scripts/build-gtk-theme.py)
+Encoding=UTF-8
+
+[X-GNOME-Metatheme]
+GtkTheme=RobinOS-dark

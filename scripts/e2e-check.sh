@@ -112,8 +112,14 @@ case "${name}" in
     fi
     saved="$(find "${HOME}/.local/state/quickshell" -name appearance.json -exec grep -ho '"dark": *[a-z]*' {} + 2>/dev/null | head -n1)"
     scheme="$(gsettings get org.gnome.desktop.interface color-scheme | tr -d "'")"
-    check "saved=${saved:-none} gtk=${scheme}" \
-      bash -c "[[ '${saved}' =~ ${want_saved}\$ ]] && [ '${scheme}' = '${want_scheme}' ]"
+    # GTK 3 gets the kit's colours from the RobinOS themes, libadwaita from the
+    # user's gtk.css (Theme.qml writes both, T-188)
+    want_theme=RobinOS
+    [[ "${name}" == dark ]] && want_theme=RobinOS-dark
+    theme="$(gsettings get org.gnome.desktop.interface gtk-theme | tr -d "'")"
+    gtkcss="$(grep -c 'usr/share/robinos/gtk/libadwaita.css' "${HOME}/.config/gtk-4.0/gtk.css" 2>/dev/null || true)"
+    check "saved=${saved:-none} gtk=${scheme} theme=${theme} gtk4css=${gtkcss:-0}" \
+      bash -c "[[ '${saved}' =~ ${want_saved}\$ ]] && [ '${scheme}' = '${want_scheme}' ] && [ '${theme}' = '${want_theme}' ] && [ '${gtkcss:-0}' = 1 ] && [ -f /usr/share/themes/${want_theme}/gtk-3.0/gtk.css ]"
     ;;
   recorded)
     # Win+Alt+R twice: a video of a second or more in ~/Videos/Screencasts

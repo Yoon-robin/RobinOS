@@ -5,7 +5,7 @@
 
 [org/gnome/desktop/interface]
 color-scheme='prefer-dark'
-gtk-theme='adw-gtk3-dark'
+gtk-theme='RobinOS-dark'
 icon-theme='Papirus-Dark'
 cursor-theme='Adwaita'
 cursor-size=24
@@ -14,6 +14,11 @@ document-font-name='Pretendard Variable 11'
 monospace-font-name='Cascadia Mono 11'
 accent-color='blue'
 enable-hot-corners=false
+
+# Text Editor paints its window from its style scheme; "robinos" (and its dark
+# variant) has the kit's faces (desktop/gtk, scripts/build-gtk-theme.py)
+[org/gnome/TextEditor]
+style-scheme='robinos'
 
 # Title bar buttons of GTK, Firefox and Qt apps. Hyprland 0.56 ignores an app's
 # own minimize request (xdg_toplevel.set_minimized), so that button would do
