@@ -972,6 +972,11 @@ def phase_installed(con, qmp):
     con.run("systemctl is-active ufw && LC_ALL=C ufw status verbose | head -n 4"
             " && LC_ALL=C ufw status | grep -q '^Status: active'"
             " && iptables -S ufw-before-input | grep -q 'dport 5353'")
+    # LocalSend's profile, for the launcher's "휴대폰에서 받기 허용" (T-186): ufw reads it,
+    # and takes the rule the launcher runs (a dry run: nothing is opened here)
+    con.run("LC_ALL=C ufw app info LocalSend | grep -q '53317/tcp'"
+            " && LC_ALL=C ufw --dry-run allow from 192.168.0.0/16 to any app LocalSend | grep -q 53317"
+            " && ! LC_ALL=C ufw status | grep -q 53317")
     # Scanners, "팩스 및 스캔" in the launcher (T-165)
     con.run("pacman -Q sane sane-airscan simple-scan && test -f /usr/share/applications/org.gnome.SimpleScan.desktop")
     # Backups of personal files, "백업" in the launcher (T-158)

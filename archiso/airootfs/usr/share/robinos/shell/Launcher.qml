@@ -322,6 +322,8 @@ PanelWindow {
         { key: "wallpaper", group: "system", icon: "image", title: "배경화면 바꾸기", subtitle: "사진 폴더에서 사진을 오른쪽 버튼으로 누르고 \"배경으로 설정\"", words: "wallpaper background 배경 배경화면 바탕 화면 바탕화면 사진 개인 설정 personalize" },
         { key: "wallpaper-reset", group: "wallpaper", icon: "rotate-ccw", title: "기본 배경화면으로", subtitle: "RobinOS 배경화면으로 되돌려요", words: "wallpaper background reset default 배경 배경화면 바탕 화면 기본 되돌리기" },
         { key: "steam", group: "store", icon: "download", title: "Steam 설치하기", subtitle: "앱 스토어에서 Flathub의 Steam을 받아요", words: "steam 스팀 게임 game games valve 게임 설치" },
+        { key: "localsend", group: "store", icon: "download", title: "LocalSend 설치하기", subtitle: "같은 와이파이의 휴대폰과 파일을 주고받아요 · 아이폰도 돼요", words: "localsend 로컬센드 휴대폰 핸드폰 스마트폰 phone 아이폰 iphone 안드로이드 android 갤럭시 파일 보내기 파일 받기 파일 전송 airdrop 에어드롭 quick share 퀵 셰어 nearby share" },
+        { key: "localsend-firewall", group: "system", icon: "shield", title: "휴대폰에서 받기 허용", subtitle: "방화벽: 같은 네트워크(사설 주소)에서 오는 LocalSend 연결(포트 53317)만 열어요", words: "localsend 로컬센드 휴대폰 핸드폰 phone 파일 받기 방화벽 firewall ufw 포트 port 허용" },
         { key: "install", group: "live", icon: "download", title: "RobinOS 설치", subtitle: "이 컴퓨터에 설치해요", words: "install installer setup 설치 설치기 하드 디스크 윈도우 옆" },
         { key: "shortcuts", group: "system", icon: "keyboard", title: "단축키 보기", subtitle: "Win + F1", words: "shortcut shortcuts keyboard hotkey 단축키 키보드 단축 도움말 help 복사 붙여넣기" },
         { key: "welcome", group: "system", icon: "sparkles", title: "환영 마법사", subtitle: "테마, 한/영 키, 단축키 안내", words: "welcome tour setup 환영 마법사 처음 시작 안내 투어 한영" },
@@ -345,6 +347,8 @@ PanelWindow {
         { win: "볼륨 믹서", words: "볼륨 믹서 volume mixer 소리 설정 sound settings 사운드", cmd: "sound" },
         { win: "네트워크 및 인터넷", linux: "ip a", learn: 6, words: "네트워크 및 인터넷 network and internet 네트워크 연결 network connections ncpa.cpl ncpa", cmd: "wifi" },
         { win: "블루투스 및 장치", words: "블루투스 및 장치 bluetooth and devices 장치 추가 add device", cmd: "bluetooth" },
+        // Opens LocalSend when it is installed, else offers it from the app store
+        { win: "휴대폰과 연결", words: "휴대폰과 연결 phone link 사용자 휴대폰 your phone 휴대폰 연결 핸드폰 연결 근거리 공유 nearby sharing", app: "org.localsend.localsend_app", cmd: "localsend" },
         { win: "Acrobat Reader", words: "acrobat 아크로뱃 adobe reader pdf 뷰어", app: "org.gnome.Evince" },
         { win: "캡처 도구", words: "캡처 도구 snipping tool 캡처 스크린샷 screenshot", cmd: "screenshot" },
         { win: "Xbox Game Bar", words: "xbox game bar 게임 바 화면 녹화 녹화 screen recording", cmd: "record" },
@@ -423,7 +427,7 @@ PanelWindow {
     // App store suggestions: only where GNOME Software is (the installed system)
     // and the app isn't installed yet
     function storeOffers(key) {
-        const apps = { "steam": "com.valvesoftware.Steam" };
+        const apps = { "steam": "com.valvesoftware.Steam", "localsend": "org.localsend.localsend_app" };
         return !!DesktopEntries.byId("org.gnome.Software") && !DesktopEntries.byId(apps[key]);
     }
 
@@ -514,16 +518,19 @@ PanelWindow {
             if (q.length >= 2 || /[^\x00-\x7f]/.test(q)) {
                 for (const name of windowsNames.filter(w => matches(w.words, q))) {
                     let item = null;
-                    if (name.cmd) {
-                        if (!shownCmds[name.cmd]) {
-                            item = commandItem(command(name.cmd));
-                            shownCmds[name.cmd] = true;
-                        }
-                    } else {
-                        const entry = lookup(name.app);
-                        if (entry && !shownApps[entry.id]) {
+                    // The app when it is installed; else its command, which for an app
+                    // store offer only where the store is (휴대폰과 연결: LocalSend)
+                    const entry = name.app ? DesktopEntries.byId(name.app) ?? (name.cmd ? null : lookup(name.app)) : null;
+                    if (entry) {
+                        if (!shownApps[entry.id]) {
                             item = appItem(entry);
                             shownApps[entry.id] = true;
+                        }
+                    } else if (name.cmd) {
+                        const cmd = command(name.cmd);
+                        if (!shownCmds[name.cmd] && (cmd.group !== "store" || storeOffers(name.cmd))) {
+                            item = commandItem(cmd);
+                            shownCmds[name.cmd] = true;
                         }
                     }
                     if (item) {
@@ -742,6 +749,19 @@ PanelWindow {
             // Flathub's Steam needs no multilib repository and gets the GPU drivers as
             // Flatpak extensions, NVIDIA's included
             Quickshell.execDetached(["gnome-software", "--details=com.valvesoftware.Steam"]);
+            break;
+        case "localsend":
+            Quickshell.execDetached(["gnome-software", "--details=org.localsend.localsend_app"]);
+            break;
+        case "localsend-firewall":
+            // ufw drops what comes in (T-157); LocalSend listens on 53317. Only from
+            // private addresses (the same network, nothing routed from the internet; a
+            // café's Wi-Fi is private addresses too, and LocalSend asks before it takes a
+            // file). In the terminal so the rule is something to read (T-186)
+            ShellState.runInTerminal("sudo ufw allow from 192.168.0.0/16 to any app LocalSend"
+                                     + " && sudo ufw allow from 172.16.0.0/12 to any app LocalSend"
+                                     + " && sudo ufw allow from 10.0.0.0/8 to any app LocalSend"
+                                     + " && sudo ufw status");
             break;
         case "lab-start":
             ShellState.runInTerminal("robinctl lab start web && printf '\\nJuice Shop  http://localhost:3000\\nDVWA        http://localhost:8080\\n'");

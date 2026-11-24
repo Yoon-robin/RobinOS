@@ -216,6 +216,7 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 | Microsoft Store, 스토어, 앱 설치 | GNOME 소프트웨어 (설치본에만 있어요) |
 | 장치 및 프린터, 프린터, `printer` | 프린터 설정 (설치본에만 있어요) |
 | 팩스 및 스캔, 스캐너, `scan` | 문서 스캐너 앱 (설치본에만 있어요) |
+| 휴대폰과 연결, `phone link`, 휴대폰 | LocalSend (깔려 있으면 열고, 없으면 앱 스토어에서 받기. 설치본에만 있어요) |
 | 파일 히스토리, 백업, `Time Machine` | 백업 앱 Déjà Dup (설치본에만 있어요) |
 | 미디어 플레이어, 영화 및 TV, 동영상 | 동영상 재생 앱 (Showtime, 설치본에만 있어요) |
 | 그루브 음악, 음악 | 오디오 재생기 (Decibels, 설치본에만 있어요) |
@@ -352,6 +353,20 @@ Steam, Discord처럼 백그라운드에서 도는 앱의 아이콘이 바 오른
 ## 프린터
 
 설치한 시스템에서 USB 프린터를 꽂거나 같은 네트워크의 프린터를 쓸 수 있어요. 요즘 프린터는 대부분 드라이버 없이(IPP Everywhere, AirPrint) 인쇄 창에 바로 나와요. 안 나오면 런처에서 "프린터"를 찾아 프린터 설정 앱에서 추가해요. 인쇄 서비스(CUPS)는 처음 쓸 때 켜지고, 네트워크 프린터는 Avahi로 찾아요(`printer.local` 같은 이름). Avahi는 같은 네트워크에 내 컴퓨터 이름을 알리고 5353/udp를 열어 둬요.
+
+## 휴대폰과 파일 주고받기
+
+같은 와이파이에 있는 휴대폰(안드로이드, 아이폰)과 파일을 주고받을 때는 LocalSend를 써요. 런처에서 "휴대폰"이나 "휴대폰과 연결"을 찾으면 앱 스토어의 LocalSend(Flathub `org.localsend.localsend_app`)가 열리고, 깔고 나면 같은 검색이 앱을 열어요. 휴대폰에도 LocalSend 앱을 깔아요.
+
+보내기는 그대로 되지만, 받으려면 방화벽(ufw, 들어오는 연결을 막아요)을 열어야 해요. 런처의 "휴대폰에서 받기 허용"이 새 터미널에서 이 명령을 보여 주며 실행해요.
+
+```bash
+sudo ufw allow from 192.168.0.0/16 to any app LocalSend
+sudo ufw allow from 172.16.0.0/12 to any app LocalSend
+sudo ufw allow from 10.0.0.0/8 to any app LocalSend
+```
+
+사설 주소(같은 네트워크)에서 오는 LocalSend 연결(포트 53317)만 열어요. 인터넷 쪽에서는 닿지 않지만, 카페 같은 공용 와이파이의 다른 사람도 사설 주소라서 받기 요청은 올 수 있어요. LocalSend는 받기 전에 묻고, 다시 막으려면 `sudo ufw status numbered`로 번호를 보고 `sudo ufw delete 번호`를 해요. 규칙 이름 `LocalSend`는 RobinOS가 넣는 ufw 앱 프로필(`/etc/ufw/applications.d/robinos-localsend`)이에요.
 
 ## 설정 바꾸기
 

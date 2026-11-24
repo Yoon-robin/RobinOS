@@ -339,6 +339,12 @@ def main():
     type_text(qmp, "taskmgr")
     wait(2)
     shot(qmp, "launcher-windows-mission")
+    # Files from a phone (T-186): the firewall rule for LocalSend. Its 설치하기 item
+    # needs the app store, which only the installed system has
+    keys(qmp, "ctrl", "a")
+    type_text(qmp, "localsend")
+    wait(2)
+    shot(qmp, "launcher-localsend")
     # Math like the Start menu's search: the result first, Enter copies it
     keys(qmp, "ctrl", "a")
     type_text(qmp, "(12+3)*4")

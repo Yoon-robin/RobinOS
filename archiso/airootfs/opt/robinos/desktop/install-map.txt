@@ -22,6 +22,7 @@ desktop/portal/robinos.portal             /usr/share/xdg-desktop-portal/portals/
 desktop/portal/org.freedesktop.impl.portal.desktop.robinos.service /usr/share/dbus-1/services/org.freedesktop.impl.portal.desktop.robinos.service 644
 desktop/portal/hyprland-portals.conf      /etc/xdg/xdg-desktop-portal/hyprland-portals.conf 644
 desktop/pacman/robinos-os-release.hook    /etc/pacman.d/hooks/robinos-os-release.hook      644
+desktop/ufw/robinos-localsend             /etc/ufw/applications.d/robinos-localsend        644
 assets/brand/robinos-mark.svg             /usr/share/icons/hicolor/scalable/apps/robinos.svg 644
 desktop/bash/robinos-hints.sh             /usr/share/robinos/bash/robinos-hints.sh         644
 desktop/bash/robinos-bashrc.sh            /usr/share/robinos/bash/robinos-bashrc.sh        644

@@ -1,0 +1,8 @@
+# ufw application profile for LocalSend (Flathub org.localsend.localsend_app): files
+# from phones and computers on the same network. The launcher opens it to private
+# addresses only (docs/desktop.md, T-186). ASCII only: ufw reads it with Python's
+# configparser in whatever locale it runs.
+[LocalSend]
+title=LocalSend
+description=Files from phones and computers on the same network
+ports=53317/tcp|53317/udp
