@@ -1,6 +1,6 @@
 # RobinOS: Claude 작업 규칙
 
-RobinOS는 Arch Linux 기반의 한국어 우선 OS예요. 정체성은 "예쁜 UI를 가진 OS"예요(2026-11-24 사용자 결정): 모든 화면이 robin-ui V5 키트(`assets/brand/robin-ui/`) 하나를 따라요. Hyprland 위에 직접 만든 Quickshell 셸을 얹었고, 화면과 도구는 "RobinOS라면 어떻게 할까"에서 시작해 직접 만들어요(2026-10-10). 리눅스를 처음 쓰는 사람을 위한 장치(윈도우 단축키, 터미널 힌트, 학습 센터, 윈도우 습관에서 리눅스 개념으로 이어 주기, 2026-10-12·13 결정)는 그대로 있지만 앞세우지 않아요. 제품 설계는 [docs/design.md](docs/design.md), 화면 규칙은 [docs/brand.md](docs/brand.md)에 있어요.
+RobinOS는 Arch Linux 기반의 한국어 우선 OS예요. 정체성은 "윈도우에서 넘어오는 사람을 위한 한국어 리눅스"예요(2026-11-24 오후 사용자 결정, 약속은 "RobinOS로 시작하는 첫 리눅스"): 윈도우 단축키와 이름, 터미널 힌트, 학습 센터, 스냅샷 되돌리기로 윈도우 습관에서 리눅스 개념까지 이어 줘요. 모든 화면은 robin-ui V5 키트(`assets/brand/robin-ui/`) 하나를 따라요. Hyprland 위에 직접 만든 Quickshell 셸을 얹었고, 화면과 도구는 "RobinOS라면 어떻게 할까"에서 시작해 직접 만들어요(2026-10-10). 제품 설계는 [docs/design.md](docs/design.md), 화면 규칙은 [docs/brand.md](docs/brand.md)에 있어요.
 
 ## 꼭 지킬 것
 

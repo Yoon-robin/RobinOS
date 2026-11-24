@@ -2,13 +2,13 @@
 
 ![RobinOS 로고: 어두운 네모 위에서 파랗게 빛나는 하얀 울새](assets/brand/robinos-logo-horizontal.svg)
 
-RobinOS는 예쁜 UI를 가진 OS예요. 바, 독, 런처, 설정, 설치기, 로그인 화면까지 한 디자인 언어로 직접 그렸어요. 리눅스를 처음 써 보는 사람도 쓸 수 있어요.
+RobinOS는 윈도우에서 넘어오는 사람을 위한 한국어 리눅스예요. 처음 켤 때부터 한국어이고, RobinOS로 시작하는 첫 리눅스가 되도록 만들었어요.
 
 소개 페이지: https://yoon-robin.github.io/RobinOS/
 
 윈도우에서 쓰던 단축키와 이름이 그대로 통해서 첫날부터 쓸 수 있어요. 터미널에 `ipconfig`를 치면 리눅스에서는 `ip a`라고 알려 주고, 업데이트하다 망가지면 부팅 메뉴에서 되돌려요. 더 배우고 싶으면 학습 센터의 미션 45개가 리눅스 기초부터 차근차근 이어 줘요.
 
-Arch Linux 위에 셸, 설치기, 업데이트 저장소, 스냅샷 복구를 RobinOS가 직접 만들어 얹었어요. 목적과 설계는 [docs/design.md](docs/design.md), 왜 만드는지는 [docs/vision.md](docs/vision.md)에 있어요.
+Arch Linux 위에 셸, 설치기, 업데이트 저장소, 스냅샷 복구를 RobinOS가 직접 만들어 얹었어요. 바, 독, 런처, 설정, 설치기, 로그인 화면까지 한 디자인 언어로 그렸어요. 목적과 설계는 [docs/design.md](docs/design.md), 왜 만드는지는 [docs/vision.md](docs/vision.md)에 있어요.
 
 **내려받기**: 최신 프리뷰는 [v0.3.0](https://github.com/Yoon-robin/RobinOS/releases/tag/v0.3.0)이에요(2026-10-13, [무엇이 바뀌었나](docs/release-notes-v0.3.md)). VM에서 검증했고 실제 PC는 아직 몇 대만 확인한 프리뷰라 중요한 자료는 꼭 백업하세요. USB에 담기 전에 체크섬과 서명을 확인하는 방법은 [docs/install.md](docs/install.md)의 "내려받은 ISO 확인하기"에 있어요. 대부분의 PC는 USB로 켜기 전에 펌웨어 설정에서 **보안 부팅(Secure Boot)을 꺼야 해요**(같은 문서의 "보안 부팅 끄기").
 

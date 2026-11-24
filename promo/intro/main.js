@@ -225,10 +225,11 @@ function build() {
     const el = q("#s-hero");
     scene(el, S.hero, S.screen);
     const hero = q(".hero", el), h1 = q("h1", el);
-    const [w1, w2, w3] = wordsOf(h1);
+    // "RobinOS로 시작하는 / 첫 리눅스.": one word per half beat, the last line lands on the bar
+    const heads = wordsOf(h1), beats = [8, 8.5, 9.5, 10];
     gsap.set(wordsOf(hero), { autoAlpha: 0 });
     reveal(q(".eyebrow", el), b(8), { dur: 0.9 });
-    [[w1, 8], [w2, 8.5], [w3, 10]].forEach(([w, at]) => reveal([w], b(at), { y: 70, blur: 24, scale: 0.92, dur: 1.2 }));
+    heads.forEach((w, i) => reveal([w], b(beats[Math.min(i, beats.length - 1)]), { y: 70, blur: 24, scale: 0.92, dur: 1.2 }));
     tl.fromTo(h1, { letterSpacing: "-0.02em" }, { letterSpacing: "-0.055em", duration: b(7), ease: "power2.out", immediateRender: false }, b(8));
     tl.fromTo(hero, { scale: 1 }, { scale: 1.04, duration: b(7), ease: "none", immediateRender: false }, b(8));
     tl.to(hero, { scale: 1.3, autoAlpha: 0, filter: "blur(30px)", duration: b(1), ease: "lift" }, b(15));
