@@ -27,8 +27,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-11-24 (오전 10시 반) | `c430a5f` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.6분, 테스트 22.6분) | 통과. 판정 모두 PASS. 새 장면 `17-launcher-localsend`: 라이브에는 GNOME 소프트웨어가 없어 "LocalSend 설치하기"는 숨고 "휴대폰에서 받기 허용"만 나와요(설계대로, 설치본 장면은 batch79에서 더함). 설치 테스트 다섯 단계 |
 | 2026-11-24 (새벽 3시 반) | `f2a6996` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 4.1분, 테스트 22.6분) | 통과. 판정 21개 모두 PASS. `31-terminal-learn.png`에서 터미널 한글이 붙어 보여요(T-183). 설치 테스트 다섯 단계 |
-| 2026-11-24 (새벽 3시) | `0451fd4` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 3.8분, 테스트 22.6분) | 통과. 판정 21개 모두 PASS. 앞의 묶음에서 실패한 `power-changed`(60 120 300)·`power-default`(240 300 600 900)가 잠금 fd 수정 뒤 통과, `default-apps`·`terminal`도 PASS. 설치 테스트 다섯 단계 |
 
 ## 품질 점검 기록
 
@@ -48,7 +48,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 `git log origin/main..HEAD`에 있는 커밋과, 푸시하기 전에 통과해야 하는 검증이에요. 검증이 끝나면 지우고 푸시해요.
 
-없어요. `f2a6996`까지 2026-11-24 새벽 집 PC의 묶음 검증 두 번(`0451fd4`, `f2a6996`, 위 정기 점검 표)을 마치고 푸시했어요. `5ba9256`(설치 테스트의 업데이트 미리 보기 확인)은 `install-test -Installer robinos` 다섯 단계 통과 뒤 푸시했어요. 그 뒤 커밋은 문서뿐이라 정적 검증만 해요([loop.md](loop.md) "푸시")
+| 커밋 | 남은 검증 |
+|---|---|
+| `7210c08`(T-177 ②) ~ `c430a5f` | `verify` 통과(위 정기 점검). `install-test -Installer archinstall`(복사본을 패키지로 옮기기)과 `-Installer windows`(BitLocker 장면, Flathub ID 확인)가 남았어요 |
 
 ## 사용자 확인 필요
 
