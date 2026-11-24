@@ -489,8 +489,15 @@ def main():
     # Minimize like the Windows taskbar: the dock's click on an app goes through the
     # same shell function as this IPC call. The focused terminal minimizes itself, and
     # a background job brings it back a few seconds later.
+    # The terminal can echo a long line well after the last key went in (2026-11-24:
+    # still half typed 10 s later, so the terminal stayed minimized through the snap
+    # scenes and every check after it was typed into nothing). The timed shots start
+    # when the guest logs that the line ran, not when the typing ends.
     ipc = "qs ipc -p /usr/share/robinos/shell call shell "
-    type_text(qmp, "clear; (sleep 6; " + ipc + "toggleApp org.gnome.Ptyxis) & " + ipc + "toggleApp org.gnome.Ptyxis\n")
+    start = serial_size()
+    type_text(qmp, "clear; logger -t robinos-e2e scenario=minimize-typed status=PASS;"
+              " (sleep 6; " + ipc + "toggleApp org.gnome.Ptyxis) & " + ipc + "toggleApp org.gnome.Ptyxis\n")
+    wait_verdict("minimize-typed", start=start, timeout=60)
     wait(3)
     shot(qmp, "minimized")
     wait(7)
