@@ -4,22 +4,23 @@ RobinOS는 예쁜 UI를 가진 OS예요([design.md](design.md)의 "정체성 다
 
 ## 로고 파일
 
-- `assets/brand/robinos-mark.svg`: 정사각형 앱·아이콘 마크
+- `assets/brand/robinos-mark.svg`: 정사각형 앱·아이콘 마크. 키트의 마크(`.rk-mark`)와 같은 문법이에요: 거의 검은 네모(`#060a14`, 모서리는 한 변의 7/30) 위에 하얀 울새, 그 둘레에 파란(`#4b7dfe`) 번짐
 - `assets/brand/robinos-logo.svg`: 전체 로고 락업 (마크와 이름)
 - `assets/brand/robinos-logo-horizontal.svg`: 헤더에 쓰기 좋은 가로형 로고 (README 맨 위)
 - `assets/brand/robinos-glyph.svg`: 아주 작은 곳(셸의 바, 런처, 설치기, 로그인 화면)에 쓰는 하얀 울새 실루엣. 키트의 마크처럼 거의 검은 네모(`#060a14`) 위에 올리고, 셸에서는 파란 번짐을 둘러요(`Mark.qml`)
-- `assets/brand/build-logo.py`: 위 네 파일을 만드는 스크립트. 이름과 한 줄 소개는 글꼴을 윤곽선으로 바꿔 넣어서 글꼴이 없는 곳에서도 똑같이 보여요
-- `desktop/fastfetch/robinos-logo.ansi`: 터미널을 열면 fastfetch 옆에 나오는 울새 그림(31×15칸). 마크를 고치면 `python3 assets/brand/build-terminal-logo.py desktop/fastfetch/robinos-logo.ansi`로 다시 만들고, 알려 주는 크기를 `desktop/fastfetch/config.jsonc`에 적어요(`check-desktop.sh`가 맞는지 봐요)
+- `assets/brand/robinos-boot-splash.svg`: 라이브 BIOS 메뉴 배경(`themes/syslinux/splash.png`)의 원본
+- `assets/brand/build-logo.py`: 위 다섯 파일을 만드는 스크립트. 이름은 글꼴을 윤곽선으로 바꿔 넣어서 글꼴이 없는 곳에서도 똑같이 보여요
+- `desktop/fastfetch/robinos-logo.ansi`: 터미널을 열면 fastfetch 옆에 나오는 울새 그림(31×11칸). 글리프를 고치면 `python3 assets/brand/build-terminal-logo.py desktop/fastfetch/robinos-logo.ansi`로 다시 만들고, 알려 주는 크기를 `desktop/fastfetch/config.jsonc`에 적어요(`check-desktop.sh`가 맞는지 봐요)
 
-로고는 키트 색(기둥 `#0a0e11`, 울새 `#f0f0f0`, 날개 `#e6e7e9`, 부리·꼬리·다리 `#8a8e94`, 프롬프트 `>`만 파랑 `#4b7dfe`)이고, 이름은 Pretendard 650이에요. 한 줄 소개는 없어요(2026-11-24). 다시 만들 때는 `scripts/fetch-fonts.sh /tmp/robinfonts` 뒤에 `python3 assets/brand/build-logo.py /tmp/robinfonts assets/brand`, 라이브 BIOS 메뉴 배경은 `rsvg-convert -w 640 -h 480 assets/brand/robinos-boot-splash.svg -o themes/syslinux/splash.png`예요.
+로고는 키트 색(바탕은 옆 기둥 `#0a0e11`, 마크 네모 `#060a14`, 울새와 이름 `#ffffff`, 번짐만 파랑 `#4b7dfe`)이고, 이름은 Pretendard 650이에요. 한 줄 소개는 없어요(2026-11-24). 다시 만들 때는 `scripts/fetch-fonts.sh /tmp/robinfonts` 뒤에 `python3 assets/brand/build-logo.py /tmp/robinfonts assets/brand`, 라이브 BIOS 메뉴 배경은 `rsvg-convert -w 640 -h 480 assets/brand/robinos-boot-splash.svg -o themes/syslinux/splash.png`예요.
 
 ## 콘셉트
 
-**프롬프트의 커서 위에 앉은 울새(Robin)** 예요(2026-10-09). 원 두 개로 만든 하얀 울새가 터미널 프롬프트 `> _`의 커서 위에 앉아 있어요.
+**어두운 네모 위에서 파랗게 빛나는 하얀 울새(Robin)** 예요(2026-11-24). 키트의 마크 문법 그대로, 셸의 바·런처·설치기에 있는 작은 마크(`Mark.qml`)와 앱 아이콘, README 로고가 모두 같은 모양이에요.
 
-- 울새: 이름 그대로의 RobinOS. 둥글고 차분한 모양
-- 터미널 프롬프트 `>`와 커서 `_`: 직접 만든 도구로 손수 다루는 컴퓨터
-- 색: 프롬프트의 `>`만 강조색이에요. 2026-11-24부터 강조색은 파랑(`#4b7dfe`) 하나예요. 울새 가슴에 색을 칠한 안도 그려 봤지만 덩어리처럼 어색해서 뺐어요
+- 울새: 이름 그대로의 RobinOS. 원 두 개와 부리·꼬리로 만든 둥글고 차분한 실루엣이고, 눈은 뚫려 있어서 파란 번짐이 비쳐요
+- 색: 흰 울새와 파란 번짐 둘뿐이에요. 강조색은 파랑(`#4b7dfe`) 하나예요
+- 예전 모양(2026-10-09~11-24): 터미널 프롬프트 `> _`의 커서 위에 앉은 회색 부리의 울새. 키트의 마크와 달라서 셸의 작은 마크와 로고가 서로 다른 모양이었어요. 사용자 요청("로고도 키트 스타일로", 2026-11-24)으로 바꿨어요
 - 한 줄 소개: 화면에는 이름만 둬요. 키트가 설명 문장을 쓰지 않아서, 로고 아래에도 소개를 넣지 않아요. 정체성("예쁜 UI를 가진 OS")은 README와 소개 영상처럼 설명이 필요한 곳에만 써요
 
 ## 키트: robin-ui V5

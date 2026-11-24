@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Draws the RobinOS robin (assets/brand/robinos-mark.svg without its square) as
-terminal art for fastfetch (desktop/fastfetch/robinos-logo.ansi): half-block
-characters, two pixels per cell. White parts use the terminal's own foreground
-color, so the robin stays visible in light mode; grey and the kit blue are fixed.
+"""Draws the RobinOS robin (assets/brand/robinos-glyph.svg, the mark without its
+tile and glow) as terminal art for fastfetch (desktop/fastfetch/robinos-logo.ansi):
+half-block characters, two pixels per cell. The robin uses the terminal's own
+foreground color, so it stays visible in light mode; the eye is left empty.
 
     python3 assets/brand/build-terminal-logo.py desktop/fastfetch/robinos-logo.ansi   (needs rsvg-convert)
 """
@@ -26,10 +26,9 @@ FIXED = {"grey": (138, 142, 148), "red": (75, 125, 254)}
 
 
 def robin_svg():
-    """The mark without its rounded square, cropped to the robin and the prompt."""
-    svg = open(os.path.join(HERE, "robinos-mark.svg"), encoding="utf-8").read()
-    svg = re.sub(r'<rect width="256" height="256" rx="56"[^>]*/>', "", svg, count=1)
-    return svg.replace('viewBox="0 0 256 256"', 'viewBox="38 48 184 168"', 1)
+    """The white robin, cropped to its own outline (x 20-238, y 54-202)."""
+    svg = open(os.path.join(HERE, "robinos-glyph.svg"), encoding="utf-8").read()
+    return svg.replace('viewBox="0 0 256 256"', 'viewBox="16 50 226 156"', 1)
 
 
 def read_png(data):

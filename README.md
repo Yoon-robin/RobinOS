@@ -1,6 +1,6 @@
 # RobinOS
 
-![RobinOS 로고: 프롬프트 커서 위에 앉은 하얀 울새](assets/brand/robinos-logo-horizontal.svg)
+![RobinOS 로고: 어두운 네모 위에서 파랗게 빛나는 하얀 울새](assets/brand/robinos-logo-horizontal.svg)
 
 RobinOS는 예쁜 UI를 가진 OS예요. 바, 독, 런처, 설정, 설치기, 로그인 화면까지 한 디자인 언어로 직접 그렸어요. 리눅스를 처음 써 보는 사람도 쓸 수 있어요.
 
