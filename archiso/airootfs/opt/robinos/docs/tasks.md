@@ -4,12 +4,13 @@
 
 상태: `할 일` → `진행 중` → `검증 대기` → `완료`. 사용자가 해야 하는 일을 기다리거나 같은 실패가 세 번 반복되면 `막힘`으로 두고 다른 작업을 해요. `보류`는 지금 하지 않기로 한 작업이에요(이유를 적어 둬요). `막힘`, `보류`, `검증 대기`는 작업을 고를 때 건너뛰어요. `할 일`이 비면 [loop.md](loop.md)의 "백로그 채우기"로 채워요.
 
-## 이어 하기 메모 (2026-11-24 새벽 4시, 집 PC)
+## 이어 하기 메모 (2026-11-24 낮 12시, robin PC)
 
-다른 PC에서 이어 할 때 먼저 읽어요. 새 PC 준비는 [build-environment.md](build-environment.md) "다른 PC에서 이어서 하기"예요. 이 PC는 모두 푸시하고 껐어요(작업 트리 `../RobinOS-wt`와 `work/batch*` 브랜치도 정리함).
+다른 PC에서 이어 할 때 먼저 읽어요. 새 PC 준비는 [build-environment.md](build-environment.md) "다른 PC에서 이어서 하기"예요. robin PC는 `3b92fa1`까지 검증하고 푸시했어요(`work/batch79`와 작업 트리 `../RobinOS-wt2`는 정리함. 빈 폴더 `../RobinOS-wt`는 다른 프로그램이 잡고 있어 못 지웠어요, 다음에 지워요).
 
-- **오늘 밤 한 것(00:55~04:00)**: 개발 스택 다시 보기([design.md](design.md) "개발 스택 다시 보기", 바탕은 그대로), 셸을 VM 없이 띄워 찍는 `shell-load.sh`, 그걸로 찾은 셸·desktop/bin 버그 열몇 개(품질 점검 기록 "코드 검토"), README 스크린샷을 새 화면으로, 전원 설정이 두 번째 선택부터 hypridle에 안 들어가던 회귀(잠금 fd 상속), 터미널 한글 간격(T-183), 밝기 키가 키보드 LED를 건드리던 것, `.msi` 기본 앱, 설치본이 릴리스 열쇠를 다시 받게(T-177 ③), 설치 테스트가 업데이트 미리 보기 줄을 확인(T-162), 진행 중 작업 21개를 17개로(T-176). 묶음 검증 두 번과 설치 테스트 한 번 통과(정기 점검 표, 푸시 대기 커밋)
-- **다음 할 일**: T-180(robin-ui V5)의 남은 것(소개 영상 다시 찍기, 랜딩 페이지 사진은 v0.4 때), T-176(진행 중 줄이기), T-177 ②, 그다음 아래 "할 일" 순서. 사용자 확인 필요 항목은 그대로예요
+- **오전~낮에 한 것(robin PC)**: archinstall로 깐 시스템에서 post-install 직후 방화벽이 꺼져 있던 것(바로 켜요), 설치 테스트 archinstall·windows 통과, T-147·T-177 완료, 고대비(T-185, 키트의 고대비 토큰 두 벌과 설정 스위치), 설치본 런처의 휴대폰 연결 장면(T-186), 소개 영상을 robin-ui V5로(T-180 ①), `shell-load.sh`를 소프트웨어 GL로(WSL D3D12가 테마 전환 때 죽어요). 묶음 검증 `3b92fa1` 통과
+- **다음 할 일**: T-180 ②(랜딩 페이지 사진, v0.4 때), T-184 ①, T-164부터 아래 "할 일" 순서
+- **새벽에 한 것(00:55~04:00, 집 PC)**: 개발 스택 다시 보기([design.md](design.md) "개발 스택 다시 보기", 바탕은 그대로), 셸을 VM 없이 띄워 찍는 `shell-load.sh`, 그걸로 찾은 셸·desktop/bin 버그 열몇 개(품질 점검 기록 "코드 검토"), README 스크린샷을 새 화면으로, 전원 설정이 두 번째 선택부터 hypridle에 안 들어가던 회귀(잠금 fd 상속), 터미널 한글 간격(T-183), 밝기 키가 키보드 LED를 건드리던 것, `.msi` 기본 앱, 설치본이 릴리스 열쇠를 다시 받게(T-177 ③), 설치 테스트가 업데이트 미리 보기 줄을 확인(T-162), 진행 중 작업 21개를 17개로(T-176). 묶음 검증 두 번과 설치 테스트 한 번 통과(정기 점검 표, 푸시 대기 커밋)
 - **새 도구**: `bash scripts/shell-load.sh -s 파일.png quickSettings settings launcher`로 VM 없이 몇 초 만에 셸 화면을 찍어요(WSL, sway와 grim은 `setup`이 깔아요. 한글 글꼴은 `bash scripts/fetch-fonts.sh /usr/local/share/fonts/robinos` 뒤 `fc-cache -f`). 화면을 고친 뒤 바로 보기에 좋아요. 터미널 글꼴은 같은 화면 없는 sway에서 Python GTK로 VTE 창 하나를 띄워 `grim`으로 찍으면 Ptyxis와 똑같이 그려져요(Ptyxis는 그 환경에서 사용자 세션 버스가 없어 안 떠요)
 - **두 PC 규칙**: 회차를 시작할 때 `git fetch` 뒤 `git log HEAD..origin/main`을 보고, 있으면 먼저 합쳐요([loop.md](loop.md) "1. 상황 파악")
 
@@ -27,8 +28,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-11-24 (낮 12시) | `3b92fa1` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 24.2분) | 통과. 판정 21개 모두 PASS. 새 장면 `95-high-contrast-light`·`96-high-contrast-launcher`·`97-accessibility-settings`(T-185), 설치 테스트 `rollback-10-launcher-phone`(T-186). 설치 테스트 다섯 단계 |
 | 2026-11-24 (오전 10시 반) | `c430a5f` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.6분, 테스트 22.6분) | 통과. 판정 모두 PASS. 새 장면 `17-launcher-localsend`: 라이브에는 GNOME 소프트웨어가 없어 "LocalSend 설치하기"는 숨고 "휴대폰에서 받기 허용"만 나와요(설계대로, 설치본 장면은 batch79에서 더함). 설치 테스트 다섯 단계 |
-| 2026-11-24 (새벽 3시 반) | `f2a6996` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 4.1분, 테스트 22.6분) | 통과. 판정 21개 모두 PASS. `31-terminal-learn.png`에서 터미널 한글이 붙어 보여요(T-183). 설치 테스트 다섯 단계 |
 
 ## 품질 점검 기록
 
@@ -48,7 +49,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 `git log origin/main..HEAD`에 있는 커밋과, 푸시하기 전에 통과해야 하는 검증이에요. 검증이 끝나면 지우고 푸시해요.
 
-없어요. `a9687cb`까지 2026-11-24 오전 robin PC의 `verify`(c430a5f), `install-test -Installer archinstall`(a9687cb), `-Installer windows`를 마치고 푸시했어요.
+없어요. `3b92fa1`(work/batch79 합침)까지 2026-11-24 낮 robin PC의 `verify -Installer robinos`를 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -85,23 +86,10 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 한 것(④·⑥·⑦ 이어서, 2026-11-24 새벽): 설치기·환영 마법사의 고른 카드는 두꺼운 흰 테 대신 회색 면 + 진한 선(테마 미리보기만 파란 선), 학습 센터의 다음 미션 칸과 끝낸 미션 원은 파랑 옅은 면 + 파란 아이콘(파란 채움은 "터미널에서 시작" 하나), 진행 막대 3px, 머리의 설명 문장 빼기(미션 화면이 `robinctl learn check`를 알려 줘요), 환영 마법사의 한글 켬 표시도 옅은 파랑. 잠금 화면의 흐림과 키 안내 빼기. 프롬프트 `>`를 파랑으로, foot 팔레트의 면을 키트 색으로(ANSI 초록·노랑은 프로그램 출력의 뜻이라 남겨요). 코드 글꼴을 키트의 Cascadia로(합자 없는 Cascadia Mono, `ttf-cascadia-code`), 기본 글꼴을 Pretendard로(dconf, qt6ct, fontconfig). 아이콘은 Lucide 그대로 둬요: 키트 아이콘(31개)과 같은 24 칸·둥근 끝 선 아이콘이고, 셸에는 그보다 많은 아이콘이 필요해요
 - 한 것(다른 PC 작업과 합친 뒤, 2026-11-24 새벽): 다른 PC가 만든 설정 페이지(전원, 키보드, 마우스, 앱, 날짜와 시간)의 선택 단추와 라디오 줄을 키트 모양으로(고른 것은 파란 채움 대신 회색 면 + 진한 선, 라디오 원은 파랑), 시간대 고르기와 설정의 `Font.*` 굵기를 토큰으로. Ptyxis 팔레트 `desktop/ptyxis/robinos.palette`(foot와 같은 면): dconf 기본 프로필이 `robinos` 팔레트를 쓰고, Ptyxis는 사용자 폴더의 팔레트만 읽어서 `robinos-terminal`이 `~/.local/share/org.gnome.Ptyxis/palettes/`에 복사해 둬요. 부팅 테스트 `terminal` 판정이 팔레트 이름과 복사본을 봐요
 - 한 것(2026-11-24 새벽 2~3시): README 스크린샷 네 장을 새 화면으로(부팅 테스트 13·23·68·79번 장면). VM 없이 셸을 띄워 페이지마다 찍고(`shell-load.sh`) 어긋난 자리와 빈 상태를 고쳤어요(품질 점검 기록 "코드 검토")
-- 남은 것: ① 소개 영상(`promo/intro/`)을 새 화면으로 다시 찍기 ② 랜딩 페이지(`site/`)의 화면 사진과 `publish-site.sh`는 v0.4 릴리스 때(지금 받는 v0.3이 옛 화면) ③ 터미널의 한글 간격은 T-183. ②~⑥ 단계(공용 부품, 표시기, 창들, 패널, 시스템 화면)와 ⑦의 아이콘·글꼴·README는 끝났어요
+- 한 것(①, 2026-11-24 낮 robin PC): 소개 영상(`promo/intro/`)을 키트 색과 새 정체성 문구("예쁜 UI를 가진 OS.")로, 화면 열넷을 새 부팅·설치 테스트 장면으로 바꿨어요(부팅 메뉴, 로그인, 스냅샷 목록 포함). 장면별 정지 화면(`render.mjs --stills`)으로 확인했어요. mp4 전체 렌더링은 결과물이 git에 없어서 필요할 때 `npm run render`로 해요
+- 남은 것: ② 랜딩 페이지(`site/`)의 화면 사진과 `publish-site.sh`는 v0.4 릴리스 때(지금 받는 v0.3이 옛 화면) ③ 터미널의 한글 간격은 T-183. ②~⑥ 단계(공용 부품, 표시기, 창들, 패널, 시스템 화면)와 ⑦의 아이콘·글꼴·README는 끝났어요
 - 검증: 단계마다 `wsl-build.ps1 check`(qmllint), 부팅 테스트 스크린샷을 다크·라이트로 직접 보기. 키트에서 벗어난 것을 세는 검사(`check-desktop.sh`에 셸 QML의 `#`색 리터럴, 초록·노랑, `Theme.` 밖의 모서리 값)도 넣어요
 - 완료 기준: 부팅 테스트의 모든 장면이 키트 문법(면 셋, 파랑 하나, 컨트롤 모서리 7, 유리 없음)을 따르고, 시스템 화면(로그인, 잠금, 부팅 메뉴)도 같은 색
-
-### T-185 접근성: 고대비와 셸 글자 크기
-- 상태: 검증 대기 (2026-11-24 robin PC, work/batch79)
-- 할 것: 설정 "손쉬운 사용"에 고대비(robin-ui 키트의 면·글자 대비를 높인 토큰 한 벌), 셸 자체의 글자 크기(지금은 화면 배율로만), 움직임 줄이기·앱 글자 크게를 켠 부팅 테스트 장면
-- 완료 기준: 두 가지가 설정에서 켜지고 다시 켜도 유지되고, 부팅 테스트에 켠 장면이 있어요
-- 한 것(2026-11-24 robin PC): 키트에 고대비 토큰 두 벌(`robin-ui.css`의 `[data-contrast="high"]`, 라이트는 `[data-theme="light"][data-contrast="high"]`, `tokens.json`의 `dark-high`·`light-high`). 면·파란색·알림 색은 그대로 두고 선(모든 면에 3:1 넘게)과 흐린 글자(7:1 넘게)만 진하게. 셸은 `Theme.highContrast`(appearance.json에 저장)가 `border`·`borderStrong`·`input`·`panelBorder`·`controlLineHover`·`muted`·`subtle`을 바꾸고 GTK의 `org.gnome.desktop.a11y.interface high-contrast`와 Hyprland 창 테두리도 따라가요. 설정 "손쉬운 사용"에 "고대비" 스위치, IPC `setHighContrast`·`setReduceMotion`·`setLargeText`, 부팅 테스트에서 셋을 모두 켜고 GTK가 받은 값(true, false, 1.25)을 보여 주는 `high-contrast-light`, `high-contrast-launcher`, 설정 화면 `accessibility-settings` 장면. shell-load.sh로 두 테마 모두 찍어 봤어요
-- 셸 글자 크기는 따로 두지 않기로(2026-11-24): 셸 QML에 글자 크기 숫자가 189곳, 행 높이 41 같은 고정값이 있어서 글자만 키우면 잘리고, 빠른 설정의 화면 배율(125%~200%)이 셸 전체를 같은 비율로 키워요. 윈도우도 "텍스트 크기"와 "배율"이 따로지만 RobinOS는 배율 하나로 해요
-- 남은 것: 묶음 검증에서 세 장면 확인
-
-### T-186 휴대폰 연결 (LocalSend)
-- 상태: 검증 대기 (ufw 프로필과 dry-run 규칙은 2026-11-24 `verify` 설치 테스트 통과. 설치본 런처에서 "phone"으로 찾는 장면은 work/batch79)
-- 한 것: 런처에 "LocalSend 설치하기"(앱 스토어가 있고 아직 안 깔렸을 때만)와 "휴대폰에서 받기 허용", 윈도우 이름 "휴대폰과 연결"(깔려 있으면 앱, 없으면 설치 항목). ufw 앱 프로필 `desktop/ufw/robinos-localsend`(53317 tcp·udp), 받기 허용은 사설 주소 세 대역에서만 열고 명령을 터미널에서 보여 줘요. 공용 와이파이도 사설 주소라는 점은 desktop.md에 그대로 적었어요. Flathub ID는 공개 목록에서 확인했어요. 설치 테스트가 `ufw app info LocalSend`와 `ufw --dry-run allow ...`를 봐요. 남은 것: 실제 휴대폰으로 받아 보기(T-167)
-- 할 것: ChatGPT 네 번째 검토대로 LocalSend(Flathub, 아이폰도 돼요)를 먼저. 앱 스토어에서 바로 설치하는 런처 항목("휴대폰과 연결"이라는 윈도우 이름으로 찾기), 방화벽(ufw)에서 LocalSend 포트(53317)를 집 네트워크에만 여는 방법. KDE Connect는 권한과 방화벽 규칙까지 생각해야 해서 나중
-- 완료 기준: 런처에서 "휴대폰"으로 찾아 설치할 수 있고, 방화벽이 켜진 설치본에서 파일을 받을 수 있어요(VM 두 대나 설치 테스트로 확인)
 
 ### T-184 윈도우 프로그램 안내의 남은 것
 - 상태: 할 일 (2026-11-24, T-159에서 떼어 냄)

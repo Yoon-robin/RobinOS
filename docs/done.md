@@ -6,6 +6,21 @@
 
 tasks.md에서 옮긴 작업 카드예요(2026-11-24 T-176 정리부터). 최근에 옮긴 것이 위에 있어요.
 
+### T-186 휴대폰 연결 (LocalSend)
+- 상태: 완료 (2026-11-24 robin PC, `3b92fa1` 묶음 검증. 실제 휴대폰으로 받아 보기는 T-167)
+- 한 것: 런처에 "LocalSend 설치하기"(앱 스토어가 있고 아직 안 깔렸을 때만)와 "휴대폰에서 받기 허용", 윈도우 이름 "휴대폰과 연결"(깔려 있으면 앱, 없으면 설치 항목). ufw 앱 프로필 `desktop/ufw/robinos-localsend`(53317 tcp·udp), 받기 허용은 사설 주소 세 대역에서만 열고 명령을 터미널에서 보여 줘요. 공용 와이파이도 사설 주소라는 점은 desktop.md에 그대로 적었어요. Flathub ID는 공개 목록에서 확인했어요. 설치 테스트가 `ufw app info LocalSend`와 `ufw --dry-run allow ...`를 봐요. 남은 것: 실제 휴대폰으로 받아 보기(T-167)
+- 확인(2026-11-24 `verify`, `3b92fa1`): 설치 테스트 `rollback-10-launcher-phone`에서 설치본 런처가 "phone"에 "LocalSend 설치하기"(윈도우에서 쓰던 이름 묶음)와 "휴대폰에서 받기 허용"을 보여 줘요. 방화벽 규칙은 `ufw --dry-run`으로 확인했고, 실제로 파일을 받는 것은 휴대폰이 있어야 해서 T-167로 넘겨요
+- 할 것: ChatGPT 네 번째 검토대로 LocalSend(Flathub, 아이폰도 돼요)를 먼저. 앱 스토어에서 바로 설치하는 런처 항목("휴대폰과 연결"이라는 윈도우 이름으로 찾기), 방화벽(ufw)에서 LocalSend 포트(53317)를 집 네트워크에만 여는 방법. KDE Connect는 권한과 방화벽 규칙까지 생각해야 해서 나중
+- 완료 기준: 런처에서 "휴대폰"으로 찾아 설치할 수 있고, 방화벽이 켜진 설치본에서 파일을 받을 수 있어요(VM 두 대나 설치 테스트로 확인)
+
+### T-185 접근성: 고대비와 셸 글자 크기
+- 상태: 완료 (2026-11-24 robin PC, `3b92fa1` 묶음 검증)
+- 할 것: 설정 "손쉬운 사용"에 고대비(robin-ui 키트의 면·글자 대비를 높인 토큰 한 벌), 셸 자체의 글자 크기(지금은 화면 배율로만), 움직임 줄이기·앱 글자 크게를 켠 부팅 테스트 장면
+- 완료 기준: 두 가지가 설정에서 켜지고 다시 켜도 유지되고, 부팅 테스트에 켠 장면이 있어요
+- 한 것(2026-11-24 robin PC): 키트에 고대비 토큰 두 벌(`robin-ui.css`의 `[data-contrast="high"]`, 라이트는 `[data-theme="light"][data-contrast="high"]`, `tokens.json`의 `dark-high`·`light-high`). 면·파란색·알림 색은 그대로 두고 선(모든 면에 3:1 넘게)과 흐린 글자(7:1 넘게)만 진하게. 셸은 `Theme.highContrast`(appearance.json에 저장)가 `border`·`borderStrong`·`input`·`panelBorder`·`controlLineHover`·`muted`·`subtle`을 바꾸고 GTK의 `org.gnome.desktop.a11y.interface high-contrast`와 Hyprland 창 테두리도 따라가요. 설정 "손쉬운 사용"에 "고대비" 스위치, IPC `setHighContrast`·`setReduceMotion`·`setLargeText`, 부팅 테스트에서 셋을 모두 켜고 GTK가 받은 값(true, false, 1.25)을 보여 주는 `high-contrast-light`, `high-contrast-launcher`, 설정 화면 `accessibility-settings` 장면. shell-load.sh로 두 테마 모두 찍어 봤어요
+- 셸 글자 크기는 따로 두지 않기로(2026-11-24): 셸 QML에 글자 크기 숫자가 189곳, 행 높이 41 같은 고정값이 있어서 글자만 키우면 잘리고, 빠른 설정의 화면 배율(125%~200%)이 셸 전체를 같은 비율로 키워요. 윈도우도 "텍스트 크기"와 "배율"이 따로지만 RobinOS는 배율 하나로 해요
+- 확인(2026-11-24 `verify`, `3b92fa1`): `95-high-contrast-light`에서 터미널이 GTK 값 true·false·1.25를 보여 주고, `96-high-contrast-launcher`의 선이 진해졌고, `97-accessibility-settings`에 세 스위치가 모두 켜져 있어요
+
 ### T-177 업데이트 길의 약한 곳
 - 상태: 완료 (2026-11-24 robin PC: ②의 `install-test -Installer archinstall` 다섯 단계 통과, 복사본이 `robinos` 패키지로 옮겨지고 `pacman -Qo`가 robinos. 같은 시험에서 post-install 직후 ufw가 꺼져 있던 것을 찾아 고침 `a9687cb`)
 - 출처: 업데이트 시스템 점검(2026-10-15, [unfinished.md](unfinished.md) 7번 표)
@@ -486,6 +501,7 @@ tasks.md에서 옮긴 작업 카드예요(2026-11-24 T-176 정리부터). 최근
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-11-24 (새벽 3시 반) | `f2a6996` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 4.1분, 테스트 22.6분) | 통과. 판정 21개 모두 PASS. `31-terminal-learn.png`에서 터미널 한글이 붙어 보여요(T-183). 설치 테스트 다섯 단계 |
 | 2026-11-24 (새벽 3시) | `0451fd4` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 3.8분, 테스트 22.6분) | 통과. 판정 21개 모두 PASS. 앞의 묶음에서 실패한 `power-changed`(60 120 300)·`power-default`(240 300 600 900)가 잠금 fd 수정 뒤 통과, `default-apps`·`terminal`도 PASS. 설치 테스트 다섯 단계 |
 | 2026-11-24 (새벽 1시) | `ddcb219` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 4.4분, 테스트 17.7분), 이어서 `install-test -Installer encrypted` | 통과. 장면 판정 열다섯 개 모두 PASS, 키트 토큰의 다크·라이트 스크린샷(바탕 화면, 빠른 설정, 잠금 화면, 학습 센터) 확인. 설치 테스트 다섯 단계. 암호화 설치도 다섯 단계 모두 통과: 단계마다 GRUB이 비밀번호를 묻고(`*-grub-password.png`) 풀린 뒤 설치본·스냅샷 부팅·되돌리기까지 |
 | 2026-10-13 (새벽 3시) | `b2a3624` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 3.4분, 테스트 17.7분) | 통과. 장면 판정 열다섯 개 모두 PASS, 새 `zoomed`(zoom_factor 2)·`unzoomed`(1), 확대 스크린샷 확인. 설치 테스트 다섯 단계 |
