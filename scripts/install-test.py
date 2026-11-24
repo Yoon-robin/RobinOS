@@ -980,6 +980,15 @@ def phase_installed(con, qmp):
     con.run("checkupdates | tail -n 3; rc=${PIPESTATUS[0]}; echo checkupdates=$rc; [ $rc -ne 1 ]")
     # (the flatpak package ships /usr/share/flatpak/remotes.d/flathub.flatpakrepo)
     con.run("flatpak remotes --system | grep -qw flathub")
+    # The Windows program window's 설치하기 buttons open the app store at these ids
+    # (desktop/shell/windowsapps.js, gnome-software --details=): each one has to be an
+    # app Flathub has, or the store opens on nothing (T-184 ②; Thunderbird's id is
+    # all lower case there, found 2026-11-24)
+    con.run("grep -v '^ *//' /usr/share/robinos/shell/windowsapps.js | grep -o 'flathub: \"[^\"]*\"'"
+            " | cut -d'\"' -f2 | sort -u > /tmp/wanted-apps && test -s /tmp/wanted-apps"
+            " && flatpak remote-ls --system --app --columns=application flathub | sort -u > /tmp/flathub-apps"
+            " && comm -23 /tmp/wanted-apps /tmp/flathub-apps > /tmp/missing-apps; cat /tmp/missing-apps;"
+            " [ -s /tmp/flathub-apps ] && [ ! -s /tmp/missing-apps ]", timeout=600)
     # What the default install opens to the network (docs/ethics.md): CUPS only on
     # localhost, no sshd; Avahi's 5353/udp is the one service the LAN can reach
     con.run("ss -Htuln", check=False)

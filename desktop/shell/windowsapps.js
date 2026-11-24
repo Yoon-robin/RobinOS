@@ -71,7 +71,7 @@ const known = [
       choices: [{ app: "firefox", title: "Firefox 열기", desc: "이미 설치된 브라우저" },
                 { flathub: "com.opera.Opera", title: "Opera 설치하기", desc: "앱 스토어(Flathub)" }] },
     { match: ["thunderbird"], name: "Thunderbird",
-      choices: [{ flathub: "org.mozilla.Thunderbird", title: "Thunderbird 설치하기", desc: "앱 스토어(Flathub)" }] },
+      choices: [{ flathub: "org.mozilla.thunderbird", title: "Thunderbird 설치하기", desc: "앱 스토어(Flathub)" }] },
     { match: ["slacksetup"], name: "Slack",
       choices: [{ flathub: "com.slack.Slack", title: "Slack 설치하기", desc: "앱 스토어(Flathub)" }] },
     { match: ["signalsetup", "signal-desktop"], name: "Signal",
