@@ -1,0 +1,30 @@
+Windows Registry Editor Version 5.00
+
+; Read once by desktop/bin/robinos-wine when it makes a user's Windows folder
+; (~/.wine), converted to UTF-16 first. Windows programs ask for Windows' Korean
+; fonts by name; these are the system's Noto CJK fonts (noto-fonts-cjk).
+
+[HKEY_CURRENT_USER\Software\Wine\Fonts\Replacements]
+"Malgun Gothic"="Noto Sans CJK KR"
+"맑은 고딕"="Noto Sans CJK KR"
+"Gulim"="Noto Sans CJK KR"
+"굴림"="Noto Sans CJK KR"
+"GulimChe"="Noto Sans Mono CJK KR"
+"굴림체"="Noto Sans Mono CJK KR"
+"Dotum"="Noto Sans CJK KR"
+"돋움"="Noto Sans CJK KR"
+"DotumChe"="Noto Sans Mono CJK KR"
+"돋움체"="Noto Sans Mono CJK KR"
+"Batang"="Noto Serif CJK KR"
+"바탕"="Noto Serif CJK KR"
+"BatangChe"="Noto Serif CJK KR"
+"바탕체"="Noto Serif CJK KR"
+"Gungsuh"="Noto Serif CJK KR"
+"궁서"="Noto Serif CJK KR"
+"GungsuhChe"="Noto Serif CJK KR"
+"궁서체"="Noto Serif CJK KR"
+
+; Wine would make itself the app for .txt, .pdf, pictures ... when a program
+; registers them; RobinOS's own apps stay the default (desktop/mime/mimeapps.list)
+[HKEY_CURRENT_USER\Software\Wine\FileOpenAssociations]
+"Enable"="N"

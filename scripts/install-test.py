@@ -488,6 +488,31 @@ assert ri.windows_inside("/dev/vda4") is False
 SESSION_ENV = "XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus"
 
 
+def check_wine(con, qmp):
+    """Windows programs (T-189): what "Wine으로 실행해 보기" runs. robinos-wine makes
+    robin's C: drive the first time and runs Wine's own notepad.exe as a downloaded
+    program, in the session and its Xwayland like a click in the shell would."""
+    con.run("pacman -Q wine wine-mono && test -f /usr/share/robinos/wine/robinos.reg")
+    con.run("install -o robin -g robin -m 644 /usr/lib/wine/x86_64-windows/notepad.exe"
+            " /home/robin/notepad-test.exe")
+    con.run(f"x=$(ls /tmp/.X11-unix 2>/dev/null | sed -n 's/^X//p' | head -n 1);"
+            f" runuser -u robin -- env {SESSION_ENV} LANG=ko_KR.UTF-8 ${{x:+DISPLAY=:$x}}"
+            " setsid -f /usr/share/robinos/bin/robinos-wine /home/robin/notepad-test.exe"
+            " </dev/null >/dev/null 2>&1")
+    # The first run makes the C: drive (wineboot), a minute or two in a VM
+    con.run("ok=1; for i in $(seq 120); do sig=$(ls /run/user/1000/hypr 2>/dev/null | head -n 1);"
+            " runuser -u robin -- env XDG_RUNTIME_DIR=/run/user/1000 HYPRLAND_INSTANCE_SIGNATURE=$sig"
+            " hyprctl clients | grep -qi 'notepad-test.exe' && { ok=0; break; }; sleep 2; done; [ $ok = 0 ]",
+            timeout=300)
+    sleep(3)
+    shot(qmp, "wine-notepad")
+    # The Korean font names and no file types taken over (desktop/wine/robinos.reg)
+    con.run("grep -q 'Malgun Gothic' /home/robin/.wine/user.reg"
+            " && grep -A2 FileOpenAssociations /home/robin/.wine/user.reg | grep -q '\"Enable\"=\"N\"'")
+    con.run("runuser -u robin -- env WINEPREFIX=/home/robin/.wine wineserver -k", check=False)
+    sleep(2)
+
+
 def make_data_partition(con):
     """A partition like Disk Management's "New Simple Volume": NTFS, named Data."""
     con.run("sgdisk -n 4:0:+41G -t 4:0700 -c '4:Basic data partition' /dev/vda > /dev/null"
@@ -1183,6 +1208,7 @@ def phase_rollback(con, qmp):
         shot(qmp, f"launcher-{query}")
         qmp.keys("esc")
         sleep(2)
+    check_wine(con, qmp)
     con.run("journalctl -b --no-pager -o cat -t robinos-session | tail -n 20", check=False)
 
     if TEST_LAB:

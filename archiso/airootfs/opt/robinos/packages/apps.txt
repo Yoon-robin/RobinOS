@@ -41,3 +41,10 @@ fwupd
 showtime
 decibels
 gst-libav
+
+# Windows programs: Wine runs an .exe or .msi when the user picks "Wine으로 실행해
+# 보기" in the window that opens instead (desktop/bin/robinos-wine, T-189). Arch
+# builds it as WoW64, so no multilib. wine-mono is .NET for it; the web engine
+# (wine-gecko, 80 MiB) is left out. About 120 MiB to download.
+wine
+wine-mono

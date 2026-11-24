@@ -6,9 +6,13 @@
 //   { app: "<desktop id>" }         an app RobinOS already has
 //   { flathub: "<app id>" }         an app from the app store (GNOME Software)
 //   { web: "<url>" }                a web version in the browser
+//   { wine: true }                  run the file itself with Wine (robinos-wine);
+//                                   added by choicesFor() when Wine is installed
+// wineFirst puts Wine before the other choices; noWine leaves it out for programs
+// that can't work in it.
 const known = [
-    { match: ["kakaotalk", "kakao"], name: "카카오톡",
-      note: "리눅스용 카카오톡은 없어요. 휴대폰 카카오톡을 쓰거나, Bottles로 윈도우판을 실행해 볼 수 있어요(안 될 때도 있어요).",
+    { match: ["kakaotalk", "kakao"], name: "카카오톡", wineFirst: true,
+      note: "리눅스용 카카오톡은 없어요. 윈도우판을 Wine이나 Bottles로 실행해 볼 수 있어요. 한글 입력이나 알림이 잘 안 될 때도 있어요.",
       choices: [{ flathub: "com.usebottles.bottles", title: "Bottles 설치하기", desc: "윈도우 프로그램 실행기" }] },
     { match: ["chromesetup", "chrome"], name: "Chrome",
       note: "Firefox가 이미 있어요. Chrome이 꼭 필요하면 앱 스토어에서 받아요.",
@@ -158,13 +162,24 @@ const known = [
       note: "리눅스용 알약이나 V3는 없어요. 방화벽(ufw)은 처음부터 켜져 있고, 터미널에서 robinctl audit으로 보안 점검을 할 수 있어요.",
       choices: [{ app: "org.gnome.Ptyxis", title: "터미널 열기", desc: "robinctl audit 입력" }] },
     { match: ["nprotect", "veraport", "wizvera", "delfino", "inisafe", "xecure", "touchenkey", "ipinside", "keysharp", "softcamp"],
-      name: "은행·공공기관 보안 프로그램",
+      name: "은행·공공기관 보안 프로그램", noWine: true,
       note: "이 보안 프로그램은 윈도우 전용이라 리눅스에서는 안 돼요. 은행과 공공기관 업무는 모바일 앱 인증으로 하거나, 윈도우에서 하는 쪽이 현실적이에요. 은행에 따라 리눅스를 지원하는 곳도 있으니 은행 홈페이지에서 확인해 보세요.",
       choices: [{ app: "firefox", title: "Firefox 열기", desc: "은행 사이트를 열어 보기" }] }
 ];
 
 // Unknown programs: Bottles runs many Windows programs, not all
 const fallback = [{ flathub: "com.usebottles.bottles", title: "Bottles 설치하기", desc: "윈도우 프로그램 실행기 (되는 프로그램도, 안 되는 프로그램도 있어요)" }];
+
+const wine = { wine: true, title: "Wine으로 실행해 보기", desc: "이 파일을 그대로 실행해요. 안 되는 프로그램도 있어요" };
+
+// What the window offers for a file: the program's choices (or the fallback), with
+// Wine first for unknown programs and wineFirst ones, last for the others
+function choicesFor(program, hasWine) {
+    const base = program ? program.choices : fallback;
+    if (!hasWine || (program && program.noWine))
+        return base;
+    return !program || program.wineFirst ? [wine].concat(base) : base.concat([wine]);
+}
 
 // "KakaoTalk_Setup (1).exe" -> "kakaotalksetup1"
 function squash(name) {

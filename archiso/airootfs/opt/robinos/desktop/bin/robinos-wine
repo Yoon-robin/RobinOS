@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# Runs a Windows program (.exe, .msi) with Wine, only when the user picks
+# "Wine으로 실행해 보기" in the shell's WindowsApp window (T-189). Opening an .exe
+# never runs it: that shows the window (robinos-windows-app).
+#
+# Wine is no sandbox: the program can read and change the user's files, like on
+# Windows. It never runs as root. The Windows folder (C: drive) is Wine's usual
+# ~/.wine, so `wine program.exe` in the terminal uses the same one.
+#
+# Usage: robinos-wine <file.exe|file.msi>
+set -uo pipefail
+
+file="${1:-}"
+
+note() {
+  notify-send --app-name=RobinOS "$1" "${2:-}" 2>/dev/null || printf '%s %s\n' "$1" "${2:-}" >&2
+}
+
+if [[ "$(id -u)" == 0 ]]; then
+  note "관리자 계정으로는 실행하지 않아요" "윈도우 프로그램은 내 계정으로만 실행해요"
+  exit 1
+fi
+if ! command -v wine >/dev/null 2>&1; then
+  note "Wine이 없어요" "설치한 RobinOS에는 들어 있어요. 터미널에서 sudo pacman -S wine wine-mono로 설치할 수 있어요"
+  exit 1
+fi
+if [[ ! -f "${file}" ]]; then
+  note "파일을 찾지 못했어요" "${file}"
+  exit 1
+fi
+
+export WINEPREFIX="${WINEPREFIX:-${HOME}/.wine}"
+# Wine opens a Korean file name only in a UTF-8 locale (RobinOS sets ko_KR.UTF-8)
+if [[ "$(locale charmap 2>/dev/null)" != UTF-8 ]]; then
+  export LC_ALL=C.UTF-8
+fi
+log_dir="${XDG_CACHE_HOME:-${HOME}/.cache}/robinos"
+mkdir -p "${log_dir}"
+log="${log_dir}/wine.log"
+printf '== %s %s\n' "$(date '+%F %T')" "${file}" >"${log}"
+
+# The first time: make the Windows folder, then the Korean font names Windows
+# programs ask for (굴림, 맑은 고딕 ...) and no file types taken over by Wine
+if [[ ! -f "${WINEPREFIX}/system.reg" ]]; then
+  note "처음 한 번은 준비해요" "윈도우 프로그램이 쓸 C: 드라이브를 만들어요. 1~2분 걸려요"
+  # mshtml= : no window asking to download Wine's web engine (wine-gecko);
+  # wine-mono (.NET) comes from the package
+  WINEDLLOVERRIDES="mshtml=" wineboot -i >>"${log}" 2>&1
+  reg="$(mktemp --suffix=.reg)"
+  # regedit reads Unicode .reg files as UTF-16
+  if iconv -f UTF-8 -t UTF-16 /usr/share/robinos/wine/robinos.reg >"${reg}"; then
+    wine regedit /S "${reg}" >>"${log}" 2>&1
+  fi
+  rm -f "${reg}"
+fi
+
+cd "$(dirname "${file}")" || true
+started="${SECONDS}"
+case "${file,,}" in
+  *.msi) wine msiexec /i "${file}" >>"${log}" 2>&1 ;;
+  *) wine "${file}" >>"${log}" 2>&1 ;;
+esac
+status=$?
+# A program that ran a while and then quit is fine whatever it returns
+if (( status != 0 && SECONDS - started < 15 )); then
+  note "실행하지 못했어요" "${file##*/}: Wine에서 안 되는 프로그램일 수 있어요. 기록은 ${log}에 있어요"
+fi
+exit "${status}"
