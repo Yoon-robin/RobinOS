@@ -148,7 +148,7 @@ h2.top { position: absolute; left: 0; right: 0; top: 110px; text-align: center; 
 .count-sub { margin-top: 26px; font: 500 38px/1.35 var(--sans); letter-spacing: -0.025em; color: var(--muted); }
 
 /* ── theme ── */
-.theme-card { position: absolute; left: 560px; top: 210px; width: 800px; height: 400px; border-radius: 22px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 60px 140px -40px rgba(0, 0, 0, 0.9); }
+.theme-card { position: absolute; left: 560px; top: 298px; width: 800px; height: 224px; border-radius: 22px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 60px 140px -40px rgba(0, 0, 0, 0.9); }
 .light .theme-card { box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 60px 140px -50px rgba(0, 0, 0, 0.30); }
 .theme-caption { position: absolute; left: 0; right: 0; top: 700px; text-align: center; font: 720 92px/1.12 var(--sans); letter-spacing: -0.05em; }
 .glow-beat { position: absolute; inset: 0; transform-origin: 50% 50%; }

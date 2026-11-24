@@ -117,18 +117,18 @@ async function sample(src, x, y) {
   return `rgb(${r}, ${g}, ${bl})`;
 }
 async function setupPatches() {
-  // Boot menu lines about security are covered (design.md T-151: the product text will change)
+  // The mouse pointer left on the login screen's avatar is covered with the avatar's face
   const s = 1200 / 1600;
   for (const p of qa(".patch")) {
     const [x, y, w, h] = p.dataset.rect.split(",").map(Number);
     Object.assign(p.style, { left: `${x * s}px`, top: `${y * s}px`, width: `${w * s}px`, height: `${h * s}px`, background: await sample(p.dataset.patch, x + 2, y + 2) });
   }
-  // login.png password field (634..966, 544..584): dots are typed into a patch of the field's color
-  const ls = Math.min(1200 / 1493, 675 / 840), pw = q("#pw");
+  // login.png password field (634..966, 537..577): dots are typed into a patch of the field's color
+  const pw = q("#pw");
   Object.assign(pw.style, {
-    left: `${(640 - 53) * ls + (1200 - 1493 * ls) / 2}px`, top: `${548 * ls + (675 - 840 * ls) / 2}px`,
-    width: `${320 * ls}px`, height: `${32 * ls}px`, paddingLeft: `${10 * ls}px`,
-    background: await sample("login.png", 900, 564), borderRadius: "5px",
+    left: `${644 * s}px`, top: `${541 * s}px`,
+    width: `${312 * s}px`, height: `${32 * s}px`, paddingLeft: `${4 * s}px`,
+    background: await sample("login.png", 900, 557), borderRadius: "5px",
   });
   // launcher-dark.png search field (508..1130, 170..198): covered while "notepad" is typed,
   // in the launcher's own 18px type
@@ -309,6 +309,9 @@ function build() {
     const found = b(TYPING[0].at) + TYPING[0].text.length * TYPE + 0.12;
     tl.set(result, { autoAlpha: 1 }, found);
     tl.set(typing, { autoAlpha: 0 }, found);
+    // Both crops fade at the bottom: the empty launcher's rows would show through the result's
+    const empty = q(".crop:not(.over)", q("#c-launcher"));
+    tl.set(empty, { autoAlpha: 0 }, found);
     // Slow drift of the whole deck, then everything leaves toward the camera
     tl.fromTo(q("#deck"), { rotationY: 0 }, { rotationY: -4, duration: b(10), ease: "none", immediateRender: false }, b(25));
     conceal(h2, b(34.9));
