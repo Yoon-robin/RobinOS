@@ -1,23 +1,32 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
   <title id="title">RobinOS</title>
-  <desc id="desc">RobinOS 마크: 터미널 프롬프트의 커서 위에 앉은 울새</desc>
-  <rect width="256" height="256" rx="56" fill="#09090B"/>
-  <g transform="translate(-3 -7)">
+  <desc id="desc">RobinOS 마크: 거의 검은 네모 위의 하얀 울새와 파란 번짐</desc>
   <defs>
-    <clipPath id="robinos-mark-bird">
-      <circle cx="124" cy="130" r="54"/>
-      <circle cx="164" cy="92" r="32"/>
-    </clipPath>
+    <clipPath id="robinos-mark-tile"><rect width="256" height="256" rx="60"/></clipPath>
+    <filter id="robinos-mark-glow" filterUnits="userSpaceOnUse" x="0" y="0" width="256" height="256" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="22" result="wide"/>
+      <feGaussianBlur in="SourceAlpha" stdDeviation="7" result="near"/>
+      <feMerge result="blur"><feMergeNode in="wide"/><feMergeNode in="near"/></feMerge>
+      <feFlood flood-color="#4B7DFE" flood-opacity="0.9"/>
+      <feComposite operator="in" in2="blur" result="glow"/>
+      <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
   </defs>
-  <path d="M82 150 L50 165 C45 167.5 46.5 174 52 173.5 L96 166 Z" fill="#A1A1AA"/>
-  <g clip-path="url(#robinos-mark-bird)">
-    <rect width="256" height="256" fill="#FAFAFA"/>
-    <path d="M66 110 C 92 100, 122 112, 132 140 C 106 148, 82 140, 66 124 Z" fill="#E4E4E7"/>
-  </g>
-  <path d="M193 84 L218 93 L193 102 Z" fill="#A1A1AA"/>
-  <circle cx="174" cy="85" r="6.5" fill="#09090B"/>
-  <path d="M114 184 V203 M134 184 V203" stroke="#A1A1AA" stroke-width="6" stroke-linecap="round"/>
-  <path d="M48 193 L65 205 L48 217" fill="none" stroke="#E5484D" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="84" y="200" width="96" height="10" rx="5" fill="#FAFAFA"/>
+  <rect width="256" height="256" rx="60" fill="#060A14"/>
+  <g clip-path="url(#robinos-mark-tile)">
+    <g filter="url(#robinos-mark-glow)">
+      <g transform="translate(33.28 33.28) scale(0.74)">
+    <mask id="robinos-mark-eye">
+      <rect width="256" height="256" fill="#FFFFFF"/>
+      <circle cx="178" cy="88" r="10" fill="#000000"/>
+    </mask>
+    <g fill="#FFFFFF" mask="url(#robinos-mark-eye)">
+      <circle cx="122" cy="138" r="64"/>
+      <circle cx="168" cy="92" r="38"/>
+      <path d="M200 76 L238 92 L200 106 Z"/>
+      <path d="M78 164 L26 190 C20 193 22 202 29 201 L96 186 Z"/>
+    </g>
+      </g>
+    </g>
   </g>
 </svg>
