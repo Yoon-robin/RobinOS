@@ -6,6 +6,13 @@
 
 tasks.md에서 옮긴 작업 카드예요(2026-11-24 T-176 정리부터). 최근에 옮긴 것이 위에 있어요.
 
+### T-189 .exe를 Wine으로 실행하기
+- 상태: 완료 (2026-11-24 저녁 robin PC, `d382d85` 묶음 검증. 실제 카카오톡 같은 프로그램은 T-167과 함께, Wine 창 색은 T-188과 함께)
+- 출처: 사용자(2026-11-24 오후) "우리 OS는 exe도 실행할수있었으면좋겠는데"
+- 한 것: Arch의 Wine이 WoW64로 바뀌어 [extra]에 있어서(11.22, 내려받기 77MiB) multilib 없이 설치본 앱 목록에 `wine`, `wine-mono`를 넣었어요(라이브 ISO는 2GiB 한도 때문에 빼요). `.exe`를 열면 뜨는 안내 창(T-159)에 "Wine으로 실행해 보기"를 더했어요: 모르는 프로그램과 카카오톡은 맨 위, 대신 쓸 앱이 있으면 맨 아래, 은행 보안 프로그램에는 없음. `robinos-wine`은 누를 때만, root가 아닐 때만 실행하고, 처음에 C: 드라이브를 만들며 한글 글꼴 이름(맑은 고딕·굴림 등 → Noto CJK)과 파일 형식 가로채기 끄기를 넣어요. 창의 글은 Wine이 샌드박스가 아니라고 말해요. WSL 헤드리스 화면에서 Wine 메모장이 한국어 메뉴로 뜨는 걸 찍어 봤고, 설치 테스트에 `wine-notepad` 장면을 넣었어요
+- 남은 것: 묶음 검증(설치 테스트의 `wine-notepad`), 실제 카카오톡 설치 파일로 확인(사용자 PC), Wine 창 색을 키트에 맞추기(레지스트리 `Control Panel\Colors`, T-188과 함께)
+
+
 ### T-187 시스템 재설정 명령과 화면
 - 상태: 완료 (2026-11-24 robin PC. 묶음 검증 `c3d3f65`의 설치 테스트 `reset` 단계와 `install-test -Installer windows`(재설정 뒤 GRUB에 윈도우)로 확인)
 - 출처: T-164 조사(2026-11-24, [recovery.md](recovery.md) "시스템 재설정")
@@ -525,6 +532,7 @@ tasks.md에서 옮긴 작업 카드예요(2026-11-24 T-176 정리부터). 최근
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-11-24 (오후 4시) | `66132b3` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 25.3분) | 통과. 판정 21개 모두 PASS(`light`·`dark`가 GTK 테마 이름과 사용자 gtk.css도 봐요, T-188). 새 장면 `light-files`·`dark-files`·`dark-text-editor`에서 GNOME 앱이 키트 면. 설치 테스트 여섯 단계 |
 | 2026-11-24 (오후 3시) | `1dd018a` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 3.5분, 테스트 14.7분) | 통과. 판정 21개 모두 PASS, FAIL 없음. 설치 테스트 여섯 단계(`reset`까지). 새 로고(빛나는 울새)가 로그인 화면 왼쪽 아래에 보여요 |
 | 2026-11-24 (오후 2시) | `c3d3f65` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 24.5분)와 `install-test -Installer windows` | 통과. 판정 22개 모두 PASS. 설치 테스트 여섯 단계(새 단계 `reset`, T-187: 재설정 뒤 새 비밀번호로 로그인, cowsay 없음, `/home` 그대로, 설정의 "시스템 재설정" 줄). 윈도우 옆 설치도 여섯 단계, 재설정 뒤 GRUB에 윈도우 |
 | 2026-11-24 (낮 12시 반) | `97a1bb0` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.6분, 테스트 24.5분) | 통과. 판정 22개 모두 PASS(새 장면 `windows-app-learn`, T-184). 설치 테스트 다섯 단계 |

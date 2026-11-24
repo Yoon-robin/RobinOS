@@ -28,8 +28,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-11-24 (저녁 7시) | `d382d85` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 25.9분) | 통과. 판정 22개 모두 PASS. 설치 테스트 여섯 단계, 새 장면 `rollback-11-wine-notepad`에서 설치본의 Wine 메모장이 한국어 메뉴로 떠요(T-189). 바로 앞 `0c4cf79`는 Wine이 레지스트리를 아직 안 써서 확인 하나가 실패, `d382d85`에서 고침 |
 | 2026-11-24 (오후 6시) | `a4174da` 테스트 ISO, 시험은 `6946fdb` | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 37.2분), 부팅 테스트만 두 번 더 | 통과. 설치 테스트 여섯 단계는 첫 실행에서 통과. 부팅 테스트는 첫 두 번 최소화 장면에서 무너져(터미널이 긴 줄을 10초 넘게 늦게 받아 최소화가 장면 뒤에 실행, 뒤의 판정이 모두 비어요) 시험을 고친 뒤(`6946fdb`: 명령이 실행된 표시를 보고 찍어요) 판정 23개 모두 PASS. `dark-firefox`에서 Firefox가 키트 면과 파랑. 터미널 한글 간격이 다시 벌어진 것을 찾아 T-190으로 |
-| 2026-11-24 (오후 4시) | `66132b3` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 25.3분) | 통과. 판정 21개 모두 PASS(`light`·`dark`가 GTK 테마 이름과 사용자 gtk.css도 봐요, T-188). 새 장면 `light-files`·`dark-files`·`dark-text-editor`에서 GNOME 앱이 키트 면. 설치 테스트 여섯 단계 |
 
 ## 품질 점검 기록
 
@@ -68,12 +68,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 출처: 사용자 요청("vmware로 깔아줘"). VMware Workstation Pro 26H1, VM은 `문서\Virtual Machines\RobinOS\RobinOS.vmx`(EFI, 8GB, NVMe 64GB, 3D 가속 켬)
 - 지금까지: VMware에서 셸이 GPU 실패 뒤 소프트웨어로 다시 뜨고(`robinos-shell`), VM 화면은 배율 1에 창 크기를 따라가고(`robinos-vm-display`), 설치기가 `open-vm-tools`를 깔아요. 2026-10-08 robin PC에서 설치본의 SDDM 로그인 화면까지 봤어요. 자세한 기록은 [done.md](done.md) "T-025 기록"
 - 남은 것 (VMware가 있는 PC: robin PC, 집 PC(Blitz, VMware Workstation 26.0)): 최종 ISO로 VMware VM에 다시 설치(`vmrun` 게스트 명령, 계획은 디스크 `/dev/nvme0n1` 전체), 로그인 뒤 셸·해상도 확인. VMware가 없는 PC의 루프는 이 작업을 건너뛰어요
-
-### T-189 .exe를 Wine으로 실행하기
-- 상태: 검증 대기 (`work/batch82`, 묶음 검증 전)
-- 출처: 사용자(2026-11-24 오후) "우리 OS는 exe도 실행할수있었으면좋겠는데"
-- 한 것: Arch의 Wine이 WoW64로 바뀌어 [extra]에 있어서(11.22, 내려받기 77MiB) multilib 없이 설치본 앱 목록에 `wine`, `wine-mono`를 넣었어요(라이브 ISO는 2GiB 한도 때문에 빼요). `.exe`를 열면 뜨는 안내 창(T-159)에 "Wine으로 실행해 보기"를 더했어요: 모르는 프로그램과 카카오톡은 맨 위, 대신 쓸 앱이 있으면 맨 아래, 은행 보안 프로그램에는 없음. `robinos-wine`은 누를 때만, root가 아닐 때만 실행하고, 처음에 C: 드라이브를 만들며 한글 글꼴 이름(맑은 고딕·굴림 등 → Noto CJK)과 파일 형식 가로채기 끄기를 넣어요. 창의 글은 Wine이 샌드박스가 아니라고 말해요. WSL 헤드리스 화면에서 Wine 메모장이 한국어 메뉴로 뜨는 걸 찍어 봤고, 설치 테스트에 `wine-notepad` 장면을 넣었어요
-- 남은 것: 묶음 검증(설치 테스트의 `wine-notepad`), 실제 카카오톡 설치 파일로 확인(사용자 PC), Wine 창 색을 키트에 맞추기(레지스트리 `Control Panel\Colors`, T-188과 함께)
 
 ## 할 일 (위에서부터)
 
