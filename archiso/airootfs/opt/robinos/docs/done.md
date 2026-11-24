@@ -6,6 +6,24 @@
 
 tasks.md에서 옮긴 작업 카드예요(2026-11-24 T-176 정리부터). 최근에 옮긴 것이 위에 있어요.
 
+### T-177 업데이트 길의 약한 곳
+- 상태: 완료 (2026-11-24 robin PC: ②의 `install-test -Installer archinstall` 다섯 단계 통과, 복사본이 `robinos` 패키지로 옮겨지고 `pacman -Qo`가 robinos. 같은 시험에서 post-install 직후 ufw가 꺼져 있던 것을 찾아 고침 `a9687cb`)
+- 출처: 업데이트 시스템 점검(2026-10-15, [unfinished.md](unfinished.md) 7번 표)
+- 할 것: ① 깃허브가 안 될 때도 Arch 업데이트는 되게: `robinctl update`가 `[robinos]` 목록을 못 받으면 그 저장소를 뺀 설정으로 `pacman -Syu`를 하고 "RobinOS 파일은 다음에 받아요"라고 알려요(Arch 컨테이너에서 받을 수 없는 서버로 시험) ② git으로 받은 파일로 설치한 시스템을 패키지로 옮기기: 저장소에서 받은 `robinos` 패키지의 파일 목록에만 `--overwrite`(설치 후 설정과 `robinctl update`, design.md "RobinOS 파일 업데이트" 5번) ③ 서명 열쇠: 백업 확인, 열쇠를 바꾸는 절차(새 열쇠를 옛 열쇠로 서명해 `robinos` 패키지로 보내기), 만료 전 연장을 release.md에
+- 한 것(2026-10-15 클라우드 세션): ① `robinctl update`가 `pacman -Sy`에 실패하면 `[robinos]` 블록을 뺀 임시 설정으로 다시 받고 `-Su`를 해요(pacman.conf는 그대로). 시험 7개(`test-robinctl.sh`: 깃허브만 안 될 때, 인터넷이 아예 없을 때), Arch 컨테이너의 실제 pacman으로 닿지 않는 `[robinos]`에서 그냥 `pacman -Syu`는 멈추고 `robinctl update`는 끝까지 가는 것을 확인. 남은 것: 설정 앱의 업데이트 상태(`checkupdates`도 같은 이유로 실패해 "알 수 없음"), ②, ③
+- 한 것(③, 2026-11-24 새벽): 설치본은 처음 설치 때 넣은 공개 열쇠를 계속 들고 있어서, 만료를 늘리거나 열쇠를 바꿔도 닿지 않고 2029-10-09에 업데이트가 멈출 뻔했어요. `robinos.install`이 패키지가 바뀔 때마다 패키지에 든 열쇠를 pacman 열쇠 꾸러미에 다시 넣고 서명해요(이미 그 열쇠를 가진 시스템만, 시험 3개). [release.md](release.md) "서명"에 백업 확인, 만료 늘리기, 열쇠 바꾸기 절차
+- 한 것(②, 2026-11-24 오전 robin PC): `robinctl`의 `robinos_adopt`가 `robinos`를 캐시로 받아(`pacman -Sw`) 파일 목록(`pacman -Qlpq`)의 파일마다 `--overwrite`를 줘서 설치해요(디렉터리는 빼고, `[`·`*`·`?`·`\`는 이스케이프, 쉼표가 든 이름은 빼요). 설치 후 설정은 `pkg/`가 없으면 `robinctl update --adopt`로 하고, 못 받으면 예전처럼 복사해요. `robinctl update`는 `-Su` 뒤에 복사된 파일(`/usr/share/robinos/shell/shell.qml`)이 있고 `robinos`가 없을 때만 옮겨요(패키지를 일부러 지운 시스템은 그대로). 시험: `test-robinctl.sh` 14개(옮기기, 덮어쓸 목록에 디렉터리 없음, 괄호 이스케이프, 두 번 안 함, 못 받을 때 안내, 저장소 없음), WSL 임시 루트의 진짜 pacman으로 복사본 셋을 덮어쓰고 주인이 `robinos`인지, 괄호를 이스케이프하지 않으면 그 파일이 충돌로 남는지 확인. 알게 된 것: `--root`를 주면 pacman은 `--overwrite` 패턴을 루트를 붙인 경로와 비교해요(실제 시스템은 루트가 `/`라 상관없어요). 설치 테스트 archinstall은 ISO 패키지로 만든 로컬 저장소와 예전 방식의 복사본으로 옮기기를 확인하고 진짜 저장소로 되돌려요
+- 완료 기준: ①② 시험(`test-robinctl.sh`와 Arch 컨테이너의 실제 pacman), 설치 테스트 archinstall 경로에서 `pacman -Qo`가 `robinos`, ③ release.md 절차
+
+### T-147 보안 부팅과 BitLocker 안내
+- 상태: 완료 (2026-11-24 robin PC: `install-test -Installer windows` 다섯 단계 통과, `live-06-installer-bitlocker`에서 경고 체크 전까지 "설치 시작"이 막혀요)
+- 출처: 설계 점검(2026-10-10) "보안 부팅". 문서 어디에도 없었어요
+- 한 것: install.md "보안 부팅 끄기"(BitLocker 복구 키 확인, 윈도우의 고급 시작 → UEFI 펌웨어 설정, 설치 뒤에도 꺼 둬야 하는 것), 준비 목록, README 내려받기 안내
+- 한 것(2026-10-12 집 PC): 설치기가 디스크의 `BitLocker` 파티션을 알아보고(`lsblk`의 FSTYPE) 디스크 카드에 "윈도우 있음 (BitLocker)", "윈도우 옆에 설치"의 확인 단계에서 "복구 키를 따로 적어 두었어요"에 체크해야 설치 시작. 백엔드도 계획에 `bitlocker_key_saved`가 없으면 디스크를 건드리기 전에 멈춰요. `test-robin-install.py`에 가짜 BitLocker 디스크 검사 여덟 개. 확인 상자는 `ConfirmBox` 하나로 합쳤어요(지우기 확인과 같이 써요)
+- 한 것(2026-11-24 오전 robin PC): 설치 테스트 windows의 가짜 디스크에 BitLocker로 잠긴 64MB "D:"(9번 파티션)를 넣었어요. 부트 섹터의 `ëX-FVE-FS-`와 176바이트째의 FVE 메타데이터 위치, 그 자리의 `-FVE-FS-`만 있으면 blkid가 `BitLocker`로 봐요(WSL에서 확인). 시험: 디스크가 `bitlocker`인지, 복구 키 확인 없이 `prepare_disk`가 파티션 표를 건드리기 전에 멈추는지, 설치 화면이 지우기 확인 뒤에도 복구 키를 체크해야 "설치 시작"을 여는지(`installer-bitlocker` 스크린샷), D:의 앞부분이 그대로인지
+- 다음 릴리스 노트의 보안 부팅 안내는 [release.md](release.md) 릴리스 노트 항목으로 옮겼어요
+- 완료 기준: 설치기 테스트(`test-robin-install.py`)에 가짜 BitLocker 파티션, 설치 테스트 windows에서 경고 장면
+
 ### T-176 반쪽 작업 끝내기
 - 상태: 완료 (2026-11-24 오전 robin PC: 진행 중 6개, tasks.md 250줄 이하)
 - 출처: 부족한 점 점검(2026-10-15, [unfinished.md](unfinished.md) 9번 표). `진행 중`이 21개라 새 일을 시작하는 속도가 끝내는 속도보다 빨라요

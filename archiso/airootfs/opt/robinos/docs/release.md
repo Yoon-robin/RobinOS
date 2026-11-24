@@ -82,6 +82,7 @@ powershell -ExecutionPolicy Bypass -File scripts/wsl-build.ps1 publish-repo
 
 - `SHA256SUMS`, `SHA256SUMS.sig`, 공개 열쇠(`keys/robinos-release.asc`)와 함께 GitHub 릴리스에 올려요.
 - 릴리스 노트에는 v0.1 범위([design.md](design.md))에서 바뀐 점과 알려진 한계를 적어요.
+- 보안 부팅: 켜져 있으면 RobinOS가 안 켜지니 펌웨어 설정에서 끄고, 윈도우 드라이브가 BitLocker로 잠겨 있으면 복구 키(aka.ms/myrecoverykey)를 먼저 적어 두라고 써요([install.md](install.md) "보안 부팅 끄기", T-147)
 
 ## 웹사이트
 

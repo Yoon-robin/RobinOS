@@ -48,9 +48,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 `git log origin/main..HEAD`에 있는 커밋과, 푸시하기 전에 통과해야 하는 검증이에요. 검증이 끝나면 지우고 푸시해요.
 
-| 커밋 | 남은 검증 |
-|---|---|
-| `7210c08`(T-177 ②) ~ `c430a5f` | `verify` 통과(위 정기 점검). `install-test -Installer archinstall`(복사본을 패키지로 옮기기)과 `-Installer windows`(BitLocker 장면, Flathub ID 확인)가 남았어요 |
+없어요. `a9687cb`까지 2026-11-24 오전 robin PC의 `verify`(c430a5f), `install-test -Installer archinstall`(a9687cb), `-Installer windows`를 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -62,15 +60,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - **실제 윈도우 PC에서 "윈도우 옆에 설치"**: VM의 가짜 윈도우 디스크로는 파티션과 부팅 파일이 그대로인 것까지 확인했어요(T-006). 진짜 윈도우가 GRUB 메뉴에 나오는지, BitLocker 복구 키를 묻는지는 실제 PC에서만 볼 수 있어요. 백업해 둔 PC나 남는 디스크로 해 주세요. (`막힘`)
 
 ## 진행 중
-
-### T-147 보안 부팅과 BitLocker 안내
-- 상태: 검증 대기 (설치 테스트 windows의 BitLocker 장면)
-- 출처: 설계 점검(2026-10-10) "보안 부팅". 문서 어디에도 없었어요
-- 한 것: install.md "보안 부팅 끄기"(BitLocker 복구 키 확인, 윈도우의 고급 시작 → UEFI 펌웨어 설정, 설치 뒤에도 꺼 둬야 하는 것), 준비 목록, README 내려받기 안내
-- 한 것(2026-10-12 집 PC): 설치기가 디스크의 `BitLocker` 파티션을 알아보고(`lsblk`의 FSTYPE) 디스크 카드에 "윈도우 있음 (BitLocker)", "윈도우 옆에 설치"의 확인 단계에서 "복구 키를 따로 적어 두었어요"에 체크해야 설치 시작. 백엔드도 계획에 `bitlocker_key_saved`가 없으면 디스크를 건드리기 전에 멈춰요. `test-robin-install.py`에 가짜 BitLocker 디스크 검사 여덟 개. 확인 상자는 `ConfirmBox` 하나로 합쳤어요(지우기 확인과 같이 써요)
-- 한 것(2026-11-24 오전 robin PC): 설치 테스트 windows의 가짜 디스크에 BitLocker로 잠긴 64MB "D:"(9번 파티션)를 넣었어요. 부트 섹터의 `ëX-FVE-FS-`와 176바이트째의 FVE 메타데이터 위치, 그 자리의 `-FVE-FS-`만 있으면 blkid가 `BitLocker`로 봐요(WSL에서 확인). 시험: 디스크가 `bitlocker`인지, 복구 키 확인 없이 `prepare_disk`가 파티션 표를 건드리기 전에 멈추는지, 설치 화면이 지우기 확인 뒤에도 복구 키를 체크해야 "설치 시작"을 여는지(`installer-bitlocker` 스크린샷), D:의 앞부분이 그대로인지
-- 남은 것: `install-test -Installer windows`로 확인하기, 다음 릴리스 노트에 보안 부팅 안내
-- 완료 기준: 설치기 테스트(`test-robin-install.py`)에 가짜 BitLocker 파티션, 설치 테스트 windows에서 경고 장면
 
 ### T-025 VMware에서 쓰기
 - 상태: 진행 중
@@ -106,7 +95,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: 두 가지가 설정에서 켜지고 다시 켜도 유지되고, 부팅 테스트에 켠 장면이 있어요
 
 ### T-186 휴대폰 연결 (LocalSend)
-- 상태: 검증 대기 (2026-11-24 오전 robin PC, 설치 테스트의 ufw 프로필 확인)
+- 상태: 검증 대기 (ufw 프로필과 dry-run 규칙은 2026-11-24 `verify` 설치 테스트 통과. 설치본 런처에서 "phone"으로 찾는 장면은 work/batch79)
 - 한 것: 런처에 "LocalSend 설치하기"(앱 스토어가 있고 아직 안 깔렸을 때만)와 "휴대폰에서 받기 허용", 윈도우 이름 "휴대폰과 연결"(깔려 있으면 앱, 없으면 설치 항목). ufw 앱 프로필 `desktop/ufw/robinos-localsend`(53317 tcp·udp), 받기 허용은 사설 주소 세 대역에서만 열고 명령을 터미널에서 보여 줘요. 공용 와이파이도 사설 주소라는 점은 desktop.md에 그대로 적었어요. Flathub ID는 공개 목록에서 확인했어요. 설치 테스트가 `ufw app info LocalSend`와 `ufw --dry-run allow ...`를 봐요. 남은 것: 실제 휴대폰으로 받아 보기(T-167)
 - 할 것: ChatGPT 네 번째 검토대로 LocalSend(Flathub, 아이폰도 돼요)를 먼저. 앱 스토어에서 바로 설치하는 런처 항목("휴대폰과 연결"이라는 윈도우 이름으로 찾기), 방화벽(ufw)에서 LocalSend 포트(53317)를 집 네트워크에만 여는 방법. KDE Connect는 권한과 방화벽 규칙까지 생각해야 해서 나중
 - 완료 기준: 런처에서 "휴대폰"으로 찾아 설치할 수 있고, 방화벽이 켜진 설치본에서 파일을 받을 수 있어요(VM 두 대나 설치 테스트로 확인)
@@ -115,16 +104,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 상태: 할 일 (2026-11-24, T-159에서 떼어 냄)
 - 할 것: ① 학습 미션 쪽 설명(실행 파일 형식이 왜 다른지, 안내 창에서 이어지게) ② 설치본에서 Flathub 단추가 앱 스토어의 그 앱을 여는지 설치 테스트로 확인
 - 한 것(②, 2026-11-24 오전 robin PC): 설치 테스트가 데스크톱 없이 콘솔로 돌아서 단추를 누르는 대신, 단추가 여는 앱 ID(`windowsapps.js`의 `flathub:` 34개)가 모두 Flathub 앱 목록(`flatpak remote-ls`)에 있는지 설치본에서 확인해요. 만들기 전에 Flathub의 공개 목록과 맞춰 보니 Thunderbird만 틀렸어요: Flathub는 `org.mozilla.thunderbird`(소문자)라 단추를 눌러도 앱 스토어가 못 찾았어요. 고쳤어요
+- ② 확인(2026-11-24): `install-test -Installer windows`에서 34개 ID가 모두 Flathub 목록에 있어요. 남은 것은 ①
 - 완료 기준: 미션 하나가 안내 창에서 열리고, 설치 테스트에 Flathub 단추 장면
-
-### T-177 업데이트 길의 약한 곳
-- 상태: 검증 대기 (①은 2026-10-16 main에 합침, ③은 2026-11-24 새벽, ②는 2026-11-24 오전 robin PC: 단위 시험과 진짜 pacman 확인 통과, 설치 테스트 archinstall 남음)
-- 출처: 업데이트 시스템 점검(2026-10-15, [unfinished.md](unfinished.md) 7번 표)
-- 할 것: ① 깃허브가 안 될 때도 Arch 업데이트는 되게: `robinctl update`가 `[robinos]` 목록을 못 받으면 그 저장소를 뺀 설정으로 `pacman -Syu`를 하고 "RobinOS 파일은 다음에 받아요"라고 알려요(Arch 컨테이너에서 받을 수 없는 서버로 시험) ② git으로 받은 파일로 설치한 시스템을 패키지로 옮기기: 저장소에서 받은 `robinos` 패키지의 파일 목록에만 `--overwrite`(설치 후 설정과 `robinctl update`, design.md "RobinOS 파일 업데이트" 5번) ③ 서명 열쇠: 백업 확인, 열쇠를 바꾸는 절차(새 열쇠를 옛 열쇠로 서명해 `robinos` 패키지로 보내기), 만료 전 연장을 release.md에
-- 한 것(2026-10-15 클라우드 세션): ① `robinctl update`가 `pacman -Sy`에 실패하면 `[robinos]` 블록을 뺀 임시 설정으로 다시 받고 `-Su`를 해요(pacman.conf는 그대로). 시험 7개(`test-robinctl.sh`: 깃허브만 안 될 때, 인터넷이 아예 없을 때), Arch 컨테이너의 실제 pacman으로 닿지 않는 `[robinos]`에서 그냥 `pacman -Syu`는 멈추고 `robinctl update`는 끝까지 가는 것을 확인. 남은 것: 설정 앱의 업데이트 상태(`checkupdates`도 같은 이유로 실패해 "알 수 없음"), ②, ③
-- 한 것(③, 2026-11-24 새벽): 설치본은 처음 설치 때 넣은 공개 열쇠를 계속 들고 있어서, 만료를 늘리거나 열쇠를 바꿔도 닿지 않고 2029-10-09에 업데이트가 멈출 뻔했어요. `robinos.install`이 패키지가 바뀔 때마다 패키지에 든 열쇠를 pacman 열쇠 꾸러미에 다시 넣고 서명해요(이미 그 열쇠를 가진 시스템만, 시험 3개). [release.md](release.md) "서명"에 백업 확인, 만료 늘리기, 열쇠 바꾸기 절차
-- 한 것(②, 2026-11-24 오전 robin PC): `robinctl`의 `robinos_adopt`가 `robinos`를 캐시로 받아(`pacman -Sw`) 파일 목록(`pacman -Qlpq`)의 파일마다 `--overwrite`를 줘서 설치해요(디렉터리는 빼고, `[`·`*`·`?`·`\`는 이스케이프, 쉼표가 든 이름은 빼요). 설치 후 설정은 `pkg/`가 없으면 `robinctl update --adopt`로 하고, 못 받으면 예전처럼 복사해요. `robinctl update`는 `-Su` 뒤에 복사된 파일(`/usr/share/robinos/shell/shell.qml`)이 있고 `robinos`가 없을 때만 옮겨요(패키지를 일부러 지운 시스템은 그대로). 시험: `test-robinctl.sh` 14개(옮기기, 덮어쓸 목록에 디렉터리 없음, 괄호 이스케이프, 두 번 안 함, 못 받을 때 안내, 저장소 없음), WSL 임시 루트의 진짜 pacman으로 복사본 셋을 덮어쓰고 주인이 `robinos`인지, 괄호를 이스케이프하지 않으면 그 파일이 충돌로 남는지 확인. 알게 된 것: `--root`를 주면 pacman은 `--overwrite` 패턴을 루트를 붙인 경로와 비교해요(실제 시스템은 루트가 `/`라 상관없어요). 설치 테스트 archinstall은 ISO 패키지로 만든 로컬 저장소와 예전 방식의 복사본으로 옮기기를 확인하고 진짜 저장소로 되돌려요
-- 완료 기준: ①② 시험(`test-robinctl.sh`와 Arch 컨테이너의 실제 pacman), 설치 테스트 archinstall 경로에서 `pacman -Qo`가 `robinos`, ③ release.md 절차
 
 ### T-164 처음 상태로 되돌리기 (조사)
 - 상태: 할 일 (나중)
