@@ -284,7 +284,9 @@ qs ipc -p /usr/share/robinos/shell call shell installer
 
 ## 윈도우 프로그램(.exe)을 열면
 
-`.exe`, `.msi`, `.lnk`를 열면 셸의 "윈도우 프로그램" 창이 떠요(`desktop/bin/robinos-windows-app`, `WindowsApp.qml`). 윈도우 프로그램은 리눅스에서 그대로 실행되지 않는다고 알려 주고, 파일 이름이 알려진 프로그램(`desktop/shell/windowsapps.js`: 카카오톡, Chrome, 한글, Office, 반디집, 곰플레이어, Discord, Steam 등)이면 대신 쓸 것을 단추로 보여 줘요. RobinOS에 있는 앱은 바로 열고, Flathub 앱은 앱 스토어의 그 앱 쪽을, 웹 버전은 브라우저를 열어요. 모르는 파일이면 Bottles(윈도우 프로그램 실행기) 설치 단추를 보여 줘요. 아래의 "왜 안 열리는지 알아보기"는 학습 미션 16(실행 파일 살펴보기)을 터미널에 열어요. 그 미션은 리눅스 프로그램(ELF)과 머리 부분만 있는 연습용 `hello.exe`(MZ)를 나란히 보여 줘요.
+`.exe`, `.msi`, `.lnk`를 열면 셸의 "윈도우 프로그램" 창이 떠요(`desktop/bin/robinos-windows-app`, `WindowsApp.qml`). 윈도우 프로그램은 리눅스에서 그대로 실행되지 않는다고 알려 주고, 파일 이름이 알려진 프로그램(`desktop/shell/windowsapps.js`: 카카오톡, Chrome, 한글, Office, 반디집, 곰플레이어, Discord, Steam 등)이면 대신 쓸 것을 단추로 보여 줘요. RobinOS에 있는 앱은 바로 열고, Flathub 앱은 앱 스토어의 그 앱 쪽을, 웹 버전은 브라우저를 열어요. 모르는 파일이면 Bottles(윈도우 프로그램 실행기) 설치 단추를 보여 줘요.
+
+설치한 RobinOS에는 Wine이 있어서(`packages/apps.txt`의 `wine`, `wine-mono`. 라이브 ISO에는 크기 때문에 없어요) 같은 창에 "Wine으로 실행해 보기"가 더 나와요(T-189). 모르는 프로그램과 카카오톡은 맨 위에, 대신 쓸 앱이 있는 프로그램은 맨 아래에 두고, 은행·공공기관 보안 프로그램에는 두지 않아요. 누르면 `desktop/bin/robinos-wine`이 실행해요. 파일을 여는 것만으로는 절대 실행하지 않고, root로는 실행하지 않아요. 처음 한 번은 C: 드라이브(`~/.wine`, 터미널의 `wine`과 같은 곳)를 만들면서 `desktop/wine/robinos.reg`를 넣어요: 윈도우 한글 글꼴 이름(맑은 고딕, 굴림, 돋움, 바탕, 궁서)을 Noto CJK로 바꾸고, Wine이 `.txt`·`.pdf` 같은 파일 형식을 가져가지 않게 해요. `.msi`는 `msiexec /i`로 열어요. 15초 안에 실패하면 알림으로 알려 주고, 기록은 `~/.cache/robinos/wine.log`에 남아요. 창의 글은 Wine이 샌드박스가 아니라서 윈도우에서처럼 내 파일에 손댈 수 있다고 말해요. 설치 테스트가 Wine의 메모장을 띄워 확인해요(`wine-notepad` 장면). 아래의 "왜 안 열리는지 알아보기"는 학습 미션 16(실행 파일 살펴보기)을 터미널에 열어요. 그 미션은 리눅스 프로그램(ELF)과 머리 부분만 있는 연습용 `hello.exe`(MZ)를 나란히 보여 줘요.
 
 ## 화면 배율
 

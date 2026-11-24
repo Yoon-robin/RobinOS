@@ -859,9 +859,20 @@ Singleton {
 
     property bool windowsAppOpen: false
     property string windowsAppPath: ""
+    // The installed system has Wine (packages/apps.txt), the live ISO doesn't; asked
+    // each time, since it can be installed later (T-189)
+    property bool hasWine: false
+
+    Process {
+        id: wineCheck
+
+        command: ["sh", "-c", "command -v wine"]
+        onExited: (exitCode, exitStatus) => root.hasWine = exitCode === 0
+    }
 
     function openWindowsApp(path) {
         windowsAppPath = path;
+        wineCheck.running = true;
         // Opened again for another file: show it from the top
         if (windowsAppOpen)
             windowsAppOpen = false;

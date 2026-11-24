@@ -6,15 +6,18 @@ import "windowsapps.js" as WindowsApps
 // Opened instead of an .exe or .msi (T-159): Windows programs don't run on Linux
 // as they are, so say so, and when the file name is a program we know (카카오톡,
 // Chrome, 한글 ...) offer what to use here: an app RobinOS has, one from the app
-// store, or a web version. desktop/bin/robinos-windows-app hands the file over
-// through `qs ipc ... call shell windowsApp <path>`.
+// store, or a web version. Where Wine is installed, running the file itself with
+// it is one more choice, never done without asking (T-189).
+// desktop/bin/robinos-windows-app hands the file over through
+// `qs ipc ... call shell windowsApp <path>`.
 FloatingWindow {
     id: root
 
     readonly property string path: ShellState.windowsAppPath
     readonly property string fileName: path.substring(path.lastIndexOf("/") + 1)
     readonly property var program: fileName !== "" ? WindowsApps.find(fileName) : null
-    readonly property var choices: program ? program.choices : WindowsApps.fallback
+    readonly property var choices: WindowsApps.choicesFor(program, ShellState.hasWine)
+    readonly property bool offersWine: choices.some(choice => choice.wine === true)
 
     visible: ShellState.windowsAppOpen
     title: "윈도우 프로그램"
@@ -29,7 +32,9 @@ FloatingWindow {
     }
 
     function choose(choice) {
-        if (choice.app)
+        if (choice.wine)
+            Quickshell.execDetached(["/usr/share/robinos/bin/robinos-wine", root.path]);
+        else if (choice.app)
             Quickshell.execDetached(["gtk-launch", choice.app]);
         else if (choice.flathub)
             Quickshell.execDetached(["gnome-software", "--details=" + choice.flathub]);
@@ -70,7 +75,8 @@ FloatingWindow {
                     spacing: 2
 
                     Text {
-                        text: root.program ? root.program.name + " 윈도우용 설치 파일이에요" : "윈도우 프로그램은 바로 실행되지 않아요"
+                        text: root.program ? root.program.name + " 윈도우용 설치 파일이에요"
+                              : root.offersWine ? "윈도우 프로그램이에요" : "윈도우 프로그램은 바로 실행되지 않아요"
                         color: Theme.fg
                         font.family: Theme.font
                         font.pixelSize: 17
@@ -91,7 +97,9 @@ FloatingWindow {
             Text {
                 Layout.fillWidth: true
                 text: (root.program && root.program.note ? root.program.note + "\n\n" : "")
-                      + ".exe와 .msi는 윈도우가 실행하는 형식이라 리눅스에서는 그대로 열리지 않아요. 대부분 같은 일을 하는 리눅스 앱이 있어요."
+                      + (root.offersWine
+                         ? ".exe와 .msi는 윈도우가 실행하는 형식이에요. Wine으로 실행해 볼 수 있지만, 같은 일을 하는 리눅스 앱이 있으면 그쪽이 더 잘 돼요. Wine 안의 프로그램은 윈도우에서처럼 내 파일을 읽고 고칠 수 있으니, 믿을 수 있는 곳에서 받은 파일만 실행해요."
+                         : ".exe와 .msi는 윈도우가 실행하는 형식이라 리눅스에서는 그대로 열리지 않아요. 대부분 같은 일을 하는 리눅스 앱이 있어요.")
                 color: Theme.fg
                 font.family: Theme.font
                 font.pixelSize: 13
@@ -100,7 +108,8 @@ FloatingWindow {
             }
 
             Text {
-                text: root.program ? "대신 쓸 수 있는 것" : "그래도 실행해 보려면"
+                text: root.program ? (root.offersWine ? "할 수 있는 것" : "대신 쓸 수 있는 것")
+                      : root.offersWine ? "실행해 보려면" : "그래도 실행해 보려면"
                 color: Theme.muted
                 font.family: Theme.font
                 font.pixelSize: 12
@@ -141,7 +150,8 @@ FloatingWindow {
                         spacing: 12
 
                         Icon {
-                            name: choiceRow.modelData.web ? "external" : choiceRow.modelData.flathub ? "download" : "sparkles"
+                            name: choiceRow.modelData.wine ? "app" : choiceRow.modelData.web ? "external"
+                                  : choiceRow.modelData.flathub ? "download" : "sparkles"
                             size: 18
                         }
 
