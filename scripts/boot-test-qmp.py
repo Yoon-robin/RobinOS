@@ -961,6 +961,13 @@ def main():
     shot(qmp, "dark-text-editor")
     keys(qmp, "alt", "f4")
     wait(2)
+    # Firefox's toolbars and home page in the kit's faces: its admin config registers
+    # the sheet desktop/gtk/firefox.css (T-188)
+    type_text(qmp, "clear; firefox --new-window about:home >/dev/null 2>&1 &\n")
+    wait(15)
+    shot(qmp, "dark-firefox")
+    keys(qmp, "ctrl", "shift", "w")
+    wait(3)
 
     keys(qmp, "meta_l", "l")
     wait(5)

@@ -33,6 +33,15 @@ if [[ "${1:-}" != --as-user ]]; then
   cp "${ROOT_DIR}/desktop/gtk/libadwaita.css" /usr/share/robinos/gtk/libadwaita.css
   mkdir -p /usr/share/gtksourceview-5/styles
   cp "${ROOT_DIR}"/desktop/gtk/gtksourceview/*.xml /usr/share/gtksourceview-5/styles/
+  # Firefox's admin config registers the kit's sheet; --stock takes it out again
+  if [[ "${stock}" == --stock ]]; then
+    rm -f /usr/lib/firefox/defaults/pref/autoconfig.js /usr/lib/firefox/robinos.cfg
+  else
+    cp "${ROOT_DIR}/desktop/firefox/autoconfig.js" /usr/lib/firefox/defaults/pref/autoconfig.js
+    cp "${ROOT_DIR}/desktop/firefox/robinos.cfg" /usr/lib/firefox/robinos.cfg
+    mkdir -p /usr/share/robinos/firefox
+    cp "${ROOT_DIR}/desktop/gtk/firefox.css" /usr/share/robinos/firefox/robinos.css
+  fi
   id -u "${USER_NAME}" >/dev/null 2>&1 || useradd -m "${USER_NAME}"
   shots="$(mktemp -d)"
   chown "${USER_NAME}" "${shots}"
@@ -132,5 +141,7 @@ for dark in 1 0; do
   shoot "text-editor-${tag}" 6 gnome-text-editor --new-window "${HOME}/Documents/note.txt"
   shoot "calculator-${tag}" 5 gnome-calculator
   mkdir -p "${work}/ff-${tag}"
-  shoot "firefox-${tag}" 14 firefox --new-instance --profile "${work}/ff-${tag}" about:blank
+  # ui.systemUsesDarkTheme stands in for the colour-scheme portal this sway lacks
+  printf 'user_pref("ui.systemUsesDarkTheme", %s);\n' "${dark}" >"${work}/ff-${tag}/user.js"
+  shoot "firefox-${tag}" 14 firefox --new-instance --profile "${work}/ff-${tag}" about:home
 done

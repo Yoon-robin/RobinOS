@@ -31,6 +31,7 @@ SYSTEM_SCREENS = [
     "themes/grub/robinos/theme.txt",
     "themes/syslinux/colors.cfg",
     "desktop/gtk/libadwaita.css",
+    "desktop/gtk/firefox.css",
     "desktop/gtk/gtksourceview/robinos-dark.xml",
 ]
 KIT_CORNERS = {6, 7, 10, 12, 14}

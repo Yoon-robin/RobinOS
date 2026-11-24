@@ -14,6 +14,10 @@ GNOME blue. Both GTK 3 (adw-gtk3) and libadwaita read the same named colours
   desktop/gtk/gtksourceview/robinos[-dark].xml
                                Text Editor's style scheme (it paints its window
                                from the scheme); dconf picks "robinos"
+  desktop/gtk/firefox.css      Firefox's toolbars, panels and new tab page: it
+                               draws its own grey, not the GTK colours, so its
+                               autoconfig (desktop/firefox/robinos.cfg) registers
+                               this as a user sheet; light-dark() follows the scheme
 
 Run after changing a colour in Theme.qml; --check (scripts/check.sh) fails when the
 files are stale:
@@ -124,9 +128,77 @@ def source_scheme(values, which, scheme, other):
     )
 
 
+# Firefox's chrome variables (browser-colors.css, tokens-shared.css in omni.ja,
+# Firefox 160) -> Theme.qml tokens: the tab strip is the side column, the toolbar
+# and the selected tab the page, the address field a control
+FIREFOX_CHROME = [
+    ("--toolbox-background-color", "side"), ("--toolbox-background-color-inactive", "side"),
+    ("--toolbox-text-color", "fg"), ("--toolbox-text-color-inactive", "muted"),
+    ("--toolbar-background-color", "bg"), ("--toolbar-text-color", "fg"),
+    ("--tab-background-color-selected", "bg"), ("--tabpanel-background-color", "bg"),
+    ("--toolbar-field-background-color", "raised"), ("--toolbar-field-text-color", "fg"),
+    ("--toolbar-field-border-color", "border"),
+    ("--toolbar-field-background-color-focus", "bg"), ("--toolbar-field-text-color-focus", "fg"),
+    ("--toolbar-field-border-color-focus", "accent"),
+    ("--chrome-content-separator-color", "border"),
+    ("--panel-background-color", "panel"), ("--panel-text-color", "fg"),
+    ("--panel-border-color", "panelBorder"),
+    ("--color-accent-primary", "accent"), ("--color-accent-primary-hover", "primaryHover"),
+    ("--color-accent-primary-active", "primary"),
+    ("--button-background-color-primary", "primary"),
+    ("--button-background-color-primary-hover", "primaryHover"),
+    ("--button-background-color-primary-active", "primary"),
+    ("--button-text-color-primary", "primaryFg"), ("--button-text-color-primary-hover", "primaryFg"),
+    ("--button-text-color-primary-active", "primaryFg"),
+    ("--focus-outline-color", "accent"), ("--link-color", "accent"),
+]
+# The new tab and home pages (activity-stream.css)
+FIREFOX_NEWTAB = [
+    ("--newtab-background-color", "bg"), ("--newtab-background-color-secondary", "surface"),
+    ("--newtab-text-primary-color", "fg"), ("--background-color-canvas", "bg"),
+    ("--background-color-box", "surface"), ("--text-color", "fg"),
+    ("--newtab-primary-action-background", "primary"),
+    ("--newtab-primary-action-background-pocket", "primary"),
+    ("--newtab-status-success", "accent"),
+]
+# Every Firefox page (about:preferences, about:addons, ...): its violet accent and
+# filled buttons become the kit's one blue
+FIREFOX_PAGES = [
+    ("--color-accent-primary", "accent"), ("--color-accent-primary-hover", "primaryHover"),
+    ("--color-accent-primary-active", "primary"),
+    ("--button-background-color-primary", "primary"),
+    ("--button-background-color-primary-hover", "primaryHover"),
+    ("--button-background-color-primary-active", "primary"),
+    ("--button-text-color-primary", "primaryFg"),
+    ("--focus-outline-color", "accent"), ("--link-color", "accent"),
+]
+
+
+def firefox_css(values):
+    def decls(table):
+        return "".join(
+            f"    {name}: light-dark({values[token][1]}, {values[token][0]}) !important;\n"
+            for name, token in table
+        )
+    return (
+        HEAD
+        + "/* Firefox in the kit's faces. Firefox draws its toolbars in its own grey, not the\n"
+        + "   GTK colours, and an unsigned theme can't be installed, so its autoconfig\n"
+        + "   (desktop/firefox/robinos.cfg) registers this file as a user sheet. Only\n"
+        + "   Firefox's own pages are touched; light-dark() follows the colour scheme. */\n"
+        + '@-moz-document url("chrome://browser/content/browser.xhtml") {\n'
+        + "  :root {\n" + decls(FIREFOX_CHROME) + "  }\n}\n\n"
+        + '@-moz-document url-prefix("about:") {\n'
+        + "  :root {\n" + decls(FIREFOX_PAGES) + "  }\n}\n\n"
+        + '@-moz-document url-prefix("about:newtab"), url-prefix("about:home") {\n'
+        + "  :root {\n" + decls(FIREFOX_NEWTAB) + "  }\n}\n"
+    )
+
+
 def outputs():
     values = tokens()
-    missing = sorted({t for _, t in COLOURS} - values.keys())
+    used = COLOURS + FIREFOX_CHROME + FIREFOX_NEWTAB + FIREFOX_PAGES
+    missing = sorted({t for _, t in used} - values.keys())
     if missing:
         sys.exit(f"build-gtk-theme: Theme.qml has no colour {', '.join(missing)}")
     dark, light = 0, 1
@@ -142,6 +214,7 @@ def outputs():
         + "}\n\n"
         + f":root {{ --window-radius: {WINDOW_RADIUS}; }}\n"
     )
+    files["firefox.css"] = firefox_css(values)
     for theme, base, which in (("RobinOS", "adw-gtk3", light), ("RobinOS-dark", "adw-gtk3-dark", dark)):
         files[f"themes/{theme}/gtk-3.0/gtk.css"] = (
             HEAD

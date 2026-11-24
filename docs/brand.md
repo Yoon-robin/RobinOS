@@ -101,7 +101,9 @@ RobinOS는 윈도우에서 넘어오는 사람을 위한 한국어 리눅스예�
 
 ## GTK 앱 (파일, 텍스트 편집기, 계산기 등)
 
-GNOME 앱은 RobinOS가 그리지 않지만 같은 면 셋과 파랑 하나를 써요(T-188). `scripts/build-gtk-theme.py`가 `Theme.qml`의 값으로 libadwaita와 adw-gtk3의 이름 붙은 색(`window_bg_color`, `accent_bg_color` 등)을 만들어요. 창·보기 면은 `bg`, 머리줄과 옆 기둥은 `side`, 카드는 `surface`, 팝오버는 `panel`, 채운 파랑은 `primary`예요. 키트에 초록·노랑이 없어서 성공은 파랑, 경고는 살구색 `note`예요. 텍스트 편집기는 창 전체를 GtkSourceView 색 구성으로 칠해서 `robinos`·`robinos-dark` 구성을 따로 만들었어요. 코드의 문법 색은 터미널의 ANSI 색처럼 프로그램의 뜻이라 Adwaita 것을 물려받아요. 모서리, 단추 모양, 글자는 libadwaita 그대로이고(글꼴은 dconf의 Pretendard), Firefox는 GTK 색이 아니라 자기 테마를 써서 아직 키트 색이 아니에요.
+GNOME 앱은 RobinOS가 그리지 않지만 같은 면 셋과 파랑 하나를 써요(T-188). `scripts/build-gtk-theme.py`가 `Theme.qml`의 값으로 libadwaita와 adw-gtk3의 이름 붙은 색(`window_bg_color`, `accent_bg_color` 등)을 만들어요. 창·보기 면은 `bg`, 머리줄과 옆 기둥은 `side`, 카드는 `surface`, 팝오버는 `panel`, 채운 파랑은 `primary`예요. 키트에 초록·노랑이 없어서 성공은 파랑, 경고는 살구색 `note`예요. 텍스트 편집기는 창 전체를 GtkSourceView 색 구성으로 칠해서 `robinos`·`robinos-dark` 구성을 따로 만들었어요. 코드의 문법 색은 터미널의 ANSI 색처럼 프로그램의 뜻이라 Adwaita 것을 물려받아요. 모서리, 단추 모양, 글자는 libadwaita 그대로예요(글꼴은 dconf의 Pretendard).
+
+Firefox는 GTK 색이 아니라 자기 회색을 쓰고, 서명 없는 테마는 일반 Firefox가 받지 않아요. 그래서 Firefox의 관리자 설정 파일(autoconfig, `desktop/firefox/robinos.cfg`)이 시작할 때 `desktop/gtk/firefox.css`를 사용자 스타일 시트로 등록해요. 이 파일도 같은 생성기가 만들어요. 탭 줄은 `side`, 도구 모음과 고른 탭은 `bg`, 주소 칸은 컨트롤 면, 패널은 `panel`, 보라 강조색과 채운 단추는 파랑이에요. 시트는 Firefox 자신의 화면(`browser.xhtml`, `about:` 페이지)에만 맞아서 웹 페이지는 건드리지 않아요. autoconfig는 시트 등록 말고는 아무것도 하지 않고, 개인 정보 설정은 그대로 `policies.json`에 있어요. 새 탭의 위젯 몇 개(낱말 퍼즐, "NEW" 표시)는 자기 색을 써서 그대로예요.
 
 Theme.qml의 색을 바꿨으면 `python3 scripts/build-gtk-theme.py`를 다시 돌려요. `check`가 어긋나면 알려 줘요.
 

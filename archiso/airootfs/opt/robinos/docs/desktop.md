@@ -21,7 +21,7 @@ RobinOS의 데스크톱은 Hyprland 위에 직접 만든 Quickshell 셸이에요
 | 로그인 화면 | SDDM (Qt 6 테마) | `themes/sddm/robinos/` |
 | 잠금 화면과 대기 | hyprlock, hypridle | `desktop/hypr/hyprlock.conf`, `hypridle.conf` |
 | 터미널 | Ptyxis (foot은 대체용) | `desktop/dconf/00-robinos`의 `[org/gnome/Ptyxis]`, foot은 `desktop/foot/foot.ini` |
-| 파일, 브라우저 | Nautilus, Firefox (원격 측정과 실험 기능은 꺼 둬요: `/etc/firefox/policies/policies.json`) | `desktop/firefox/` |
+| 파일, 브라우저 | Nautilus, Firefox (원격 측정과 실험 기능은 꺼 둬요: `/etc/firefox/policies/policies.json`. 키트 색은 autoconfig `/usr/lib/firefox/robinos.cfg`가 `/usr/share/robinos/firefox/robinos.css`를 등록해요) | `desktop/firefox/`, `desktop/gtk/firefox.css` |
 | 파일을 여는 기본 앱 | `/etc/xdg/mimeapps.list` | `desktop/mime/` |
 | fastfetch 요약과 울새 그림 | fastfetch | `desktop/fastfetch/` |
 | GTK, libadwaita 앱 | 키트 색의 GTK 3 테마 `RobinOS`·`RobinOS-dark`(adw-gtk3 위), 사용자 `~/.config/gtk-4.0/gtk.css`가 불러오는 `/usr/share/robinos/gtk/libadwaita.css`, 텍스트 편집기 색 구성 `robinos`, dconf 기본값. 모두 `scripts/build-gtk-theme.py`가 `Theme.qml`에서 만들어요 | `desktop/gtk/`, `desktop/dconf/` |
