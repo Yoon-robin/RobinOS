@@ -8,8 +8,8 @@
 
 다른 PC에서 이어 할 때 먼저 읽어요. 새 PC 준비는 [build-environment.md](build-environment.md) "다른 PC에서 이어서 하기"예요. robin PC는 `3b92fa1`까지 검증하고 푸시했어요(`work/batch79`와 작업 트리 `../RobinOS-wt2`는 정리함. 빈 폴더 `../RobinOS-wt`는 다른 프로그램이 잡고 있어 못 지웠어요, 다음에 지워요).
 
-- **오전~낮에 한 것(robin PC)**: archinstall로 깐 시스템에서 post-install 직후 방화벽이 꺼져 있던 것(바로 켜요), 설치 테스트 archinstall·windows 통과, T-147·T-177 완료, 고대비(T-185, 키트의 고대비 토큰 두 벌과 설정 스위치), 설치본 런처의 휴대폰 연결 장면(T-186), 소개 영상을 robin-ui V5로(T-180 ①), `shell-load.sh`를 소프트웨어 GL로(WSL D3D12가 테마 전환 때 죽어요). 묶음 검증 `3b92fa1` 통과
-- **다음 할 일**: T-180 ②(랜딩 페이지 사진, v0.4 때), T-184 ①, T-164부터 아래 "할 일" 순서
+- **오전~낮에 한 것(robin PC)**: archinstall로 깐 시스템에서 post-install 직후 방화벽이 꺼져 있던 것(바로 켜요), 설치 테스트 archinstall·windows 통과, T-147·T-177 완료, 고대비(T-185, 키트의 고대비 토큰 두 벌과 설정 스위치), 설치본 런처의 휴대폰 연결 장면(T-186), 소개 영상을 robin-ui V5로(T-180 ①), `shell-load.sh`를 소프트웨어 GL로(WSL D3D12가 테마 전환 때 죽어요). 묶음 검증 `3b92fa1` 통과. 그 뒤 윈도우 프로그램 안내 창에서 미션 16으로(T-184, 연습용 `hello.exe`), 묶음 검증 `0932584` 통과
+- **다음 할 일**: T-180 ②(랜딩 페이지 사진, v0.4 때), T-164부터 아래 "할 일" 순서
 - **새벽에 한 것(00:55~04:00, 집 PC)**: 개발 스택 다시 보기([design.md](design.md) "개발 스택 다시 보기", 바탕은 그대로), 셸을 VM 없이 띄워 찍는 `shell-load.sh`, 그걸로 찾은 셸·desktop/bin 버그 열몇 개(품질 점검 기록 "코드 검토"), README 스크린샷을 새 화면으로, 전원 설정이 두 번째 선택부터 hypridle에 안 들어가던 회귀(잠금 fd 상속), 터미널 한글 간격(T-183), 밝기 키가 키보드 LED를 건드리던 것, `.msi` 기본 앱, 설치본이 릴리스 열쇠를 다시 받게(T-177 ③), 설치 테스트가 업데이트 미리 보기 줄을 확인(T-162), 진행 중 작업 21개를 17개로(T-176). 묶음 검증 두 번과 설치 테스트 한 번 통과(정기 점검 표, 푸시 대기 커밋)
 - **새 도구**: `bash scripts/shell-load.sh -s 파일.png quickSettings settings launcher`로 VM 없이 몇 초 만에 셸 화면을 찍어요(WSL, sway와 grim은 `setup`이 깔아요. 한글 글꼴은 `bash scripts/fetch-fonts.sh /usr/local/share/fonts/robinos` 뒤 `fc-cache -f`). 화면을 고친 뒤 바로 보기에 좋아요. 터미널 글꼴은 같은 화면 없는 sway에서 Python GTK로 VTE 창 하나를 띄워 `grim`으로 찍으면 Ptyxis와 똑같이 그려져요(Ptyxis는 그 환경에서 사용자 세션 버스가 없어 안 떠요)
 - **두 PC 규칙**: 회차를 시작할 때 `git fetch` 뒤 `git log HEAD..origin/main`을 보고, 있으면 먼저 합쳐요([loop.md](loop.md) "1. 상황 파악")
@@ -28,8 +28,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-11-24 (낮 12시 반) | `0932584` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.6분, 테스트 24.5분) | 통과. 판정 22개 모두 PASS(새 장면 `windows-app-learn`, T-184). 설치 테스트 다섯 단계 |
 | 2026-11-24 (낮 12시) | `3b92fa1` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 24.2분) | 통과. 판정 21개 모두 PASS. 새 장면 `95-high-contrast-light`·`96-high-contrast-launcher`·`97-accessibility-settings`(T-185), 설치 테스트 `rollback-10-launcher-phone`(T-186). 설치 테스트 다섯 단계 |
-| 2026-11-24 (오전 10시 반) | `c430a5f` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.6분, 테스트 22.6분) | 통과. 판정 모두 PASS. 새 장면 `17-launcher-localsend`: 라이브에는 GNOME 소프트웨어가 없어 "LocalSend 설치하기"는 숨고 "휴대폰에서 받기 허용"만 나와요(설계대로, 설치본 장면은 batch79에서 더함). 설치 테스트 다섯 단계 |
 
 ## 품질 점검 기록
 
@@ -49,9 +49,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 `git log origin/main..HEAD`에 있는 커밋과, 푸시하기 전에 통과해야 하는 검증이에요. 검증이 끝나면 지우고 푸시해요.
 
-- T-184 ① 미션 16의 `hello.exe`와 안내 창 단추: `verify -Installer robinos`(부팅 테스트 `windows-app-learn` 장면)
-
-`3b92fa1`까지는 2026-11-24 낮 robin PC의 `verify -Installer robinos`를 마치고 푸시했어요.
+없어요. `0932584`까지 2026-11-24 낮 robin PC의 `verify -Installer robinos`를 마치고 푸시했어요.
 
 ## 사용자 확인 필요
 
@@ -92,14 +90,6 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 남은 것: ② 랜딩 페이지(`site/`)의 화면 사진과 `publish-site.sh`는 v0.4 릴리스 때(지금 받는 v0.3이 옛 화면) ③ 터미널의 한글 간격은 T-183. ②~⑥ 단계(공용 부품, 표시기, 창들, 패널, 시스템 화면)와 ⑦의 아이콘·글꼴·README는 끝났어요
 - 검증: 단계마다 `wsl-build.ps1 check`(qmllint), 부팅 테스트 스크린샷을 다크·라이트로 직접 보기. 키트에서 벗어난 것을 세는 검사(`check-desktop.sh`에 셸 QML의 `#`색 리터럴, 초록·노랑, `Theme.` 밖의 모서리 값)도 넣어요
 - 완료 기준: 부팅 테스트의 모든 장면이 키트 문법(면 셋, 파랑 하나, 컨트롤 모서리 7, 유리 없음)을 따르고, 시스템 화면(로그인, 잠금, 부팅 메뉴)도 같은 색
-
-### T-184 윈도우 프로그램 안내의 남은 것
-- 상태: 검증 대기 (2026-11-24 robin PC, ①을 묶음 검증에서 확인)
-- 할 것: ① 학습 미션 쪽 설명(실행 파일 형식이 왜 다른지, 안내 창에서 이어지게) ② 설치본에서 Flathub 단추가 앱 스토어의 그 앱을 여는지 설치 테스트로 확인
-- 한 것(②, 2026-11-24 오전 robin PC): 설치 테스트가 데스크톱 없이 콘솔로 돌아서 단추를 누르는 대신, 단추가 여는 앱 ID(`windowsapps.js`의 `flathub:` 34개)가 모두 Flathub 앱 목록(`flatpak remote-ls`)에 있는지 설치본에서 확인해요. 만들기 전에 Flathub의 공개 목록과 맞춰 보니 Thunderbird만 틀렸어요: Flathub는 `org.mozilla.thunderbird`(소문자)라 단추를 눌러도 앱 스토어가 못 찾았어요. 고쳤어요
-- ② 확인(2026-11-24): `install-test -Installer windows`에서 34개 ID가 모두 Flathub 목록에 있어요. 남은 것은 ①
-- 한 것(①, 2026-11-24 낮 robin PC): 안내 창 아래의 글 한 줄을 "왜 안 열리는지 알아보기" 단추(ghost)로 바꿨어요. 누르면 창을 닫고 미션 16(실행 파일 살펴보기)을 터미널에 열어요. 미션 16은 이제 연습 파일 `hello.exe`(64비트 콘솔 .exe의 머리 부분만, 코드 없음, 실행 권한 없음)도 만들고, "윈도우 프로그램과 비교" 칸에서 `file`과 `xxd`로 ELF(7f 45 4c 46)와 MZ(4d 5a)를 나란히 보여 줘요. `hello.exe`를 `xdg-open`으로 열면 같은 안내 창이 떠서 둘이 서로 이어져요. 새 미션을 만들지 않은 건 미션 16이 이미 ".exe와 ELF"로 시작해서예요. 부팅 테스트에 `windows-app-learn` 장면(단추를 눌러 새 터미널의 미션 16, 판정은 창이 닫혔고 `file`이 `hello.exe`를 MS Windows용으로 알아보는지)
-- 완료 기준: 미션 하나가 안내 창에서 열리고, 설치 테스트에 Flathub 단추 장면
 
 ### T-164 처음 상태로 되돌리기 (조사)
 - 상태: 할 일 (나중)

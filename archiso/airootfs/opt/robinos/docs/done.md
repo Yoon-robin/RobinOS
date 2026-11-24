@@ -6,6 +6,15 @@
 
 tasks.md에서 옮긴 작업 카드예요(2026-11-24 T-176 정리부터). 최근에 옮긴 것이 위에 있어요.
 
+### T-184 윈도우 프로그램 안내의 남은 것
+- 상태: 완료 (2026-11-24 robin PC, `0932584` 묶음 검증)
+- 할 것: ① 학습 미션 쪽 설명(실행 파일 형식이 왜 다른지, 안내 창에서 이어지게) ② 설치본에서 Flathub 단추가 앱 스토어의 그 앱을 여는지 설치 테스트로 확인
+- 한 것(②, 2026-11-24 오전 robin PC): 설치 테스트가 데스크톱 없이 콘솔로 돌아서 단추를 누르는 대신, 단추가 여는 앱 ID(`windowsapps.js`의 `flathub:` 34개)가 모두 Flathub 앱 목록(`flatpak remote-ls`)에 있는지 설치본에서 확인해요. 만들기 전에 Flathub의 공개 목록과 맞춰 보니 Thunderbird만 틀렸어요: Flathub는 `org.mozilla.thunderbird`(소문자)라 단추를 눌러도 앱 스토어가 못 찾았어요. 고쳤어요
+- ② 확인(2026-11-24): `install-test -Installer windows`에서 34개 ID가 모두 Flathub 목록에 있어요. 남은 것은 ①
+- 한 것(①, 2026-11-24 낮 robin PC): 안내 창 아래의 글 한 줄을 "왜 안 열리는지 알아보기" 단추(ghost)로 바꿨어요. 누르면 창을 닫고 미션 16(실행 파일 살펴보기)을 터미널에 열어요. 미션 16은 이제 연습 파일 `hello.exe`(64비트 콘솔 .exe의 머리 부분만, 코드 없음, 실행 권한 없음)도 만들고, "윈도우 프로그램과 비교" 칸에서 `file`과 `xxd`로 ELF(7f 45 4c 46)와 MZ(4d 5a)를 나란히 보여 줘요. `hello.exe`를 `xdg-open`으로 열면 같은 안내 창이 떠서 둘이 서로 이어져요. 새 미션을 만들지 않은 건 미션 16이 이미 ".exe와 ELF"로 시작해서예요. 부팅 테스트에 `windows-app-learn` 장면(단추를 눌러 새 터미널의 미션 16, 판정은 창이 닫혔고 `file`이 `hello.exe`를 MS Windows용으로 알아보는지)
+- 완료 기준: 미션 하나가 안내 창에서 열리고, 설치 테스트에 Flathub 단추 장면
+- 확인(2026-11-24 `verify`, `0932584`): `52-windows-app-learn`에서 단추가 창을 닫고 새 터미널에 미션 16의 "윈도우 프로그램과 비교"가 보여요. 판정 `windows-app-learn` PASS(`file`: PE32+ executable for MS Windows). 그 터미널을 닫은 뒤 다음 장면들도 처음 터미널에서 그대로 이어졌어요
+
 ### T-186 휴대폰 연결 (LocalSend)
 - 상태: 완료 (2026-11-24 robin PC, `3b92fa1` 묶음 검증. 실제 휴대폰으로 받아 보기는 T-167)
 - 한 것: 런처에 "LocalSend 설치하기"(앱 스토어가 있고 아직 안 깔렸을 때만)와 "휴대폰에서 받기 허용", 윈도우 이름 "휴대폰과 연결"(깔려 있으면 앱, 없으면 설치 항목). ufw 앱 프로필 `desktop/ufw/robinos-localsend`(53317 tcp·udp), 받기 허용은 사설 주소 세 대역에서만 열고 명령을 터미널에서 보여 줘요. 공용 와이파이도 사설 주소라는 점은 desktop.md에 그대로 적었어요. Flathub ID는 공개 목록에서 확인했어요. 설치 테스트가 `ufw app info LocalSend`와 `ufw --dry-run allow ...`를 봐요. 남은 것: 실제 휴대폰으로 받아 보기(T-167)
@@ -501,6 +510,7 @@ tasks.md에서 옮긴 작업 카드예요(2026-11-24 T-176 정리부터). 최근
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-11-24 (오전 10시 반) | `c430a5f` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.6분, 테스트 22.6분) | 통과. 판정 모두 PASS. 새 장면 `17-launcher-localsend`: 라이브에는 GNOME 소프트웨어가 없어 "LocalSend 설치하기"는 숨고 "휴대폰에서 받기 허용"만 나와요(설계대로, 설치본 장면은 batch79에서 더함). 설치 테스트 다섯 단계 |
 | 2026-11-24 (새벽 3시 반) | `f2a6996` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 4.1분, 테스트 22.6분) | 통과. 판정 21개 모두 PASS. `31-terminal-learn.png`에서 터미널 한글이 붙어 보여요(T-183). 설치 테스트 다섯 단계 |
 | 2026-11-24 (새벽 3시) | `0451fd4` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 3.8분, 테스트 22.6분) | 통과. 판정 21개 모두 PASS. 앞의 묶음에서 실패한 `power-changed`(60 120 300)·`power-default`(240 300 600 900)가 잠금 fd 수정 뒤 통과, `default-apps`·`terminal`도 PASS. 설치 테스트 다섯 단계 |
 | 2026-11-24 (새벽 1시) | `ddcb219` 테스트 ISO | 집 PC에서 `verify -Installer robinos`(빌드 4.4분, 테스트 17.7분), 이어서 `install-test -Installer encrypted` | 통과. 장면 판정 열다섯 개 모두 PASS, 키트 토큰의 다크·라이트 스크린샷(바탕 화면, 빠른 설정, 잠금 화면, 학습 센터) 확인. 설치 테스트 다섯 단계. 암호화 설치도 다섯 단계 모두 통과: 단계마다 GRUB이 비밀번호를 묻고(`*-grub-password.png`) 풀린 뒤 설치본·스냅샷 부팅·되돌리기까지 |
