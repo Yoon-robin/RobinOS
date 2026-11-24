@@ -78,7 +78,7 @@ def tile(cid):
     off = 256 * (1 - GLYPH) / 2
     return f"""<defs>
     <clipPath id="{cid}-tile"><rect width="256" height="256" rx="{r}"/></clipPath>
-    <filter id="{cid}-glow" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+    <filter id="{cid}-glow" filterUnits="userSpaceOnUse" x="0" y="0" width="256" height="256" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceAlpha" stdDeviation="22" result="wide"/>
       <feGaussianBlur in="SourceAlpha" stdDeviation="7" result="near"/>
       <feMerge result="blur"><feMergeNode in="wide"/><feMergeNode in="near"/></feMerge>

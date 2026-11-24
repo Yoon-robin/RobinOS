@@ -3,7 +3,7 @@
   <desc id="desc">RobinOS 마크: 거의 검은 네모 위의 하얀 울새와 파란 번짐</desc>
   <defs>
     <clipPath id="robinos-mark-tile"><rect width="256" height="256" rx="60"/></clipPath>
-    <filter id="robinos-mark-glow" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+    <filter id="robinos-mark-glow" filterUnits="userSpaceOnUse" x="0" y="0" width="256" height="256" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceAlpha" stdDeviation="22" result="wide"/>
       <feGaussianBlur in="SourceAlpha" stdDeviation="7" result="near"/>
       <feMerge result="blur"><feMergeNode in="wide"/><feMergeNode in="near"/></feMerge>

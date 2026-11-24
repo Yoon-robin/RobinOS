@@ -28,22 +28,24 @@ const q = (s, root = document) => root.querySelector(s);
 const qa = (s, root = document) => [...root.querySelectorAll(s)];
 const W = 1920, H = 1080;
 
-// ── the RobinOS mark in parts (assets/brand/robinos-mark.svg without its tile) ──
+// ── the RobinOS mark in parts (assets/brand/robinos-mark.svg): the kit's tile, the
+// blue glow and the white robin, so each can move on its own ──
 let markCount = 0;
 function markSvg() {
-  const id = `robin-clip-${++markCount}`;
+  const id = `robin-mark-${++markCount}`;
+  const body = `<circle cx="122" cy="138" r="64"/><circle cx="168" cy="92" r="38"/><path d="M200 76 L238 92 L200 106 Z"/><path d="M78 164 L26 190 C20 193 22 202 29 201 L96 186 Z"/>`;
   return `<svg viewBox="0 0 256 256" aria-hidden="true">
-  <defs><clipPath id="${id}"><circle cx="124" cy="130" r="54"/><circle cx="164" cy="92" r="32"/></clipPath></defs>
-  <g transform="translate(-3 -7)">
-    <g class="m-robin">
-      <path d="M82 150 L50 165 C45 167.5 46.5 174 52 173.5 L96 166 Z" fill="#8A8E94"/>
-      <g clip-path="url(#${id})"><rect width="256" height="256" fill="#F0F0F0"/><path d="M66 110 C 92 100, 122 112, 132 140 C 106 148, 82 140, 66 124 Z" fill="#E6E7E9"/></g>
-      <path d="M193 84 L218 93 L193 102 Z" fill="#8A8E94"/>
-      <circle cx="174" cy="85" r="6.5" fill="#0A0E11"/>
-      <path d="M114 184 V203 M134 184 V203" stroke="#8A8E94" stroke-width="6" stroke-linecap="round"/>
+  <defs>
+    <clipPath id="${id}-tile"><rect width="256" height="256" rx="60"/></clipPath>
+    <mask id="${id}-eye"><rect width="256" height="256" fill="#fff"/><circle cx="178" cy="88" r="10" fill="#000"/></mask>
+    <filter id="${id}-blur" filterUnits="userSpaceOnUse" x="-120" y="-120" width="496" height="496"><feGaussianBlur stdDeviation="22" result="w"/><feGaussianBlur in="SourceGraphic" stdDeviation="7" result="n"/><feMerge><feMergeNode in="w"/><feMergeNode in="n"/></feMerge></filter>
+  </defs>
+  <rect class="m-tile" width="256" height="256" rx="60" fill="#060A14"/>
+  <g clip-path="url(#${id}-tile)">
+    <g transform="translate(33.28 33.28) scale(0.74)">
+      <g class="m-glow" fill="#4B7DFE" fill-opacity="0.9" filter="url(#${id}-blur)">${body}</g>
+      <g class="m-robin" fill="#FFFFFF" mask="url(#${id}-eye)">${body}</g>
     </g>
-    <path class="m-chev" d="M48 193 L65 205 L48 217" fill="none" stroke="#4B7DFE" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-    <rect class="m-cursor" x="84" y="200" width="96" height="10" rx="5" fill="#F0F0F0"/>
   </g>
 </svg>`;
 }
@@ -195,26 +197,23 @@ function build() {
   const blackOut = q("#black-out"), vignette = q(".vignette");
   buildGlows();
 
-  // 0–8: the chevron draws, the cursor appears, the robin lands on it, the name rises
+  // 0–8: the tile opens, the robin lands on it, the blue glow comes up, the name rises
   {
     const el = q("#s-logo");
     scene(el, S.logo, S.hero);
     const lockup = q(".lockup", el), slot = q(".mark-slot", el), svg = q("svg", el);
-    const chev = q(".m-chev", svg), cursor = q(".m-cursor", svg), robin = q(".m-robin", svg);
+    const tile = q(".m-tile", svg), glow = q(".m-glow", svg), robin = q(".m-robin", svg);
     const wm = q(".wordmark", el), letters = wordsOf(q(".wm-text", wm)), sweep = q(".wm-sweep", wm);
-    const len = chev.getTotalLength();
-    // (hidden until it draws: a round cap on a zero-length dash still paints a dot)
-    gsap.set(chev, { strokeDasharray: len, strokeDashoffset: len, autoAlpha: 0 });
-    gsap.set(cursor, { scaleX: 0, transformOrigin: "0% 50%" });
+    gsap.set(tile, { autoAlpha: 0, scale: 0.82, transformOrigin: "50% 50%" });
+    gsap.set(glow, { autoAlpha: 0 });
     gsap.set(robin, { autoAlpha: 0 });
     gsap.set(letters, { autoAlpha: 0 });
     // The mark starts alone in the middle and makes room for the name
     gsap.set(slot, { x: (wm.offsetWidth + 4) / 2 });
-    tl.set(chev, { autoAlpha: 1 }, b(0.5));
-    tl.to(chev, { strokeDashoffset: 0, duration: b(1.2), ease: "glide" }, b(0.5));
-    tl.to(cursor, { scaleX: 1, duration: b(0.9), ease: "land" }, b(1.5));
+    tl.to(tile, { autoAlpha: 1, scale: 1, duration: b(1.4), ease: "land" }, b(0.5));
     tl.fromTo(robin, { y: -170, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.42, ease: "power2.in", immediateRender: false }, b(3) - 0.42);
     tl.fromTo(robin, { scaleY: 0.88, scaleX: 1.05, transformOrigin: "50% 100%" }, { scaleY: 1, scaleX: 1, duration: SPRING_TIME, ease: spring, immediateRender: false }, b(3));
+    tl.to(glow, { autoAlpha: 1, duration: b(1.2), ease: "land" }, b(3));
     tl.to(slot, { x: 0, duration: b(1.8), ease: "glide" }, b(3.7));
     reveal(letters, b(4.1), { stagger: 0.045, dur: 1.2, y: 60, blur: 16 });
     tl.fromTo(sweep, { backgroundPosition: "100% 0" }, { backgroundPosition: "0% 0", duration: b(1.6), ease: "power2.inOut", immediateRender: false }, b(5.8));
@@ -446,7 +445,7 @@ function typedAt(target, t) {
 }
 const inGroove = (t) => (t >= b(SONG.drop1) && t < b(SONG.breakdown)) || (t >= b(SONG.drop2) && t < b(SONG.finale));
 const easeOutExpo = (p) => (p >= 1 ? 1 : 1 - Math.pow(2, -10 * p));
-let glowEls, logoCursor, typeEls, searchCaret, cmdCaret, pwEl, countEl, beatEl;
+let glowEls, typeEls, searchCaret, cmdCaret, pwEl, countEl, beatEl;
 
 function ambient(t) {
   for (const el of typeEls) {
@@ -457,8 +456,6 @@ function ambient(t) {
   searchCaret.style.opacity = search.typing || blinkOn(t) ? 1 : 0;
   const cmd = typedAt("cmd", t);
   cmdCaret.style.opacity = t >= b(ENTERS[1]) ? 0 : cmd.typing || blinkOn(t) ? 1 : 0;
-  // The prompt's cursor blinks until the robin lands on it
-  logoCursor.style.opacity = t >= b(2.4) && t < b(3) && !blinkOn(t) ? 0 : 1;
   // Five password dots, one per 32nd note
   const dotsAt = b(18.5), dots = t >= dotsAt ? Math.min(5, Math.floor((t - dotsAt) / TYPE) + 1) : 0;
   const want = "•".repeat(dots);
@@ -492,7 +489,6 @@ async function init() {
   const srcs = [...new Set(qa(".crop").map((el) => el.dataset.src))];
   await Promise.all(srcs.map((src) => { const i = new Image(); i.src = `assets/${src}`; return i.decode().catch(() => {}); }));
   glowEls = qa(".glow");
-  logoCursor = q("#s-logo .m-cursor");
   typeEls = qa("[data-type]");
   searchCaret = q("#search-type .caret");
   cmdCaret = q("#cmd-caret");

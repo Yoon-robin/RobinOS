@@ -5,7 +5,7 @@
   <g transform="translate(176.0 40) scale(0.8125)">
   <defs>
     <clipPath id="robinos-logo-tile"><rect width="256" height="256" rx="60"/></clipPath>
-    <filter id="robinos-logo-glow" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+    <filter id="robinos-logo-glow" filterUnits="userSpaceOnUse" x="0" y="0" width="256" height="256" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceAlpha" stdDeviation="22" result="wide"/>
       <feGaussianBlur in="SourceAlpha" stdDeviation="7" result="near"/>
       <feMerge result="blur"><feMergeNode in="wide"/><feMergeNode in="near"/></feMerge>
