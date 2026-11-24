@@ -223,6 +223,15 @@ ShellRoot {
             Theme.setHighContrast(on);
         }
 
+        // 움직임 줄이기 and 앱 글자 크게 (T-161), for the same scene
+        function setReduceMotion(on: bool): void {
+            Theme.setReduceMotion(on);
+        }
+
+        function setLargeText(on: bool): void {
+            Theme.setLargeText(on);
+        }
+
         function welcome(): void {
             ShellState.openWelcome();
         }
