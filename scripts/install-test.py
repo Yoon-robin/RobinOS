@@ -1227,8 +1227,9 @@ def phase_reset(con, qmp):
     shot(qmp, "desktop-after-reset")
     con.run("for i in $(seq 30); do loginctl list-users --no-legend | grep -q robin && break; sleep 2; done;"
             " loginctl list-users --no-legend | grep robin")
-    # Where the reset starts from: 설정 > 업데이트 > 시스템 재설정 (shown once the
-    # update check has read the snapshot list)
+    # Where the reset starts from: 설정 > 업데이트 > 시스템 재설정, shown when robin
+    # (not root) finds the first snapshot
+    con.run("runuser -u robin -- robinctl update --status | tail -n 1 | grep '\"reset\":true'", timeout=300)
     con.run(f"{INSTALLER_IPC}settingsSection update", check=False)
     sleep(20)
     shot(qmp, "settings-update-reset")

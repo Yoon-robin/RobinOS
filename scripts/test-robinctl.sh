@@ -786,6 +786,9 @@ check "update status with nothing new" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash
 json_is "status: up to date" state current
 json_is "status: no updates" count 0
 json_is "status: no kernel change" kernel false
+json_is "status: no snapshots folder, no system reset" reset false
+check "update status with the first snapshot there" 0 env PATH="${PREVIEW_BIN}:/usr/bin" ROBINOS_SNAPSHOT_DIR="${SNAPS}" bash "${ROBINCTL}" update --status
+json_is "status: the first snapshot is there, so 시스템 재설정 shows" reset true
 printf '#!/bin/sh\nexit 1\n' >"${PREVIEW_BIN}/checkupdates"
 check "update status when checkupdates fails" 0 env PATH="${PREVIEW_BIN}:/usr/bin" bash "${ROBINCTL}" update --status
 json_is "status: it could not look, which isn't up to date" state unknown

@@ -640,17 +640,22 @@ robinos_version() {
 
 # robinctl update --status: one line of JSON for the settings app, no root needed
 #   {"state":"updates|current|unknown","count":N,"bytes":N,"kernel":bool,"metered":bool,
-#    "next_snapshot":N,"flatpak":N,"robinos":"0.3.0.r481-1"}
+#    "next_snapshot":N,"flatpak":N,"robinos":"0.3.0.r481-1","reset":bool}
+# reset: the first snapshot is there, so 설정's 시스템 재설정 can show (T-187). It
+# reads the snapshots folder (wheel may, by its ACL); next_snapshot needs root.
 update_status() {
-  local mode="$1" state="current" kernel=false metered=false next=0
+  local mode="$1" state="current" kernel=false metered=false next=0 reset=false
   update_facts
   [[ "${UPD_RC}" -eq 1 ]] && state="unknown"
   [[ "${UPD_COUNT}" -gt 0 ]] && state="updates"
   update_has_kernel && kernel=true
   update_metered && metered=true
   [[ "${mode}" != none ]] && next="$(update_next_snapshot)"
-  printf '{"state":"%s","count":%s,"bytes":%s,"kernel":%s,"metered":%s,"next_snapshot":%s,"flatpak":%s,"robinos":"%s"}\n' \
-    "${state}" "${UPD_COUNT}" "${UPD_BYTES}" "${kernel}" "${metered}" "${next:-0}" "$(update_flatpak_count)" "$(robinos_version)"
+  if [[ -n "$(snapshot_first "${ROBINOS_SNAPSHOT_DIR:-/.snapshots}" 2>/dev/null)" ]]; then
+    reset=true
+  fi
+  printf '{"state":"%s","count":%s,"bytes":%s,"kernel":%s,"metered":%s,"next_snapshot":%s,"flatpak":%s,"robinos":"%s","reset":%s}\n' \
+    "${state}" "${UPD_COUNT}" "${UPD_BYTES}" "${kernel}" "${metered}" "${next:-0}" "$(update_flatpak_count)" "$(robinos_version)" "${reset}"
 }
 
 # What the update is about to do, before pacman asks (T-162): how many packages

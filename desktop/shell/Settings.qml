@@ -1403,7 +1403,7 @@ FloatingWindow {
             // The terminal shows what stays and asks before and after
             Group {
                 title: "시스템 재설정"
-                visible: !ShellState.isLive && (root.upd.next_snapshot ?? 0) > 0
+                visible: !ShellState.isLive && root.upd.reset === true
                 hint: "개인 파일, 사용자 계정, 저장한 와이파이는 그대로예요"
 
                 RowLayout {
