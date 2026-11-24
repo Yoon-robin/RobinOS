@@ -76,11 +76,19 @@ fi
 # RobinOS's own files: the robinos package the ISO carries (built from the same
 # commit), so they belong to pacman. robin-install copied /opt/robinos already, and
 # only those files may be overwritten. A checkout without the package (Arch first,
-# then this script) copies the files as before.
+# then this script) installs the package from the RobinOS repository instead, over
+# exactly its own files (T-177 ②): its newest published version, which may be older
+# than the checkout. Without the repository it copies the files as before, and the
+# next `robinctl update` moves them to the package.
 robinos_package="$(find "${ROOT_DIR}/pkg" -maxdepth 1 -name 'robinos-*.pkg.tar.zst' -print -quit 2>/dev/null || true)"
 if [[ -n "${robinos_package}" ]]; then
   run pacman -U --noconfirm --overwrite '/opt/robinos/*' "${robinos_package}"
+elif [[ "${DRY_RUN}" == "true" ]]; then
+  printf 'RobinOS 저장소에서 robinos 패키지를 받아 설치해요. 받지 못하면 파일을 복사해요\n'
+elif [[ -f "${release_key}" ]] && bash "${ROOT_DIR}/bin/robinctl" update --adopt; then
+  robinos_package="repository"
 else
+  printf '알림: RobinOS 저장소에서 패키지를 받지 못해서 파일을 복사해요. 인터넷이 될 때 sudo robinctl update가 패키지로 옮겨요\n' >&2
   run install -Dm755 "${ROOT_DIR}/bin/robinctl" /usr/local/bin/robinctl
   run install -Dm644 "${ROOT_DIR}/config/robinos.toml" /etc/robinos/config.toml
 fi

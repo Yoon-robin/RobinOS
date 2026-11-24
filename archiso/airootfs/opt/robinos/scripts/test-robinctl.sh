@@ -793,6 +793,71 @@ if [[ "${EUID}" -eq 0 ]]; then
   rm -f "${WORK}/github-down" "${WORK}/all-down"
 fi
 
+printf '%s\n' "Copied RobinOS files move to the robinos package (T-177 ②)"
+# A pacman with a [robinos] repository whose package carries four paths; "installs"
+# it on -S and keeps the options it got
+ADOPT_BIN="${WORK}/adopt-bin"
+mkdir -p "${ADOPT_BIN}" "${WORK}/adopt-cache"
+: >"${WORK}/adopt-cache/robinos-0.3.0.r9-1-any.pkg.tar.zst"
+cat >"${ADOPT_BIN}/pacman" <<EOF
+#!/bin/sh
+[ "\$1" = --config ] && shift 2
+case "\$*" in
+  "-Q robinos") [ -f '${WORK}/adopted' ] || exit 1; echo "robinos 0.3.0.r9-1" ;;
+  -Sy|-Su*) echo "pacman \$*" >>'${WORK}/adopt-calls'; exit 0 ;;
+  "-Sw --noconfirm robinos") echo "pacman \$*" >>'${WORK}/adopt-calls'; [ ! -f '${WORK}/adopt-offline' ] ;;
+  "-Sp robinos") echo "https://github.com/Yoon-robin/RobinOS/releases/download/repo/robinos-0.3.0.r9-1-any.pkg.tar.zst" ;;
+  "-Qlpq ${WORK}/adopt-cache/robinos-0.3.0.r9-1-any.pkg.tar.zst")
+    printf '/usr/share/robinos/\n/usr/share/robinos/shell/shell.qml\n/usr/share/fonts/robinos/Geist[wght].ttf\n/usr/local/bin/robinctl\n' ;;
+  "-S "*) printf '%s\n' "\$@" >'${WORK}/adopt-args'; touch '${WORK}/adopted' ;;
+  *) echo "pacman \$*" >>'${WORK}/adopt-calls'; exit 1 ;;
+esac
+EOF
+printf '#!/bin/sh\necho %s/adopt-cache/\n' "${WORK}" >"${ADOPT_BIN}/pacman-conf"
+printf '#!/bin/sh\nexit 2\n' >"${ADOPT_BIN}/checkupdates"
+printf '#!/bin/sh\nexit 1\n' >"${ADOPT_BIN}/pgrep"
+chmod 755 "${ADOPT_BIN}"/*
+touch "${WORK}/adopt-mark"
+printf '[core]\nInclude = /etc/pacman.d/mirrorlist\n\n[robinos]\nSigLevel = Required DatabaseRequired\nServer = https://github.com/Yoon-robin/RobinOS/releases/download/repo\n' >"${WORK}/adopt.conf"
+adopt_env=(env SUDO_USER=learner ROBINOS_ADOPT_MARK="${WORK}/adopt-mark" ROBINOS_PACMAN_CONF="${WORK}/adopt.conf" PATH="${ADOPT_BIN}:/usr/bin")
+check "the dry run says copied files move to the package" 0 "${adopt_env[@]}" bash "${ROBINCTL}" update --dry-run
+said "it tells about the move" "robinos 패키지로 옮겨요"
+if [[ "${EUID}" -eq 0 ]]; then
+  : >"${WORK}/adopt-calls"
+  check "an update moves copied files to the package" 0 "${adopt_env[@]}" bash "${ROBINCTL}" update --yes
+  said "it says the files moved" "robinos 패키지(0.3.0.r9-1)로 옮겼어요"
+  if grep -qxF -- '/usr/share/robinos/shell/shell.qml' "${WORK}/adopt-args" && grep -qxF -- '/usr/local/bin/robinctl' "${WORK}/adopt-args"; then
+    ok "only the package's own files may be overwritten"
+  else
+    bad "the overwrite list was: $(cat "${WORK}/adopt-args" 2>/dev/null)"
+  fi
+  if grep -qxF -- '/usr/share/fonts/robinos/Geist\[wght\].ttf' "${WORK}/adopt-args"; then ok "a file name with brackets is no pattern"; else bad "brackets weren't escaped: $(cat "${WORK}/adopt-args")"; fi
+  if grep -qxF -- '/usr/share/robinos/' "${WORK}/adopt-args"; then bad "a directory went into the overwrite list"; else ok "directories stay out of the overwrite list"; fi
+  if grep -qxF -- '--noconfirm' "${WORK}/adopt-args"; then ok "--yes reaches the move too"; else bad "the move didn't get --noconfirm"; fi
+  # Once it is the package, nothing is moved again
+  rm -f "${WORK}/adopt-args"
+  check "the next update after the move" 0 "${adopt_env[@]}" bash "${ROBINCTL}" update --yes
+  if [[ -f "${WORK}/adopt-args" ]]; then bad "the package was installed again"; else ok "the package isn't installed twice"; fi
+  # The repository can't give the package: the update still ends well and says so
+  rm -f "${WORK}/adopted"
+  touch "${WORK}/adopt-offline"
+  check "an update that can't move the files" 0 "${adopt_env[@]}" bash "${ROBINCTL}" update --yes
+  said "it says it tries again next time" "다음 업데이트 때 다시 해요"
+  check "post-install's move without the package fails" fail "${adopt_env[@]}" bash "${ROBINCTL}" update --adopt --yes
+  rm -f "${WORK}/adopt-offline"
+  # Someone who removed the robinos package (docs/exit.md) doesn't get it back
+  rm -f "${WORK}/adopt-mark" "${WORK}/adopt-args"
+  check "an update without copied files" 0 "${adopt_env[@]}" bash "${ROBINCTL}" update --yes
+  if [[ -f "${WORK}/adopt-args" ]]; then bad "robinos came back without copied files"; else ok "nothing is moved without copied files"; fi
+  # post-install's way: --adopt alone, after its own pacman -Sy
+  check "post-install's move" 0 "${adopt_env[@]}" bash "${ROBINCTL}" update --adopt --yes
+  if [[ -f "${WORK}/adopted" ]]; then ok "--adopt installs the package"; else bad "--adopt didn't install the package"; fi
+  # Without [robinos] in pacman.conf there is nothing to move to
+  rm -f "${WORK}/adopted"
+  sed -i '/^\[robinos\]/,$d' "${WORK}/adopt.conf"
+  check "--adopt without the RobinOS repository fails" fail "${adopt_env[@]}" bash "${ROBINCTL}" update --adopt --yes
+fi
+
 printf '%s\n' "Idle suspend (robinos-idle-suspend): a laptop on battery sleeps, nothing else does"
 IDLE_BIN="${WORK}/idle-bin"
 mkdir -p "${IDLE_BIN}"

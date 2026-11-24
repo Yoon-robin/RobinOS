@@ -139,11 +139,12 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: `진행 중` 10개 이하, tasks.md 250줄 이하
 
 ### T-177 업데이트 길의 약한 곳
-- 상태: 할 일 (①은 2026-10-16 main에 합침, ③은 2026-11-24 새벽, ② 남음. 진행 중 한도 때문에 진행 중으로 올리지 않아요)
+- 상태: 검증 대기 (①은 2026-10-16 main에 합침, ③은 2026-11-24 새벽, ②는 2026-11-24 오전 robin PC: 단위 시험과 진짜 pacman 확인 통과, 설치 테스트 archinstall 남음)
 - 출처: 업데이트 시스템 점검(2026-10-15, [unfinished.md](unfinished.md) 7번 표)
 - 할 것: ① 깃허브가 안 될 때도 Arch 업데이트는 되게: `robinctl update`가 `[robinos]` 목록을 못 받으면 그 저장소를 뺀 설정으로 `pacman -Syu`를 하고 "RobinOS 파일은 다음에 받아요"라고 알려요(Arch 컨테이너에서 받을 수 없는 서버로 시험) ② git으로 받은 파일로 설치한 시스템을 패키지로 옮기기: 저장소에서 받은 `robinos` 패키지의 파일 목록에만 `--overwrite`(설치 후 설정과 `robinctl update`, design.md "RobinOS 파일 업데이트" 5번) ③ 서명 열쇠: 백업 확인, 열쇠를 바꾸는 절차(새 열쇠를 옛 열쇠로 서명해 `robinos` 패키지로 보내기), 만료 전 연장을 release.md에
 - 한 것(2026-10-15 클라우드 세션): ① `robinctl update`가 `pacman -Sy`에 실패하면 `[robinos]` 블록을 뺀 임시 설정으로 다시 받고 `-Su`를 해요(pacman.conf는 그대로). 시험 7개(`test-robinctl.sh`: 깃허브만 안 될 때, 인터넷이 아예 없을 때), Arch 컨테이너의 실제 pacman으로 닿지 않는 `[robinos]`에서 그냥 `pacman -Syu`는 멈추고 `robinctl update`는 끝까지 가는 것을 확인. 남은 것: 설정 앱의 업데이트 상태(`checkupdates`도 같은 이유로 실패해 "알 수 없음"), ②, ③
 - 한 것(③, 2026-11-24 새벽): 설치본은 처음 설치 때 넣은 공개 열쇠를 계속 들고 있어서, 만료를 늘리거나 열쇠를 바꿔도 닿지 않고 2029-10-09에 업데이트가 멈출 뻔했어요. `robinos.install`이 패키지가 바뀔 때마다 패키지에 든 열쇠를 pacman 열쇠 꾸러미에 다시 넣고 서명해요(이미 그 열쇠를 가진 시스템만, 시험 3개). [release.md](release.md) "서명"에 백업 확인, 만료 늘리기, 열쇠 바꾸기 절차
+- 한 것(②, 2026-11-24 오전 robin PC): `robinctl`의 `robinos_adopt`가 `robinos`를 캐시로 받아(`pacman -Sw`) 파일 목록(`pacman -Qlpq`)의 파일마다 `--overwrite`를 줘서 설치해요(디렉터리는 빼고, `[`·`*`·`?`·`\`는 이스케이프, 쉼표가 든 이름은 빼요). 설치 후 설정은 `pkg/`가 없으면 `robinctl update --adopt`로 하고, 못 받으면 예전처럼 복사해요. `robinctl update`는 `-Su` 뒤에 복사된 파일(`/usr/share/robinos/shell/shell.qml`)이 있고 `robinos`가 없을 때만 옮겨요(패키지를 일부러 지운 시스템은 그대로). 시험: `test-robinctl.sh` 14개(옮기기, 덮어쓸 목록에 디렉터리 없음, 괄호 이스케이프, 두 번 안 함, 못 받을 때 안내, 저장소 없음), WSL 임시 루트의 진짜 pacman으로 복사본 셋을 덮어쓰고 주인이 `robinos`인지, 괄호를 이스케이프하지 않으면 그 파일이 충돌로 남는지 확인. 알게 된 것: `--root`를 주면 pacman은 `--overwrite` 패턴을 루트를 붙인 경로와 비교해요(실제 시스템은 루트가 `/`라 상관없어요). 설치 테스트 archinstall은 ISO 패키지로 만든 로컬 저장소와 예전 방식의 복사본으로 옮기기를 확인하고 진짜 저장소로 되돌려요
 - 완료 기준: ①② 시험(`test-robinctl.sh`와 Arch 컨테이너의 실제 pacman), 설치 테스트 archinstall 경로에서 `pacman -Qo`가 `robinos`, ③ release.md 절차
 
 

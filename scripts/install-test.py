@@ -607,6 +607,18 @@ assert new != conf, "no [robinos] section in pacman.conf"
 open(path, "w").write(new)
 """ % LOCAL_REPO
 
+# The real [robinos] section, as scripts/post-install.sh writes it
+POINT_AT_REAL_REPO = """
+import re
+path = "/etc/pacman.conf"
+conf = open(path).read()
+new = re.sub(r"(?ms)^\\[robinos\\]\\n.*?(?=^\\[|\\Z)",
+             "[robinos]\\nSigLevel = Required DatabaseRequired\\n"
+             "Server = https://github.com/Yoon-robin/RobinOS/releases/download/repo\\n\\n", conf)
+assert new != conf, "no [robinos] section in pacman.conf"
+open(path, "w").write(new)
+"""
+
 
 def check_update(con):
     """robinctl update, from the status the settings app reads to the snapshots around it."""
@@ -801,6 +813,17 @@ def install_with_archinstall(con):
     con.run("rm -rf /mnt/opt/robinos && mkdir -p /mnt/opt && cp -r /share/robinos /mnt/opt/robinos"
             " && chmod +x /mnt/opt/robinos/bin/* /mnt/opt/robinos/installer/* /mnt/opt/robinos/scripts/*.sh"
             " /mnt/opt/robinos/scripts/*.py /mnt/opt/robinos/desktop/bin/*")
+    # A checkout has no package, so post-install.sh installs robinos from the RobinOS
+    # repository over the files it carries (T-177 ②). A local repository with this ISO's
+    # package stands in for GitHub, whose published one is older than this commit (the
+    # next phase puts the real one back). And files copied the old way, so the package
+    # has to overwrite them: robinctl and the config from before the package
+    con.run(f"mkdir -p /mnt{LOCAL_REPO} && cp /opt/robinos/pkg/robinos-*.pkg.tar.zst /mnt{LOCAL_REPO}/"
+            f" && repo-add -q /mnt{LOCAL_REPO}/robinos.db.tar.gz /mnt{LOCAL_REPO}/robinos-*.pkg.tar.zst"
+            f" && chmod -R a+rX /mnt{LOCAL_REPO}"
+            f" && printf '\\n[robinos]\\nSigLevel = Never\\nServer = file://{LOCAL_REPO}\\n' >> /mnt/etc/pacman.conf"
+            " && install -Dm755 /share/robinos/bin/robinctl /mnt/usr/local/bin/robinctl"
+            " && install -Dm644 /share/robinos/config/robinos.toml /mnt/etc/robinos/config.toml")
 
 
 GRUB_BTRFS_CFG = "/boot/grub/grub-btrfs.cfg"
@@ -872,6 +895,14 @@ def phase_installed(con, qmp):
         con.run("tail -n 30 /root/post-install.out", check=False)
         if status != 0:
             raise RuntimeError(f"post-install.sh failed with {status}")
+        # It took robinos from the (local) repository over the copied files; then the
+        # real RobinOS repository again, as post-install.sh would have written it
+        con.run("grep -q 'robinos 패키지로 옮겨요' /root/post-install.out && pacman -Q robinos"
+                " && pacman -Qqo /usr/local/bin/robinctl /etc/robinos/config.toml | grep -cx robinos | grep -qx 2")
+        con.put_file("/root/real-repo.py", POINT_AT_REAL_REPO)
+        # (and its signed list: the local one has none, which a later `pacman -S` rejects)
+        con.run("python3 /root/real-repo.py && grep -A2 '^\\[robinos\\]' /etc/pacman.conf && pacman -Sy > /dev/null",
+                timeout=300)
 
     con.run("robinctl doctor", check=False)
     con.run("robinctl snapshot list")
@@ -955,12 +986,10 @@ def phase_installed(con, qmp):
     # RobinOS's own files belong to the robinos package the ISO carries, the RobinOS
     # repository and its key are set up for updates (T-145), and the two files other
     # packages own got RobinOS's version (desktop/package-shared.txt)
-    # (archinstall's way runs post-install.sh from the checkout, which has no package:
-    # the files are copied as before and only the repository is set up)
-    if INSTALLER != "archinstall":
-        # -q: just the package name; the full answer is in Korean on the installed system
-        con.run(r"pacman -Q robinos && pacman -Qqo /usr/share/robinos/shell/shell.qml /usr/local/bin/robinctl"
-                r" /opt/robinos/bin/robinctl | grep -cx robinos | grep -qx 3")
+    # (archinstall's way: post-install.sh took the package from the repository, T-177 ②)
+    # -q: just the package name; the full answer is in Korean on the installed system
+    con.run(r"pacman -Q robinos && pacman -Qqo /usr/share/robinos/shell/shell.qml /usr/local/bin/robinctl"
+            r" /opt/robinos/bin/robinctl | grep -cx robinos | grep -qx 3")
     con.run(r"grep -A2 '^\[robinos\]' /etc/pacman.conf"
             r" && pacman-key --list-keys D8EB0C495CBF5B2BBB57EACCFD9B53B8B79E9AAD >/dev/null")
     con.run(r"pacman -Sy >/dev/null && pacman -Si robinos | head -n 3")

@@ -138,7 +138,7 @@ WHPX가 필요해요. TCG에서는 `build`, `boot-test`, `install-test`를 차�
 
 설치 방식은 네 가지예요.
 
-- `archinstall` (기본): [install.md](install.md)의 방법 A예요. archinstall로 Arch를 설치하고(기본 Btrfs 구성, GRUB, EFI는 `/boot`) `scripts/post-install.sh --yes`를 실행해요.
+- `archinstall` (기본): [install.md](install.md)의 방법 A예요. archinstall로 Arch를 설치하고(기본 Btrfs 구성, GRUB, EFI는 `/boot`) `scripts/post-install.sh --yes`를 실행해요. git 체크아웃에는 패키지가 없어서 설치 후 설정이 RobinOS 저장소에서 `robinos`를 받아 옮겨요(T-177 ②). 깃허브의 저장소 대신 ISO의 같은 커밋 패키지로 만든 로컬 저장소를 쓰고, 예전 방식으로 복사해 둔 `robinctl`과 설정 파일을 덮어쓰는지 본 뒤 진짜 저장소로 되돌려요.
 - `robinos`: RobinOS 설치기 백엔드(`installer/robin-install`)로 디스크 전체에 설치해요(EFI는 `/efi`).
 - `encrypted`: `robinos`와 같지만 디스크 암호화를 켜요(LUKS2, T-178·T-179). 설치 뒤 복구 키가 화면 줄(`@@ recovery-key`)에만 있고 로그 파일에는 없는지 봐요. 설치본을 켤 때마다 GRUB이 화면에서 비밀번호를 물어서, 시리얼에 메뉴가 안 보이면 QMP로 비밀번호를 쳐요(`grub-password` 스크린샷, 잠금 해제에 걸린 시간을 기록). 두 번째 부팅(snapshots)은 비밀번호 대신 복구 키로 열어요.
 - `windows`: 윈도우가 깔린 것처럼 꾸민 64GB 디스크(100MB EFI 파티션과 그 안의 윈도우 부팅 관리자 자리, MSR, 20GB NTFS "C:", 나머지 빈 공간)에 RobinOS 설치기로 설치해요. 순서는 이래요.

@@ -707,7 +707,11 @@ restart_shell_after() {
   local before="$1" after user="${SUDO_USER:-}"
   after="$(robinos_version)"
   [[ -n "${before}" && "${before}" != "${after}" ]] || return 0
-  printf '\nRobinOS 파일이 %s에서 %s로 올라갔어요.\n' "${before}" "${after}"
+  if [[ "${before}" == copied ]]; then
+    printf '\nRobinOS 파일을 robinos 패키지(%s)로 옮겼어요. 앞으로는 업데이트할 때 새 파일이 와요.\n' "${after}"
+  else
+    printf '\nRobinOS 파일이 %s에서 %s로 올라갔어요.\n' "${before}" "${after}"
+  fi
   if [[ -n "${user}" && "${user}" != root ]] && pgrep -u "${user}" -x qs >/dev/null 2>&1; then
     printf '화면(셸)을 새 버전으로 다시 띄워요.\n'
     pkill -u "${user}" -x qs >/dev/null 2>&1 || true
@@ -734,20 +738,83 @@ pacman_with() {
   fi
 }
 
+# A path as a pacman --overwrite pattern: fnmatch's special characters escaped
+# (a font like Geist[wght].ttf), and no comma, which pacman splits patterns at
+overwrite_pattern() {
+  local path="$1"
+  [[ "${path}" != *,* ]] || return 1
+  path="${path//\\/\\\\}"
+  path="${path//\*/\\*}"
+  path="${path//\?/\\?}"
+  path="${path//\[/\\[}"
+  path="${path//\]/\\]}"
+  printf '%s\n' "${path}"
+}
+
+# RobinOS files copied rather than installed as the robinos package: a checkout and
+# scripts/post-install.sh (docs/install.md, way A), or an install from before the
+# package. pacman owns none of them, so updates never brought new ones (T-177 ②).
+# Installs the package from the RobinOS repository and lets it overwrite exactly the
+# files it carries, which are those copies. Needs the repository's list (pacman -Sy).
+# robinos_adopt <conf> [pacman options]; true when robinos is installed afterwards.
+robinos_adopt() {
+  local conf="$1"
+  shift
+  pkg_installed robinos && return 0
+  grep -q '^\[robinos\]' "${conf}" || return 1
+  # Into pacman's cache first (checked against the signed list) to read its file list
+  local url file cache
+  pacman_with "${conf}" -Sw --noconfirm robinos >/dev/null || return 1
+  url="$(pacman_with "${conf}" -Sp robinos | tail -n 1)" || return 1
+  cache="$(pacman-conf --config "${conf}" CacheDir 2>/dev/null | head -n 1)"
+  file="${cache:-/var/cache/pacman/pkg/}"
+  file="${file%/}/${url##*/}"
+  # A local repository (file://) may be used where it is, without a copy in the cache
+  [[ -f "${file}" || "${url}" != file://* ]] || file="${url#file://}"
+  [[ -f "${file}" ]] || return 1
+  local overwrite=() path pattern
+  while IFS= read -r path; do
+    [[ -n "${path}" && "${path}" != */ ]] || continue
+    pattern="$(overwrite_pattern "${path}")" || continue
+    overwrite+=(--overwrite "${pattern}")
+  done < <(pacman -Qlpq "${file}")
+  ((${#overwrite[@]} > 0)) || return 1
+  printf 'RobinOS 파일을 robinos 패키지로 옮겨요. 이 패키지에 든 파일만 패키지 것으로 바꿔 써요.\n'
+  pacman_with "${conf}" -S "$@" "${overwrite[@]}" robinos || return 1
+  pkg_installed robinos
+}
+
+# Copied RobinOS files on this system that no package owns (robinos_adopt).
+# ROBINOS_ADOPT_MARK: another file to look at, for the tests
+robinos_copied() {
+  [[ -e "${ROBINOS_ADOPT_MARK:-/usr/share/robinos/shell/shell.qml}" ]] && ! pkg_installed robinos
+}
+
 update_system() {
-  local dry_run="false" preview="false" status="false" arg
+  local dry_run="false" preview="false" status="false" adopt="false" arg
   for arg in "$@"; do
     case "${arg}" in
       --dry-run) dry_run="true" ;;
       --preview) preview="true" ;;
       --status) status="true" ;;
+      --adopt) adopt="true" ;;
       --yes | -y) ASSUME_YES="true" ;;
       "") ;;
-      *) die "알 수 없는 옵션이에요: ${arg} (쓸 수 있는 것: --dry-run, --preview, --status, --yes)" ;;
+      *) die "알 수 없는 옵션이에요: ${arg} (쓸 수 있는 것: --dry-run, --preview, --status, --adopt, --yes)" ;;
     esac
   done
 
   have_cmd pacman || die "pacman이 필요해요"
+
+  # robinctl update --adopt: only move copied RobinOS files to the robinos package
+  # (scripts/post-install.sh, after its pacman -Sy)
+  if [[ "${adopt}" == "true" ]]; then
+    need_root
+    local adopt_args=()
+    [[ "${ASSUME_YES}" != "true" ]] || adopt_args+=(--noconfirm)
+    robinos_adopt "${ROBINOS_PACMAN_CONF:-/etc/pacman.conf}" "${adopt_args[@]}"
+    return
+  fi
 
   # snap-pac takes pre/post snapshots around every pacman transaction once the
   # root config exists; otherwise take one ourselves when we can.
@@ -775,6 +842,9 @@ update_system() {
       none) printf '스냅샷이 설정되지 않아서 업데이트 전 스냅샷을 만들지 않아요 (설정: sudo robinctl snapshot setup).\n' ;;
     esac
     printf '실행할 명령: pacman -Syu\n'
+    if robinos_copied; then
+      printf '복사해 둔 RobinOS 파일을 RobinOS 저장소의 robinos 패키지로 옮겨요. 그다음부터 업데이트로 새 파일이 와요.\n'
+    fi
     if have_cmd flatpak; then
       printf '앱 스토어(Flatpak) 앱이 있으면 이어서: flatpak update --system\n'
     fi
@@ -818,6 +888,16 @@ update_system() {
   pacman_with "${conf}" -Su "${pacman_args[@]}" || rc=$?
   [[ -z "${fallback}" ]] || rm -f "${fallback}"
   ((rc == 0)) || return "${rc}"
+  # Copied RobinOS files become the robinos package now, so the next update brings
+  # new ones (not when only Arch's lists could be fetched this time)
+  if [[ -z "${fallback}" ]] && robinos_copied && grep -q '^\[robinos\]' "${conf}"; then
+    printf '\n'
+    if robinos_adopt "${conf}" "${pacman_args[@]}"; then
+      before="copied"
+    else
+      printf '%s알림:%s RobinOS 파일을 패키지로 옮기지 못했어요. 다음 업데이트 때 다시 해요.\n' "${C_YELLOW}" "${C_RESET}" >&2
+    fi
+  fi
   restart_shell_after "${before}"
 
   # Apps from the app store (Flathub) live outside pacman and its snapshots

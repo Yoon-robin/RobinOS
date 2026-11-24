@@ -200,7 +200,7 @@ Hyprland 0.56은 `start-hyprland`(감시 프로세스)로 띄우라고 하고, �
 2. **저장소**: 깃허브 릴리스 하나(태그 `repo`)를 pacman 저장소로 써요. `repo-add`가 만든 데이터베이스와 패키지를 릴리스 열쇠(`keys/robinos-release.asc`)로 서명해서 올려요. 서버 비용과 운영이 없고, 깃허브가 내려받기를 맡아요.
 3. **설치본 설정**: 설치 후 설정(`scripts/post-install.sh`)이 `/etc/pacman.conf`에 `[robinos]` 저장소를 넣고(`SigLevel = Required DatabaseRequired`), pacman 열쇠고리에 RobinOS 열쇠(`keys/robinos-release.asc`)를 넣어 로컬 서명으로 믿게 해요. 그러면 `sudo robinctl update`(`pacman -Syu`) 한 번에 RobinOS 파일도 올라가고, snap-pac이 업데이트 전후 스냅샷을 그대로 만들어요. 새 RobinOS 파일이 들어오면 `robinctl update`가 셸을 다시 띄워요.
 4. **설치할 때 패키지로**: 라이브 ISO는 같은 커밋으로 만든 `robinos` 패키지를 `/opt/robinos/pkg`에 들고 있어요(`scripts/build-iso.sh`). 설치 후 설정이 그 패키지를 `pacman -U --overwrite '/opt/robinos/*'`로 설치해서, 처음부터 파일의 주인이 pacman이에요. 개발 ISO여도 저장소의 옛 파일로 돌아가지 않고, 깃허브가 안 될 때도 설치가 끝나요(2026-10-10 결정, T-145, 묶음 72에서 검증).
-5. **패키지가 아닌 시스템**: git으로 받은 파일로 설치 후 설정을 돌리면(`pkg/`가 없으면) 예전처럼 파일을 복사만 해요. v0.1·v0.2로 설치한 시스템도 그래요. 이런 시스템을 패키지로 옮기는 코드(처음 한 번 그 경로에만 `--overwrite`)는 처음 설계에 있었지만 아직 없어요. 빈 곳은 [unfinished.md](unfinished.md) 7번 표예요(T-146, T-177).
+5. **패키지가 아닌 시스템**: git으로 받은 파일로 설치 후 설정을 돌리면(`pkg/`가 없으면) RobinOS 저장소에서 `robinos` 패키지를 받아 설치해요. 이미 복사된 파일이 있으면 그 패키지에 든 파일에만 `--overwrite`를 줘요(`robinctl`의 `robinos_adopt`: 패키지를 캐시로 받아 `pacman -Qlpq`로 파일 목록을 읽고, 이름의 `[`, `*` 같은 글자는 패턴이 되지 않게 이스케이프해요). 저장소에 닿지 못하면 예전처럼 복사하고, 다음 `robinctl update`가 `-Su` 뒤에 같은 방법으로 패키지로 옮겨요. 받는 것은 저장소에 올린 최신 버전이라 git의 파일보다 오래됐을 수 있어요(2026-11-24, T-177 ②). `robinos` 패키지를 일부러 지운 시스템([exit.md](exit.md))은 복사된 파일도 함께 없어서 다시 설치하지 않아요. v0.1·v0.2로 설치한 시스템은 `[robinos]` 저장소가 없어서 여기에 해당하지 않아요(T-146).
 
 열쇠가 이 PC의 WSL에만 있어서, 패키지와 저장소는 이 PC에서만 서명해요([release.md](release.md) "서명").
 
