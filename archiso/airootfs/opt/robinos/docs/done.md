@@ -525,6 +525,7 @@ tasks.md에서 옮긴 작업 카드예요(2026-11-24 T-176 정리부터). 최근
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-11-24 (오후 2시) | `c3d3f65` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 24.5분)와 `install-test -Installer windows` | 통과. 판정 22개 모두 PASS. 설치 테스트 여섯 단계(새 단계 `reset`, T-187: 재설정 뒤 새 비밀번호로 로그인, cowsay 없음, `/home` 그대로, 설정의 "시스템 재설정" 줄). 윈도우 옆 설치도 여섯 단계, 재설정 뒤 GRUB에 윈도우 |
 | 2026-11-24 (낮 12시 반) | `97a1bb0` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.6분, 테스트 24.5분) | 통과. 판정 22개 모두 PASS(새 장면 `windows-app-learn`, T-184). 설치 테스트 다섯 단계 |
 | 2026-11-24 (낮 12시) | `3b92fa1` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 24.2분) | 통과. 판정 21개 모두 PASS. 새 장면 `95-high-contrast-light`·`96-high-contrast-launcher`·`97-accessibility-settings`(T-185), 설치 테스트 `rollback-10-launcher-phone`(T-186). 설치 테스트 다섯 단계 |
 | 2026-11-24 (오전 10시 반) | `c430a5f` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.6분, 테스트 22.6분) | 통과. 판정 모두 PASS. 새 장면 `17-launcher-localsend`: 라이브에는 GNOME 소프트웨어가 없어 "LocalSend 설치하기"는 숨고 "휴대폰에서 받기 허용"만 나와요(설계대로, 설치본 장면은 batch79에서 더함). 설치 테스트 다섯 단계 |

@@ -28,8 +28,8 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 
 | 날짜 | 대상 커밋 | 한 것 | 결과 |
 |---|---|---|---|
+| 2026-11-24 (오후 4시) | `66132b3` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 25.3분) | 통과. 판정 21개 모두 PASS(`light`·`dark`가 GTK 테마 이름과 사용자 gtk.css도 봐요, T-188). 새 장면 `light-files`·`dark-files`·`dark-text-editor`에서 GNOME 앱이 키트 면. 설치 테스트 여섯 단계 |
 | 2026-11-24 (오후 3시) | `1dd018a` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 3.5분, 테스트 14.7분) | 통과. 판정 21개 모두 PASS, FAIL 없음. 설치 테스트 여섯 단계(`reset`까지). 새 로고(빛나는 울새)가 로그인 화면 왼쪽 아래에 보여요 |
-| 2026-11-24 (오후 2시) | `c3d3f65` 테스트 ISO | robin PC에서 `verify -Installer robinos`(빌드 2.7분, 테스트 24.5분)와 `install-test -Installer windows` | 통과. 판정 22개 모두 PASS. 설치 테스트 여섯 단계(새 단계 `reset`, T-187: 재설정 뒤 새 비밀번호로 로그인, cowsay 없음, `/home` 그대로, 설정의 "시스템 재설정" 줄). 윈도우 옆 설치도 여섯 단계, 재설정 뒤 GRUB에 윈도우 |
 
 ## 품질 점검 기록
 
@@ -95,7 +95,7 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
 - 완료 기준: 부팅 테스트의 모든 장면이 키트 문법(면 셋, 파랑 하나, 컨트롤 모서리 7, 유리 없음)을 따르고, 시스템 화면(로그인, 잠금, 부팅 메뉴)도 같은 색
 
 ### T-188 기본 앱과 시스템 창을 키트 색으로
-- 상태: 진행 중 (① GTK 앱 끝, 묶음 검증 대기)
+- 상태: 진행 중 (① GTK 앱 끝, `66132b3` 묶음 검증 통과)
 - 출처: 사용자(2026-11-24 오후) "Neverlose UI 적용 안 된 곳". 셸, 로그인, 잠금, GRUB, 터미널 팔레트는 키트를 따르지만, 그 밖에서 여는 창은 GNOME 기본 모양이에요. 새 정체성(윈도우에서 넘어온 사람의 첫날)에서 파일 탐색기와 브라우저는 매일 여는 창이라 앞에 둬요
 - 적용 안 된 곳(코드와 오늘 `1dd018a` 테스트 화면으로 확인):
   - **GTK·libadwaita 앱**: 파일(Nautilus), Firefox, 텍스트 편집기, 이미지 보기(Loupe), 문서 보기(Evince), 계산기, 압축 풀기, 소프트웨어, 디스크, 스캔, 동영상·음악. `adw-gtk3-dark`와 `accent-color='blue'`뿐이고 `gtk.css` 덮어쓰기가 없어서, 면은 회색(#242424 계열), 파랑은 GNOME 파랑(#3584e4), 모서리는 libadwaita 값이에요. 파일 고르기 창(xdg-desktop-portal-gtk)도 같아요. 부팅·설치 테스트에 이 앱들을 연 장면이 하나도 없어요
@@ -105,9 +105,9 @@ WSL에서 도는 긴 작업이에요. WSL 작업은 한 번에 하나만 돌려�
   - **마우스 커서**: Adwaita 그대로
   - **부팅 중 화면**: GRUB와 로그인 사이에 커널 글자(T-150 Plymouth). GRUB 메뉴 글꼴도 Pretendard가 아니라 GRUB 기본 고정폭
   - **받는 ISO**: 지금 내려받는 v0.3은 옛 화면이에요. v0.4 릴리스 전까지는 그대로
-- 한 것(①, 2026-11-24 오후 robin PC, 사용자 "GTK 앱부터"): `scripts/build-gtk-theme.py`가 `Theme.qml`에서 libadwaita용 `libadwaita.css`(라이트 + `prefers-color-scheme: dark`, 열린 앱도 바로 바뀌어요), GTK 3 테마 `RobinOS`·`RobinOS-dark`(adw-gtk3 위에 같은 색), 텍스트 편집기 색 구성 `robinos`·`robinos-dark`를 만들어요. 셸이 gtk-theme을 `RobinOS(-dark)`로 바꾸고, 사용자 `~/.config/gtk-4.0/gtk.css`(표시 줄이 있을 때만 다시 써요)가 `libadwaita.css`를 불러요. `check`가 생성물이 낡았는지, 색이 키트 안인지 봐요. `scripts/gtk-shot.sh`로 WSL에서 파일·텍스트 편집기·계산기를 다크·라이트로 찍어 GNOME 모양(`--stock`)과 비교했어요. 부팅 테스트에 `light-files`·`dark-files`·`dark-text-editor` 장면과 `light`·`dark` 판정(테마 이름, gtk.css)을 넣었어요. Firefox는 GTK 색 대신 자기 테마를 써서 그대로예요(②로)
+- 한 것(①, 2026-11-24 오후 robin PC, 사용자 "GTK 앱부터"): `scripts/build-gtk-theme.py`가 `Theme.qml`에서 libadwaita용 `libadwaita.css`(라이트 + `prefers-color-scheme: dark`, 열린 앱도 바로 바뀌어요), GTK 3 테마 `RobinOS`·`RobinOS-dark`(adw-gtk3 위에 같은 색), 텍스트 편집기 색 구성 `robinos`·`robinos-dark`를 만들어요. 셸이 gtk-theme을 `RobinOS(-dark)`로 바꾸고, 사용자 `~/.config/gtk-4.0/gtk.css`(표시 줄이 있을 때만 다시 써요)가 `libadwaita.css`를 불러요. `check`가 생성물이 낡았는지, 색이 키트 안인지 봐요. `scripts/gtk-shot.sh`로 WSL에서 파일·텍스트 편집기·계산기를 다크·라이트로 찍어 GNOME 모양(`--stock`)과 비교했어요. 부팅 테스트에 `light-files`·`dark-files`·`dark-text-editor` 장면과 `light`·`dark` 판정(테마 이름, gtk.css)을 넣었어요. Firefox는 GTK 색 대신 자기 테마를 써서 그대로예요(②로). 묶음 검증 `66132b3`의 `81-light-files`, `101-dark-files`, `102-dark-text-editor`에서 VM 안의 파일·텍스트 편집기가 셸과 같은 면이고, 터미널(Ptyxis) 머리줄도 같이 키트 면이 됐어요
 - 할 일(처음 적은 것): ① `gtk-4.0/gtk.css`와 `gtk-3.0/gtk.css`에 키트 색을 `@define-color`로(창·보기·머리줄·카드·팝오버 면, 강조 `#4b7dfe`, 빨강), 다크·라이트는 셸이 테마를 바꿀 때 파일을 바꿔 써요. Firefox는 GTK 색을 따라와요 ② 부팅 테스트에 파일 창과 Firefox 장면 ③ fcitx5 테마와 polkit 창 ④ 커서는 키트에 없어서 그대로 둘지 정하기
-- 남은 것: ② Firefox(정책으로 깔리는 테마나 색 설정) ③ 터미널 머리줄(Ptyxis는 libadwaita라 ①로 바뀌었을 수 있어요, 부팅 테스트 화면으로 확인) ④ fcitx5 후보 창, polkit 창 ⑤ 커서
+- 남은 것: ② Firefox(정책으로 깔리는 테마나 색 설정) ③ ~~터미널 머리줄~~(①로 해결, `101-dark-files`) ④ fcitx5 후보 창, polkit 창 ⑤ 커서
 - 완료 기준: 파일, Firefox, 텍스트 편집기, 터미널 머리줄을 다크·라이트로 찍었을 때 면 셋과 파랑 하나가 셸과 같아요
 
 ### T-166 라이브 USB로 설치본 고치기
